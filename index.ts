@@ -16,6 +16,7 @@ import { config } from "@lumi/aws";
 import { printf } from "@lumi/lumirt";
 
 export * from "./api";
+export * from "./queue";
 export * from "./table";
 
 // TODO[pulumi/lumi#268] We should be exposing our own region config

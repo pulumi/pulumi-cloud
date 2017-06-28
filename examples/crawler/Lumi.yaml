@@ -1,0 +1,5 @@
+name: todo
+description: A todo app backend.
+dependencies:
+    platform: "*"
+

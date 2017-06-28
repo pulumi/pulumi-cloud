@@ -1,0 +1,12 @@
+{
+    "name": "crawler",
+    "version": "0.1",
+    "typings": ".lumi/bin/index.d.ts",
+    "scripts": {
+        "build": "lumijs"
+    },
+    "peerDependencies": {
+        "@lumi/platform": "*"
+    }
+}
+
