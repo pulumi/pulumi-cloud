@@ -14,6 +14,7 @@ api.routeStatic("GET", "/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
 api.route("GET", "/todo/{id}", {}, (req, cb) => {
+  console.log("GET /todo/" + req.pathParameters.id);
   db(todos).get({ id: req.pathParameters.id }, (err, data) => {
     if (err !== null) {
       cb(null, { statusCode: 500, body: JSON.stringify(err) });
@@ -23,6 +24,7 @@ api.route("GET", "/todo/{id}", {}, (req, cb) => {
   });
 });
 api.route("POST", "/todo/{id}", {}, (req, cb) => {
+  console.log("POST /todo/" + req.pathParameters.id);
   db(todos).insert({ id: req.pathParameters.id, value: req.body }, (err, data) => {
     if (err !== null) {
       cb(null, { statusCode: 500, body: JSON.stringify(err) });
@@ -32,6 +34,7 @@ api.route("POST", "/todo/{id}", {}, (req, cb) => {
   });
 });
 api.route("GET", "/todo", {}, (req, cb) => {
+  console.log("GET /todo");
   db(todos).scan((err, data) => {
     if (err !== null) {
       cb(null, { statusCode: 500, body: JSON.stringify(err) });
