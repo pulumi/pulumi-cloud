@@ -2,15 +2,19 @@
 
 import * as aws from "@lumi/aws";
 import * as runtime from "@lumi/lumirt";
+import * as config from "./config";
+
+// Set the AWS region based on the Pulumi region configuration
+aws.config.region = config.requireAWSRegion();
+
+// Note that we only export APIs with no AWS types exposed
+// We must ensure that consumers of the Pulumi platform do
+// not see any types from AWS when calling APIs in these
+// exported modules.
 
 export * from "./api";
 export * from "./queue";
 export * from "./table";
-
-// TODO[pulumi/lumi#268] We should be exposing our own region config
-// setting on the `platform` pacakge and then passing it through to
-// the AWS provider.  Until that works, we'll hard code it.
-aws.config.region = "us-east-2";
 
 export function log(s: string) {
     runtime.printf(s);
