@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import { Table as DynamoTable } from "@lumi/aws/dynamodb";
+import * as aws from "@lumi/aws";
 
 export interface TableOptions {
     readCapacity?: number;
@@ -8,7 +8,7 @@ export interface TableOptions {
 }
 
 export class Table {
-    private table: DynamoTable;
+    private table: aws.dynamodb.Table;
     public tableName: string;
 
     public readonly primaryKey: string;
@@ -34,7 +34,7 @@ export class Table {
         if (writeCapacity === undefined) {
             writeCapacity = 5;
         }
-        this.table = new DynamoTable(name, {
+        this.table = new aws.dynamodb.Table(name, {
             attributes: [
                 { name: primaryKey, type: primaryKeyType },
             ],

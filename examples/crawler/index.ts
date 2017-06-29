@@ -15,5 +15,3 @@ countDown.forEach("watcher", (item, cb) => {
     cb(null);
   }
 });
-
-platform.log("Hello!");

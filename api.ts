@@ -1,14 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import { Deployment, RestAPI, Stage } from "@lumi/aws/apigateway";
-import { requireRegion } from "@lumi/aws/config";
-import { AmazonS3FullAccess, AWSLambdaFullAccess, Role } from "@lumi/aws/iam";
-import { Permission } from "@lumi/aws/lambda";
-import { Bucket, Object } from "@lumi/aws/s3";
-import { Context as LambdaContext, Function } from "@lumi/aws/serverless/function";
-import { ARN } from "@lumi/aws/types";
-import { File } from "@lumi/lumi/asset";
-import { jsonStringify, objectKeys, printf, sha1hash } from "@lumi/lumirt";
+import * as aws from "@lumi/aws";
+import * as lumi from "@lumi/lumi";
+import * as lumirt from "@lumi/lumirt";
+import { Context as LambdaContext, LoggedFunction as Function } from "./function";
 
 interface Route {
     method: string;
@@ -125,7 +120,7 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 }
 
 function createPathSpecLambda(lambdaARN: string): SwaggerOperation {
-    let region = requireRegion();
+    let region = aws.config.requireRegion();
     return {
         "x-amazon-apigateway-integration": {
             uri: "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations",
@@ -137,7 +132,7 @@ function createPathSpecLambda(lambdaARN: string): SwaggerOperation {
 }
 
 function createPathSpecObject(roleARN: string, bucket: string, key: string): SwaggerOperation {
-    let region = requireRegion();
+    let region = aws.config.requireRegion();
     return {
         responses: {
           "200": {
@@ -196,12 +191,12 @@ let apigatewayAssumeRolePolicyDocument = {
 
 // API is a higher level abstraction for working with AWS APIGateway reources.
 export class API {
-    public api: RestAPI;
-    public deployment: Deployment;
+    public api: aws.apigateway.RestAPI;
+    public deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
     private apiName: string;
     private lambdas: { [key: string]: Function };
-    private bucket: Bucket;
+    private bucket: aws.s3.Bucket;
 
     constructor(apiName: string) {
         this.apiName = apiName;
@@ -211,18 +206,18 @@ export class API {
 
     public routeStatic(method: string, path: string, filePath: string, contentType?: string) {
         let swaggerMethod = this.routePrepare(method, path);
-        let name = this.apiName + sha1hash(method + ":" + path);
-        let role = new Role(name, {
+        let name = this.apiName + lumirt.sha1hash(method + ":" + path);
+        let role = new aws.iam.Role(name, {
             assumeRolePolicyDocument: apigatewayAssumeRolePolicyDocument,
-            managedPolicyARNs: [AmazonS3FullAccess],
+            managedPolicyARNs: [aws.iam.AmazonS3FullAccess],
         });
         if (this.bucket === undefined) {
-            this.bucket = new Bucket(this.apiName, {});
+            this.bucket = new aws.s3.Bucket(this.apiName, {});
         }
-        let obj = new Object({
+        let obj = new aws.s3.Object({
             bucket: this.bucket,
             key: name,
-            source: new File(filePath),
+            source: new lumi.asset.File(filePath),
             contentType: contentType,
         });
         this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucketName!, obj.key);
@@ -259,8 +254,8 @@ export class API {
     }
 
     public route(method: string, path: string, options: RouteOptions, handler: RouteHandler) {
-        let functionName = this.apiName + sha1hash(method + ":" + path);
-        let policies: ARN[] = [AWSLambdaFullAccess];
+        let functionName = this.apiName + lumirt.sha1hash(method + ":" + path);
+        let policies = [aws.iam.AWSLambdaFullAccess];
         if (options !== undefined && options.policies !== undefined) {
             policies = options.policies;
         }
@@ -271,25 +266,25 @@ export class API {
     }
 
     public publish(): string {
-        this.api = new RestAPI(this.apiName, {
+        this.api = new aws.apigateway.RestAPI(this.apiName, {
             body: this.swaggerSpec,
         });
-        let deploymentId = sha1hash(jsonStringify(this.swaggerSpec));
-        this.deployment = new Deployment(this.apiName + "_" + deploymentId, {
+        let deploymentId = lumirt.sha1hash(lumirt.jsonStringify(this.swaggerSpec));
+        this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + deploymentId, {
             restAPI: this.api,
             description: "Deployment of version " + deploymentId,
         });
-        let stage = new Stage(this.apiName + "_stage", {
+        let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
             stageName: "stage",
             description: "The current deployment of the API.",
             restAPI: this.api,
             deployment: this.deployment,
         });
 
-        let pathKeys = objectKeys(this.swaggerSpec.paths);
+        let pathKeys = lumirt.objectKeys(this.swaggerSpec.paths);
         for (let i = 0; i < (<any>pathKeys).length; i++) {
             let path = pathKeys[i];
-            let methodKeys = objectKeys(this.swaggerSpec.paths[path]);
+            let methodKeys = lumirt.objectKeys(this.swaggerSpec.paths[path]);
             for (let j = 0; j < (<any>methodKeys).length; j++) {
                 let method = methodKeys[j];
                 let lambda = this.lambdas[method + ":" + path];
@@ -299,7 +294,8 @@ export class API {
                     } else {
                         method = (<any>method).toUpperCase();
                     }
-                    let invokePermission = new Permission(this.apiName + "_invoke_" + sha1hash(method + path), {
+                    let permissionName = this.apiName + "_invoke_" + lumirt.sha1hash(method + path);
+                    let invokePermission = new aws.lambda.Permission(permissionName, {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",

@@ -1,10 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import { AWSLambdaFullAccess } from "@lumi/aws/iam";
-import { Permission } from "@lumi/aws/lambda";
-import { Function } from "@lumi/aws/serverless/function";
-import { Subscription, Topic } from "@lumi/aws/sns";
-import { ARN } from "@lumi/aws/types";
+import * as aws from "@lumi/aws";
+import { LoggedFunction as Function } from "./function";
 
 export interface QueueItem {
     message: string;
@@ -41,18 +38,18 @@ interface SNSMessageAttribute {
 
 export class Queue {
     private name: string;
-    private topic: Topic;
-    private subscriptions: Subscription[];
+    private topic: aws.sns.Topic;
+    private subscriptions: aws.sns.Subscription[];
 
     constructor(name: string) {
         this.name = name;
-        this.topic = new Topic(name, {});
+        this.topic = new aws.sns.Topic(name, {});
         this.subscriptions = [];
     }
 
     forEach(name: string, handler: (item: any, cb: (error: any) => void)=> void) {
         let resName = this.name + "_" + name;
-        let policies: ARN[] = [AWSLambdaFullAccess]; // TODO: Least privelege
+        let policies: aws.ARN[] = [aws.iam.AWSLambdaFullAccess]; // TODO: Least privelege
         let lambda = new Function(resName, policies, (ev: SNSEvent, ctx, cb) => {
             let records = ev.Records;
             let numRecords = (<any>records).length;
@@ -76,13 +73,13 @@ export class Queue {
                 handler(item, callback);
             }
         });
-        let invokePermission = new Permission(resName, {
+        let invokePermission = new aws.lambda.Permission(resName, {
             action: "lambda:invokeFunction",
             function: lambda.lambda,
             principal: "sns.amazonaws.com",
             sourceARN: this.topic.id,
         });
-        let subscription = new Subscription(resName, {
+        let subscription = new aws.sns.Subscription(resName, {
             topic: this.topic,
             protocol: "lambda",
             endpoint: lambda.lambda.arn,
