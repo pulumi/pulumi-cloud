@@ -51,8 +51,12 @@ export class LoggedFunction {
                 principal: "logs." + region + ".amazonaws.com",
             });
         }
-        let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
+        let loggroup = new aws.cloudwatch.LogGroup(name, {
             logGroupName: lambdaLogGroupName,
+            retentionInDays: 1,
+        });
+        let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
+            logGroupName: loggroup.logGroupName!,
             destinationArn: logCollector!.lambda.arn,
             filterPattern: "",
         });

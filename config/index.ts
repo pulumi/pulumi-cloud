@@ -1,11 +1,12 @@
 import * as aws from "@lumi/aws";
 
-export type Region = "WestUS" | "EastUS";
+export type Region = "WestUS" | "EastUS" | "WestEU";
 
 function convertToAWSRegion(region: Region): aws.Region {
     switch (region) {
         case "WestUS": return "us-west-2";
         case "EastUS": return "us-east-2";
+        case "WestEU": return "eu-west-1";
         default:
             throw new Error("Expected a valid Pulumi region");
     }
