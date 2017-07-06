@@ -4,29 +4,8 @@
 // The Pulumi Platform library provides core building blocks for Pulumi cloud programs.
 // *******************************
 
-// QUESTIONS:
-// - Should the JS/TS API surface use promises?  Assuming no for now, though may revisit.
-// - Are the inside and outside interfaces available on the same object?  Assuming yes, throwing
-//   if unavailable inside/outside.
-// - HTTP requests?  Just Node.js - or is a Lumi-specific runtime library needed? (what network sandbox?)
-// - Email? Send/Receive? (probably defer to GSuite or other integrations?)
-// - Functions? Perhaps exported function are invocable through Pulumi CLI/web (but don't have public HTTP endpoint)?
-
-// Core Library
-// QUESTION - Presumably the entire ES standard lib is avaialble, but what about Node.js builtin libs (fs, net, etc)?
-export let console: {
-    log(...objs: any[]): void;
-    error(...objs: any[]): void;
-}
-export let JSON: {
-    stringify(data: any): string;
-    parse(str: string): any;
-}
-
 // HttpAPI publishes an internet-facing HTTP API, for serving web applications or REST APIs.
-// QUESTION - Should this be more Express-like?  Assuming yes.
-// QUESTION - Can/should we support Express middleware?  Or our own middleware at least?
-// QUESTION - Authentication/Authorization? Assuming that will be up to user/middleware.
+// TODO[pulumi/lumi-platform#4] We will make this API more Express-like.
 export interface Request {
     resource: string;
     path: string;
@@ -94,8 +73,7 @@ export class Table {
 }
 
 // Queue is a job queue for distributing work to job handlers which can run concurrently.
-// QUESTION - Should this be named PubSubHub or EventHub instead?  It's not really a persistent
-// queue at all.
+// TODO[pulumi/lumi-platform#8] Need to adopt new naming
 export type QueueHandler<T> = (item: T) => void
 export class Queue<T> {
     //////////
@@ -128,13 +106,21 @@ export class Bucket {
     //////////
     put(key: string, value: string); // QUESTION: Binary data, content-type, publically viewable URL, file upload?
     get(key: string): string; // QUESTION: Is it safe to expose this on the outside?
+    list(): string[];
 }
 
-// cron runs the given function on a regular cadence, defined by either
-// a Cron string or a number of minutes between invocations.
-// QUESTION - Low pri?
-export type Cron = string;
-export function cron(timing: Cron | number);
+// onInterval invokes the handler on a regular cadence. 
+export function onInterval(intervalMinutes: number, handler: () => void);
+// Note - we are not (yet) exposing the ability to set time-of-day, time-of-week, etc.
+// Maybe in the future:
+// export function onDaily(hourUtc: number, minuteUtc: number, handler: () => void);
+// export function onMonthly(dayOfMonthUtc: number hourUtc: number, minuteUtc: number, handler: () => void);
+
+// A global onError handler - hook up a dead letter queue on all lambdas and redirect them
+// to this handler.  We may also want/need more granular exception handling, but this can 
+// be a start.
+type ErrorHandler = (message: any) => void;
+export function onError(handler: ErrorHandler);
 
 // TODO:
 // - Asset/Archive: How are references to local files handled?  Can they just be treated as string paths at the Pulumi Platform layer?
