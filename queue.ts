@@ -47,31 +47,15 @@ export class Queue {
         this.subscriptions = [];
     }
 
-    forEach(name: string, handler: (item: any, cb: (error: any) => void)=> void) {
+    forEach(name: string, handler: (item: any) => Promise<void>) {
         let resName = this.name + "_" + name;
         let policies: aws.ARN[] = [aws.iam.AWSLambdaFullAccess]; // TODO: Least privelege
         let lambda = new Function(resName, policies, (ev: SNSEvent, ctx, cb) => {
-            let records = ev.Records;
-            let numRecords = (<any>records).length;
-            let callbacksWaiting = numRecords;
-            let errors: any[] = [];
-            let callback = (err: any) => {
-                callbacksWaiting--;
-                if (err !== null && err !== undefined) {
-                    (<any>errors).push(err);
-                }
-                if (callbacksWaiting === 0) {
-                    if ((<any>errors).length > 0) {
-                        cb(errors, null);
-                    } else {
-                        cb(null, null);
-                    }
-                }
-            };
-            for (let i = 0; i < numRecords; i++) {
-                let item = records[i].Sns.Message;
-                handler(item, callback);
-            }
+            (<any>Promise).all((<any>ev.Records).map(async (record: SNSRecord) => {
+                await handler(record.Sns.Message);
+            }))
+            .then(() => { cb(null, null); })
+            .catch((err: any) => { cb(err, null); });
         });
         let invokePermission = new aws.lambda.Permission(resName, {
             action: "lambda:invokeFunction",

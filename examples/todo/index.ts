@@ -13,35 +13,32 @@ api.routeStatic("GET", "/", "index.html", "text/html");
 api.routeStatic("GET", "/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
-api.get("/todo/{id}", {}, (req, res) => {
+api.get("/todo/{id}", {}, async (req, res) => {
   console.log("GET /todo/" + req.params.id);
-  db(todos).get({ id: req.params.id }, (err, data) => {
-    if (err !== null) {
-      res.status(500).json(err);
-    } else {
-      res.status(200).json(data.Item.Value);
-    }
-  });
+  try {
+    let item = await db(todos).get({ id: req.params.id });
+    res.status(200).json(item.Value);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
-api.post("/todo/{id}", {}, (req, res) => {
+api.post("/todo/{id}", {}, async (req, res) => {
   console.log("POST /todo/" + req.params.id);
-  db(todos).insert({ id: req.params.id, value: req.body }, (err, data) => {
-    if (err !== null) {
-      res.status(500).json(err);
-    } else {
-      res.status(201).json({});
-    }
-  });
+  try {
+    await db(todos).insert({ id: req.params.id, value: req.body });
+    res.status(201).json({});
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
-api.get("/todo", {}, (req, res) => {
+api.get("/todo", {}, async (req, res) => {
   console.log("GET /todo");
-  db(todos).scan((err, data) => {
-    if (err !== null) {
-      res.status(500).json(err);
-    } else {
-      res.status(200).json(data.Items);
-    }
-  });
+  try {
+    let items = await db(todos).scan();
+    res.status(200).json(items);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 // Publish

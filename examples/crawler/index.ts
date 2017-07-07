@@ -6,12 +6,10 @@ let q = queue.q;
 declare let JSON: any;
 
 let countDown = new platform.Queue("queue");
-countDown.forEach("watcher", (item, cb) => {
+countDown.forEach("watcher", async (item) => {
   let num = JSON.parse(item);
   console.log(num);
   if (num > 0) {
-    q(countDown).push(JSON.stringify(num - 1), cb);
-  } else {
-    cb(null);
+    await q(countDown).push(JSON.stringify(num - 1));
   }
 });

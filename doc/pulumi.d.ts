@@ -58,14 +58,17 @@ export class HttpAPI {
 }
 
 // Table is a simplified document store for persistent application backend storage.
+//
 //   let table = new Table("id");
 //   await table.insert({id: "kuibai", data: 42});
 //   let item = await table.get({id: "kuibai"});
+//
 // Tables support a single primary key with a user-defined name.  All other document
 // properties are schemaless.
-// QUESTION - Is this thin semantic surface area useful enough for a wide range of
-// applications?  Can it be faithfully implemented on Google Cloud Datastore,
-// Azure DocumentDB, etc.?
+//
+// All queries provide a subset of properties to filter on, and only filters on value equality
+// are supported.  The get, update and delete operations expect the query to contain only the 
+// value for the primary key. 
 export class Table {
     okayToDelete: boolean; // QUESTION - default to false and require that it manually be set to true before delete?
     //////////
@@ -87,14 +90,22 @@ export class Table {
 }
 
 // Queue is a job queue for distributing work to job handlers which can run concurrently.
+//
+//   let topic = new Queue();
+//   topic.forEach(async (num) => {
+//     if (num > 0) {
+//       await topic.push(num - 1);
+//     }
+//   });
+//
 // TODO[pulumi/lumi-platform#8] Need to adopt new naming
-export type QueueHandler<T> = (item: T) => void
+export type QueueHandler<T> = (item: T) => Promise<void>
 export class Queue<T> {
     //////////
     // Outside
     //////////
     constructor(name: string);
-    forEach(handler: QueueHandler<T>);
+    forEach(name: string, handler: QueueHandler<T>);
     //////////
     // Inside
     //////////

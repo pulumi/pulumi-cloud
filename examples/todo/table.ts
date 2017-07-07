@@ -5,31 +5,31 @@ declare let require: any;
 import * as platform from "@lumi/platform";
 
 export interface DB {
-    get(query: Object, callback: (err: any, data: any) => void): void;
-    insert(item: Object, callback: (err: any, data: any) => void): void;
-    scan(callback: (err: any, data: any) => void): void;
+    get(query: Object): Promise<any>;
+    insert(item: Object): Promise<void>;
+    scan(): Promise<any[]>;
 }
 
 export let db: (table: platform.Table) => DB = table => {
     let aws = require("aws-sdk");
     let db = new aws.DynamoDB.DocumentClient();
     return <DB>{
-        get: (query, callback) => {
+        get: (query) => {
             return db.get({
                 TableName: table.tableName,
                 Key: query,
-            }, callback);
+            }).promise().then((x: any) => x.Item);
         },
-        insert: (item, callback) => {
+        insert: (item) => {
             return db.put({
                 TableName: table.tableName,
                 Item: item,
-            }, callback);
+            }).promise();
         },
-        scan: (callback) => {
+        scan: () => {
             return db.scan({
                 TableName: table.tableName,
-            }, callback);
+            }).promise().then((x: any) => x.Items);
         },
     }
 }
