@@ -4,14 +4,9 @@ import * as aws from "@lumi/aws";
 import * as lumi from "@lumi/lumi";
 import * as lumirt from "@lumi/lumirt";
 import { Context as LambdaContext, LoggedFunction as Function } from "./function";
+declare let JSON: any;
 
-interface Route {
-    method: string;
-    path: string;
-    lambda: Function;
-}
-
-export interface Request {
+interface APIGatewayRequest {
     resource: string;
     path: string;
     httpMethod: string;
@@ -19,23 +14,23 @@ export interface Request {
     queryStringParameters: { [param: string]: string; };
     pathParameters: { [param: string]: string; };
     stageVariables: { [name: string]: string; };
-    requestContext: RequestContext;
+    requestContext: APIGatewayRequestContext;
     body: string;
     isBase64Encoded: boolean;
 }
 
-export interface RequestContext {
+interface APIGatewayRequestContext {
     accountId: string;
     resourceId: string;
     stage: string;
     requestId: string;
-    identity: Identity;
+    identity: APIGatewayIdentity;
     resourcePath: string;
     httpMethod: string;
     apiId: string;
 }
 
-export interface Identity {
+interface APIGatewayIdentity {
     cognitoIdentityPoolId?: string;
     accountId?: string;
     cognitoIdentityId?: string;
@@ -49,18 +44,11 @@ export interface Identity {
     user?: string;
 }
 
-export interface Response {
+interface APIGatewayResponse {
     isBase64Encoded?: boolean;
     statusCode: number;
     headers?: { [header: string]: string; };
     body: string;
-}
-
-export type RouteCallback = (err: any, resp: Response) => void;
-export type RouteHandler = (req: Request, callback: RouteCallback) => void;
-
-export interface RouteOptions {
-    policies?: string[];
 }
 
 interface SwaggerSpec {
@@ -82,7 +70,7 @@ interface SwaggerOperation {
         httpMethod: string;
         type: string;
         credentials?: string;
-        responses?: {[pattern: string]: APIGatewayIntegrationResponse};
+        responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
     };
 }
 
@@ -106,7 +94,7 @@ interface SwaggerItems {
     items?: SwaggerItems;
 }
 
-interface APIGatewayIntegrationResponse {
+interface SwaggerAPIGatewayIntegrationResponse {
     statusCode: string;
     responseParameters?: { [key: string]: string };
 }
@@ -135,20 +123,20 @@ function createPathSpecObject(roleARN: string, bucket: string, key: string): Swa
     let region = aws.config.requireRegion();
     return {
         responses: {
-          "200": {
-            description: "200 response",
-            schema: { type: "object" },
-            headers: {
-              "Content-Type": { type: "string" },
-              "content-type": { type: "string" },
+            "200": {
+                description: "200 response",
+                schema: { type: "object" },
+                headers: {
+                    "Content-Type": { type: "string" },
+                    "content-type": { type: "string" },
+                },
             },
-          },
-          "400": {
-            description: "400 response",
-          },
-          "500": {
-            description: "500 response",
-          },
+            "400": {
+                description: "400 response",
+            },
+            "500": {
+                description: "500 response",
+            },
         },
         "x-amazon-apigateway-integration": {
             credentials: roleARN,
@@ -171,7 +159,7 @@ function createPathSpecObject(roleARN: string, bucket: string, key: string): Swa
                     statusCode: "500",
                 },
             },
-          },
+        },
     };
 }
 
@@ -189,10 +177,80 @@ let apigatewayAssumeRolePolicyDocument = {
     ],
 };
 
+export interface Request {
+    body: string;
+    method: string;
+    params: { [param: string]: string; };
+    headers: { [header: string]: string; };
+    query: { [query: string]: string; };
+}
+
+export interface Response {
+    status(code: number): Response;
+    setHeader(name: string, value: string): Response;
+    write(data: string): Response;
+    end(data?: string): void;
+    json(obj: any): void;
+}
+
+export type RouteHandler = (req: Request, res: Response) => void;
+
+export interface RouteOptions {
+    policies?: string[];
+}
+
+interface ReqRes {
+    req: Request;
+    res: Response;
+}
+
+let apiGatewayToReqRes: (ev: APIGatewayRequest, cb: (err: any, result: any) => void) => ReqRes = (ev, cb) => {
+    let response: APIGatewayResponse = {
+        isBase64Encoded: false,
+        statusCode: 200,
+        headers: {},
+        body: "",
+    };
+    let req = {
+        headers: ev.headers,
+        body: ev.body,
+        method: ev.httpMethod,
+        params: ev.pathParameters,
+        query: ev.queryStringParameters,
+    };
+    let res = {
+        status: (code: number) => {
+            response.statusCode = code;
+            return res;
+        },
+        setHeader: (name: string, value: string) => {
+            response.headers![name] = value;
+            return res;
+        },
+        write: (data: string) => {
+            response.body += data;
+            return res;
+        },
+        end: (data?: string) => {
+            if (data !== undefined) {
+                res.write(data);
+            }
+            cb(null, response);
+        },
+        json: (obj: any) => {
+            res.setHeader("content-type", "application/json");
+            res.end(JSON.stringify(obj));
+        },
+    };
+    return { req, res };
+};
+
 // API is a higher level abstraction for working with AWS APIGateway reources.
-export class API {
-    public api: aws.apigateway.RestAPI;
-    public deployment: aws.apigateway.Deployment;
+export class HttpAPI {
+    public url?: string;
+
+    private api: aws.apigateway.RestAPI;
+    private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
     private apiName: string;
     private lambdas: { [key: string]: Function };
@@ -229,7 +287,7 @@ export class API {
         this.lambdas[swaggerMethod + ":" + path] = lambda;
     }
 
-    public routePrepare(method: string, path: string): string {
+    private routePrepare(method: string, path: string): string {
         if (this.swaggerSpec.paths[path] === undefined) {
             this.swaggerSpec.paths[path] = {};
         }
@@ -259,10 +317,27 @@ export class API {
         if (options !== undefined && options.policies !== undefined) {
             policies = options.policies;
         }
-        let lambda = new Function(functionName, policies, (ev, ctx, cb) => {
-            handler(ev, cb);
+        let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
+            let reqres = apiGatewayToReqRes(ev, cb);
+            handler(reqres.req, reqres.res);
         });
         this.routeLambda(method, path, lambda);
+    }
+
+    public get(path: string, options: RouteOptions, handler: RouteHandler) {
+        this.route("GET", path, options, handler);
+    }
+
+    public put(path: string, options: RouteOptions, handler: RouteHandler) {
+        this.route("PUT", path, options, handler);
+    }
+
+    public post(path: string, options: RouteOptions, handler: RouteHandler) {
+        this.route("POST", path, options, handler);
+    }
+
+    public delete(path: string, options: RouteOptions, handler: RouteHandler) {
+        this.route("DELETE", path, options, handler);
     }
 
     public publish(): string {
@@ -304,6 +379,8 @@ export class API {
                 }
             }
         }
+
+        this.url = stage.url;
         return stage.url;
     }
 }

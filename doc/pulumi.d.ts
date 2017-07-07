@@ -5,42 +5,56 @@
 // *******************************
 
 // HttpAPI publishes an internet-facing HTTP API, for serving web applications or REST APIs.
-// TODO[pulumi/lumi-platform#4] We will make this API more Express-like.
+//
+//   let api = new HttpAPI("myapi")
+//   api.publish();
+//   api.get("/", (req, res) => res.json({hello: "world"}));
+//   console.log(`Serving myapi at ${api.url}`);
+//
+// Paths are `/` seperated.  A path can use `{param}` to capture zero-or-more non-`/` characters 
+// and make the captured path segment available in `req.params.param`, or `{param+}` to greedily 
+// capture all remaining characters in the url path into `req.params.param`.
+//
+// Paths and routing are defined statically, and cannot overlap. Code inside a route handler
+// can be used to provide dynamic decisions about sub-routing within a static path.
 export interface Request {
-    resource: string;
-    path: string;
-    httpMethod: string;
-    headers: { [header: string]: string; };
-    queryStringParameters: { [param: string]: string; };
-    pathParameters: { [param: string]: string; };
-    stageVariables: { [name: string]: string; };
     body: string;
-    isBase64Encoded: boolean;
+    method: string;
+    params: { [param: string]: string; };
+    headers: { [header: string]: string; };
+    query: { [query: string]: string; };
 }
 export interface Response {
-    isBase64Encoded?: boolean;
-    statusCode: number;
-    headers?: { [header: string]: string; };
-    body: string;
+    status(code: number): Response;
+    setHeader(name: string, value: string): Response;
+    write(data: string): Response;
+    end(data?: string): void;
+    json(obj: any): void;
 }
-export type RouteCallback = (err: any, resp: Response) => void;
-export type RouteHandler = (req: Request, callback: RouteCallback) => void;
+export type RouteHandler = (req: Request, res: Response) => void;
 export class HttpAPI {
-    url?: string;
+    // The url where the API is published.  Only available after calling `publish`.
+    readonly url?: string;
     //////////
     // Outside
     //////////
     constructor(apiName: string);
+    // Handles a request of the provided method and path on the HttpAPI using the provided handler.
     route(method: string, path: string, handler: RouteHandler): void;
+    // Handles a GET request for the provided path on the HttpAPI using the provided handler.
     get(path: string, handler: RouteHandler): void;
+    // Handles a GET request for the provided path on the HttpAPI using the provided handler.
     post(path: string, handler: RouteHandler): void;
+    // Handles a GET request for the provided path on the HttpAPI using the provided handler.
     put(path: string, handler: RouteHandler): void;
+    // Handles a GET request for the provided path on the HttpAPI using the provided handler.
     delete(path: string, handler: RouteHandler): void;
+    // Publishes the HttpAPI with the configured routes.
     publish(): void;
     //////////
     // Inside
     //////////
-    // QUESTION - Is there any useful API needed inside?
+    // None
 }
 
 // Table is a simplified document store for persistent application backend storage.

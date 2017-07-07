@@ -6,40 +6,40 @@ declare let JSON: any; // TODO[pulumi/lumi#230] JSON object should be availble i
 let db = table.db; // TODO[pulumi/lumi#230] Imports should be available in the scope chain.
 
 let todos = new platform.Table("todo", "id", "S", {});
-let api = new platform.API("todoapp");
+let api = new platform.HttpAPI("todoapp");
 
 // Index handler
 api.routeStatic("GET", "/", "index.html", "text/html");
 api.routeStatic("GET", "/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
-api.route("GET", "/todo/{id}", {}, (req, cb) => {
-  console.log("GET /todo/" + req.pathParameters.id);
-  db(todos).get({ id: req.pathParameters.id }, (err, data) => {
+api.get("/todo/{id}", {}, (req, res) => {
+  console.log("GET /todo/" + req.params.id);
+  db(todos).get({ id: req.params.id }, (err, data) => {
     if (err !== null) {
-      cb(null, { statusCode: 500, body: JSON.stringify(err) });
+      res.status(500).json(err);
     } else {
-      cb(null, { statusCode: 200, body: data.Item.Value });
+      res.status(200).json(data.Item.Value);
     }
   });
 });
-api.route("POST", "/todo/{id}", {}, (req, cb) => {
-  console.log("POST /todo/" + req.pathParameters.id);
-  db(todos).insert({ id: req.pathParameters.id, value: req.body }, (err, data) => {
+api.post("/todo/{id}", {}, (req, res) => {
+  console.log("POST /todo/" + req.params.id);
+  db(todos).insert({ id: req.params.id, value: req.body }, (err, data) => {
     if (err !== null) {
-      cb(null, { statusCode: 500, body: JSON.stringify(err) });
+      res.status(500).json(err);
     } else {
-      cb(null, { statusCode: 201, body: "{}" });
+      res.status(201).json({});
     }
   });
 });
-api.route("GET", "/todo", {}, (req, cb) => {
+api.get("/todo", {}, (req, res) => {
   console.log("GET /todo");
   db(todos).scan((err, data) => {
     if (err !== null) {
-      cb(null, { statusCode: 500, body: JSON.stringify(err) });
+      res.status(500).json(err);
     } else {
-      cb(null, { statusCode: 200, body: JSON.stringify(data.Items) });
+      res.status(200).json(data.Items);
     }
   });
 });
