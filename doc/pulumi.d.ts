@@ -89,27 +89,25 @@ export class Table {
     delete(query: Object): Promise<void>;
 }
 
-// Queue is a job queue for distributing work to job handlers which can run concurrently.
+// Topic is a pub/sub topic for distributing work to job handlers which can run concurrently.
 //
-//   let topic = new Queue();
-//   topic.forEach(async (num) => {
+//   let topic = new Topic();
+//   topic.subscribe(async (num) => {
 //     if (num > 0) {
-//       await topic.push(num - 1);
+//       await topic.publish(num - 1);
 //     }
 //   });
 //
-// TODO[pulumi/lumi-platform#8] Need to adopt new naming
-export type QueueHandler<T> = (item: T) => Promise<void>
-export class Queue<T> {
+export class Topic<T> {
     //////////
     // Outside
     //////////
     constructor(name: string);
-    forEach(name: string, handler: QueueHandler<T>);
+    subscribe(name: string, handler: (item: T) => Promise<void>);
     //////////
     // Inside
     //////////
-    push(item: T): Promise<void>;
+    publish(item: T): Promise<void>;
 }
 
 export interface BucketEvent {

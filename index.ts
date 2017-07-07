@@ -13,8 +13,8 @@ aws.config.region = config.requireAWSRegion();
 // exported modules.
 
 export * from "./api";
-export * from "./queue";
 export * from "./table";
+export * from "./topic";
 
 export function log(s: string) {
     runtime.printf(s);

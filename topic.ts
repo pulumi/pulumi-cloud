@@ -3,11 +3,6 @@
 import * as aws from "@lumi/aws";
 import { LoggedFunction as Function } from "./function";
 
-export interface QueueItem {
-    message: string;
-    timestamp: string;
-}
-
 interface SNSEvent {
     Records: SNSRecord[];
 }
@@ -36,7 +31,7 @@ interface SNSMessageAttribute {
     Value: string;
 }
 
-export class Queue {
+export class Topic<T> {
     private name: string;
     private topic: aws.sns.Topic;
     private subscriptions: aws.sns.Subscription[];
@@ -47,12 +42,13 @@ export class Queue {
         this.subscriptions = [];
     }
 
-    forEach(name: string, handler: (item: any) => Promise<void>) {
+    subscribe(name: string, handler: (item: T) => Promise<void>) {
         let resName = this.name + "_" + name;
         let policies: aws.ARN[] = [aws.iam.AWSLambdaFullAccess]; // TODO: Least privelege
         let lambda = new Function(resName, policies, (ev: SNSEvent, ctx, cb) => {
             (<any>Promise).all((<any>ev.Records).map(async (record: SNSRecord) => {
-                await handler(record.Sns.Message);
+                let item = (<any>JSON).parse(record.Sns.Message);
+                await handler(item);
             }))
             .then(() => { cb(null, null); })
             .catch((err: any) => { cb(err, null); });

@@ -17,6 +17,6 @@
     },
     "files": [
         "index.ts",
-        "queue.ts"
+        "topic.ts"
     ]
 }
