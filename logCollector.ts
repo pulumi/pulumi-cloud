@@ -30,8 +30,7 @@ export function getLogCollector(): aws.lambda.Function {
                     if (err !== undefined && err !== null) {
                         cb(err, null);
                     } else {
-                        result = JSON.parse(result.toString("ascii"));
-                        console.log(`[${name}]: ${JSON.stringify(result)}`);
+                        console.log(result.toString("utf8"));
                         cb(null, {});
                     }
                 });
