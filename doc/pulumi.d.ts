@@ -142,8 +142,8 @@ export function onInterval(intervalMinutes: number, handler: () => void);
 // A global onError handler - hook up a dead letter queue on all lambdas and redirect them
 // to this handler.  We may also want/need more granular exception handling, but this can 
 // be a start.
-type ErrorHandler = (message: any) => void;
-export function onError(handler: ErrorHandler);
+type ErrorHandler = (message: string, payload: any) => void;
+export function onError(name: string, handler: ErrorHandler);
 
 // TODO:
 // - Asset/Archive: How are references to local files handled?  Can they just be treated as string paths at the Pulumi Platform layer?

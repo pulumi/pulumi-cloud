@@ -15,6 +15,7 @@ aws.config.region = config.requireAWSRegion();
 export * from "./api";
 export * from "./table";
 export * from "./topic";
+export { onError, ErrorHandler } from "./unhandledError";
 
 export function log(s: string) {
     runtime.printf(s);
