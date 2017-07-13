@@ -2,9 +2,13 @@ PROCCNT=$(shell nproc --all)
 LUMIROOT ?= /usr/local/lumi
 LUMILIB   = ${LUMIROOT}/packs
 THISLIB   = ${LUMILIB}/platform
+TESTPARALLELISM=10
 
 .PHONY: default
 default: banner lint build install
+
+.PHONY: all
+all: banner lint build install examples
 
 .PHONY: banner
 banner:
@@ -38,3 +42,7 @@ install:
 	@mkdir -p ${LUMILIB} # ensure the machine-wide library dir exists.
 	@cp -R ./.lumi/bin/ ${THISLIB} # copy to the standard library location.
 
+.PHONY: examples
+examples:
+	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
