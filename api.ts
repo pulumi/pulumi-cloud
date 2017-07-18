@@ -183,6 +183,7 @@ export interface Request {
     params: { [param: string]: string; };
     headers: { [header: string]: string; };
     query: { [query: string]: string; };
+    path: string;
 }
 
 export interface Response {
@@ -217,6 +218,7 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, cb: (err: any, result: any) => v
         method: ev.httpMethod,
         params: ev.pathParameters,
         query: ev.queryStringParameters,
+        path: ev.path,
     };
     let res = {
         status: (code: number) => {
@@ -318,6 +320,7 @@ export class HttpAPI {
             policies = options.policies;
         }
         let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
+            ctx.callbackWaitsForEmptyEventLoop = false;
             let reqres = apiGatewayToReqRes(ev, cb);
             handler(reqres.req, reqres.res);
         });
