@@ -9,7 +9,7 @@ export class Topic<T> {
     // Inside + Outside API
     private name: string;
     private topic: aws.sns.Topic;
-    private subscriptions: aws.sns.Subscription[];
+    private subscriptions: aws.sns.TopicSubscription[];
 
     // Inside API (lambda-valued properties)
     public publish: (item: T) => Promise<void>;
