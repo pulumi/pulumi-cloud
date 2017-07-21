@@ -358,8 +358,9 @@ export class HttpAPI {
             stageName: "",
             description: "Deployment of version " + deploymentId,
         });
+        let stageName = "stage";
         let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
-            stageName: "stage",
+            stageName: stageName,
             description: "The current deployment of the API.",
             restApi: this.api,
             deployment: this.deployment,
@@ -383,14 +384,14 @@ export class HttpAPI {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: this.deployment.executionArn + "/" + method + path,
+                        sourceArn: this.deployment.executionArn + stageName + "/" + method + path,
                     });
                 }
             }
         }
 
-        this.url = this.deployment.invokeUrl;
-        return this.deployment.invokeUrl;
+        this.url = this.deployment.invokeUrl + stageName + "/";
+        return this.deployment.invokeUrl + stageName + "/";
     }
 }
 
