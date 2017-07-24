@@ -11,7 +11,6 @@ countDown.subscribe("watcher", async (num) => {
     }
 });
 
-// // Uncomment this to generate load continuously:
-// platform.onSchedule("everyminute", { rate: "1 minute"}, async () => {
-//     await countDown.publish(25);
-// });
+platform.timer.interval("heartbeat", {minutes: 5}, async () => {
+    await countDown.publish(25);
+});

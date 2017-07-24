@@ -13,10 +13,11 @@ aws.config.region = config.requireAWSRegion();
 // exported modules.
 
 export * from "./api";
-export * from "./schedule";
 export * from "./table";
 export * from "./topic";
 export { onError, ErrorHandler } from "./unhandledError";
+import * as timer from "./timer";
+export { timer };
 
 export function log(s: string) {
     runtime.printf(s);
