@@ -2,6 +2,7 @@ name: platform
 description: The Lumi Platform provides core platform abstractions for Pulumi.
 dependencies:
     aws: "*"
+    aws-serverless: "*"
     lumi: "*"
     lumirt: "*"
 

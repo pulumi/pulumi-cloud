@@ -38,7 +38,7 @@ export interface SNSMessageAttribute {
 export function createSubscription(
     resName: string,
     topic: aws.sns.Topic,
-    handler: (item: SNSItem) => Promise<void>): aws.sns.Subscription {
+    handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
     let policies: aws.ARN[] = [aws.iam.AWSLambdaFullAccess];
     let lambda = new Function(resName, policies, (ev: SNSEvent, ctx, cb) => {
         (<any>Promise).all((<any>ev.Records).map(async (record: SNSRecord) => {
@@ -51,9 +51,9 @@ export function createSubscription(
         action: "lambda:invokeFunction",
         function: lambda.lambda,
         principal: "sns.amazonaws.com",
-        sourceARN: topic.id,
+        sourceArn: topic.id,
     });
-    let subscription = new aws.sns.Subscription(resName, {
+    let subscription = new aws.sns.TopicSubscription(resName, {
         topic: topic,
         protocol: "lambda",
         endpoint: lambda.lambda.arn,

@@ -44,7 +44,7 @@ export class Table {
             writeCapacity = 5;
         }
         this.table = new aws.dynamodb.Table(name, {
-            attributes: [
+            attribute: [
                 { name: primaryKey, type: primaryKeyType },
             ],
             hashKey: primaryKey,

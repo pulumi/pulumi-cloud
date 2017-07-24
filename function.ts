@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@lumi/aws";
+import * as serverless from "@lumi/aws-serverless";
 import { getLogCollector } from "./logCollector";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
@@ -9,7 +10,7 @@ class Buffer {
     toString(kind: string): string { return ""; }
 }
 
-export { Context, Handler } from "@lumi/aws/serverless";
+export { Context, Handler } from "@lumi/aws-serverless";
 
 // LoggedFunction is a wrapper over aws.serverless.Function which applies a single shared
 // log collected across all functions in the application, allowing all application logs
@@ -17,14 +18,14 @@ export { Context, Handler } from "@lumi/aws/serverless";
 export class LoggedFunction {
     public lambda: aws.lambda.Function;
     public role: aws.iam.Role;
-    constructor(name: string, policies: aws.ARN[], func: aws.serverless.Handler) {
+    constructor(name: string, policies: aws.ARN[], func: serverless.Handler) {
         let options = {
             policies: policies,
             deadLetterConfig: {
-                target: getUnhandledErrorTopic(),
+                targetArn: getUnhandledErrorTopic().arn,
             },
         };
-        let lambda = new aws.serverless.Function(name, options, func);
+        let lambda = new serverless.Function(name, options, func);
         this.lambda = lambda.lambda;
         this.role = lambda.role;
         let lambdaLogGroupName = "/aws/lambda/" + this.lambda.functionName;
@@ -34,7 +35,7 @@ export class LoggedFunction {
             retentionInDays: 1,
         });
         let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
-            logGroupName: loggroup.logGroupName!,
+            logGroup: loggroup,
             destinationArn: getLogCollector().arn,
             filterPattern: "",
         });

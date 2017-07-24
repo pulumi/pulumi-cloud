@@ -132,12 +132,18 @@ export class Bucket {
     list(): string[];
 }
 
-// onInterval invokes the handler on a regular cadence. 
-export function onInterval(intervalMinutes: number, handler: () => void);
-// Note - we are not (yet) exposing the ability to set time-of-day, time-of-week, etc.
-// Maybe in the future:
-// export function onDaily(hourUtc: number, minuteUtc: number, handler: () => void);
-// export function onMonthly(dayOfMonthUtc: number hourUtc: number, minuteUtc: number, handler: () => void);
+export interface ScheduleOptions {
+    // The rate at which to invoke the handler - e.g. "1 hour", "5 minutes", "7 days"
+    rate?: string;
+    // A condition for invoking the handler.  Format is:
+    //     Minutes Hours Day-of-month Month Day-of-week Year
+    // For example - to invoke every 10 mins Monday-Friday:
+    //     0/10 * ? * MON-FRI *
+    cron?: string;
+}
+// onSchedule registers a handler to be called on a regular schedule, defined
+// by the provided schedule options.
+export function onSchedule(name: string, options: ScheduleOptions, handler: () => Promise<void>);
 
 // A global onError handler - hook up a dead letter queue on all lambdas and redirect them
 // to this handler.  We may also want/need more granular exception handling, but this can 

@@ -2,6 +2,7 @@
 
 /*tslint:disable:no-require-imports*/
 import * as aws from "@lumi/aws";
+import * as serverless from "@lumi/aws-serverless";
 declare let require: any;
 class Buffer {
     constructor(data: string, encoding: string) { return; }
@@ -16,11 +17,11 @@ let region = aws.config.requireRegion();
 // created and managed by the Pulumi platform.
 
 let logCollectorName = "pulumi-app-log-collector";
-let logCollector: aws.serverless.Function | undefined;
+let logCollector: serverless.Function | undefined;
 export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda
-        logCollector = new aws.serverless.Function(
+        logCollector = new serverless.Function(
             logCollectorName,
             { policies: [ aws.iam.AWSLambdaFullAccess ] },
             (ev, ctx, cb) => {

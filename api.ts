@@ -251,7 +251,7 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, cb: (err: any, result: any) => v
 export class HttpAPI {
     public url?: string;
 
-    private api: aws.apigateway.RestAPI;
+    private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
     private apiName: string;
@@ -267,9 +267,13 @@ export class HttpAPI {
     public routeStatic(method: string, path: string, filePath: string, contentType?: string) {
         let swaggerMethod = this.routePrepare(method, path);
         let name = this.apiName + lumirt.sha1hash(method + ":" + path);
+        let rolePolicyJSON = lumirt.jsonStringify(apigatewayAssumeRolePolicyDocument);
         let role = new aws.iam.Role(name, {
-            assumeRolePolicyDocument: apigatewayAssumeRolePolicyDocument,
-            managedPolicyARNs: [aws.iam.AmazonS3FullAccess],
+            assumeRolePolicy: rolePolicyJSON,
+        });
+        let attachment = new aws.iam.RolePolicyAttachment(name, {
+            role: role,
+            policyArn: aws.iam.AmazonS3FullAccess,
         });
         if (this.bucket === undefined) {
             this.bucket = new aws.s3.Bucket(this.apiName, {});
@@ -280,7 +284,7 @@ export class HttpAPI {
             source: new lumi.asset.File(filePath),
             contentType: contentType,
         });
-        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucketName!, obj.key);
+        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucket, obj.key);
     }
 
     private routeLambda(method: string, path: string, lambda: Function) {
@@ -344,18 +348,21 @@ export class HttpAPI {
     }
 
     public publish(): string {
-        this.api = new aws.apigateway.RestAPI(this.apiName, {
-            body: this.swaggerSpec,
+        let swaggerJSON = lumirt.jsonStringify(this.swaggerSpec);
+        this.api = new aws.apigateway.RestApi(this.apiName, {
+            body: swaggerJSON,
         });
-        let deploymentId = lumirt.sha1hash(lumirt.jsonStringify(this.swaggerSpec));
+        let deploymentId = lumirt.sha1hash(swaggerJSON);
         this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + deploymentId, {
-            restAPI: this.api,
+            restApi: this.api,
+            stageName: "",
             description: "Deployment of version " + deploymentId,
         });
+        let stageName = "stage";
         let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
-            stageName: "stage",
+            stageName: stageName,
             description: "The current deployment of the API.",
-            restAPI: this.api,
+            restApi: this.api,
             deployment: this.deployment,
         });
 
@@ -377,14 +384,14 @@ export class HttpAPI {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceARN: stage.executionARN + "/" + method + path,
+                        sourceArn: this.deployment.executionArn + stageName + "/" + method + path,
                     });
                 }
             }
         }
 
-        this.url = stage.url;
-        return stage.url;
+        this.url = this.deployment.invokeUrl + stageName + "/";
+        return this.deployment.invokeUrl + stageName + "/";
     }
 }
 

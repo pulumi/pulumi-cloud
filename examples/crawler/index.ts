@@ -3,9 +3,14 @@
 import * as platform from "@lumi/platform";
 
 let countDown = new platform.Topic<number>("countDown");
+
 countDown.subscribe("watcher", async (num) => {
     console.log(num);
     if (num > 0) {
         await countDown.publish(num - 1);
     }
+});
+
+platform.timer.interval("heartbeat", {minutes: 5}, async () => {
+    await countDown.publish(25);
 });

@@ -16,6 +16,8 @@ export * from "./api";
 export * from "./table";
 export * from "./topic";
 export { onError, ErrorHandler } from "./unhandledError";
+import * as timer from "./timer";
+export { timer };
 
 export function log(s: string) {
     runtime.printf(s);
