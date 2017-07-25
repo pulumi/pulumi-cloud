@@ -29,9 +29,7 @@ clean:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	@yarn link @lumi/lumirt # ensure we resolve to Lumi's rtlib.
-	@yarn link @lumi/lumi   # ensure we resolve to Lumi's lib.
-	@yarn link @lumi/aws    # ensure we resolve to Lumi's AWS provider.
+	@yarn link @lumi/lumirt @lumi/lumi @lumi/aws @lumi/aws-serverless # ensure we link dependencies.
 	@lumijs # compile the LumiPack
 	@lumi pack verify # ensure the pack verifies
 
@@ -46,3 +44,8 @@ install:
 examples:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
 	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+
+publish:
+	@echo "\033[0;32mPublishing current release:\033[0m"
+	./scripts/publish.sh
+.PHONY: publish

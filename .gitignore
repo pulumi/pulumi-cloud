@@ -1,3 +1,4 @@
 .pulumi
 .lumi/
 node_modules/
+vendor/
