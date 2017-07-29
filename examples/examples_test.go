@@ -36,6 +36,7 @@ func Test_Examples(t *testing.T) {
 	examples := []string{
 		path.Join(cwd, "crawler"),
 		path.Join(cwd, "todo"),
+		path.Join(cwd, "integration"),
 	}
 	options := integrationtesting.LumiProgramTestOptions{
 		Config: map[string]string{
