@@ -23,6 +23,8 @@ export class Table {
     get: (query: Object) => Promise<any>;
     insert: (item: Object) => Promise<void>;
     scan: () => Promise<any[]>;
+    delete: (query: Object) => Promise<void>;
+    update: (query: Object, updates: Object) => Promise<void>;
 
     // Outside API (constructor and methods)
     constructor(name: string, primaryKey?: string, primaryKeyType?: "S" | "N" | "B", opts?: TableOptions) {
@@ -76,6 +78,34 @@ export class Table {
             return db().scan({
                 TableName: this.tableName,
             }).promise().then((x: any) => x.Items);
+        };
+        this.update = (query, updates) => {
+            let updateExpression = "";
+            let attributeValues: {[key: string]: any} = {};
+            let keys = (<any>Object).keys(updates);
+            for (let i = 0; i < (<any>keys).length; i++) {
+                let key = keys[i];
+                let val = (<any>updates)[key];
+                if (updateExpression === "") {
+                    updateExpression += "SET ";
+                } else {
+                    updateExpression += ", ";
+                }
+                updateExpression += `${key} = :${key}`;
+                attributeValues[`:${key}`] = val;
+            }
+            return db().update({
+                TableName: this.tableName,
+                Key: query,
+                UpdateExpression: updateExpression,
+                ExpressionAttributeValues: attributeValues,
+            }).promise().then((x: any) => x.Items);
+        };
+        this.delete = (query) => {
+            return db().delete({
+                TableName: this.tableName,
+                Key: query,
+            }).promise();
         };
     }
 }

@@ -5,7 +5,10 @@ declare let require: any;
 import * as aws from "@lumi/aws";
 import * as sns from "./sns";
 
-export class Topic<T> {
+// A Topic<T> is used to distribute work which will be run conurrently by any susbcribed
+// handlers.  Producers can `publish` to the topic, and consumers can `subscribe` to be
+// notified when new items are published.
+export class Topic<T> implements Stream<T> {
     // Inside + Outside API
     private name: string;
     private topic: aws.sns.Topic;
@@ -39,4 +42,11 @@ export class Topic<T> {
         });
         (<any>this.subscriptions).push(s);
     }
+}
+
+// A Stream<T> provides access to listen to an (infinite) stream of items coming from a
+// data source.  Unlike Topic<T>, a Stream provides only access to read from the stream,
+// not the ability to publish new items to the stream.
+export interface Stream<T> {
+     subscribe(name: string, handler: (item: T) => Promise<void>): void;
 }
