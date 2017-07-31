@@ -12,13 +12,6 @@ import * as config from "./config";
 // Reusable SaaS integration support APIs
 //////////////////////////////////////////////////////
 
-// A Stream<T> provides access to listen to an (infinite) stream of items coming from a
-// data source.  Unlike Topic<T>, a Stream provides only access to read from the stream,
-// not the ability to publish new items to the stream.
-interface Stream<T> {
-     subscribe(name: string, handler: (item: T) => Promise<void>): void;
-}
-
 // A poll function takes an opaque token generated from the last execution (or undefined), and
 // returns any new items since the last invocation, along with a new token to be used with the
 // next invocation.
@@ -27,7 +20,7 @@ type PollFunction<T> = (lastToken?: string) => Promise<{ items: T[]; nextToken: 
 // Poll<T> represents a stream of items which are derived from polling at a given rate
 // using a user-provided polling function.
 let pollMarkers = new platform.Table("__pollMarkers", "id", "S", {});
-class Poll<T> implements Stream<T> {
+class Poll<T> implements platform.Stream<T> {
     private topic: platform.Topic<T>;
 
     constructor(name: string, rate: platform.timer.IntervalRate, poller: PollFunction<T> ) {
@@ -62,11 +55,11 @@ class Poll<T> implements Stream<T> {
 // Digest takes an Observable and produces another Observable
 // which batches the input into groups delimted by times
 // when `collect` is called on the Digest.
-class Digest<T> implements Stream<T[]> {
+class Digest<T> implements platform.Stream<T[]> {
     private table: platform.Table;
     private topic: platform.Topic<T[]>;
     public collect: () => Promise<void>;
-    constructor(name: string, stream: Stream<T>) {
+    constructor(name: string, stream: platform.Stream<T>) {
         this.topic = new platform.Topic<T[]>(name);
         this.table = new platform.Table(name, "id", "S", {});
         stream.subscribe(name, async (item) => {
@@ -101,7 +94,7 @@ class Digest<T> implements Stream<T[]> {
 // from Twitter.
 class Twitter {
     // Search returns a stream of all tweets matching the search term.
-    search(name: string, term: string): Stream<Tweet> {
+    search(name: string, term: string): platform.Stream<Tweet> {
         let accessToken = config.twitterAccessToken;
         let searchPoll = new Poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
             let request = require("request-promise-native");
@@ -189,7 +182,7 @@ let twitter = new Twitter();
 let email = new Mailgun();
 
 // Get a stream of all tweets matching this query, forever...
-let tweets: Stream<Tweet> = twitter.search("pulumi", "vscode");
+let tweets: platform.Stream<Tweet> = twitter.search("pulumi", "vscode");
 
 // Collect them into bunches
 let digest = new Digest("tweetdigest", tweets);
