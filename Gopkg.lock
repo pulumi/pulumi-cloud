@@ -21,9 +21,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/pulumi/lumi"
+  name = "github.com/pulumi/pulumi-fabric"
   packages = ["pkg/integrationtesting","pkg/util/contract"]
-  revision = "e4e9710f30501dcb8cafad97b812ca6176f8107d"
+  revision = "35aa6b755999f963922e7acf99fb3b1de6a1d419"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -34,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0bdf869ca857abc0b8b838fefae529632de95396bacc05adc220cb2bd804a1f8"
+  inputs-digest = "c90be49fd5af82ea00e47c66735532fc00366c7687d80367f760e83a49c2d65c"
   solver-name = "gps-cdcl"
   solver-version = 1

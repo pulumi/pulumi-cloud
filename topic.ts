@@ -36,8 +36,8 @@ export class Topic<T> implements Stream<T> {
     subscribe(name: string, shandler: (item: T) => Promise<void>) {
         let s = sns.createSubscription(this.name + "_" + name, this.topic, async (snsItem: sns.SNSItem) => {
             let item = (<any>JSON).parse(snsItem.Message);
-            // TODO[pulumi/lumi#238] For now we need to use a different name for `shandler` to avoid accidental
-            // conflict with handler inside `createSubscription`
+            // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid
+            // accidental conflict with handler inside `createSubscription`
             await shandler(item);
         });
         (<any>this.subscriptions).push(s);

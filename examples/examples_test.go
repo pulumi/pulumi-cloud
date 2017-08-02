@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/lumi/pkg/integrationtesting"
+	"github.com/pulumi/pulumi-fabric/pkg/integrationtesting"
 )
 
 func Test_Examples(t *testing.T) {
