@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-fabric/pkg/integrationtesting"
+	"github.com/pulumi/pulumi-fabric/pkg/testing/integration"
 )
 
 func Test_Examples(t *testing.T) {
@@ -38,7 +38,7 @@ func Test_Examples(t *testing.T) {
 		path.Join(cwd, "todo"),
 		path.Join(cwd, "integration"),
 	}
-	options := integrationtesting.LumiProgramTestOptions{
+	options := integration.LumiProgramTestOptions{
 		Config: map[string]string{
 			"platform:config:region": pulumiPlatformRegion,
 		},
@@ -49,7 +49,7 @@ func Test_Examples(t *testing.T) {
 	for _, ex := range examples {
 		example := ex
 		t.Run(example, func(t *testing.T) {
-			integrationtesting.LumiProgramTest(t, example, options)
+			integration.LumiProgramTest(t, example, options)
 		})
 	}
 }

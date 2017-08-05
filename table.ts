@@ -53,7 +53,7 @@ export class Table {
             readCapacity: readCapacity,
             writeCapacity: writeCapacity,
         });
-        this.tableName = this.table.tableName!;
+        this.tableName = this.table.name;
         this.primaryKey = primaryKey;
         this.primaryKeyType = primaryKeyType;
         this.readCapacity = this.table.readCapacity;

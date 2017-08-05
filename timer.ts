@@ -64,7 +64,7 @@ function createScheduledEvent(name: string, scheduleExpression: string, handler:
         scheduleExpression: scheduleExpression,
     });
     let target = new aws.cloudwatch.EventTarget(name, {
-        rule: rule.eventRuleName!,
+        rule: rule.name,
         arn: f.lambda.arn,
         targetId: name,
     });

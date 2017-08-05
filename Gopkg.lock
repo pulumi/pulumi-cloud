@@ -8,12 +8,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -22,8 +16,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/pulumi/pulumi-fabric"
-  packages = ["pkg/integrationtesting","pkg/util/contract"]
-  revision = "35aa6b755999f963922e7acf99fb3b1de6a1d419"
+  packages = ["pkg/testing/integration"]
+  revision = "ed58a2cbd1a2207cefa33dcb653de70b4cf51837"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -34,6 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c90be49fd5af82ea00e47c66735532fc00366c7687d80367f760e83a49c2d65c"
+  inputs-digest = "83b38bbbf7592a7f1c4ba13155ae5f8e6daa9b40554321d143c72e91e69f083f"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -278,7 +278,7 @@ export class HttpAPI {
         if (this.bucket === undefined) {
             this.bucket = new aws.s3.Bucket(this.apiName, {});
         }
-        let obj = new aws.s3.Object({
+        let obj = new aws.s3.Object(name, {
             bucket: this.bucket,
             key: name,
             source: new lumi.asset.File(filePath),
