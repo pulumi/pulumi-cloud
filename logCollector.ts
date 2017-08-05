@@ -2,7 +2,7 @@
 
 /*tslint:disable:no-require-imports*/
 import * as aws from "@lumi/aws";
-import * as serverless from "@lumi/aws-serverless";
+import * as serverless from "@lumi/aws/serverless";
 declare let require: any;
 class Buffer {
     constructor(data: string, encoding: string) { return; }

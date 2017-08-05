@@ -29,7 +29,7 @@ clean:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	@yarn link @lumi/lumirt @lumi/lumi @lumi/aws @lumi/aws-serverless # ensure we link dependencies.
+	@yarn link @lumi/lumirt @lumi/lumi @lumi/aws # ensure we link dependencies.
 	@lumijs # compile the LumiPack
 	@lumi pack verify # ensure the pack verifies
 

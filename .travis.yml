@@ -19,7 +19,6 @@ install:
     - git clone git@github.com:pulumi/pulumi-fabric ${GOPATH}/src/github.com/pulumi/pulumi-fabric
     - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh lumi ${VERSION} ~/.lumi
     - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh aws ${VERSION} ~/.lumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh aws-serverless ${VERSION} ~/.lumi
     - dep ensure
     - yarn install
 before_script:
