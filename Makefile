@@ -39,6 +39,8 @@ install:
 	@yarn link # ensure NPM references resolve locally
 	@mkdir -p ${LUMILIB} # ensure the machine-wide library dir exists.
 	@cp -R ./.lumi/bin/ ${THISLIB} # copy to the standard library location.
+	@cp package.json ${THISLIB} # ensure the result is a proper NPM package.
+	@cp -RL ./node_modules ${THISLIB} # copy the links we installed.
 
 .PHONY: examples
 examples:
