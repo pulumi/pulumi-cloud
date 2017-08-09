@@ -178,38 +178,56 @@ interface EmailMessage {
 // User sample code
 /////////////////////
 
-let twitter = new Twitter();
-let email = new Mailgun();
+function exampleTwitter1() {
+    let twitter = new Twitter();
+    let email = new Mailgun();
 
-// Get a stream of all tweets matching this query, forever...
-let tweets: platform.Stream<Tweet> = twitter.search("pulumi", "vscode");
+    // Get a stream of all tweets matching this query, forever...
+    let tweets: platform.Stream<Tweet> = twitter.search("pulumi", "vscode");
 
-// Collect them into bunches
-let digest = new Digest("tweetdigest", tweets);
-
-// Every night, take all of the tweets collected since the
-// last digest and publish that as a group to the digest stream.
-platform.timer.daily("nightly", { hourUTC: 7 },  async () => {
-    await digest.collect();
-});
-
-// For every group of tweets published to the digest stream (nightly)
-// send an email.
-digest.subscribe("digest", async (dailyTweets) => {
-    // Arbitrary code to compose email body - could use templating system or
-    // any other programmatic way of constructing the text.
-    let text = "Tweets:\n";
-    for (let i = 0; i < (<any>dailyTweets).length; i++) {
-        let tweet = dailyTweets[i];
-        text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
-    }
-    await email.send({
-        to: "luke@pulumi.com",
-        subject: `Tweets from ${new Date().toDateString()}`,
-        body: text,
+    // On each tweet, log it and send an email.
+    tweets.subscribe("tweetlistener", async (tweet) => {
+        console.log(tweet);
+        await email.send({
+            to: "luke@pulumi.com",
+            subject: `Tweets from ${new Date().toDateString()}`,
+            body: `@${tweet.user.screen_name}: ${tweet.text}\n`,
+        });
     });
-});
+}
 
-tweets.subscribe("tweetlistener", async (tweet) => {
-    console.log(tweet);
-});
+function exampleTwitter2() {
+    let twitter = new Twitter();
+    let email = new Mailgun();
+
+    // Get a stream of all tweets matching this query, forever...
+    let tweets: platform.Stream<Tweet> = twitter.search("pulumi", "vscode");
+
+    // Collect them into bunches
+    let digest = new Digest("tweetdigest", tweets);
+
+    // Every night, take all of the tweets collected since the
+    // last digest and publish that as a group to the digest stream.
+    platform.timer.daily("nightly", { hourUTC: 7 },  async () => {
+        await digest.collect();
+    });
+
+    // For every group of tweets published to the digest stream (nightly)
+    // send an email.
+    digest.subscribe("digest", async (dailyTweets) => {
+        // Arbitrary code to compose email body - could use templating system or
+        // any other programmatic way of constructing the text.
+        let text = "Tweets:\n";
+        for (let i = 0; i < (<any>dailyTweets).length; i++) {
+            let tweet = dailyTweets[i];
+            text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
+        }
+        await email.send({
+            to: "luke@pulumi.com",
+            subject: `Tweets from ${new Date().toDateString()}`,
+            body: text,
+        });
+    });
+}
+
+exampleTwitter1();
