@@ -4,12 +4,15 @@
 declare let require: any;
 declare let JSON: any;
 declare let Date: any;
+declare let Math: any;
 
 import * as platform from "@lumi/platform";
 import * as config from "./config";
 import {Digest} from "./digest";
-import * as email from "./mailgun";
+import * as mailgun from "./mailgun";
 import * as twitter from "./twitter";
+
+let sendEmail = mailgun.send;
 
 function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
@@ -18,7 +21,7 @@ function exampleTwitter1() {
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
         console.log(tweet);
-        await email.send({
+        await sendEmail({
             to: "luke@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: `@${tweet.user.screen_name}: ${tweet.text}\n`,
@@ -49,7 +52,7 @@ function exampleTwitter2() {
             let tweet = dailyTweets[i];
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
-        await email.send({
+        await sendEmail({
             to: "luke@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: text,

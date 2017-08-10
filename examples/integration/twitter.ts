@@ -7,12 +7,12 @@ declare let Date: any;
 
 import * as platform from "@lumi/platform";
 import * as config from "./config";
-import {Poll} from "./poll";
+import {poll} from "./poll";
 
 // Search returns a stream of all tweets matching the search term.
 export function search(name: string, term: string): platform.Stream<Tweet> {
     let accessToken = config.twitterAccessToken;
-    let searchPoll = new Poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
+    let searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
         let request = require("request-promise-native");
         let querystring = lastToken;
         if (lastToken === undefined) {
