@@ -10,9 +10,12 @@ import * as platform from "@lumi/platform";
 import * as config from "./config";
 import {Digest} from "./digest";
 import * as mailgun from "./mailgun";
+import {poll} from "./poll";
+import * as salesforce from "./salesforce";
 import * as twitter from "./twitter";
 
 let sendEmail = mailgun.send;
+let salesforceQueryAll = salesforce.queryAll;
 
 function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
@@ -60,4 +63,62 @@ function exampleTwitter2() {
     });
 }
 
-exampleTwitter1();
+function exampleSalesforce1() {
+    // Get a stream of all modifications to the Contact list...
+    let contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
+        if (timestamp === undefined) {
+            // Initial timestamp to start collecting edits from.
+            timestamp = "2017-01-01T00:00:00.000Z";
+        }
+        // Query Salesforce
+        let records = await salesforceQueryAll(
+            `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
+        );
+        // Update timetamp to latest of all received edits.
+        let newTimestamp = (<any>records).reduce(
+            (ts: string, record: salesforce.Record) => {
+                let newts = record["LastModifiedDate"];
+                return newts > ts ? newts : ts;
+            },
+            timestamp,
+        );
+        // Return this batch of items and the new timestamp
+        return {
+            items: records,
+            nextToken: newTimestamp,
+        };
+    });
+
+    // Log each modification.
+    contactsStream.subscribe("contactlistener", async (contact) => {
+        console.log(contact);
+    });
+}
+
+function exampleSalesforce2() {
+    // Get a stream of all modifications to the Contact list...
+    let contacts = salesforce.query(
+        "contacts",
+        (timestamp) => `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
+        "2017-01-01T00:00:00.000Z",
+        "LastModifiedDate",
+        (a, b) => a > b ? a : b,
+    );
+
+    // Log each modification.
+    contacts.subscribe("contactlistener", async (contact) => {
+        console.log(contact);
+    });
+}
+
+function exampleSalesforce3() {
+    // Get a stream of all modifications to the Contact list...
+    let contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
+
+    // Log each modification.
+    contacts.subscribe("contactlistener", async (contact) => {
+        console.log(contact);
+    });
+}
+
+exampleSalesforce2();
