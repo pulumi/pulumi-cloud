@@ -36,7 +36,8 @@ func Test_Examples(t *testing.T) {
 	examples := []string{
 		path.Join(cwd, "crawler"),
 		path.Join(cwd, "todo"),
-		path.Join(cwd, "integration"),
+		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
+		// path.Join(cwd, "integration"),
 	}
 	options := integration.LumiProgramTestOptions{
 		Config: map[string]string{
