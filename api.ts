@@ -5,6 +5,7 @@ import * as lumi from "@lumi/lumi";
 import * as lumirt from "@lumi/lumirt";
 import { Context as LambdaContext, LoggedFunction as Function } from "./function";
 declare let JSON: any;
+declare let Buffer: any;
 
 interface APIGatewayRequest {
     resource: string;
@@ -55,6 +56,7 @@ interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
     paths: { [path: string]: { [method: string]: SwaggerOperation; }; };
+    "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
 interface SwaggerInfo {
@@ -104,6 +106,7 @@ function createBaseSpec(apiName: string): SwaggerSpec {
         swagger: "2.0",
         info: { title: apiName, version: "1.0" },
         paths: {},
+        "x-amazon-apigateway-binary-media-types": [ "*/*" ],
     };
 }
 
@@ -178,7 +181,7 @@ let apigatewayAssumeRolePolicyDocument = {
 };
 
 export interface Request {
-    body: string;
+    body: any; // Actually a Buffer
     method: string;
     params: { [param: string]: string; };
     headers: { [header: string]: string; };
@@ -205,16 +208,17 @@ interface ReqRes {
     res: Response;
 }
 
-let apiGatewayToReqRes: (ev: APIGatewayRequest, cb: (err: any, result: any) => void) => ReqRes = (ev, cb) => {
-    let response: APIGatewayResponse = {
-        isBase64Encoded: false,
+type Callback = (err: any, result: APIGatewayResponse) => void;
+
+let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqRes = (ev, body, cb) => {
+    let response = {
         statusCode: 200,
-        headers: {},
-        body: "",
+        headers: <{[header: string]: string}>{},
+        body: Buffer.from([]),
     };
     let req = {
         headers: ev.headers,
-        body: ev.body,
+        body: body,
         method: ev.httpMethod,
         params: ev.pathParameters,
         query: ev.queryStringParameters,
@@ -229,15 +233,26 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, cb: (err: any, result: any) => v
             response.headers![name] = value;
             return res;
         },
-        write: (data: string) => {
-            response.body += data;
+        write: (data: string | any, encoding?: string) => {
+            if (encoding === undefined) {
+                encoding = "utf8";
+            }
+            if (typeof data === "string") {
+                data = Buffer.from(data, encoding);
+            }
+            response.body = Buffer.concat([response.body, data]);
             return res;
         },
-        end: (data?: string) => {
+        end: (data?: string | any, encoding?: string) => {
             if (data !== undefined) {
-                res.write(data);
+                res.write(data, encoding);
             }
-            cb(null, response);
+            cb(null, {
+                statusCode: response.statusCode,
+                headers: response.headers,
+                isBase64Encoded: true,
+                body: (<any>response.body).toString("base64"),
+            });
         },
         json: (obj: any) => {
             res.setHeader("content-type", "application/json");
@@ -324,8 +339,16 @@ export class HttpAPI {
             policies = options.policies;
         }
         let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
+            let body: any;
+            if (ev.body !== null) {
+                if (ev.isBase64Encoded) {
+                    body = Buffer.from(ev.body, "base64");
+                } else {
+                    body = Buffer.from(ev.body, "utf8");
+                }
+            }
             ctx.callbackWaitsForEmptyEventLoop = false;
-            let reqres = apiGatewayToReqRes(ev, cb);
+            let reqres = apiGatewayToReqRes(ev, body, cb);
             handler(reqres.req, reqres.res);
         });
         this.routeLambda(method, path, lambda);

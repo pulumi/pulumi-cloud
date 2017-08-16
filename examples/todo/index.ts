@@ -22,7 +22,7 @@ api.get("/todo/{id}", {}, async (req, res) => {
 api.post("/todo/{id}", {}, async (req, res) => {
     console.log("POST /todo/" + req.params.id);
     try {
-        await todos.insert({ id: req.params.id, value: req.body });
+        await todos.insert({ id: req.params.id, value: req.body.toString() });
         res.status(201).json({});
     } catch (err) {
         res.status(500).json(err);
