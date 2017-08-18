@@ -14,7 +14,7 @@ api.get("/todo/{id}", {}, async (req, res) => {
     console.log("GET /todo/" + req.params.id);
     try {
         let item = await todos.get({ id: req.params.id });
-        res.status(200).json(item.Value);
+        res.status(200).json(item.value);
     } catch (err) {
         res.status(500).json(err);
     }
