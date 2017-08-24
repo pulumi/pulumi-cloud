@@ -262,6 +262,8 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqR
     return { req, res };
 };
 
+let stageName = "stage";
+
 // API is a higher level abstraction for working with AWS APIGateway reources.
 export class HttpAPI {
     public url?: string;
@@ -381,7 +383,6 @@ export class HttpAPI {
             stageName: "",
             description: "Deployment of version " + deploymentId,
         });
-        let stageName = "stage";
         let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
             stageName: stageName,
             description: "The current deployment of the API.",
@@ -416,5 +417,33 @@ export class HttpAPI {
         this.url = this.deployment.invokeUrl + stageName + "/";
         return this.deployment.invokeUrl + stageName + "/";
     }
+
+    // Attach a custom domain to this HttpAPI.
+    // Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
+    // The return value is a domain name that you must map your custom domain to using a DNS A record.
+    // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
+    attachCustomDomain(domain: Domain): string {
+        let awsDomain = new aws.apigateway.DomainName(this.apiName+"-"+domain.domainName, {
+            domainName: domain.domainName,
+            certificateName: domain.domainName,
+            certificateBody: domain.certificateBody,
+            certificatePrivateKey: domain.certificatePrivateKey,
+            certificateChain: domain.certificateChain,
+        });
+        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName+"-"+domain.domainName, {
+            restApi: this.api,
+            stageName: stageName,
+            domainName: awsDomain.domainName,
+        });
+        return awsDomain.cloudfrontDomainName;
+    }
 }
 
+// Domain includes the domain name and certificate data
+// to enable hosting an HttpAPI on a custom domain.
+export interface Domain {
+    domainName: string;
+    certificateBody: string;
+    certificatePrivateKey: string;
+    certificateChain: string;
+}
