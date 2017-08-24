@@ -6,7 +6,7 @@
         "build": "lumijs"
     },
     "peerDependencies": {
-        "@lumi/platform": "*"
+        "@pulumi/pulumi": "*"
     }
 }
 

@@ -21,16 +21,16 @@ func Test_Examples(t *testing.T) {
 		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
 	}
 	fmt.Printf("AWS Region: %v\n", region)
-	var pulumiPlatformRegion string
+	var pulumiFrameworkRegion string
 	switch region {
 	case "us-west-2":
-		pulumiPlatformRegion = "WestUS"
+		pulumiFrameworkRegion = "WestUS"
 	case "us-east-2":
-		pulumiPlatformRegion = "EastUS"
+		pulumiFrameworkRegion = "EastUS"
 	case "eu-west-1":
-		pulumiPlatformRegion = "WestEU"
+		pulumiFrameworkRegion = "WestEU"
 	default:
-		assert.Fail(t, "Expected a valid Pulumi platform region: %v", region)
+		assert.Fail(t, "Expected a valid Pulumi framework region: %v", region)
 	}
 
 	cwd, err := os.Getwd()
@@ -41,19 +41,19 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "crawler"),
 			Config: map[string]string{
-				"platform:config:region": pulumiPlatformRegion,
+				"pulumi:config:region": pulumiFrameworkRegion,
 			},
 			Dependencies: []string{
-				"@lumi/platform",
+				"@pulumi/pulumi",
 			},
 		},
 		{
 			Dir: path.Join(cwd, "todo"),
 			Config: map[string]string{
-				"platform:config:region": pulumiPlatformRegion,
+				"pulumi:config:region": pulumiFrameworkRegion,
 			},
 			Dependencies: []string{
-				"@lumi/platform",
+				"@pulumi/pulumi",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				var baseUrl string

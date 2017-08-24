@@ -1,18 +1,18 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 declare let JSON: any;
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 
 // Digest takes an Observable and produces another Observable
 // which batches the input into groups delimted by times
 // when `collect` is called on the Digest.
-export class Digest<T> implements platform.Stream<T[]> {
-    private table: platform.Table;
-    private topic: platform.Topic<T[]>;
+export class Digest<T> implements pulumi.Stream<T[]> {
+    private table: pulumi.Table;
+    private topic: pulumi.Topic<T[]>;
     public collect: () => Promise<void>;
-    constructor(name: string, stream: platform.Stream<T>) {
-        this.topic = new platform.Topic<T[]>(name);
-        this.table = new platform.Table(name, "id", "S", {});
+    constructor(name: string, stream: pulumi.Stream<T>) {
+        this.topic = new pulumi.Topic<T[]>(name);
+        this.table = new pulumi.Table(name, "id", "S", {});
         stream.subscribe(name, async (item) => {
             console.log(`adding item to digest table`);
             await this.table.insert({ id: JSON.stringify(item) });

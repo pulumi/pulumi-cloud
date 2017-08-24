@@ -3,7 +3,7 @@
 /*tslint:disable:no-require-imports*/
 declare let require: any;
 declare let JSON: any;
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
 
 let domain = config.mailgunDomain;

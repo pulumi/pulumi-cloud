@@ -1,3 +1,3 @@
-# examples/scenarios/aws/todo
+# examples/todo
 
 A simple Todo appplication.

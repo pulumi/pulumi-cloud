@@ -6,7 +6,7 @@ declare let JSON: any;
 declare let Date: any;
 declare let Math: any;
 
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
 import {Digest} from "./digest";
 import * as mailgun from "./mailgun";
@@ -34,14 +34,14 @@ function exampleTwitter1() {
 
 function exampleTwitter2() {
     // Get a stream of all tweets matching this query, forever...
-    let tweets: platform.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
+    let tweets: pulumi.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
     // Collect them into bunches
     let digest = new Digest("tweetdigest", tweets);
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
-    platform.timer.daily("nightly", { hourUTC: 7 },  async () => {
+    pulumi.timer.daily("nightly", { hourUTC: 7 },  async () => {
         await digest.collect();
     });
 

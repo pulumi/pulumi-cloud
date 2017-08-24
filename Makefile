@@ -1,7 +1,7 @@
 PROCCNT=$(shell nproc --all)
 LUMIROOT ?= /usr/local/lumi
 LUMILIB   = ${LUMIROOT}/packs
-THISLIB   = ${LUMILIB}/platform
+THISLIB   = ${LUMILIB}/pulumi
 TESTPARALLELISM=10
 
 .PHONY: default
@@ -13,7 +13,7 @@ all: banner lint build install examples
 .PHONY: banner
 banner:
 	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mLumi Platform Package\033[0m"
+	@echo "\033[1;37mPulumi Framework Package\033[0m"
 	@echo "\033[1;37m======================\033[0m"
 
 .PHONY: lint
