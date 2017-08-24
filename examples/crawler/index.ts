@@ -1,8 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 
-let countDown = new platform.Topic<number>("countDown");
+let countDown = new pulumi.Topic<number>("countDown");
 
 countDown.subscribe("watcher", async (num) => {
     console.log(num);
@@ -11,6 +11,6 @@ countDown.subscribe("watcher", async (num) => {
     }
 });
 
-platform.timer.interval("heartbeat", {minutes: 5}, async () => {
+pulumi.timer.interval("heartbeat", {minutes: 5}, async () => {
     await countDown.publish(25);
 });

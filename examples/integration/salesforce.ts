@@ -5,7 +5,7 @@ declare let require: any;
 declare let JSON: any;
 declare let Date: any;
 
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
 import {poll} from "./poll";
 
@@ -19,7 +19,7 @@ export function query(
     soql: (watermark: string) => string,
     watermarkDefault: string,
     watermarkField: string,
-    watermarkSelection: (a: string, b: string) => string): platform.Stream<Record> {
+    watermarkSelection: (a: string, b: string) => string): pulumi.Stream<Record> {
     let queryPoll = poll<Record>(name, {minutes: 1}, async (watermark) => {
         let jsforce = require("jsforce");
         console.log(`loaded jsforce`);
@@ -73,7 +73,7 @@ interface QueryResult {
 
 // allObjectModifications returns a stream of all Salesforce records for modifications to an object.
 // This is a deployment-time API.
-export function allObjectModifications(name: string, object: string, fields: string): platform.Stream<Record> {
+export function allObjectModifications(name: string, object: string, fields: string): pulumi.Stream<Record> {
     if ((<any>fields).length === 0) {
         throw new Error("Expect at least one field name in the format `FieldA,FieldB`");
     }

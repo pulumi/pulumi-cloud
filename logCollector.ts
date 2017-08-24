@@ -14,7 +14,7 @@ let region = aws.config.requireRegion();
 
 // logCollector is a shared and lazily created Function resource which
 // is wired up as a listener on the cloud watch logs for all users functions
-// created and managed by the Pulumi platform.
+// created and managed by the Pulumi framework.
 
 let logCollectorName = "pulumi-app-log-collector";
 let logCollector: serverless.Function | undefined;

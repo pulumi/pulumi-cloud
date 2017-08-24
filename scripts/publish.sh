@@ -3,7 +3,7 @@
 
 set -e
 
-PACKNAME=platform
+PACKNAME=pulumi
 
 # Default the Lumi root to the right place, but let it be overridden.
 if [ -z "${LUMIROOT}" ]; then

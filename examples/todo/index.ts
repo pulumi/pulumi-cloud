@@ -1,9 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as platform from "@lumi/platform";
+import * as pulumi from "@pulumi/pulumi";
 
-let todos = new platform.Table("todo", "id", "S", {});
-let api = new platform.HttpAPI("todo");
+let todos = new pulumi.Table("todo", "id", "S", {});
+let api = new pulumi.HttpAPI("todo");
 
 // Index handler
 api.routeStatic("GET", "/", "index.html", "text/html");
@@ -40,6 +40,6 @@ api.get("/todo", {}, async (req, res) => {
 
 // Publish
 let url = api.publish();
-platform.log(`Listening at:
+pulumi.log(`Listening at:
 ${url}
 `);

@@ -1,5 +1,5 @@
 {
-    "name": "@lumi/platform",
+    "name": "@pulumi/pulumi",
     "version": "0.1",
     "typings": ".lumi/bin/index.d.ts",
     "scripts": {

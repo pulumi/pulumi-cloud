@@ -8,7 +8,7 @@ import * as config from "./config";
 aws.config.region = config.requireAWSRegion();
 
 // Note that we only export APIs with no AWS types exposed
-// We must ensure that consumers of the Pulumi platform do
+// We must ensure that consumers of the Pulumi framework do
 // not see any types from AWS when calling APIs in these
 // exported modules.
 
