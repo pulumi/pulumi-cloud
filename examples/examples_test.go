@@ -56,42 +56,43 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/pulumi",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
-				var baseUrl string
+				var baseURL string
 				for _, kv := range checkpoint.Latest.Resources.Iter() {
 					urn := kv.Key
 					res := kv.Value
 					if res.Type == "aws:apigateway/deployment:Deployment" && strings.HasPrefix(string(urn.Name()), "todo") {
-						baseUrl = res.Outputs["invokeUrl"].(string) + "stage/"
+						baseURL = res.Outputs["invokeUrl"].(string) + "stage/"
 
 					}
 				}
-				assert.NotNil(t, baseUrl, "expected to find a RestAPI Deployment with an `invokeURL`")
+				assert.NotNil(t, baseURL, "expected to find a RestAPI Deployment with an `invokeURL`")
 
 				// Validate the GET / endpoint
-				resp, err := http.Get(baseUrl)
+				resp, err := http.Get(baseURL)
 				assert.NoError(t, err, "expected to be able to GET /")
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
 
 				// Validate the GET /favico.ico endpoint
-				resp, err = http.Get(baseUrl + "/favicon.ico")
+				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
 				assert.Equal(t, int64(1150), resp.ContentLength)
 
 				// Validate the POST /todo/{id} endpoint
-				resp, err = http.Post(baseUrl+"/todo/abc", "application/x-www-form-urlencoded", strings.NewReader("xyz"))
+				resp, err = http.Post(baseURL+"/todo/abc", "application/x-www-form-urlencoded", strings.NewReader("xyz"))
 				assert.NoError(t, err, "expected to be able to POST /todo/{id}")
 				assert.Equal(t, 201, resp.StatusCode)
 
 				// Validate the GET /todo/{id} endpoint
-				resp, err = http.Get(baseUrl + "/todo/abc")
+				resp, err = http.Get(baseURL + "/todo/abc")
 				assert.NoError(t, err, "expected to be able to GET /todo/{id}")
 				byts, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				assert.Equal(t, `"xyz"`, string(byts))
+				assert.Equal(t, 401, resp.StatusCode)
+				assert.Equal(t, "Authorization header required", string(byts))
 
 				// Validate the GET /todo endpoint
-				resp, err = http.Get(baseUrl + "/todo/")
+				resp, err = http.Get(baseURL + "/todo/")
 				assert.NoError(t, err, "expected to be able to GET /todo")
 				assert.Equal(t, int64(28), resp.ContentLength)
 			},
