@@ -197,11 +197,7 @@ export interface Response {
     json(obj: any): void;
 }
 
-export type RouteHandler = (req: Request, res: Response) => void;
-
-export interface RouteOptions {
-    policies?: string[];
-}
+export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
 interface ReqRes {
     req: Request;
@@ -279,7 +275,8 @@ export class HttpAPI {
         this.lambdas = {};
     }
 
-    public routeStatic(method: string, path: string, filePath: string, contentType?: string) {
+    public staticFile(path: string, filePath: string, contentType?: string) {
+        let method = "GET";
         let swaggerMethod = this.routePrepare(method, path);
         let name = this.apiName + lumirt.sha1hash(method + ":" + path);
         let rolePolicyJSON = lumirt.jsonStringify(apigatewayAssumeRolePolicyDocument);
@@ -332,12 +329,11 @@ export class HttpAPI {
         return swaggerMethod;
     }
 
-    public route(method: string, path: string, options: RouteOptions, handler: RouteHandler) {
+    // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
+    // in LumiJS and the Lumi runtime yet.
+    public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
         let functionName = this.apiName + lumirt.sha1hash(method + ":" + path);
         let policies = [aws.iam.AWSLambdaFullAccess];
-        if (options !== undefined && options.policies !== undefined) {
-            policies = options.policies;
-        }
         let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
             let body: any;
             if (ev.body !== null) {
@@ -349,25 +345,42 @@ export class HttpAPI {
             }
             ctx.callbackWaitsForEmptyEventLoop = false;
             let reqres = apiGatewayToReqRes(ev, body, cb);
-            handler(reqres.req, reqres.res);
+            let i = 0;
+            let next = () => {
+                let nextMiddleware = middleware[i++];
+                if (nextMiddleware !== undefined) {
+                    nextMiddleware(reqres.req, reqres.res, next);
+                } else {
+                    handler(reqres.req, reqres.res, () => { return; });
+                }
+            };
+            next();
         });
         this.routeLambda(method, path, lambda);
     }
 
-    public get(path: string, options: RouteOptions, handler: RouteHandler) {
-        this.route("GET", path, options, handler);
+    public get(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("GET", path, middleware, handler);
     }
 
-    public put(path: string, options: RouteOptions, handler: RouteHandler) {
-        this.route("PUT", path, options, handler);
+    public put(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("PUT", path, middleware, handler);
     }
 
-    public post(path: string, options: RouteOptions, handler: RouteHandler) {
-        this.route("POST", path, options, handler);
+    public post(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("POST", path, middleware, handler);
     }
 
-    public delete(path: string, options: RouteOptions, handler: RouteHandler) {
-        this.route("DELETE", path, options, handler);
+    public delete(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("DELETE", path, middleware, handler);
+    }
+
+    public options(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("OPTIONS", path, middleware, handler);
+    }
+
+    public all(path: string, middleware: RouteHandler[], handler: RouteHandler) {
+        this.route("ANY", path, middleware, handler);
     }
 
     public publish(): string {
