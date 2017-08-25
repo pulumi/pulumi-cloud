@@ -29,7 +29,7 @@ export function poll<T>(name: string, rate: pulumi.timer.IntervalRate, poller: P
         console.log(`updated pollmarker ${name} to ${results.nextToken}`);
         for (let i = 0; i < (<any>results.items).length; i++) {
             let result = results.items[i];
-            await this.topic.publish(result);
+            await topic.publish(result);
             console.log(`published to topic ${JSON.stringify(result, null, "")}`);
         }
         console.log(`done`);

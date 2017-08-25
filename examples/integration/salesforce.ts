@@ -12,6 +12,15 @@ import {poll} from "./poll";
 let salesforceEmail = config.salesforceEmail;
 let salesforcePassword = config.salesforcePassword;
 
+let getAuthenticatedSalesforceConnection: () => Promise<any> = async () => {
+    let jsforce = require("jsforce");
+    console.log(`loaded jsforce`);
+    let conn = new jsforce.Connection();
+    let auth = await conn.login(salesforceEmail, salesforcePassword);
+    console.log(`authed with Salesforce: ${JSON.stringify(auth, null, "")}`);
+    return conn;
+};
+
 // query returns a stream of all Salesforce records matching the SOQL query.
 // This is a deployment-time API.
 export function query(
@@ -21,11 +30,7 @@ export function query(
     watermarkField: string,
     watermarkSelection: (a: string, b: string) => string): pulumi.Stream<Record> {
     let queryPoll = poll<Record>(name, {minutes: 1}, async (watermark) => {
-        let jsforce = require("jsforce");
-        console.log(`loaded jsforce`);
-        let conn = new jsforce.Connection();
-        let auth = await conn.login(salesforceEmail, salesforcePassword);
-        console.log(`authed with Salesforce: ${JSON.stringify(auth, null, "")}`);
+        let conn = await getAuthenticatedSalesforceConnection();
         if (watermark === undefined) {
             watermark = watermarkDefault;
         }
@@ -48,18 +53,14 @@ export function query(
 // queryAll runs a single SOQL query and returns the resulting records.
 // This is a runtime API.
 export let queryAll: (soql: string) => Promise<Record[]> = async (soql) => {
-    let jsforce = require("jsforce");
-    console.log(`loaded jsforce`);
-    let conn = new jsforce.Connection();
-    let auth = await conn.login(salesforceEmail, salesforcePassword);
-    console.log(`authed with Salesforce: ${JSON.stringify(auth, null, "")}`);
+    let conn = await getAuthenticatedSalesforceConnection();
     console.log(`query text: ${soql}`);
     let res: QueryResult = await conn.query(soql).run({autoFetch: true});
     console.log(`data from Salesforce: ${JSON.stringify(res, null, "")}`);
     if (!res.done) {
-        throw new Error(`expected to fetch all results - got ${res.records.length} of ${res.totalSize}`);
+        throw new Error(`expected to fetch all results - got ${(<any>res.records).length} of ${<any>res.totalSize}`);
     }
-    return res.records;
+    return <any>res.records;
 };
 
 export type Record = { [property: string]: any };

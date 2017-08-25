@@ -7,7 +7,7 @@ declare let Date: any;
 declare let Math: any;
 
 import * as pulumi from "@pulumi/pulumi";
-import * as config from "./config";
+import * as aws from "./aws";
 import {Digest} from "./digest";
 import * as mailgun from "./mailgun";
 import {poll} from "./poll";
@@ -16,6 +16,7 @@ import * as twitter from "./twitter";
 
 let sendEmail = mailgun.send;
 let salesforceQueryAll = salesforce.queryAll;
+let sendSESEmail = aws.sendEmail;
 
 function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
@@ -77,7 +78,7 @@ function exampleSalesforce1() {
         // Update timetamp to latest of all received edits.
         let newTimestamp = (<any>records).reduce(
             (ts: string, record: salesforce.Record) => {
-                let newts = record["LastModifiedDate"];
+                let newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;
             },
             timestamp,
@@ -121,4 +122,25 @@ function exampleSalesforce3() {
     });
 }
 
-exampleSalesforce2();
+function exampleSendSESEmail() {
+    let api = new pulumi.HttpAPI("sadsad");
+    api.get("/", [], async (req, res) => {
+        try {
+            await sendSESEmail({
+                to: ["luke@pulumi.com"],
+                bcc: ["enquiries@pulumi.com"],
+                replyTo: ["enquiries@pulumi.com"],
+                source: "\"Pulumi\" <enquiries@pulumi.com>",
+                subject: "Hi from Pulumi",
+                bodyHtml: "Hello, welcome to <b>Pulumi</b>.",
+            });
+            res.json({});
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    });
+    let url = api.publish();
+    pulumi.log(`URL: ${url}`);
+}
+
+exampleSendSESEmail();

@@ -16,3 +16,9 @@ export let mailgunApiKey: string;
 // See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
 export let salesforceEmail: string;
 export let salesforcePassword: string;
+
+// AWS IAM credentials for making calls agaisnt AWS resources.
+// See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html
+export let awsAccessKeyID: string;
+export let awsSecretAccessKey: string;
+export let awsRegion: string;
