@@ -17,6 +17,7 @@ import * as twitter from "./twitter";
 let sendEmail = mailgun.send;
 let salesforceQueryAll = salesforce.queryAll;
 let sendSESEmail = aws.sendEmail;
+let salesforceInsert = salesforce.insert;
 
 function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
@@ -139,6 +140,15 @@ function exampleSendSESEmail() {
             res.status(500).json(err);
         }
     });
+    api.get("/insertSalesforce", [], async (req, res) => {
+        try {
+            await salesforceInsert("Lead", {Email: "lukehoban@gmail.com", LastName: "Hoban", Company: "Pulumi"});
+            res.json({});
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    });
+
     let url = api.publish();
     pulumi.log(`URL: ${url}`);
 }

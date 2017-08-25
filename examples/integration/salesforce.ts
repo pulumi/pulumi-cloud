@@ -86,3 +86,9 @@ export function allObjectModifications(name: string, object: string, fields: str
         (a, b) => a > b ? a : b,
     );
 }
+
+export let insert: (tableName: string, object: any) => Promise<void> = async(tableName, object) => {
+    let conn = await getAuthenticatedSalesforceConnection();
+    let record = await conn.sobject(tableName).insert(object);
+    console.log(record);
+};
