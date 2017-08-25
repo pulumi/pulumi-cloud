@@ -128,9 +128,9 @@ function exampleSendSESEmail() {
         try {
             await sendSESEmail({
                 to: ["luke@pulumi.com"],
-                bcc: ["enquiries@pulumi.com"],
-                replyTo: ["enquiries@pulumi.com"],
-                source: "\"Pulumi\" <enquiries@pulumi.com>",
+                bcc: ["inquiries@pulumi.com"],
+                replyTo: ["inquiries@pulumi.com"],
+                source: "\"Pulumi\" <inquiries@pulumi.com>",
                 subject: "Hi from Pulumi",
                 bodyHtml: "Hello, welcome to <b>Pulumi</b>.",
             });
