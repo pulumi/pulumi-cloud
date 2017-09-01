@@ -13,6 +13,7 @@ import (
 
 	"github.com/pulumi/pulumi-fabric/pkg/resource/environment"
 	"github.com/pulumi/pulumi-fabric/pkg/testing/integration"
+	"github.com/pulumi/pulumi-framework/pkg/pulumiframework"
 )
 
 func Test_Examples(t *testing.T) {
@@ -56,16 +57,12 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/pulumi",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
-				var baseURL string
-				for _, kv := range checkpoint.Latest.Resources.Iter() {
-					urn := kv.Key
-					res := kv.Value
-					if res.Type == "aws:apigateway/deployment:Deployment" && strings.HasPrefix(string(urn.Name()), "todo") {
-						baseURL = res.Outputs["invokeUrl"].(string) + "stage/"
-
-					}
-				}
-				assert.NotNil(t, baseURL, "expected to find a RestAPI Deployment with an `invokeURL`")
+				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
+				pulumiResources := pulumiframework.GetPulumiResources(snapshot.Resources)
+				endpoint, ok := pulumiResources.Endpoints["todo"]
+				assert.True(t, ok)
+				baseURL := endpoint.URL
+				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET / endpoint
 				resp, err := http.Get(baseURL)
