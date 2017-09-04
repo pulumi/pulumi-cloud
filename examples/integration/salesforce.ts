@@ -1,13 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-declare let JSON: any;
-declare let Date: any;
-
 import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
-import {poll} from "./poll";
+import { poll } from "./poll";
 
 let salesforceEmail = config.salesforceEmail;
 let salesforcePassword = config.salesforcePassword;

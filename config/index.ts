@@ -4,8 +4,8 @@ import * as aws from "@pulumi/aws";
 
 export type Region = "WestUS" | "EastUS" | "WestEU";
 
-function convertToAWSRegion(region: Region): aws.Region {
-    switch (region) {
+function convertToAWSRegion(pulumiRegion: Region): aws.Region {
+    switch (pulumiRegion) {
         case "WestUS": return "us-west-2";
         case "EastUS": return "us-east-2";
         case "WestEU": return "eu-west-1";

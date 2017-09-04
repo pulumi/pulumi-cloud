@@ -21,10 +21,9 @@ export class Topic<T> implements Stream<T> {
         this.topic = new aws.sns.Topic(name, {});
         this.subscriptions = [];
         this.publish = (item) => {
-            let aws = require("aws-sdk");
-            let sns = new aws.SNS();
+            let awssdk = require("aws-sdk");
             let str = JSON.stringify(item);
-            return sns.publish({
+            return new awssdk.SNS().publish({
                 Message: str,
                 TopicArn: this.topic.id,
             }).promise();
@@ -38,7 +37,7 @@ export class Topic<T> implements Stream<T> {
                 // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid
                 // accidental conflict with handler inside `createSubscription`
                 await shandler(item);
-            })
+            }),
         );
     }
 }

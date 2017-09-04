@@ -1,16 +1,10 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-declare let JSON: any;
-declare let Date: any;
-declare let Math: any;
-
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "./aws";
-import {Digest} from "./digest";
+import { Digest } from "./digest";
 import * as mailgun from "./mailgun";
-import {poll} from "./poll";
+import { poll } from "./poll";
 import * as salesforce from "./salesforce";
 import * as twitter from "./twitter";
 
@@ -150,7 +144,7 @@ function exampleSendSESEmail() {
     });
 
     let url = api.publish();
-    pulumi.log(`URL: ${url}`);
+    console.log(`URL: ${url}`);
 }
 
 exampleSendSESEmail();

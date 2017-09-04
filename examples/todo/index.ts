@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "@pulumi/pulumi";
-import {authMiddleware} from "./middleware";
+import { authMiddleware } from "./middleware";
 
 let todos = new pulumi.Table("todo", "id", "S", {});
 let api = new pulumi.HttpAPI("todo");
@@ -41,6 +41,4 @@ api.get("/todo", [], async (req, res) => {
 
 // Publish
 let url = api.publish();
-pulumi.log(`Listening at:
-${url}
-`);
+console.log(`Listening at: ${url}`);

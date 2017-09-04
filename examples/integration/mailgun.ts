@@ -1,8 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-declare let JSON: any;
 import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
 

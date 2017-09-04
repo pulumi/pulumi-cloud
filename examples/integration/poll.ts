@@ -1,6 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-declare let JSON: any;
 import * as pulumi from "@pulumi/pulumi";
 
 // A poll function takes an opaque token generated from the last execution (or undefined), and

@@ -1,8 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as crypto from "crypto";
 import { asset } from "@pulumi/pulumi-fabric";
+import * as crypto from "crypto";
 import { Context as LambdaContext, LoggedFunction as Function } from "./function";
 declare let JSON: any;
 declare let Buffer: any;

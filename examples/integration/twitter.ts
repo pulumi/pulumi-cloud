@@ -1,13 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-declare let JSON: any;
-declare let Date: any;
-
 import * as pulumi from "@pulumi/pulumi";
 import * as config from "./config";
-import {poll} from "./poll";
+import { poll } from "./poll";
 
 // Search returns a stream of all tweets matching the search term.
 export function search(name: string, term: string): pulumi.Stream<Tweet> {

@@ -57,8 +57,8 @@ export class Table {
         this.readCapacity = this.table.readCapacity;
         this.writeCapacity = this.table.writeCapacity;
         let db = () => {
-            let aws = require("aws-sdk");
-            return new aws.DynamoDB.DocumentClient();
+            let awssdk = require("aws-sdk");
+            return new awssdk.DynamoDB.DocumentClient();
         };
         this.get = (query) => {
             return db().get({
@@ -77,10 +77,10 @@ export class Table {
                 TableName: this.tableName,
             }).promise().then((x: any) => x.Items);
         };
-        this.update = (query, updates) => {
+        this.update = (query: any, updates: any) => {
             let updateExpression = "";
             let attributeValues: {[key: string]: any} = {};
-            for (let key of updates) {
+            for (let key of Object.keys(updates)) {
                 let val = updates[key];
                 if (updateExpression === "") {
                     updateExpression += "SET ";
