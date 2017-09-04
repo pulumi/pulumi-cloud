@@ -1,8 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@lumi/aws";
-import * as lumi from "@lumi/lumi";
-import * as lumirt from "@lumi/lumirt";
+import * as aws from "@pulumi/aws";
+import * as crypto from "crypto";
+import { asset } from "@pulumi/pulumi-fabric";
 import { Context as LambdaContext, LoggedFunction as Function } from "./function";
 declare let JSON: any;
 declare let Buffer: any;
@@ -247,7 +247,7 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqR
                 statusCode: response.statusCode,
                 headers: response.headers,
                 isBase64Encoded: true,
-                body: (<any>response.body).toString("base64"),
+                body: response.body.toString("base64"),
             });
         },
         json: (obj: any) => {
@@ -280,8 +280,8 @@ export class HttpAPI {
     public staticFile(path: string, filePath: string, contentType?: string) {
         let method = "GET";
         let swaggerMethod = this.routePrepare(method, path);
-        let name = this.apiName + lumirt.sha1hash(method + ":" + path);
-        let rolePolicyJSON = lumirt.jsonStringify(apigatewayAssumeRolePolicyDocument);
+        let name = this.apiName + sha1hash(method + ":" + path);
+        let rolePolicyJSON = JSON.stringify(apigatewayAssumeRolePolicyDocument);
         let role = new aws.iam.Role(name, {
             assumeRolePolicy: rolePolicyJSON,
         });
@@ -292,10 +292,10 @@ export class HttpAPI {
         if (this.bucket === undefined) {
             this.bucket = new aws.s3.Bucket(this.apiName, {});
         }
-        let obj = new aws.s3.Object(name, {
+        let obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
-            source: new lumi.asset.File(filePath),
+            source: new asset.FileAsset(filePath),
             contentType: contentType,
         });
         this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucket, obj.key);
@@ -312,7 +312,7 @@ export class HttpAPI {
             this.swaggerSpec.paths[path] = {};
         }
         let swaggerMethod: string;
-        switch ((<any>method).toLowerCase()) {
+        switch (method.toLowerCase()) {
             case "get":
             case "put":
             case "post":
@@ -320,7 +320,7 @@ export class HttpAPI {
             case "options":
             case "head":
             case "patch":
-                swaggerMethod = (<any>method).toLowerCase();
+                swaggerMethod = method.toLowerCase();
                 break;
             case "any":
                 swaggerMethod = "x-amazon-apigateway-any-method";
@@ -334,7 +334,7 @@ export class HttpAPI {
     // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
     // in LumiJS and the Lumi runtime yet.
     public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        let functionName = this.apiName + lumirt.sha1hash(method + ":" + path);
+        let functionName = this.apiName + sha1hash(method + ":" + path);
         let policies = [aws.iam.AWSLambdaFullAccess];
         let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
             let body: any;
@@ -386,11 +386,11 @@ export class HttpAPI {
     }
 
     public publish(): string {
-        let swaggerJSON = lumirt.jsonStringify(this.swaggerSpec);
+        let swaggerJSON = JSON.stringify(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: swaggerJSON,
         });
-        let deploymentId = lumirt.sha1hash(swaggerJSON);
+        let deploymentId = sha1hash(swaggerJSON);
         this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + deploymentId, {
             restApi: this.api,
             stageName: "",
@@ -403,20 +403,16 @@ export class HttpAPI {
             deployment: this.deployment,
         });
 
-        let pathKeys = lumirt.objectKeys(this.swaggerSpec.paths);
-        for (let i = 0; i < (<any>pathKeys).length; i++) {
-            let path = pathKeys[i];
-            let methodKeys = lumirt.objectKeys(this.swaggerSpec.paths[path]);
-            for (let j = 0; j < (<any>methodKeys).length; j++) {
-                let method = methodKeys[j];
+        for (let path of Object.keys(this.swaggerSpec.paths)) {
+            for (let method of Object.keys(this.swaggerSpec.paths[path])) {
                 let lambda = this.lambdas[method + ":" + path];
                 if (lambda !== undefined) {
                     if (method === "x-amazon-apigateway-any-method") {
                         method = "*";
                     } else {
-                        method = (<any>method).toUpperCase();
+                        method = method.toUpperCase();
                     }
-                    let permissionName = this.apiName + "_invoke_" + lumirt.sha1hash(method + path);
+                    let permissionName = this.apiName + "_invoke_" + sha1hash(method + path);
                     let invokePermission = new aws.lambda.Permission(permissionName, {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
@@ -435,7 +431,7 @@ export class HttpAPI {
     // Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
     // The return value is a domain name that you must map your custom domain to using a DNS A record.
     // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
-    attachCustomDomain(domain: Domain): string {
+    private attachCustomDomain(domain: Domain): string {
         let awsDomain = new aws.apigateway.DomainName(this.apiName+"-"+domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
@@ -460,3 +456,11 @@ export interface Domain {
     certificatePrivateKey: string;
     certificateChain: string;
 }
+
+// sha1hash returns the SHA1 hash of the input string.
+function sha1hash(s: string): string {
+    let shasum: crypto.Hash = crypto.createHash("sha1");
+    shasum.update(s);
+    return shasum.digest("hex");
+}
+

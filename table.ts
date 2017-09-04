@@ -1,8 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-import * as aws from "@lumi/aws";
+import * as aws from "@pulumi/aws";
 
 export interface TableOptions {
     readCapacity?: number;
@@ -82,10 +80,8 @@ export class Table {
         this.update = (query, updates) => {
             let updateExpression = "";
             let attributeValues: {[key: string]: any} = {};
-            let keys = (<any>Object).keys(updates);
-            for (let i = 0; i < (<any>keys).length; i++) {
-                let key = keys[i];
-                let val = (<any>updates)[key];
+            for (let key of updates) {
+                let val = updates[key];
                 if (updateExpression === "") {
                     updateExpression += "SET ";
                 } else {

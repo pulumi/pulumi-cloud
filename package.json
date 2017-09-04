@@ -1,18 +1,17 @@
 {
     "name": "@pulumi/pulumi",
     "version": "0.1",
-    "typings": ".lumi/bin/index.d.ts",
+    "typings": "bin/index.d.ts",
     "scripts": {
-        "build": "lumijs"
+        "build": "tsc"
     },
     "devDependencies": {
-        "typescript": "^2.1.4",
-        "tslint": "^5.4.3"
+        "@types/node": "^8.0.26",
+        "tslint": "^5.4.3",
+        "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "@lumi/aws": "*",
-        "@lumi/lumi": "*",
-        "@lumi/lumirt": "*"
+        "@pulumi/aws": "*",
+        "@pulumi/pulumi-fabric": "*"
     }
 }
-

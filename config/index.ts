@@ -1,4 +1,6 @@
-import * as aws from "@lumi/aws";
+// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+
+import * as aws from "@pulumi/aws";
 
 export type Region = "WestUS" | "EastUS" | "WestEU";
 
