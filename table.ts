@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
 
 export interface TableOptions {
     readCapacity?: number;
@@ -9,11 +10,11 @@ export interface TableOptions {
 
 export class Table {
     private table: aws.dynamodb.Table;
-    private readonly readCapacity: number;
-    private readonly writeCapacity: number;
+    private readonly readCapacity: fabric.Property<number>;
+    private readonly writeCapacity: fabric.Property<number>;
 
     // Inside + Outside API
-    public tableName: string;
+    public tableName: fabric.Property<string>;
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
 

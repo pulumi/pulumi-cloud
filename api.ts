@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import { asset } from "@pulumi/pulumi-fabric";
+import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
 import { Context as LambdaContext, LoggedFunction as Function } from "./function";
 declare let JSON: any;
@@ -55,7 +55,7 @@ interface APIGatewayResponse {
 interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: SwaggerOperation; }; };
+    paths: { [path: string]: { [method: string]: fabric.Property<SwaggerOperation>; }; };
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
@@ -295,15 +295,17 @@ export class HttpAPI {
         let obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
-            source: new asset.FileAsset(filePath),
+            source: new fabric.asset.FileAsset(filePath),
             contentType: contentType,
         });
-        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucket, obj.key);
+        this.swaggerSpec.paths[path][swaggerMethod] =
+            role.arn.then((arn: aws.ARN) => createPathSpecObject(arn, this.apiName, name));
     }
 
     private routeLambda(method: string, path: string, lambda: Function) {
         let swaggerMethod = this.routePrepare(method, path);
-        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecLambda(lambda.lambda.arn);
+        this.swaggerSpec.paths[path][swaggerMethod] =
+            lambda.lambda.arn.then((arn: aws.ARN) => createPathSpecLambda(arn));
         this.lambdas[swaggerMethod + ":" + path] = lambda;
     }
 
@@ -431,7 +433,7 @@ export class HttpAPI {
     // Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
     // The return value is a domain name that you must map your custom domain to using a DNS A record.
     // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
-    private attachCustomDomain(domain: Domain): string {
+    private attachCustomDomain(domain: Domain): fabric.Property<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName+"-"+domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
