@@ -22,9 +22,9 @@ export class Topic<T> implements Stream<T> {
         this.subscriptions = [];
         this.publish = (item) => {
             let awssdk = require("aws-sdk");
-            let str = JSON.stringify(item);
-            return new awssdk.SNS().publish({
-                Message: str,
+            let snsconn = awssdk.SNS();
+            return new snsconn.publish({
+                Message: JSON.stringify(item),
                 TopicArn: this.topic.id,
             }).promise();
         };
