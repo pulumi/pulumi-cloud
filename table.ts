@@ -10,11 +10,11 @@ export interface TableOptions {
 
 export class Table {
     private table: aws.dynamodb.Table;
-    private readonly readCapacity: fabric.Property<number>;
-    private readonly writeCapacity: fabric.Property<number>;
+    private readonly readCapacity: fabric.Computed<number>;
+    private readonly writeCapacity: fabric.Computed<number>;
 
     // Inside + Outside API
-    public tableName: fabric.Property<string>;
+    public tableName: fabric.Computed<string>;
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
 
