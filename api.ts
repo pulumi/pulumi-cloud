@@ -262,7 +262,7 @@ let stageName = "stage";
 
 // API is a higher level abstraction for working with AWS APIGateway reources.
 export class HttpAPI {
-    public url?: string;
+    public url?: fabric.Computed<string>;
 
     private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
@@ -336,30 +336,32 @@ export class HttpAPI {
     // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
     // in LumiJS and the Lumi runtime yet.
     public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        let functionName = this.apiName + sha1hash(method + ":" + path);
-        let policies = [aws.iam.AWSLambdaFullAccess];
-        let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
-            let body: any;
-            if (ev.body !== null) {
-                if (ev.isBase64Encoded) {
-                    body = Buffer.from(ev.body, "base64");
-                } else {
-                    body = Buffer.from(ev.body, "utf8");
+        let lambda = new Function(
+            this.apiName + sha1hash(method + ":" + path),
+            [ aws.iam.AWSLambdaFullAccess ],
+            (ev: APIGatewayRequest, ctx, cb) => {
+                let body: any;
+                if (ev.body !== null) {
+                    if (ev.isBase64Encoded) {
+                        body = Buffer.from(ev.body, "base64");
+                    } else {
+                        body = Buffer.from(ev.body, "utf8");
+                    }
                 }
-            }
-            ctx.callbackWaitsForEmptyEventLoop = false;
-            let reqres = apiGatewayToReqRes(ev, body, cb);
-            let i = 0;
-            let next = () => {
-                let nextMiddleware = middleware[i++];
-                if (nextMiddleware !== undefined) {
-                    nextMiddleware(reqres.req, reqres.res, next);
-                } else {
-                    handler(reqres.req, reqres.res, () => { return; });
-                }
-            };
-            next();
-        });
+                ctx.callbackWaitsForEmptyEventLoop = false;
+                let reqres = apiGatewayToReqRes(ev, body, cb);
+                let i = 0;
+                let next = () => {
+                    let nextMiddleware = middleware[i++];
+                    if (nextMiddleware !== undefined) {
+                        nextMiddleware(reqres.req, reqres.res, next);
+                    } else {
+                        handler(reqres.req, reqres.res, () => { return; });
+                    }
+                };
+                next();
+            },
+        );
         this.routeLambda(method, path, lambda);
     }
 
@@ -387,7 +389,7 @@ export class HttpAPI {
         this.route("ANY", path, middleware, handler);
     }
 
-    public publish(): string {
+    public publish(): fabric.Computed<string> {
         let swaggerJSON = JSON.stringify(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: swaggerJSON,
@@ -419,14 +421,15 @@ export class HttpAPI {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: this.deployment.executionArn + stageName + "/" + method + path,
+                        sourceArn: this.deployment.executionArn.mapValue((arn: aws.ARN) =>
+                            arn + stageName + "/" + method + path),
                     });
                 }
             }
         }
 
-        this.url = this.deployment.invokeUrl + stageName + "/";
-        return this.deployment.invokeUrl + stageName + "/";
+        this.url = this.deployment.invokeUrl.mapValue((url: string) => url + stageName + "/");
+        return this.url;
     }
 
     // Attach a custom domain to this HttpAPI.
@@ -434,14 +437,14 @@ export class HttpAPI {
     // The return value is a domain name that you must map your custom domain to using a DNS A record.
     // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
     private attachCustomDomain(domain: Domain): fabric.Computed<string> {
-        let awsDomain = new aws.apigateway.DomainName(this.apiName+"-"+domain.domainName, {
+        let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
             certificateBody: domain.certificateBody,
             certificatePrivateKey: domain.certificatePrivateKey,
             certificateChain: domain.certificateChain,
         });
-        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName+"-"+domain.domainName, {
+        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName + "-" + domain.domainName, {
             restApi: this.api,
             stageName: stageName,
             domainName: awsDomain.domainName,

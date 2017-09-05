@@ -143,8 +143,7 @@ function exampleSendSESEmail() {
         }
     });
 
-    let url = api.publish();
-    console.log(`URL: ${url}`);
+    api.publish().mapValue((url: string) => { console.log(`URL: ${url}`); });
 }
 
 exampleSendSESEmail();

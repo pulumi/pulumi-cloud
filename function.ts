@@ -12,6 +12,7 @@ export { Context, Handler } from "@pulumi/aws/serverless";
 export class LoggedFunction {
     public lambda: aws.lambda.Function;
     public role: aws.iam.Role;
+
     constructor(name: string, policies: aws.ARN[], func: aws.serverless.Handler) {
         let options = {
             policies: policies,
@@ -19,13 +20,13 @@ export class LoggedFunction {
                 targetArn: getUnhandledErrorTopic().arn,
             },
         };
+
         let lambda = new aws.serverless.Function(name, options, func);
         this.lambda = lambda.lambda;
         this.role = lambda.role;
-        let lambdaLogGroupName = "/aws/lambda/" + this.lambda.name;
 
         let loggroup = new aws.cloudwatch.LogGroup(name, {
-            name: lambdaLogGroupName,
+            name: this.lambda.name.mapValue((n: string) => "/aws/lambda/" + n),
             retentionInDays: 1,
         });
         let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
