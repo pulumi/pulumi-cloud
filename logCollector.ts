@@ -12,7 +12,7 @@ let region = aws.config.requireRegion();
 let logCollectorName = "pulumi-app-log-collector";
 let logCollector: aws.serverless.Function | undefined;
 
-export function getLogCollector(): fabric.Computed<aws.lambda.Function> {
+export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda
         logCollector = new aws.serverless.Function(

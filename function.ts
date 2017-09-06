@@ -11,7 +11,7 @@ export { Context, Handler } from "@pulumi/aws/serverless";
 // log collected across all functions in the application, allowing all application logs
 // to be read from a single place.
 export class LoggedFunction {
-    public lambda: fabric.Computed<aws.lambda.Function>;
+    public lambda: aws.lambda.Function;
     public role: aws.iam.Role;
 
     constructor(name: string, policies: aws.ARN[], func: aws.serverless.Handler) {
@@ -27,13 +27,12 @@ export class LoggedFunction {
         this.role = lambda.role;
 
         let loggroup = new aws.cloudwatch.LogGroup(name, {
-            name: this.lambda.mapValue((l: aws.lambda.Function) =>
-                l.name.mapValue((n: string) => "/aws/lambda/" + n)),
+            name: this.lambda.name.mapValue((n: string) => "/aws/lambda/" + n),
             retentionInDays: 1,
         });
         let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
             logGroup: loggroup,
-            destinationArn: getLogCollector().mapValue((l: aws.lambda.Function) => l.arn),
+            destinationArn: getLogCollector().arn,
             filterPattern: "",
         });
     }

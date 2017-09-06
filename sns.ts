@@ -56,7 +56,7 @@ export function createSubscription(
     return new aws.sns.TopicSubscription(resName, {
         topic: topic,
         protocol: "lambda",
-        endpoint: func.lambda.mapValue((l: aws.lambda.Function) => l.arn),
+        endpoint: func.lambda.arn,
     });
 }
 

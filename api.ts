@@ -305,8 +305,7 @@ export class HttpAPI {
     private routeLambda(method: string, path: string, func: LoggedFunction) {
         let swaggerMethod = this.routePrepare(method, path);
         this.swaggerSpec.paths[path][swaggerMethod] =
-            func.lambda.mapValue((l: aws.lambda.Function) =>
-                l.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn)));
+            func.lambda.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn));
         this.lambdas[swaggerMethod + ":" + path] = func;
     }
 
