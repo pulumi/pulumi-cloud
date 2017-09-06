@@ -1,5 +1,4 @@
 name: todo
 description: A todo app backend.
-dependencies:
-    pulumi: "*"
+runtime: nodejs
 

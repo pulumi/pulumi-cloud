@@ -1,9 +1,10 @@
 {
     "name": "crawler",
     "version": "0.1",
-    "typings": ".lumi/bin/index.d.ts",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
     "scripts": {
-        "build": "lumijs"
+        "build": "tsc"
     },
     "peerDependencies": {
         "@pulumi/pulumi": "*"
