@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
 
 let region = aws.config.requireRegion();
 
@@ -11,7 +12,7 @@ let region = aws.config.requireRegion();
 let logCollectorName = "pulumi-app-log-collector";
 let logCollector: aws.serverless.Function | undefined;
 
-export function getLogCollector(): aws.lambda.Function {
+export function getLogCollector(): fabric.Computed<aws.lambda.Function> {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda
         logCollector = new aws.serverless.Function(
@@ -38,3 +39,4 @@ export function getLogCollector(): aws.lambda.Function {
     }
     return logCollector.lambda;
 }
+

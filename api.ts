@@ -3,7 +3,7 @@
 import * as aws from "@pulumi/aws";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
-import { Context as LambdaContext, LoggedFunction as Function } from "./function";
+import { LoggedFunction } from "./function";
 declare let JSON: any;
 declare let Buffer: any;
 
@@ -268,7 +268,7 @@ export class HttpAPI {
     private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
     private apiName: string;
-    private lambdas: { [key: string]: Function };
+    private lambdas: { [key: string]: LoggedFunction };
     private bucket: aws.s3.Bucket;
 
     constructor(apiName: string) {
@@ -302,11 +302,12 @@ export class HttpAPI {
             role.arn.mapValue((arn: aws.ARN) => createPathSpecObject(arn, this.apiName, name));
     }
 
-    private routeLambda(method: string, path: string, lambda: Function) {
+    private routeLambda(method: string, path: string, func: LoggedFunction) {
         let swaggerMethod = this.routePrepare(method, path);
         this.swaggerSpec.paths[path][swaggerMethod] =
-            lambda.lambda.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn));
-        this.lambdas[swaggerMethod + ":" + path] = lambda;
+            func.lambda.mapValue((l: aws.lambda.Function) =>
+                l.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn)));
+        this.lambdas[swaggerMethod + ":" + path] = func;
     }
 
     private routePrepare(method: string, path: string): string {
@@ -336,10 +337,10 @@ export class HttpAPI {
     // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
     // in LumiJS and the Lumi runtime yet.
     public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        let lambda = new Function(
+        let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
-            (ev: APIGatewayRequest, ctx, cb) => {
+            (ev: APIGatewayRequest, ctx: any, cb) => {
                 let body: any;
                 if (ev.body !== null) {
                     if (ev.isBase64Encoded) {

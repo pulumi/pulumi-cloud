@@ -36,7 +36,7 @@ export interface SNSMessageAttribute {
 // createSubscription creates a subscription on an SNS topic, passing the full SNSItem to the handler.
 export function createSubscription(
     resName: string, topic: aws.sns.Topic, handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
-    let lambda = new LoggedFunction(
+    let func = new LoggedFunction(
         resName,
         [ aws.iam.AWSLambdaFullAccess ],
         (ev: SNSEvent, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
@@ -49,14 +49,14 @@ export function createSubscription(
     );
     let invokePermission = new aws.lambda.Permission(resName, {
         action: "lambda:invokeFunction",
-        function: lambda.lambda,
+        function: func.lambda,
         principal: "sns.amazonaws.com",
         sourceArn: topic.id,
     });
-    let subscription = new aws.sns.TopicSubscription(resName, {
+    return new aws.sns.TopicSubscription(resName, {
         topic: topic,
         protocol: "lambda",
-        endpoint: lambda.lambda.arn,
+        endpoint: func.lambda.mapValue((l: aws.lambda.Function) => l.arn),
     });
-    return subscription;
 }
+
