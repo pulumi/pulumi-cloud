@@ -13,15 +13,15 @@ before_install:
     - export PATH=$HOME/.yarn/bin:$PATH
 install:
     - export VERSION=HEAD
-    # Clone the Lumi repo and use its script to fetch the latest installation packages.
-    - git clone git@github.com:pulumi/pulumi-fabric ${GOPATH}/src/github.com/pulumi/pulumi-fabric
-    - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh lumi ${VERSION} ~/.lumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh aws ${VERSION} ~/.lumi
+    # Clone the Pulumi repo and use its script to fetch the latest installation packages.
+    - git clone git@github.com:pulumi/pulumi ${GOPATH}/src/github.com/pulumi/pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi ${VERSION} ~/.pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} ~/.pulumi/packs/aws
     - dep ensure
     - yarn install
 before_script:
-    - export LUMIROOT=~/.lumi
-    - export PATH=$LUMIROOT/cmd:$PATH
+    - export PULUMI=~/.pulumi
+    - export PATH=$PULUMI/bin:$PULUMI/nodejs/sdk:$PATH
 script:
     - make all
 after_script:
