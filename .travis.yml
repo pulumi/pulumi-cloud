@@ -4,8 +4,8 @@ sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
     # Dep for Go dependency management.
     - go get -v github.com/golang/dep/cmd/dep
-    # Node.js 7.x for LumiJS and associated JS code.
-    - nvm install v7
+    # Node.js 6.10.2 for Pulumi Fabric's Node.js runtime.
+    - nvm install v6.10.2
     # Install the AWS CLI so that we can publish the resulting release (if applicable) at the end.
     - pip install --upgrade --user awscli
     # Install Yarn as per https://yarnpkg.com/lang/en/docs/install-ci/#travis-tab.
