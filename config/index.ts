@@ -1,9 +1,20 @@
-import * as aws from "@lumi/aws";
+// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+
+import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
+
+let _config = new fabric.Config("pulumi:config");
 
 export type Region = "WestUS" | "EastUS" | "WestEU";
 
-function convertToAWSRegion(region: Region): aws.Region {
-    switch (region) {
+export let region: Region = <Region>_config.require("region");
+
+export function requireAWSRegion(): aws.Region {
+    return convertToAWSRegion(region);
+}
+
+function convertToAWSRegion(pregion: Region): aws.Region {
+    switch (pregion) {
         case "WestUS": return "us-west-2";
         case "EastUS": return "us-east-2";
         case "WestEU": return "eu-west-1";
@@ -12,16 +23,3 @@ function convertToAWSRegion(region: Region): aws.Region {
     }
 }
 
-export let region: Region | undefined;
-
-export function requireRegion(): Region {
-    if (region === undefined) {
-        throw new Error("No Pulumi region has been configured");
-    }
-    return region;
-}
-
-export function requireAWSRegion(): aws.Region {
-    let pulumiRegion = requireRegion();
-    return convertToAWSRegion(pulumiRegion);
-}

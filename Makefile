@@ -1,7 +1,4 @@
 PROCCNT=$(shell nproc --all)
-LUMIROOT ?= /usr/local/lumi
-LUMILIB   = ${LUMIROOT}/packs
-THISLIB   = ${LUMILIB}/pulumi
 TESTPARALLELISM=10
 
 .PHONY: default
@@ -29,18 +26,13 @@ clean:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	@yarn link @lumi/lumirt @lumi/lumi @lumi/aws # ensure we link dependencies.
-	@lumijs # compile the LumiPack
-	@lumi pack verify # ensure the pack verifies
+	yarn link @pulumi/pulumi-fabric @pulumi/aws # ensure we link dependencies.
+	yarn run build # compile the LumiPack
 
 .PHONY: install
 install:
 	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	@yarn link # ensure NPM references resolve locally
-	@mkdir -p ${LUMILIB} # ensure the machine-wide library dir exists.
-	@cp -R ./.lumi/bin/ ${THISLIB} # copy to the standard library location.
-	@cp package.json ${THISLIB} # ensure the result is a proper NPM package.
-	@cp -RL ./node_modules ${THISLIB} # copy the links we installed.
+	yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:

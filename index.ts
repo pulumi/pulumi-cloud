@@ -1,7 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@lumi/aws";
-import * as runtime from "@lumi/lumirt";
+import * as aws from "@pulumi/aws";
 import * as config from "./config";
 
 // Set the AWS region based on the Pulumi region configuration
@@ -18,9 +17,4 @@ export * from "./topic";
 export { onError, ErrorHandler } from "./unhandledError";
 import * as timer from "./timer";
 export { timer };
-
-export function log(s: string) {
-    runtime.printf(s);
-    runtime.printf("\n");
-}
 

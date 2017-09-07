@@ -1,9 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@lumi/aws";
-import * as lumi from "@lumi/lumi";
-import * as lumirt from "@lumi/lumirt";
-import { Context as LambdaContext, LoggedFunction as Function } from "./function";
+import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
+import * as crypto from "crypto";
+import { LoggedFunction } from "./function";
 declare let JSON: any;
 declare let Buffer: any;
 
@@ -55,7 +55,7 @@ interface APIGatewayResponse {
 interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: SwaggerOperation; }; };
+    paths: { [path: string]: { [method: string]: fabric.Computed<SwaggerOperation>; }; };
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
@@ -247,7 +247,7 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqR
                 statusCode: response.statusCode,
                 headers: response.headers,
                 isBase64Encoded: true,
-                body: (<any>response.body).toString("base64"),
+                body: response.body.toString("base64"),
             });
         },
         json: (obj: any) => {
@@ -262,13 +262,13 @@ let stageName = "stage";
 
 // API is a higher level abstraction for working with AWS APIGateway reources.
 export class HttpAPI {
-    public url?: string;
+    public url?: fabric.Computed<string>;
 
     private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
     private apiName: string;
-    private lambdas: { [key: string]: Function };
+    private lambdas: { [key: string]: LoggedFunction };
     private bucket: aws.s3.Bucket;
 
     constructor(apiName: string) {
@@ -280,8 +280,8 @@ export class HttpAPI {
     public staticFile(path: string, filePath: string, contentType?: string) {
         let method = "GET";
         let swaggerMethod = this.routePrepare(method, path);
-        let name = this.apiName + lumirt.sha1hash(method + ":" + path);
-        let rolePolicyJSON = lumirt.jsonStringify(apigatewayAssumeRolePolicyDocument);
+        let name = this.apiName + sha1hash(method + ":" + path);
+        let rolePolicyJSON = JSON.stringify(apigatewayAssumeRolePolicyDocument);
         let role = new aws.iam.Role(name, {
             assumeRolePolicy: rolePolicyJSON,
         });
@@ -292,19 +292,21 @@ export class HttpAPI {
         if (this.bucket === undefined) {
             this.bucket = new aws.s3.Bucket(this.apiName, {});
         }
-        let obj = new aws.s3.Object(name, {
+        let obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
-            source: new lumi.asset.File(filePath),
+            source: new fabric.asset.FileAsset(filePath),
             contentType: contentType,
         });
-        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecObject(role.arn, obj.bucket.bucket, obj.key);
+        this.swaggerSpec.paths[path][swaggerMethod] =
+            role.arn.mapValue((arn: aws.ARN) => createPathSpecObject(arn, this.apiName, name));
     }
 
-    private routeLambda(method: string, path: string, lambda: Function) {
+    private routeLambda(method: string, path: string, func: LoggedFunction) {
         let swaggerMethod = this.routePrepare(method, path);
-        this.swaggerSpec.paths[path][swaggerMethod] = createPathSpecLambda(lambda.lambda.arn);
-        this.lambdas[swaggerMethod + ":" + path] = lambda;
+        this.swaggerSpec.paths[path][swaggerMethod] =
+            func.lambda.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn));
+        this.lambdas[swaggerMethod + ":" + path] = func;
     }
 
     private routePrepare(method: string, path: string): string {
@@ -312,7 +314,7 @@ export class HttpAPI {
             this.swaggerSpec.paths[path] = {};
         }
         let swaggerMethod: string;
-        switch ((<any>method).toLowerCase()) {
+        switch (method.toLowerCase()) {
             case "get":
             case "put":
             case "post":
@@ -320,7 +322,7 @@ export class HttpAPI {
             case "options":
             case "head":
             case "patch":
-                swaggerMethod = (<any>method).toLowerCase();
+                swaggerMethod = method.toLowerCase();
                 break;
             case "any":
                 swaggerMethod = "x-amazon-apigateway-any-method";
@@ -334,30 +336,32 @@ export class HttpAPI {
     // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
     // in LumiJS and the Lumi runtime yet.
     public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        let functionName = this.apiName + lumirt.sha1hash(method + ":" + path);
-        let policies = [aws.iam.AWSLambdaFullAccess];
-        let lambda = new Function(functionName, policies, (ev: APIGatewayRequest, ctx, cb) => {
-            let body: any;
-            if (ev.body !== null) {
-                if (ev.isBase64Encoded) {
-                    body = Buffer.from(ev.body, "base64");
-                } else {
-                    body = Buffer.from(ev.body, "utf8");
+        let lambda = new LoggedFunction(
+            this.apiName + sha1hash(method + ":" + path),
+            [ aws.iam.AWSLambdaFullAccess ],
+            (ev: APIGatewayRequest, ctx: any, cb) => {
+                let body: any;
+                if (ev.body !== null) {
+                    if (ev.isBase64Encoded) {
+                        body = Buffer.from(ev.body, "base64");
+                    } else {
+                        body = Buffer.from(ev.body, "utf8");
+                    }
                 }
-            }
-            ctx.callbackWaitsForEmptyEventLoop = false;
-            let reqres = apiGatewayToReqRes(ev, body, cb);
-            let i = 0;
-            let next = () => {
-                let nextMiddleware = middleware[i++];
-                if (nextMiddleware !== undefined) {
-                    nextMiddleware(reqres.req, reqres.res, next);
-                } else {
-                    handler(reqres.req, reqres.res, () => { return; });
-                }
-            };
-            next();
-        });
+                ctx.callbackWaitsForEmptyEventLoop = false;
+                let reqres = apiGatewayToReqRes(ev, body, cb);
+                let i = 0;
+                let next = () => {
+                    let nextMiddleware = middleware[i++];
+                    if (nextMiddleware !== undefined) {
+                        nextMiddleware(reqres.req, reqres.res, next);
+                    } else {
+                        handler(reqres.req, reqres.res, () => { return; });
+                    }
+                };
+                next();
+            },
+        );
         this.routeLambda(method, path, lambda);
     }
 
@@ -385,12 +389,12 @@ export class HttpAPI {
         this.route("ANY", path, middleware, handler);
     }
 
-    public publish(): string {
-        let swaggerJSON = lumirt.jsonStringify(this.swaggerSpec);
+    public publish(): fabric.Computed<string> {
+        let swaggerJSON = JSON.stringify(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: swaggerJSON,
         });
-        let deploymentId = lumirt.sha1hash(swaggerJSON);
+        let deploymentId = sha1hash(swaggerJSON);
         this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + deploymentId, {
             restApi: this.api,
             stageName: "",
@@ -403,47 +407,44 @@ export class HttpAPI {
             deployment: this.deployment,
         });
 
-        let pathKeys = lumirt.objectKeys(this.swaggerSpec.paths);
-        for (let i = 0; i < (<any>pathKeys).length; i++) {
-            let path = pathKeys[i];
-            let methodKeys = lumirt.objectKeys(this.swaggerSpec.paths[path]);
-            for (let j = 0; j < (<any>methodKeys).length; j++) {
-                let method = methodKeys[j];
+        for (let path of Object.keys(this.swaggerSpec.paths)) {
+            for (let method of Object.keys(this.swaggerSpec.paths[path])) {
                 let lambda = this.lambdas[method + ":" + path];
                 if (lambda !== undefined) {
                     if (method === "x-amazon-apigateway-any-method") {
                         method = "*";
                     } else {
-                        method = (<any>method).toUpperCase();
+                        method = method.toUpperCase();
                     }
-                    let permissionName = this.apiName + "_invoke_" + lumirt.sha1hash(method + path);
+                    let permissionName = this.apiName + "_invoke_" + sha1hash(method + path);
                     let invokePermission = new aws.lambda.Permission(permissionName, {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: this.deployment.executionArn + stageName + "/" + method + path,
+                        sourceArn: this.deployment.executionArn.mapValue((arn: aws.ARN) =>
+                            arn + stageName + "/" + method + path),
                     });
                 }
             }
         }
 
-        this.url = this.deployment.invokeUrl + stageName + "/";
-        return this.deployment.invokeUrl + stageName + "/";
+        this.url = this.deployment.invokeUrl.mapValue((url: string) => url + stageName + "/");
+        return this.url;
     }
 
     // Attach a custom domain to this HttpAPI.
     // Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
     // The return value is a domain name that you must map your custom domain to using a DNS A record.
     // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
-    attachCustomDomain(domain: Domain): string {
-        let awsDomain = new aws.apigateway.DomainName(this.apiName+"-"+domain.domainName, {
+    private attachCustomDomain(domain: Domain): fabric.Computed<string> {
+        let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
             certificateBody: domain.certificateBody,
             certificatePrivateKey: domain.certificatePrivateKey,
             certificateChain: domain.certificateChain,
         });
-        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName+"-"+domain.domainName, {
+        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName + "-" + domain.domainName, {
             restApi: this.api,
             stageName: stageName,
             domainName: awsDomain.domainName,
@@ -460,3 +461,11 @@ export interface Domain {
     certificatePrivateKey: string;
     certificateChain: string;
 }
+
+// sha1hash returns the SHA1 hash of the input string.
+function sha1hash(s: string): string {
+    let shasum: crypto.Hash = crypto.createHash("sha1");
+    shasum.update(s);
+    return shasum.digest("hex");
+}
+

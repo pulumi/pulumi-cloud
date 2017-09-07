@@ -1,14 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-import * as aws from "@lumi/aws";
-import * as serverless from "@lumi/aws/serverless";
-declare let require: any;
-class Buffer {
-    constructor(data: string, encoding: string) { return; }
-    toString(kind: string): string { return ""; }
-}
-declare let JSON: any;
+import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
 
 let region = aws.config.requireRegion();
 
@@ -17,14 +10,15 @@ let region = aws.config.requireRegion();
 // created and managed by the Pulumi framework.
 
 let logCollectorName = "pulumi-app-log-collector";
-let logCollector: serverless.Function | undefined;
+let logCollector: aws.serverless.Function | undefined;
+
 export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda
-        logCollector = new serverless.Function(
+        logCollector = new aws.serverless.Function(
             logCollectorName,
             { policies: [ aws.iam.AWSLambdaFullAccess ] },
-            (ev, ctx, cb) => {
+            (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 let zlib = require("zlib");
                 let payload = new Buffer(ev.awslogs.data, "base64");
                 zlib.gunzip(payload, (err: any, result: Buffer) => {
@@ -45,3 +39,4 @@ export function getLogCollector(): aws.lambda.Function {
     }
     return logCollector.lambda;
 }
+
