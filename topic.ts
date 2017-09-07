@@ -10,7 +10,8 @@ export class Topic<T> implements Stream<T> {
     // Inside + Outside API
     private name: string;
     private topic: aws.sns.Topic;
-    private subscriptions: aws.sns.TopicSubscription[];
+    // TODO[pulumi/pulumi-fabric#331]: bring this back once deadlock issues are resolved.
+    // private subscriptions: aws.sns.TopicSubscription[];
 
     // Inside API (lambda-valued properties)
     public publish: (item: T) => Promise<void>;
@@ -19,7 +20,8 @@ export class Topic<T> implements Stream<T> {
     constructor(name: string) {
         this.name = name;
         this.topic = new aws.sns.Topic(name, {});
-        this.subscriptions = [];
+        // TODO[pulumi/pulumi-fabric#331]: bring this back once deadlock issues are resolved.
+        // this.subscriptions = [];
         this.publish = (item) => {
             let awssdk = require("aws-sdk");
             let snsconn = awssdk.SNS();
@@ -31,14 +33,15 @@ export class Topic<T> implements Stream<T> {
     }
 
     public subscribe(name: string, shandler: (item: T) => Promise<void>) {
-        this.subscriptions.push(
+        // TODO[pulumi/pulumi-fabric#331]: bring this back once deadlock issues are resolved.
+        // this.subscriptions.push(
             sns.createSubscription(this.name + "_" + name, this.topic, async (snsItem: sns.SNSItem) => {
                 let item = JSON.parse(snsItem.Message);
                 // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid
                 // accidental conflict with handler inside `createSubscription`
                 await shandler(item);
-            }),
-        );
+            });
+        // );
     }
 }
 
