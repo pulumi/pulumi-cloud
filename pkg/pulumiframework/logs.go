@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/golang/glog"
+	"github.com/pulumi/pulumi-framework/pkg/component"
 )
 
 type awsConnection struct {
@@ -23,14 +24,13 @@ func newAWSConnection(sess *session.Session) *awsConnection {
 
 var logRegexp = regexp.MustCompile(".*Z\t[a-g0-9\\-]*\t(.*)")
 
-func (p *awsConnection) getLogsForFunctionsConcurrently(functions map[string]Function) []LogEntry {
-	var logs []LogEntry
-	ch := make(chan []LogEntry)
-	for _, fn := range functions {
-		go func(fn Function) {
-			f := fn.(*function)
-			ch <- p.getLogsForFunction(f)
-		}(fn)
+func (p *awsConnection) getLogsForFunctionsConcurrently(functions []string) []component.LogEntry {
+	var logs []component.LogEntry
+	ch := make(chan []component.LogEntry)
+	for _, functionName := range functions {
+		go func(functionName string) {
+			ch <- p.getLogsForFunction(functionName)
+		}(functionName)
 	}
 	for i := 0; i < len(functions); i++ {
 		logs = append(logs, <-ch...)
@@ -38,8 +38,8 @@ func (p *awsConnection) getLogsForFunctionsConcurrently(functions map[string]Fun
 	return logs
 }
 
-func (p *awsConnection) getLogsForFunction(fn *function) []LogEntry {
-	logGroupName := "/aws/lambda/" + fn.id
+func (p *awsConnection) getLogsForFunction(functionName string) []component.LogEntry {
+	logGroupName := "/aws/lambda/" + functionName
 	resp, err := p.logSvc.DescribeLogStreams(&cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName: aws.String(logGroupName),
 	})
@@ -47,14 +47,14 @@ func (p *awsConnection) getLogsForFunction(fn *function) []LogEntry {
 		glog.V(5).Infof("[getLogs] Error getting logs: %v %v\n", logGroupName, err)
 	}
 	glog.V(5).Infof("[getLogs] Log streams: %v\n", resp)
-	logResult := p.getLogsForFunctionNameStreamsConcurrently(fn.id, resp.LogStreams)
+	logResult := p.getLogsForFunctionNameStreamsConcurrently(functionName, resp.LogStreams)
 	return logResult
 }
 
 func (p *awsConnection) getLogsForFunctionNameStreamsConcurrently(functionName string,
-	logStreams []*cloudwatchlogs.LogStream) []LogEntry {
-	var logs []LogEntry
-	ch := make(chan []LogEntry)
+	logStreams []*cloudwatchlogs.LogStream) []component.LogEntry {
+	var logs []component.LogEntry
+	ch := make(chan []component.LogEntry)
 	for _, logStream := range logStreams {
 		go func(logStreamName *string) {
 			ch <- p.getLogsForFunctionNameStream(functionName, logStreamName)
@@ -66,8 +66,8 @@ func (p *awsConnection) getLogsForFunctionNameStreamsConcurrently(functionName s
 	return logs
 }
 
-func (p *awsConnection) getLogsForFunctionNameStream(functionName string, logStreamName *string) []LogEntry {
-	var logResult []LogEntry
+func (p *awsConnection) getLogsForFunctionNameStream(functionName string, logStreamName *string) []component.LogEntry {
+	var logResult []component.LogEntry
 	logGroupName := "/aws/lambda/" + functionName
 	logsResp, err := p.logSvc.GetLogEvents(&cloudwatchlogs.GetLogEventsInput{
 		LogGroupName:  aws.String(logGroupName),
@@ -82,7 +82,7 @@ func (p *awsConnection) getLogsForFunctionNameStream(functionName string, logStr
 		innerMatches := logRegexp.FindAllStringSubmatch(aws.StringValue(event.Message), -1)
 		glog.V(5).Infof("[getLogs] Inner matches: %v\n", innerMatches)
 		if len(innerMatches) > 0 {
-			logResult = append(logResult, LogEntry{
+			logResult = append(logResult, component.LogEntry{
 				ID:        functionName,
 				Message:   innerMatches[0][1],
 				Timestamp: aws.Int64Value(event.Timestamp),

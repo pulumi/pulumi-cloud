@@ -1,8 +1,6 @@
 package pulumiframework
 
 import (
-	"bytes"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -10,122 +8,135 @@ import (
 
 	"github.com/pulumi/pulumi-fabric/pkg/resource"
 	"github.com/pulumi/pulumi-fabric/pkg/tokens"
+	"github.com/pulumi/pulumi-framework/pkg/component"
 )
 
-// This file contains the implementation of the PulumiResources interface for the
+// This file contains the implementation of the component.Components interface for the
 // AWS implementation of the Pulumi Framework defined in this repo.
 
-type pulumiResources struct {
-	awsConnection *awsConnection
-	endpoints     map[string]Endpoint
-	timers        map[string]Timer
-	tables        map[string]Table
-	topics        map[string]Topic
-	functions     map[string]Function
+// PulumiFrameworkComponents exrtacts the Pulumi Framework components from a checkpoint
+// file, based on the raw resources created by the implementation of the Pulumi Framework
+// in this repo.
+func PulumiFrameworkComponents(source []*resource.State) component.Components {
+	sourceMap := makeIDLookup(source)
+	components := make(component.Components)
+	for _, res := range source {
+		name := res.Inputs["urnName"].StringValue()
+		if res.Type() == stageType {
+			stage := res
+			deployment := lookup(sourceMap, deploymentType, stage.Inputs["deployment"].StringValue())
+			restAPI := lookup(sourceMap, restAPIType, stage.Inputs["restApi"].StringValue())
+			baseURL := deployment.Outputs["invokeUrl"].StringValue() + stage.Inputs["stageName"].StringValue() + "/"
+			restAPIName := restAPI.Inputs["urnName"].StringValue()
+			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiEndpointType), tokens.QName(restAPIName))
+			components[urn] = &component.Component{
+				Type: pulumiEndpointType,
+				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
+					"url": baseURL,
+				}),
+				Resources: map[string]*resource.State{
+					"restapi":    restAPI,
+					"deployment": deployment,
+					"stage":      stage,
+				},
+			}
+		} else if res.Type() == eventRuleType {
+			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTimerType), tokens.QName(name))
+			components[urn] = &component.Component{
+				Type: pulumiTimerType,
+				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
+					"schedule": res.Inputs["scheduleExpression"].StringValue(),
+				}),
+				Resources: map[string]*resource.State{
+					"rule":       res,
+					"target":     nil,
+					"permission": nil,
+				},
+			}
+		} else if res.Type() == tableType {
+			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTableType), tokens.QName(name))
+			components[urn] = &component.Component{
+				Type: pulumiTableType,
+				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
+					"primaryKey": res.Inputs["hashKey"].StringValue(),
+				}),
+				Resources: map[string]*resource.State{
+					"table": res,
+				},
+			}
+		} else if res.Type() == topicType {
+			if !strings.HasSuffix(name, "unhandled-error-topic") {
+				urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTopicType), tokens.QName(name))
+				components[urn] = &component.Component{
+					Type:       pulumiTopicType,
+					Properties: resource.NewPropertyMapFromMap(map[string]interface{}{}),
+					Resources: map[string]*resource.State{
+						"topic": res,
+					},
+				}
+			}
+		} else if res.Type() == functionType {
+			if !strings.HasSuffix(name, "pulumi-app-log-collector") {
+				urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiFunctionType), tokens.QName(name))
+				components[urn] = &component.Component{
+					Type:       pulumiFunctionType,
+					Properties: resource.NewPropertyMapFromMap(map[string]interface{}{}),
+					Resources: map[string]*resource.State{
+						"function":              res,
+						"role":                  nil,
+						"roleAttachment":        nil,
+						"logGroup":              nil,
+						"logSubscriptionFilter": nil,
+						"permission":            nil,
+					},
+				}
+			}
+		}
+	}
+	return components
 }
 
-var _ PulumiResources = (*pulumiResources)(nil)
-
-func (p *pulumiResources) Endpoints() map[string]Endpoint { return p.endpoints }
-func (p *pulumiResources) Timers() map[string]Timer       { return p.timers }
-func (p *pulumiResources) Tables() map[string]Table       { return p.tables }
-func (p *pulumiResources) Topics() map[string]Topic       { return p.topics }
-func (p *pulumiResources) Functions() map[string]Function { return p.functions }
-
-func newPulumiResources(sess *session.Session) *pulumiResources {
-	return &pulumiResources{
-		endpoints:     make(map[string]Endpoint),
-		timers:        make(map[string]Timer),
-		tables:        make(map[string]Table),
-		topics:        make(map[string]Topic),
-		functions:     make(map[string]Function),
+// PulumiFrameworkOperationsProvider creates an OperationsProvider capable of answering
+// operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
+func PulumiFrameworkOperationsProvider(sess *session.Session) component.OperationsProvider {
+	return &pulumiFrameworkOperationsProvider{
 		awsConnection: newAWSConnection(sess),
 	}
 }
 
-func (p *pulumiResources) GetLogs() []LogEntry {
-	var functionNames []string
-	for _, fn := range p.functions {
-		f := fn.(*function)
-		functionNames = append(functionNames, f.id)
-	}
-	logResult := p.awsConnection.getLogsForFunctionsConcurrently(p.functions)
-	sort.SliceStable(logResult, func(i, j int) bool { return logResult[i].Timestamp < logResult[j].Timestamp })
-	return logResult
-}
-
-func (p *pulumiResources) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("Functions (%d)\n", len(p.Functions())))
-	for k := range p.Functions() {
-		buffer.WriteString(fmt.Sprintf("\t%s\n", k))
-	}
-	buffer.WriteString(fmt.Sprintf("Endpoints (%d)\n", len(p.Endpoints())))
-	for k, v := range p.Endpoints() {
-		buffer.WriteString(fmt.Sprintf("\t%s: %s\n", k, v.URL()))
-	}
-	buffer.WriteString(fmt.Sprintf("Timers    (%d)\n", len(p.Timers())))
-	for k, v := range p.Timers() {
-		buffer.WriteString(fmt.Sprintf("\t%s: %s\n", k, v.Schedule()))
-	}
-	buffer.WriteString(fmt.Sprintf("Tables    (%d)\n", len(p.Tables())))
-	for k := range p.Tables() {
-		buffer.WriteString(fmt.Sprintf("\t%s\n", k))
-	}
-	buffer.WriteString(fmt.Sprintf("Topics    (%d)\n", len(p.Topics())))
-	for k := range p.Topics() {
-		buffer.WriteString(fmt.Sprintf("\t%s\n", k))
-	}
-	return buffer.String()
-}
-
-type endpoint struct {
-	awsConnection *awsConnection
-	url           string
-}
-
-var _ Endpoint = (*endpoint)(nil)
-
-func (e *endpoint) URL() string { return e.url }
-
-type timer struct {
-	awsConnection *awsConnection
-	arn           string
-	schedule      string
-}
-
-var _ Timer = (*timer)(nil)
-
-func (t *timer) Schedule() string { return t.schedule }
-
-type table struct {
-	awsConnection  *awsConnection
-	primaryKey     string
-	primaryKeyType string
-}
-
-var _ Table = (*table)(nil)
-
-func (t *table) PrimaryKey() string     { return t.primaryKey }
-func (t *table) PrimaryKeyType() string { return t.primaryKeyType }
-
-type topic struct {
+type pulumiFrameworkOperationsProvider struct {
 	awsConnection *awsConnection
 }
 
-var _ Topic = (*topic)(nil)
+var _ component.OperationsProvider = (*pulumiFrameworkOperationsProvider)(nil)
 
-type function struct {
-	awsConnection *awsConnection
-	id            string
-}
+const (
+	stageType      = "aws:apigateway/stage:Stage"
+	deploymentType = "aws:apigateway/deployment:Deployment"
+	restAPIType    = "aws:apigateway/restApi:RestApi"
+	eventRuleType  = "aws:cloudwatch/eventRule:EventRule"
+	tableType      = "aws:dynamodb/table:Table"
+	topicType      = "aws:sns/topic:Topic"
+	functionType   = "aws:lambda/function:Function"
 
-var _ Function = (*function)(nil)
+	pulumiEndpointType = tokens.Type("pulumi:framework:Endpoint")
+	pulumiTopicType    = tokens.Type("pulumi:framework:Topic")
+	pulumiTimerType    = tokens.Type("pulumi:framework:Timer")
+	pulumiTableType    = tokens.Type("pulumi:framework:Table")
+	pulumiFunctionType = tokens.Type("pulumi:framework:Function")
+)
 
-func (f *function) GetLogs() []LogEntry {
-	logResult := f.awsConnection.getLogsForFunction(f)
-	sort.SliceStable(logResult, func(i, j int) bool { return logResult[i].Timestamp < logResult[j].Timestamp })
-	return logResult
+func (ops *pulumiFrameworkOperationsProvider) GetLogs(component *component.Component) *[]component.LogEntry {
+	switch component.Type {
+	case pulumiFunctionType:
+		functionName := component.Resources["function"].Outputs["name"].StringValue()
+		logResult := ops.awsConnection.getLogsForFunction(functionName)
+		sort.SliceStable(logResult, func(i, j int) bool { return logResult[i].Timestamp < logResult[j].Timestamp })
+		return &logResult
+	default:
+		return nil
+
+	}
 }
 
 type typeid struct {
@@ -146,54 +157,7 @@ func lookup(m map[typeid]*resource.State, t string, id string) *resource.State {
 	return m[typeid{Type: tokens.Type(t), ID: resource.ID(id)}]
 }
 
-const (
-	stageType      = "aws:apigateway/stage:Stage"
-	deploymentType = "aws:apigateway/deployment:Deployment"
-	restAPIType    = "aws:apigateway/restApi:RestApi"
-	eventRuleType  = "aws:cloudwatch/eventRule:EventRule"
-	tableType      = "aws:dynamodb/table:Table"
-	topicType      = "aws:sns/topic:Topic"
-	functionType   = "aws:lambda/function:Function"
-)
-
-// GetPulumiResources translates a Lumi resources checkpoint with AWS reosources into a collection
-// of Pulumi Framework abstractions.
-func GetPulumiResources(source []*resource.State, sess *session.Session) PulumiResources {
-	sourceMap := makeIDLookup(source)
-	pulumiResources := newPulumiResources(sess)
-	for _, res := range source {
-		name := res.Inputs["urnName"].StringValue()
-		if res.Type() == stageType {
-			stage := res
-			deployment := lookup(sourceMap, deploymentType, stage.Inputs["deployment"].StringValue())
-			restAPI := lookup(sourceMap, restAPIType, stage.Inputs["restApi"].StringValue())
-			baseURL := deployment.Outputs["invokeUrl"].StringValue() + stage.Inputs["stageName"].StringValue() + "/"
-			pulumiResources.endpoints[restAPI.Inputs["urnName"].StringValue()] = &endpoint{
-				awsConnection: pulumiResources.awsConnection,
-				url:           baseURL,
-			}
-		} else if res.Type() == eventRuleType {
-			pulumiResources.timers[name] = &timer{
-				awsConnection: pulumiResources.awsConnection,
-				schedule:      res.Inputs["scheduleExpression"].StringValue(),
-			}
-		} else if res.Type() == tableType {
-			pulumiResources.tables[name] = &table{
-				awsConnection: pulumiResources.awsConnection,
-				primaryKey:    res.Outputs["hashKey"].StringValue(),
-			}
-		} else if res.Type() == topicType {
-			pulumiResources.topics[name] = &topic{
-				awsConnection: pulumiResources.awsConnection,
-			}
-		} else if res.Type() == functionType {
-			if !strings.HasSuffix(name, "pulumi-app-log-collector") {
-				pulumiResources.functions[name] = &function{
-					awsConnection: pulumiResources.awsConnection,
-					id:            res.Outputs["id"].StringValue(),
-				}
-			}
-		}
-	}
-	return pulumiResources
+func newPulumiFrameworkURN(resourceURN resource.URN, t tokens.Type, name tokens.QName) resource.URN {
+	namespace := resourceURN.Namespace()
+	return resource.NewURN(namespace, resourceURN.Alloc(), t, name)
 }
