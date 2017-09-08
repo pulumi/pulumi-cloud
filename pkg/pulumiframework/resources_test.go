@@ -35,7 +35,7 @@ func getPulumiResources(t *testing.T, path string) component.Components {
 	json.Unmarshal(byts, &checkpoint)
 	_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
 
-	resources := PulumiFrameworkComponents(snapshot.Resources)
+	resources := GetComponents(snapshot.Resources)
 	fmt.Printf("%s\n", resources)
 	return resources
 }

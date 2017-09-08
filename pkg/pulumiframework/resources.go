@@ -14,10 +14,10 @@ import (
 // This file contains the implementation of the component.Components interface for the
 // AWS implementation of the Pulumi Framework defined in this repo.
 
-// PulumiFrameworkComponents exrtacts the Pulumi Framework components from a checkpoint
+// GetComponents exrtacts the Pulumi Framework components from a checkpoint
 // file, based on the raw resources created by the implementation of the Pulumi Framework
 // in this repo.
-func PulumiFrameworkComponents(source []*resource.State) component.Components {
+func GetComponents(source []*resource.State) component.Components {
 	sourceMap := makeIDLookup(source)
 	components := make(component.Components)
 	for _, res := range source {
@@ -96,21 +96,24 @@ func PulumiFrameworkComponents(source []*resource.State) component.Components {
 	return components
 }
 
-// PulumiFrameworkOperationsProvider creates an OperationsProvider capable of answering
+// OperationsProviderForComponent creates an OperationsProvider capable of answering
 // operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
-func PulumiFrameworkOperationsProvider(sess *session.Session) component.OperationsProvider {
+func OperationsProviderForComponent(sess *session.Session, component *component.Component) component.OperationsProvider {
 	return &pulumiFrameworkOperationsProvider{
 		awsConnection: newAWSConnection(sess),
+		component:     component,
 	}
 }
 
 type pulumiFrameworkOperationsProvider struct {
 	awsConnection *awsConnection
+	component     *component.Component
 }
 
 var _ component.OperationsProvider = (*pulumiFrameworkOperationsProvider)(nil)
 
 const (
+	// AWS Resource Types
 	stageType      = "aws:apigateway/stage:Stage"
 	deploymentType = "aws:apigateway/deployment:Deployment"
 	restAPIType    = "aws:apigateway/restApi:RestApi"
@@ -119,23 +122,65 @@ const (
 	topicType      = "aws:sns/topic:Topic"
 	functionType   = "aws:lambda/function:Function"
 
+	// Pulumi Framework "virtual" types
 	pulumiEndpointType = tokens.Type("pulumi:framework:Endpoint")
 	pulumiTopicType    = tokens.Type("pulumi:framework:Topic")
 	pulumiTimerType    = tokens.Type("pulumi:framework:Timer")
 	pulumiTableType    = tokens.Type("pulumi:framework:Table")
 	pulumiFunctionType = tokens.Type("pulumi:framework:Function")
+
+	// Operational metric names for Pulumi Framework components
+	functionInvocations        component.MetricName = "invocations"
+	functionDuration           component.MetricName = "duration"
+	functionErrors             component.MetricName = "errors"
+	functionThrottles          component.MetricName = "throttles"
+	endpoint4xxError           component.MetricName = "4xxerror"
+	endpoint5xxError           component.MetricName = "5xxerror"
+	endpointCount              component.MetricName = "count"
+	endpointLatency            component.MetricName = "latency"
+	topicPulished              component.MetricName = "published"
+	topicPublishSize           component.MetricName = "publishsize"
+	topicDelivered             component.MetricName = "delivered"
+	topicFailed                component.MetricName = "failed"
+	timerInvocations           component.MetricName = "invocations"
+	timerFailedInvocations     component.MetricName = "failedinvocations"
+	tableConsumedReadCapacity  component.MetricName = "consumedreadcapacity"
+	tableConsumedWriteCapacity component.MetricName = "consumerwritecapacity"
+	tableThrottles             component.MetricName = "throttles"
 )
 
-func (ops *pulumiFrameworkOperationsProvider) GetLogs(component *component.Component) *[]component.LogEntry {
-	switch component.Type {
+func (ops *pulumiFrameworkOperationsProvider) GetLogs() *[]component.LogEntry {
+	switch ops.component.Type {
 	case pulumiFunctionType:
-		functionName := component.Resources["function"].Outputs["name"].StringValue()
+		functionName := ops.component.Resources["function"].Outputs["name"].StringValue()
 		logResult := ops.awsConnection.getLogsForFunction(functionName)
 		sort.SliceStable(logResult, func(i, j int) bool { return logResult[i].Timestamp < logResult[j].Timestamp })
 		return &logResult
 	default:
 		return nil
 
+	}
+}
+
+func (ops *pulumiFrameworkOperationsProvider) ListMetrics() []component.MetricName {
+	switch ops.component.Type {
+	case pulumiFunctionType:
+		// Don't include these which are internal implementation metrics: DLQ delivery errors
+		return []component.MetricName{functionInvocations, functionDuration, functionErrors, functionThrottles}
+		// return []string{"invocations", "duration", "errors", "throttles" /*?*/}
+	case pulumiEndpointType:
+		return []component.MetricName{endpoint4xxError, endpoint5xxError, endpointCount, endpointLatency}
+	case pulumiTopicType:
+		return []component.MetricName{topicPulished, topicPublishSize, topicDelivered, topicFailed}
+	case pulumiTimerType:
+		return []component.MetricName{timerInvocations, timerFailedInvocations}
+	case pulumiTableType:
+		// Internal only: "provisionedreadcapacity", "provisionedwritecapacity", "usererrors", "timetolivedeleted",
+		// "systemerrors", "succesfulrequestlatency", "returnedrecordscount", "returenditemcount", "returnedbytes",
+		// "onlineindex*", "conditionalcheckfailed"
+		return []component.MetricName{tableConsumedReadCapacity, tableConsumedWriteCapacity, tableThrottles}
+	default:
+		return nil
 	}
 }
 

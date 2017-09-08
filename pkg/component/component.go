@@ -5,10 +5,10 @@ import (
 	"github.com/pulumi/pulumi-fabric/pkg/tokens"
 )
 
-// Components is a map of URN to resource
+// Components is a map of URN to component
 type Components map[resource.URN]*Component
 
-// Component is a serializable vitrual node in a resource graph, specifically for resource snapshots.
+// Component is a serializable vitrual node in a resource graph
 type Component struct {
 	Type       tokens.Type                `json:"type"`                // this components's full type token.
 	Properties resource.PropertyMap       `json:"props,omitempty"`     // the properties of this component.
@@ -22,11 +22,18 @@ type LogEntry struct {
 	Message   string
 }
 
+// MetricName is a handle to a metric supported by a Pulumi Framework resources
+type MetricName string
+
 // OperationsProvider is the interface for making operational requests about the
-// state of a Component or Resource
+// state of a Component (or Components)
 type OperationsProvider interface {
-	GetLogs(component *Component) *[]LogEntry
+	// GetLogs returns logs for the component
+	GetLogs() *[]LogEntry
+	// ListMetrics returns the list of supported metrics for the requested component type.
+	ListMetrics() []MetricName
+
+	// TBD:
 	// QueryLogs(component *Component, query *LogQuery) []LogEntry
 	// GetMetricStatistics(component *Component, metric MetricRequest) []MetricData
-	// ListMetrics(component *Component) []string
 }
