@@ -59,6 +59,47 @@ interface SwaggerSpec {
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
+// jsonStringifySwaggerSpec creates a JSON string out of a Swagger spec object.  This is required versus an
+// ordinary JSON.stringify because the spec contains computed values.
+function jsonStringifySwaggerSpec(spec: SwaggerSpec): { json: string | fabric.Computed<string>, hash: string } {
+    let last: fabric.Computed<void> | undefined;
+    let pathValues: {[path: string]: {[method: string]: SwaggerOperation} } = {};
+    for (let path of Object.keys(spec.paths)) {
+        pathValues[path] = {};
+        for (let method of Object.keys(spec.paths[path])) {
+            // Set up a callback to remember the final value, and chain it on the previous one.
+            let resolvePathValue: fabric.Computed<void> =
+                spec.paths[path][method].mapValue((op: SwaggerOperation) => { pathValues[path][method] = op; });
+            last = last ? last.mapValue(() => resolvePathValue) : resolvePathValue;
+        }
+    }
+
+    let promptSpec = {
+        swagger: spec.swagger,
+        info: spec.info,
+        paths: pathValues,
+        "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+    };
+
+    // Produce a hash of all the promptly available values.
+    // BUGBUG[pulumi/pulumi-fabric#331]: we are skipping hashing of the actual operation objects, because they
+    //     are possibly computed, and we need the hash promptly for resource URN creation.  This isn't correct,
+    //     and will lead to hash collisions; we need to fix this as part of fixing pulumi/pulumi-fabric#331
+    let promptHash: string = sha1hash(JSON.stringify(promptSpec));
+
+    // After all values have settled, we can produce the resulting string.
+    if (last) {
+        return {
+            json: last.mapValue(() => JSON.stringify(Object.assign({}, promptSpec, { paths: pathValues }))),
+            hash: promptHash,
+        };
+    }
+    return {
+        json: JSON.stringify(promptSpec),
+        hash: promptHash,
+    };
+}
+
 interface SwaggerInfo {
     title: string;
     version: string;
@@ -390,15 +431,14 @@ export class HttpAPI {
     }
 
     public publish(): fabric.Computed<string> {
-        let swaggerJSON = JSON.stringify(this.swaggerSpec);
+        let { json, hash } = jsonStringifySwaggerSpec(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
-            body: swaggerJSON,
+            body: json,
         });
-        let deploymentId = sha1hash(swaggerJSON);
-        this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + deploymentId, {
+        this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + hash, {
             restApi: this.api,
             stageName: "",
-            description: "Deployment of version " + deploymentId,
+            description: "Deployment of version " + hash,
         });
         let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
             stageName: stageName,
@@ -413,7 +453,8 @@ export class HttpAPI {
                 if (lambda !== undefined) {
                     if (method === "x-amazon-apigateway-any-method") {
                         method = "*";
-                    } else {
+                    }
+                    else {
                         method = method.toUpperCase();
                     }
                     let permissionName = this.apiName + "_invoke_" + sha1hash(method + path);
