@@ -41,6 +41,8 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "crawler"),
 			Config: map[string]string{
+				// TODO[pulumi/pulumi-framework#33]: we shouldn't need to configure both region variables.
+				"aws:config:region":    region,
 				"pulumi:config:region": pulumiFrameworkRegion,
 			},
 			Dependencies: []string{

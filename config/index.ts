@@ -10,11 +10,7 @@ export type Region = "WestUS" | "EastUS" | "WestEU";
 export let region: Region = <Region>_config.require("region");
 
 export function requireAWSRegion(): aws.Region {
-    return convertToAWSRegion(region);
-}
-
-function convertToAWSRegion(pregion: Region): aws.Region {
-    switch (pregion) {
+    switch (region) {
         case "WestUS": return "us-west-2";
         case "EastUS": return "us-east-2";
         case "WestEU": return "eu-west-1";
