@@ -2,22 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/blang/semver"
-  packages = ["."]
-  revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
-  version = "v3.5.1"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
-
-[[projects]]
-  name = "github.com/ghodss/yaml"
-  packages = ["."]
-  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
-  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -38,12 +26,6 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -58,8 +40,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/pulumi/pulumi-fabric"
-  packages = ["pkg/compiler/ast","pkg/compiler/binder","pkg/compiler/core","pkg/compiler/errors","pkg/compiler/metadata","pkg/compiler/symbols","pkg/compiler/types","pkg/compiler/types/predef","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/eval","pkg/eval/rt","pkg/pack","pkg/resource","pkg/resource/deploy","pkg/resource/environment","pkg/resource/plugin","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/mapper","pkg/util/rendezvous","pkg/util/rpcutil","pkg/workspace","sdk/go/pkg/lumirpc"]
-  revision = "2e22c243bcc4b31ad64752955a5f8cde76575bcb"
+  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/pack","pkg/resource","pkg/resource/deploy","pkg/resource/environment","pkg/resource/plugin","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/mapper","pkg/util/rpcutil","sdk/proto/go"]
+  revision = "8aba3aae12bac26a9ee05cb42d9b4f15ba9959a4"
 
 [[projects]]
   branch = "master"
@@ -71,7 +53,7 @@
   branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "3c0b56b677e04926dfa835a1b3f11cd4f62f076e"
+  revision = "b78744579491c1ceeaaa3b40205e56b0591b93a3"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -101,7 +83,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
+  revision = "a5054c7c1385fd50d9394475365355a87a7873ec"
 
 [[projects]]
   branch = "master"
@@ -113,7 +95,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "ee236bd376b077c7a89f260c026c4735b195e459"
+  revision = "595979c8a7bf586b2d293fb42246bf91a0b893d9"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -121,15 +103,9 @@
   revision = "f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3"
   version = "v1.6.0"
 
-[[projects]]
-  branch = "v2"
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bcdbcd0c4ae1b02956c5e01f5ecfbf9306b583197bba8dba9d24a652c1cd3377"
+  inputs-digest = "8e63b71e98791bd4e8fde59f3d1c9a552a9c1b431e9ea40fe6ca5e61650c04cf"
   solver-name = "gps-cdcl"
   solver-version = 1

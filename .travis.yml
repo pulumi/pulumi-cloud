@@ -15,7 +15,7 @@ install:
     - export VERSION=HEAD
     # Clone the Pulumi repo and use its script to fetch the latest installation packages.
     - git clone git@github.com:pulumi/pulumi ${GOPATH}/src/github.com/pulumi/pulumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi ${VERSION} ~/.pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi-fabric ${VERSION} ~/.pulumi
     - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} ~/.pulumi/packs/aws
     - dep ensure
     - yarn install
