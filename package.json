@@ -1,8 +1,6 @@
 {
     "name": "@pulumi/pulumi",
     "version": "0.1",
-    "main": "bin/index.js",
-    "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc && yarn run lint",
         "lint": "tslint '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
