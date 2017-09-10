@@ -10,7 +10,7 @@ declare -a PUBTARGETS=(${GITVER} $(git describe --tags 2>/dev/null) $(git rev-pa
 
 # Copy the pack.
 mkdir -p $PUBDIR
-cp -R ${ROOT}/pack/bin/. ${PUBDIR}/
+cp -R ${ROOT}/bin/. ${PUBDIR}/
 echo . >> ${PUBDIR}/packs.txt
 echo . @pulumi/pulumi-fabric >> ${PUBDIR}/packdeps.txt
 echo . @pulumi/aws >> ${PUBDIR}/packdeps.txt
