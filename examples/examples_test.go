@@ -80,7 +80,7 @@ func Test_Examples(t *testing.T) {
 				// assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				t.Logf("GET %v [%v]: %v", baseURL, resp.StatusCode, string(bytes))
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
 				// Validate the GET /favico.ico endpoint
 				resp, err = http.Get(baseURL + "/favicon.ico")
