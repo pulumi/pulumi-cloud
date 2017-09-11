@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/pulumi/pulumi-fabric/pkg/resource"
 	"github.com/pulumi/pulumi-fabric/pkg/resource/environment"
 	"github.com/pulumi/pulumi-fabric/pkg/testing/integration"
 	"github.com/pulumi/pulumi-framework/pkg/pulumiframework"
@@ -58,10 +59,10 @@ func Test_Examples(t *testing.T) {
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
-				pulumiResources := pulumiframework.GetPulumiResources(snapshot.Resources)
-				endpoint, ok := pulumiResources.Endpoints["todo"]
+				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				endpoint, ok := pulumiResources[resource.URN("urn:lumi:test::todo:index::pulumi:framework:Endpoint::todo")]
 				assert.True(t, ok)
-				baseURL := endpoint.URL
+				baseURL := endpoint.Properties["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET / endpoint

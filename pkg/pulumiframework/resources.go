@@ -1,13 +1,17 @@
 package pulumiframework
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 
 	"github.com/pulumi/pulumi-fabric/pkg/resource"
 	"github.com/pulumi/pulumi-fabric/pkg/tokens"
+	"github.com/pulumi/pulumi-fabric/pkg/util/contract"
 	"github.com/pulumi/pulumi-framework/pkg/component"
 )
 
@@ -99,18 +103,18 @@ func GetComponents(source []*resource.State) component.Components {
 // OperationsProviderForComponent creates an OperationsProvider capable of answering
 // operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
 func OperationsProviderForComponent(sess *session.Session, component *component.Component) component.OperationsProvider {
-	return &pulumiFrameworkOperationsProvider{
+	return &opsProvider{
 		awsConnection: newAWSConnection(sess),
 		component:     component,
 	}
 }
 
-type pulumiFrameworkOperationsProvider struct {
+type opsProvider struct {
 	awsConnection *awsConnection
 	component     *component.Component
 }
 
-var _ component.OperationsProvider = (*pulumiFrameworkOperationsProvider)(nil)
+var _ component.OperationsProvider = (*opsProvider)(nil)
 
 const (
 	// AWS Resource Types
@@ -130,10 +134,10 @@ const (
 	pulumiFunctionType = tokens.Type("pulumi:framework:Function")
 
 	// Operational metric names for Pulumi Framework components
-	functionInvocations        component.MetricName = "invocations"
-	functionDuration           component.MetricName = "duration"
-	functionErrors             component.MetricName = "errors"
-	functionThrottles          component.MetricName = "throttles"
+	functionInvocations        component.MetricName = "Invocation"
+	functionDuration           component.MetricName = "Duration"
+	functionErrors             component.MetricName = "Errors"
+	functionThrottles          component.MetricName = "Throttles"
 	endpoint4xxError           component.MetricName = "4xxerror"
 	endpoint5xxError           component.MetricName = "5xxerror"
 	endpointCount              component.MetricName = "count"
@@ -149,25 +153,26 @@ const (
 	tableThrottles             component.MetricName = "throttles"
 )
 
-func (ops *pulumiFrameworkOperationsProvider) GetLogs() *[]component.LogEntry {
+func (ops *opsProvider) GetLogs(query *component.LogQuery) ([]component.LogEntry, error) {
+	if query.StartTime != nil || query.EndTime != nil || query.Query != nil {
+		contract.Failf("not yet implemented - StartTime, Endtime, Query")
+	}
 	switch ops.component.Type {
 	case pulumiFunctionType:
 		functionName := ops.component.Resources["function"].Outputs["name"].StringValue()
 		logResult := ops.awsConnection.getLogsForFunction(functionName)
 		sort.SliceStable(logResult, func(i, j int) bool { return logResult[i].Timestamp < logResult[j].Timestamp })
-		return &logResult
+		return logResult, nil
 	default:
-		return nil
-
+		return nil, fmt.Errorf("Logs not supported for component type: %s", ops.component.Type)
 	}
 }
 
-func (ops *pulumiFrameworkOperationsProvider) ListMetrics() []component.MetricName {
+func (ops *opsProvider) ListMetrics() []component.MetricName {
 	switch ops.component.Type {
 	case pulumiFunctionType:
 		// Don't include these which are internal implementation metrics: DLQ delivery errors
 		return []component.MetricName{functionInvocations, functionDuration, functionErrors, functionThrottles}
-		// return []string{"invocations", "duration", "errors", "throttles" /*?*/}
 	case pulumiEndpointType:
 		return []component.MetricName{endpoint4xxError, endpoint5xxError, endpointCount, endpointLatency}
 	case pulumiTopicType:
@@ -180,8 +185,61 @@ func (ops *pulumiFrameworkOperationsProvider) ListMetrics() []component.MetricNa
 		// "onlineindex*", "conditionalcheckfailed"
 		return []component.MetricName{tableConsumedReadCapacity, tableConsumedWriteCapacity, tableThrottles}
 	default:
+		contract.Failf("invalid component type")
 		return nil
 	}
+}
+
+func (ops *opsProvider) GetMetricStatistics(metric component.MetricRequest) ([]component.MetricDataPoint, error) {
+
+	var dimensions []*cloudwatch.Dimension
+	var namespace string
+
+	switch ops.component.Type {
+	case pulumiFunctionType:
+		dimensions = append(dimensions, &cloudwatch.Dimension{
+			Name:  aws.String("FunctionName"),
+			Value: aws.String(string(ops.component.Resources["function"].ID)),
+		})
+		namespace = "AWS/Lambda"
+	case pulumiEndpointType:
+		contract.Failf("not yet implemented")
+	case pulumiTopicType:
+		contract.Failf("not yet implemented")
+	case pulumiTimerType:
+		contract.Failf("not yet implemented")
+	case pulumiTableType:
+		contract.Failf("not yet implemented")
+	default:
+		contract.Failf("invalid component type")
+	}
+
+	resp, err := ops.awsConnection.metricSvc.GetMetricStatistics(&cloudwatch.GetMetricStatisticsInput{
+		Namespace:  aws.String(namespace),
+		MetricName: aws.String(metric.Name),
+		Dimensions: dimensions,
+		Statistics: []*string{
+			aws.String("Sum"), aws.String("SampleCount"), aws.String("Average"),
+			aws.String("Maximum"), aws.String("Minimum"),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var metrics []component.MetricDataPoint
+	for _, datapoint := range resp.Datapoints {
+		metrics = append(metrics, component.MetricDataPoint{
+			Timestamp:   aws.TimeValue(datapoint.Timestamp),
+			Unit:        aws.StringValue(datapoint.Unit),
+			Sum:         aws.Float64Value(datapoint.Sum),
+			SampleCount: aws.Float64Value(datapoint.SampleCount),
+			Average:     aws.Float64Value(datapoint.Average),
+			Maximum:     aws.Float64Value(datapoint.Maximum),
+			Minimum:     aws.Float64Value(datapoint.Minimum),
+		})
+	}
+	return metrics, nil
 }
 
 type typeid struct {

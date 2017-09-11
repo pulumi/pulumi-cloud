@@ -1,6 +1,8 @@
 package component
 
 import (
+	"time"
+
 	"github.com/pulumi/pulumi-fabric/pkg/resource"
 	"github.com/pulumi/pulumi-fabric/pkg/tokens"
 )
@@ -22,18 +24,38 @@ type LogEntry struct {
 	Message   string
 }
 
+// LogQuery represents the parameters to a log query operation.
+// All fields are optional, leaving them off returns all logs.
+type LogQuery struct {
+	StartTime *time.Time
+	EndTime   *time.Time
+	Query     *string
+}
+
 // MetricName is a handle to a metric supported by a Pulumi Framework resources
 type MetricName string
+
+type MetricRequest struct {
+	Name string
+}
+
+type MetricDataPoint struct {
+	Timestamp   time.Time
+	Unit        string
+	Sum         float64
+	SampleCount float64
+	Average     float64
+	Maximum     float64
+	Minimum     float64
+}
 
 // OperationsProvider is the interface for making operational requests about the
 // state of a Component (or Components)
 type OperationsProvider interface {
-	// GetLogs returns logs for the component
-	GetLogs() *[]LogEntry
-	// ListMetrics returns the list of supported metrics for the requested component type.
+	// GetLogs returns logs matching a query
+	GetLogs(query *LogQuery) ([]LogEntry, error)
+	// ListMetrics returns the list of supported metrics for the requested component type
 	ListMetrics() []MetricName
-
-	// TBD:
-	// QueryLogs(component *Component, query *LogQuery) []LogEntry
-	// GetMetricStatistics(component *Component, metric MetricRequest) []MetricData
+	// GetMetricStatistics provides metrics data for a given metric request
+	GetMetricStatistics(metric MetricRequest) ([]MetricDataPoint, error)
 }

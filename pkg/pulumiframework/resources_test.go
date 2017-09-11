@@ -2,12 +2,12 @@ package pulumiframework
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi-fabric/pkg/resource"
@@ -36,7 +36,7 @@ func getPulumiResources(t *testing.T, path string) component.Components {
 	_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
 
 	resources := GetComponents(snapshot.Resources)
-	fmt.Printf("%s\n", resources)
+	spew.Dump(resources)
 	return resources
 }
 
@@ -44,12 +44,23 @@ func TestTodo(t *testing.T) {
 	components := getPulumiResources(t, "testdata/todo.json")
 	assert.Equal(t, 5, len(components))
 
-	// assert.Equal(t, 1, len(resources.Endpoints()), "expected 1 endpoint")
-	// endpoint, ok := resources.Endpoints()["todo"]
-	// assert.True(t, ok)
-	// assert.NotEqual(t, 0, len(endpoint.URL()))
-	// assert.Equal(t, 0, len(resources.Timers()), "expected 1 endpoint")
-	// assert.Equal(t, 1, len(resources.Tables()), "expected 1 endpoint")
+	rawURN := resource.URN("urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo")
+
+	tableArn := newPulumiFrameworkURN(rawURN, tokens.Type(pulumiTableType), tokens.QName("todo"))
+	table, ok := components[tableArn]
+	assert.True(t, ok)
+	assert.Equal(t, 1, len(table.Properties))
+	assert.Equal(t, "id", table.Properties[resource.PropertyKey("primaryKey")].StringValue())
+	assert.Equal(t, 1, len(table.Resources))
+	assert.Equal(t, pulumiTableType, table.Type)
+
+	endpointArn := newPulumiFrameworkURN(rawURN, tokens.Type(pulumiEndpointType), tokens.QName("todo"))
+	endpoint, ok := components[endpointArn]
+	assert.True(t, ok)
+	assert.Equal(t, 1, len(endpoint.Properties))
+	assert.Equal(t, "https://yuhtl4t6n5.execute-api.us-east-2.amazonaws.com/stage/", endpoint.Properties[resource.PropertyKey("url")].StringValue())
+	assert.Equal(t, 3, len(endpoint.Resources))
+	assert.Equal(t, pulumiEndpointType, endpoint.Type)
 }
 
 func TestCrawler(t *testing.T) {

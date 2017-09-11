@@ -3,6 +3,8 @@ package pulumiframework
 import (
 	"regexp"
 
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -11,14 +13,16 @@ import (
 )
 
 type awsConnection struct {
-	sess   *session.Session
-	logSvc *cloudwatchlogs.CloudWatchLogs
+	sess      *session.Session
+	logSvc    *cloudwatchlogs.CloudWatchLogs
+	metricSvc *cloudwatch.CloudWatch
 }
 
 func newAWSConnection(sess *session.Session) *awsConnection {
 	return &awsConnection{
-		sess:   sess,
-		logSvc: cloudwatchlogs.New(sess),
+		sess:      sess,
+		logSvc:    cloudwatchlogs.New(sess),
+		metricSvc: cloudwatch.New(sess),
 	}
 }
 
