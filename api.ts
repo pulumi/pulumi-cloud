@@ -340,7 +340,11 @@ export class HttpAPI {
             contentType: contentType,
         });
         this.swaggerSpec.paths[path][swaggerMethod] =
-            role.arn.mapValue((arn: aws.ARN) => createPathSpecObject(arn, this.apiName, name));
+            role.arn.mapValue((arn: aws.ARN) => {
+                return this.bucket.bucket.mapValue((bucketName: string) => {
+                    return createPathSpecObject(arn, bucketName, name);
+                });
+            });
     }
 
     private routeLambda(method: string, path: string, func: LoggedFunction) {

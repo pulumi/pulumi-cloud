@@ -76,8 +76,7 @@ func Test_Examples(t *testing.T) {
 				resp, err := http.Get(baseURL)
 				assert.NoError(t, err, "expected to be able to GET /")
 				contentType := resp.Header.Get("Content-Type")
-				// BUGBUG[pulumi/pulumi-framework#36]: reenable once we get to the bottom of the issue.
-				// assert.Equal(t, "text/html", contentType)
+				assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
@@ -85,8 +84,7 @@ func Test_Examples(t *testing.T) {
 				// Validate the GET /favico.ico endpoint
 				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
-				// BUGBUG[pulumi/pulumi-framework#36]: reenable once we get to the bottom of the issue.
-				// assert.Equal(t, int64(1150), resp.ContentLength)
+				assert.Equal(t, int64(1150), resp.ContentLength)
 				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
 
 				// Validate the POST /todo/{id} endpoint
