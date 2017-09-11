@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@lumi/aws";
-import { LoggedFunction as Function } from "./function";
+import * as aws from "@pulumi/aws";
+import { LoggedFunction } from "./function";
 
 interface SNSEvent {
     Records: SNSRecord[];
@@ -33,30 +33,30 @@ export interface SNSMessageAttribute {
     Value: string;
 }
 
-// createSubscription creates a subscription on an SNS topic, passing the full
-// SNSItem to the handler.
+// createSubscription creates a subscription on an SNS topic, passing the full SNSItem to the handler.
 export function createSubscription(
-    resName: string,
-    topic: aws.sns.Topic,
-    handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
-    let policies: aws.ARN[] = [aws.iam.AWSLambdaFullAccess];
-    let lambda = new Function(resName, policies, (ev: SNSEvent, ctx, cb) => {
-        (<any>Promise).all((<any>ev.Records).map(async (record: SNSRecord) => {
-            await handler(record.Sns);
-        }))
-        .then(() => { cb(null, null); })
-        .catch((err: any) => { cb(err, null); });
-    });
+    resName: string, topic: aws.sns.Topic, handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
+    let func = new LoggedFunction(
+        resName,
+        [ aws.iam.AWSLambdaFullAccess ],
+        (ev: SNSEvent, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+            Promise.all(ev.Records.map(async (record: SNSRecord) => {
+                await handler(record.Sns);
+            }))
+            .then(() => { cb(null, null); })
+            .catch((err: any) => { cb(err, null); });
+        },
+    );
     let invokePermission = new aws.lambda.Permission(resName, {
         action: "lambda:invokeFunction",
-        function: lambda.lambda,
+        function: func.lambda,
         principal: "sns.amazonaws.com",
         sourceArn: topic.id,
     });
-    let subscription = new aws.sns.TopicSubscription(resName, {
+    return new aws.sns.TopicSubscription(resName, {
         topic: topic,
         protocol: "lambda",
-        endpoint: lambda.lambda.arn,
+        endpoint: func.lambda.arn,
     });
-    return subscription;
 }
+

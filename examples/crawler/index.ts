@@ -14,3 +14,4 @@ countDown.subscribe("watcher", async (num) => {
 pulumi.timer.interval("heartbeat", {minutes: 5}, async () => {
     await countDown.publish(25);
 });
+

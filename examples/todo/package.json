@@ -1,9 +1,14 @@
 {
     "name": "todo",
     "version": "0.1",
-    "typings": ".lumi/bin/index.d.ts",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
     "scripts": {
-        "build": "lumijs"
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "typescript": "^2.1.4"
     },
     "peerDependencies": {
         "@pulumi/pulumi": "*"

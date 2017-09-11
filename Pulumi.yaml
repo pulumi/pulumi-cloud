@@ -1,7 +1,4 @@
 name: pulumi
 description: The Pulumi Framework provides core platform abstractions for Pulumi.
-dependencies:
-    aws: "*"
-    lumi: "*"
-    lumirt: "*"
+runtime: nodejs
 

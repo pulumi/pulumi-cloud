@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "@pulumi/pulumi";
-import {authMiddleware} from "./middleware";
+import { authMiddleware } from "./middleware";
 
 let todos = new pulumi.Table("todo", "id", "S", {});
 let api = new pulumi.HttpAPI("todo");
@@ -12,18 +12,18 @@ api.staticFile("/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
 api.get("/todo/{id}", [authMiddleware], async (req, res) => {
-    console.log("GET /todo/" + req.params.id);
+    console.log("GET /todo/" + req.params["id"]);
     try {
-        let item = await todos.get({ id: req.params.id });
+        let item = await todos.get({ id: req.params["id"] });
         res.status(200).json(item.value);
     } catch (err) {
         res.status(500).json(err);
     }
 });
 api.post("/todo/{id}", [], async (req, res) => {
-    console.log("POST /todo/" + req.params.id);
+    console.log("POST /todo/" + req.params["id"]);
     try {
-        await todos.insert({ id: req.params.id, value: req.body.toString() });
+        await todos.insert({ id: req.params["id"], value: req.body.toString() });
         res.status(201).json({});
     } catch (err) {
         res.status(500).json(err);
@@ -40,7 +40,5 @@ api.get("/todo", [], async (req, res) => {
 });
 
 // Publish
-let url = api.publish();
-pulumi.log(`Listening at:
-${url}
-`);
+api.publish().mapValue((url: string) => console.log(`Listening at: ${url}`));
+

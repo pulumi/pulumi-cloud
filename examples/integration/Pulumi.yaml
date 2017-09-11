@@ -1,5 +1,4 @@
 name: integration
 description: SaaS integration.
-dependencies:
-    pulumi: "*"
+runtime: nodejs
 

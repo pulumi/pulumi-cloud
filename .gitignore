@@ -1,4 +1,4 @@
-.pulumi
-.lumi/
-node_modules/
-vendor/
+/.pulumi/
+/bin/
+/node_modules/
+/vendor/

@@ -1,29 +1,27 @@
 language: go
-go: 1.8.2
+go: 1.9
 sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
     # Dep for Go dependency management.
     - go get -v github.com/golang/dep/cmd/dep
-    # Node.js 7.x for LumiJS and associated JS code.
-    - nvm install v7
+    # Node.js 6.10.2 for Pulumi Fabric's Node.js runtime.
+    - nvm install v6.10.2
     # Install the AWS CLI so that we can publish the resulting release (if applicable) at the end.
     - pip install --upgrade --user awscli
     # Install Yarn as per https://yarnpkg.com/lang/en/docs/install-ci/#travis-tab.
     - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.24.6
     - export PATH=$HOME/.yarn/bin:$PATH
 install:
-    - git clone -b pulumi-master git@github.com:pulumi/terraform-provider-aws ${GOPATH}/src/github.com/terraform-providers/terraform-provider-aws
-    - go install github.com/terraform-providers/terraform-provider-aws
     - export VERSION=HEAD
-    # Clone the Lumi repo and use its script to fetch the latest installation packages.
-    - git clone git@github.com:pulumi/pulumi-fabric ${GOPATH}/src/github.com/pulumi/pulumi-fabric
-    - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh lumi ${VERSION} ~/.lumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi-fabric/scripts/install_release.sh aws ${VERSION} ~/.lumi
+    # Clone the Pulumi repo and use its script to fetch the latest installation packages.
+    - git clone git@github.com:pulumi/pulumi ${GOPATH}/src/github.com/pulumi/pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi-fabric ${VERSION} ~/.pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} ~/.pulumi/packs/aws
     - dep ensure
     - yarn install
 before_script:
-    - export LUMIROOT=~/.lumi
-    - export PATH=$LUMIROOT/cmd:$PATH
+    - export PULUMI=~/.pulumi
+    - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
 script:
     - make all
 after_script:

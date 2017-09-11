@@ -1,4 +1,6 @@
-import * as aws from "@lumi/aws";
+// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+
+import * as aws from "@pulumi/aws";
 import * as sns from "./sns";
 
 let unhandledErrorTopic: aws.sns.Topic | undefined;
@@ -16,7 +18,7 @@ export type ErrorHandler = (message: string, payload: any) => void;
 // execution.
 export function onError(name: string, handler: ErrorHandler) {
     sns.createSubscription(name, getUnhandledErrorTopic(), async (item: sns.SNSItem) => {
-        let errorMessage = (<any>JSON).stringify(item.MessageAttributes["ErrorMessage"]);
+        let errorMessage = JSON.stringify(item.MessageAttributes["ErrorMessage"]);
         await handler(errorMessage, item.Message);
     });
 }

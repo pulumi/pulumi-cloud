@@ -1,8 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/*tslint:disable:no-require-imports*/
-declare let require: any;
-import * as aws from "@lumi/aws";
+import * as aws from "@pulumi/aws";
+import * as fabric from "@pulumi/pulumi-fabric";
 
 export interface TableOptions {
     readCapacity?: number;
@@ -11,11 +10,11 @@ export interface TableOptions {
 
 export class Table {
     private table: aws.dynamodb.Table;
-    private readonly readCapacity: number;
-    private readonly writeCapacity: number;
+    private readonly readCapacity: fabric.Computed<number>;
+    private readonly writeCapacity: fabric.Computed<number>;
 
     // Inside + Outside API
-    public tableName: string;
+    public tableName: fabric.Computed<string>;
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
 
@@ -59,8 +58,8 @@ export class Table {
         this.readCapacity = this.table.readCapacity;
         this.writeCapacity = this.table.writeCapacity;
         let db = () => {
-            let aws = require("aws-sdk");
-            return new aws.DynamoDB.DocumentClient();
+            let awssdk = require("aws-sdk");
+            return new awssdk.DynamoDB.DocumentClient();
         };
         this.get = (query) => {
             return db().get({
@@ -79,13 +78,11 @@ export class Table {
                 TableName: this.tableName,
             }).promise().then((x: any) => x.Items);
         };
-        this.update = (query, updates) => {
+        this.update = (query: any, updates: any) => {
             let updateExpression = "";
             let attributeValues: {[key: string]: any} = {};
-            let keys = (<any>Object).keys(updates);
-            for (let i = 0; i < (<any>keys).length; i++) {
-                let key = keys[i];
-                let val = (<any>updates)[key];
+            for (let key of Object.keys(updates)) {
+                let val = updates[key];
                 if (updateExpression === "") {
                     updateExpression += "SET ";
                 } else {

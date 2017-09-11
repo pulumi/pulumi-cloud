@@ -1,18 +1,17 @@
 {
     "name": "@pulumi/pulumi",
     "version": "0.1",
-    "typings": ".lumi/bin/index.d.ts",
     "scripts": {
-        "build": "lumijs"
+        "build": "tsc && yarn run lint",
+        "lint": "tslint '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
     },
     "devDependencies": {
-        "typescript": "^2.1.4",
-        "tslint": "^5.4.3"
+        "@types/node": "^8.0.26",
+        "tslint": "^5.6.0",
+        "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "@lumi/aws": "*",
-        "@lumi/lumi": "*",
-        "@lumi/lumirt": "*"
+        "@pulumi/aws": "*",
+        "@pulumi/pulumi-fabric": "*"
     }
 }
-

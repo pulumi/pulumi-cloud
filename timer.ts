@@ -1,8 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@lumi/aws";
-import * as lumirt from "@lumi/lumirt";
-import {LoggedFunction as Function} from "./function";
+import * as aws from "@pulumi/aws";
+import { LoggedFunction } from "./function";
 
 // IntervalRate describes how often to invoke an interval timer.
 export interface IntervalRate {
@@ -19,13 +18,13 @@ export interface DailySchedule {
 // interval invokes handler at a regular rate defined by the interval options.
 export function interval(name: string, options: IntervalRate, handler: () => Promise<void>) {
     let rateMinutes = 0;
-    if (options.minutes !== undefined) {
+    if (options.minutes) {
         rateMinutes += options.minutes;
     }
-    if (options.hours !== undefined) {
+    if (options.hours) {
         rateMinutes += options.hours * 60;
     }
-    if (options.days !== undefined) {
+    if (options.days) {
         rateMinutes += options.days * 60 * 24;
     }
     let unit = "minutes";
@@ -35,7 +34,7 @@ export function interval(name: string, options: IntervalRate, handler: () => Pro
     if (rateMinutes === 1) {
         unit = "minute";
     }
-    createScheduledEvent(name, `rate(${lumirt.toString(rateMinutes)} ${unit})`, handler);
+    createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler);
 }
 
 // cron invokes handler on a custom scheduled based on a Cron tab defintion.  See http://crontab.org/ for details.
@@ -45,32 +44,34 @@ export function cron(name: string, cronTab: string, handler: () => Promise<void>
 
 // daily invokes handler every day at the specified UTC hour and minute
 export function daily(name: string, schedule: DailySchedule, handler: () => Promise<void>) {
-    let hour = "0";
-    if (schedule.hourUTC !== undefined) {
-        hour = lumirt.toString(schedule.hourUTC);
-    }
-    let minute = "0";
-    if (schedule.minuteUTC !== undefined) {
-        minute = lumirt.toString(schedule.minuteUTC);
-    }
+    let hour = schedule.hourUTC || 0;
+    let minute = schedule.minuteUTC || 0;
     cron(name, `${minute} ${hour} * * ? *`, handler);
 }
 
 function createScheduledEvent(name: string, scheduleExpression: string, handler: () => Promise<void>) {
-    let f = new Function(name, [aws.iam.AWSLambdaFullAccess], (ev, ctx, cb) => {
-        (<any>handler()).then(() => { cb(null, null); }).catch((err: any) => { cb(err, null); });
-    });
+    let func = new LoggedFunction(
+        name,
+        [ aws.iam.AWSLambdaFullAccess ],
+        (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+            handler().then(() => {
+                cb(null, null);
+            }).catch((err: any) => {
+                cb(err, null);
+            });
+        },
+    );
     let rule = new aws.cloudwatch.EventRule(name, {
         scheduleExpression: scheduleExpression,
     });
     let target = new aws.cloudwatch.EventTarget(name, {
         rule: rule.name,
-        arn: f.lambda.arn,
+        arn: func.lambda.arn,
         targetId: name,
     });
     let permission = new aws.lambda.Permission(name, {
         action: "lambda:invokeFunction",
-        function: f.lambda,
+        function: func.lambda,
         principal: "events.amazonaws.com",
         sourceArn: rule.arn,
     });

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": ".lumi/bin",
+        "outDir": "bin",
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
@@ -18,7 +18,14 @@
     "files": [
         "index.ts",
         "api.ts",
-        "table.ts"
+        "function.ts",
+        "logCollector.ts",
+        "sns.ts",
+        "table.ts",
+        "timer.ts",
+        "topic.ts",
+        "unhandledError.ts",
+        "config/index.ts"
     ]
 }
 
