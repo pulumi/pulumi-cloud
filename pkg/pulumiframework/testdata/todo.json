@@ -1,17 +1,25 @@
 {
-    "target": "test",
+    "target": "test2",
     "config": {
-        "pulumi:config:region": "EastUS"
+        "aws:config:region": "us-east-2"
     },
     "latest": {
-        "time": "2017-08-31T13:54:29.152161411-07:00",
+        "time": "2017-09-11T14:01:48.879946724-07:00",
         "info": {
-            "pkg": "todo",
-            "args": null
+            "pkg": {
+                "name": "todo",
+                "runtime": "nodejs",
+                "description": "A todo app backend."
+            },
+            "pwd": "/Users/luke/go/src/github.com/pulumi/pulumi-framework/examples/todo",
+            "program": "",
+            "config": {
+                "aws:config:region": "us-east-2"
+            }
         },
         "resources": {
-            "urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo": {
-                "id": "todo-c0dc4cf4ec16",
+            "urn:lumi:test2::todo::aws:dynamodb/table:Table::todo": {
+                "id": "todo-e05186c73b99cfa4",
                 "type": "aws:dynamodb/table:Table",
                 "inputs": {
                     "attribute": [
@@ -22,16 +30,15 @@
                     ],
                     "hashKey": "id",
                     "readCapacity": 5,
-                    "urnName": "todo",
                     "writeCapacity": 5
                 },
                 "defaults": {
-                    "name": "todo-c0dc4cf4ec16",
+                    "name": "todo-e05186c73b99cfa4",
                     "readCapacity": "5",
                     "writeCapacity": "5"
                 },
                 "outputs": {
-                    "arn": "arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16",
+                    "arn": "arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4",
                     "attribute": [
                         {
                             "name": "id",
@@ -40,70 +47,65 @@
                     ],
                     "globalSecondaryIndex": [],
                     "hashKey": "id",
-                    "id": "todo-c0dc4cf4ec16",
+                    "id": "todo-e05186c73b99cfa4",
                     "localSecondaryIndex": [],
-                    "name": "todo-c0dc4cf4ec16",
+                    "name": "todo-e05186c73b99cfa4",
                     "readCapacity": "5",
                     "writeCapacity": "5"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/role:Role::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
-                "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
+            "urn:lumi:test2::todo::aws:iam/role:Role::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
+                "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf",
                 "type": "aws:iam/role:Role",
                 "inputs": {
-                    "assumeRolePolicy": "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Sid\": \"\", \"Effect\": \"Allow\", \"Principal\": { \"Service\": \"apigateway.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}",
-                    "urnName": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4"
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
                 },
                 "defaults": {
                     "forceDetachPolicies": false,
-                    "name": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
+                    "name": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf",
                     "path": "/"
                 },
                 "outputs": {
-                    "arn": "arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
+                    "arn": "arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf",
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
-                    "createDate": "2017-08-26T23:35:32Z",
+                    "createDate": "2017-09-11T21:00:21Z",
                     "forceDetachPolicies": false,
-                    "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
-                    "name": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
+                    "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf",
+                    "name": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf",
                     "path": "/",
-                    "uniqueId": "AROAIHS535FDEP5YEQIWO"
+                    "uniqueId": "AROAJ5T4NQSOCN4I4HXNM"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
-                "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb-0096a282236c7a1073a712e4c1",
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
+                "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf-20170911210022029300000001",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                    "role": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb",
-                    "urnName": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4"
+                    "role": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf"
                 },
                 "outputs": {
-                    "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb-0096a282236c7a1073a712e4c1",
+                    "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf-20170911210022029300000001",
                     "policyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                    "role": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb"
+                    "role": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf"
                 }
             },
-            "urn:lumi:test::todo:index::aws:s3/bucket:Bucket::todo": {
-                "id": "todo-c4f6edbfde56",
+            "urn:lumi:test2::todo::aws:s3/bucket:Bucket::todo": {
+                "id": "todo-3798db95f44db382",
                 "type": "aws:s3/bucket:Bucket",
-                "inputs": {
-                    "urnName": "todo"
-                },
                 "defaults": {
                     "acl": "private",
-                    "bucket": "todo-c4f6edbfde56",
+                    "bucket": "todo-3798db95f44db382",
                     "forceDestroy": false
                 },
                 "outputs": {
                     "accelerationStatus": "",
                     "acl": "private",
-                    "arn": "arn:aws:s3:::todo-c4f6edbfde56",
-                    "bucket": "todo-c4f6edbfde56",
-                    "bucketDomainName": "todo-c4f6edbfde56.s3.amazonaws.com",
+                    "arn": "arn:aws:s3:::todo-3798db95f44db382",
+                    "bucket": "todo-3798db95f44db382",
+                    "bucketDomainName": "todo-3798db95f44db382.s3.amazonaws.com",
                     "forceDestroy": false,
                     "hostedZoneId": "Z2O1EMRO9K5GLX",
-                    "id": "todo-c4f6edbfde56",
+                    "id": "todo-3798db95f44db382",
                     "logging": [],
                     "region": "us-east-2",
                     "requestPayer": "BucketOwner",
@@ -117,11 +119,11 @@
                     "website": []
                 }
             },
-            "urn:lumi:test::todo:index::aws:s3/object:Object::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
+            "urn:lumi:test2::todo::aws:s3/bucketObject:BucketObject::todo3454b7045a88364b5cecad7c4d8bbef4513062e4": {
                 "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4",
-                "type": "aws:s3/object:Object",
+                "type": "aws:s3/bucketObject:BucketObject",
                 "inputs": {
-                    "bucket": "todo-c4f6edbfde56",
+                    "bucket": "todo-3798db95f44db382",
                     "contentType": "text/html",
                     "key": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4",
                     "source": {
@@ -129,16 +131,15 @@
                         "path": "index.html",
                         "text": "",
                         "uri": ""
-                    },
-                    "urnName": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4"
+                    }
                 },
                 "defaults": {
                     "acl": "private",
-                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf768630048"
+                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf465159211"
                 },
                 "outputs": {
                     "acl": "private",
-                    "bucket": "todo-c4f6edbfde56",
+                    "bucket": "todo-3798db95f44db382",
                     "cacheControl": "",
                     "contentDisposition": "",
                     "contentEncoding": "",
@@ -148,55 +149,53 @@
                     "id": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4",
                     "key": "todo3454b7045a88364b5cecad7c4d8bbef4513062e4",
                     "serverSideEncryption": "",
-                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf906549759",
+                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf510242190",
                     "storageClass": "STANDARD",
                     "tags": {},
                     "versionId": "",
                     "websiteRedirect": ""
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/role:Role::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
-                "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
+            "urn:lumi:test2::todo::aws:iam/role:Role::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
+                "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7",
                 "type": "aws:iam/role:Role",
                 "inputs": {
-                    "assumeRolePolicy": "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Sid\": \"\", \"Effect\": \"Allow\", \"Principal\": { \"Service\": \"apigateway.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}",
-                    "urnName": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9"
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
                 },
                 "defaults": {
                     "forceDetachPolicies": false,
-                    "name": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
+                    "name": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7",
                     "path": "/"
                 },
                 "outputs": {
-                    "arn": "arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
+                    "arn": "arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7",
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"apigateway.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
-                    "createDate": "2017-08-26T23:35:41Z",
+                    "createDate": "2017-09-11T21:00:31Z",
                     "forceDetachPolicies": false,
-                    "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
-                    "name": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
+                    "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7",
+                    "name": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7",
                     "path": "/",
-                    "uniqueId": "AROAIUOTPRBUQ4IEDOA2C"
+                    "uniqueId": "AROAIJOCTH74FMPERABMK"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
-                "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73-0096a282236c7a1073a712e4c2",
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
+                "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7-20170911210031952600000002",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                    "role": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73",
-                    "urnName": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9"
+                    "role": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7"
                 },
                 "outputs": {
-                    "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73-0096a282236c7a1073a712e4c2",
+                    "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7-20170911210031952600000002",
                     "policyArn": "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-                    "role": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73"
+                    "role": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7"
                 }
             },
-            "urn:lumi:test::todo:index::aws:s3/object:Object::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
+            "urn:lumi:test2::todo::aws:s3/bucketObject:BucketObject::todobe14e924eed46147948ca9e1d1b01cf7b63d80a9": {
                 "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9",
-                "type": "aws:s3/object:Object",
+                "type": "aws:s3/bucketObject:BucketObject",
                 "inputs": {
-                    "bucket": "todo-c4f6edbfde56",
+                    "bucket": "todo-3798db95f44db382",
                     "contentType": "image/x-icon",
                     "key": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9",
                     "source": {
@@ -204,16 +203,15 @@
                         "path": "favicon.ico",
                         "text": "",
                         "uri": ""
-                    },
-                    "urnName": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9"
+                    }
                 },
                 "defaults": {
                     "acl": "private",
-                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf790597458"
+                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf500833685"
                 },
                 "outputs": {
                     "acl": "private",
-                    "bucket": "todo-c4f6edbfde56",
+                    "bucket": "todo-3798db95f44db382",
                     "cacheControl": "",
                     "contentDisposition": "",
                     "contentEncoding": "",
@@ -223,69 +221,64 @@
                     "id": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9",
                     "key": "todobe14e924eed46147948ca9e1d1b01cf7b63d80a9",
                     "serverSideEncryption": "",
-                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf232155785",
+                    "source": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-asset-for-tf346242544",
                     "storageClass": "STANDARD",
                     "tags": {},
                     "versionId": "",
                     "websiteRedirect": ""
                 }
             },
-            "urn:lumi:test::todo:index::aws:sns/topic:Topic::unhandled-error-topic": {
-                "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd",
+            "urn:lumi:test2::todo::aws:sns/topic:Topic::unhandled-error-topic": {
+                "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17",
                 "type": "aws:sns/topic:Topic",
-                "inputs": {
-                    "urnName": "unhandled-error-topic"
-                },
                 "defaults": {
-                    "name": "unhandled-error-topic-b44dffdb4acd"
+                    "name": "unhandled-error-topic-f09208640ea97f17"
                 },
                 "outputs": {
-                    "arn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd",
+                    "arn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17",
                     "displayName": "",
-                    "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd",
-                    "name": "unhandled-error-topic-b44dffdb4acd",
-                    "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
+                    "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17",
+                    "name": "unhandled-error-topic-f09208640ea97f17",
+                    "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/role:Role::todo600341533e58e948000b1a0c26670f16254d6612-iamrole": {
-                "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+            "urn:lumi:test2::todo::aws:iam/role:Role::todo600341533e58e948000b1a0c26670f16254d6612-iamrole": {
+                "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                 "type": "aws:iam/role:Role",
                 "inputs": {
-                    "assumeRolePolicy": "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Action\": \"sts:AssumeRole\", \"Principal\": { \"Service\": \"lambda.amazonaws.com\"}, \"Effect\": \"Allow\", \"Sid\": \"\"}]}",
-                    "urnName": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole"
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
                 },
                 "defaults": {
                     "forceDetachPolicies": false,
-                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                     "path": "/"
                 },
                 "outputs": {
-                    "arn": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+                    "arn": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
-                    "createDate": "2017-08-26T23:35:45Z",
+                    "createDate": "2017-09-11T21:00:36Z",
                     "forceDetachPolicies": false,
-                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
-                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                     "path": "/",
-                    "uniqueId": "AROAJOAX5MO27LACPFBVK"
+                    "uniqueId": "AROAINE3R3DZUR45EFRYW"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo600341533e58e948000b1a0c26670f16254d6612-iampolicy-0": {
-                "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6-0096a282236c7a1073a712e4c3",
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo600341533e58e948000b1a0c26670f16254d6612-iampolicy-0": {
+                "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791-20170911210037647800000003",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
-                    "urnName": "todo600341533e58e948000b1a0c26670f16254d6612-iampolicy-0"
+                    "role": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791"
                 },
                 "outputs": {
-                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6-0096a282236c7a1073a712e4c3",
+                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791-20170911210037647800000003",
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6"
+                    "role": "todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791"
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/function:Function::todo600341533e58e948000b1a0c26670f16254d6612": {
-                "id": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
+            "urn:lumi:test2::todo::aws:lambda/function:Function::todo600341533e58e948000b1a0c26670f16254d6612": {
+                "id": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -294,7 +287,7 @@
                             "index.js": {
                                 "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
                                 "path": "",
-                                "text": "exports.handler = __ba238e887249a657418793861f65611c0071cba6;\n\nfunction __ba238e887249a657418793861f65611c0071cba6() {\n  var _this;\n  with({ apiGatewayToReqRes: __5dc0df62ce3d9779aed7d34610566d889ce05722, handler: __065acb7431a660bf5dbd77cff74e644f1b30400f, middleware: [ __062095dbc909d3ed6bbb89db1fb31d76d1567adc] }) {\n    return (function() {\n\nreturn function (ev, ctx, cb) {\n    var body;\n    if (ev.body !== null) {\n        if (ev.isBase64Encoded) {\n            body = Buffer.from(ev.body, \"base64\");\n        }\n        else {\n            body = Buffer.from(ev.body, \"utf8\");\n        }\n    }\n    ctx.callbackWaitsForEmptyEventLoop = false;\n    var reqres = apiGatewayToReqRes(ev, body, cb);\n    var i = 0;\n    var next = function () {\n        var nextMiddleware = middleware[i++];\n        if (nextMiddleware !== undefined) {\n            nextMiddleware(reqres.req, reqres.res, next);\n        }\n        else {\n            handler(reqres.req, reqres.res, function () { return; });\n        }\n    };\n    next();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __5dc0df62ce3d9779aed7d34610566d889ce05722() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function (ev, body, cb) {\n    var response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([])\n    };\n    var req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path\n    };\n    var res = {\n        status: function (code) {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: function (name, value) {\n            response.headers[name] = value;\n            return res;\n        },\n        write: function (data, encoding) {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: function (data, encoding) {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\")\n            });\n        },\n        json: function (obj) {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        }\n    };\n    return { req: req, res: res };\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __065acb7431a660bf5dbd77cff74e644f1b30400f() {\n  var _this;\n  with({ todos: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 } }) {\n    return (function() {\n\nvar _this = this;\nreturn function (req, res) { return __awaiter(_this, void 0, void 0, function () {\n    var item, err_1;\n    return __generator(this, function (_a) {\n        switch (_a.label) {\n            case 0:\n                console.log(\"GET /todo/\" + req.params.id);\n                _a.label = 1;\n            case 1:\n                _a.trys.push([1, 3, , 4]);\n                return [4 /*yield*/, todos.get({ id: req.params.id })];\n            case 2:\n                item = _a.sent();\n                res.status(200).json(item.value);\n                return [3 /*break*/, 4];\n            case 3:\n                err_1 = _a.sent();\n                res.status(500).json(err_1);\n                return [3 /*break*/, 4];\n            case 4: return [2 /*return*/];\n        }\n    });\n}); };\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db().get({\n        TableName: _this.tableName,\n        Key: query\n    }).promise().then(function (x) { return x.Item; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __baec7e39106a37340476521a55e83dfcf7d33d61() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (item) {\n    return db().put({\n        TableName: _this.tableName,\n        Item: item\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __6096da85c9a20fe5bc49ca9b656741f1bc070f71() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function () {\n    return db().scan({\n        TableName: _this.tableName\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __22886086cb67beb66b42573777b86d10f3b3dd59() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query, updates) {\n    var updateExpression = \"\";\n    var attributeValues = {};\n    var keys = Object.keys(updates);\n    for (var i = 0; i \u003c keys.length; i++) {\n        var key = keys[i];\n        var val = updates[key];\n        if (updateExpression === \"\") {\n            updateExpression += \"SET \";\n        }\n        else {\n            updateExpression += \", \";\n        }\n        updateExpression += key + \" = :\" + key;\n        attributeValues[\":\" + key] = val;\n    }\n    return db().update({\n        TableName: _this.tableName,\n        Key: query,\n        UpdateExpression: updateExpression,\n        ExpressionAttributeValues: attributeValues\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __1c6314fff918df9a96494416fe2c46d6bfa2b931() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db()[\"delete\"]({\n        TableName: _this.tableName,\n        Key: query\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __fc8ddd140ac817434c59437a8928a2f0ff567173() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function () {\n    var aws = require(\"aws-sdk\");\n    return new aws.DynamoDB.DocumentClient();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __062095dbc909d3ed6bbb89db1fb31d76d1567adc() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function (req, res, next) {\n    var auth = req.headers[\"Authorization\"];\n    if (auth !== \"Bearer SECRETPASSWORD\") {\n        res.status(401).end(\"Authorization header required\");\n        return;\n    }\n    next();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n\nfunction __awaiter(thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n}\n\nfunction __generator(thisArg, body) {\n    var _ = { label: 0, sent: function() { if (t[0] \u0026 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;\n    return g = { next: verb(0), \"throw\": verb(1), \"return\": verb(2) }, typeof Symbol === \"function\" \u0026\u0026 (g[Symbol.iterator] = function() { return this; }), g;\n    function verb(n) { return function (v) { return step([n, v]); }; }\n    function step(op) {\n        if (f) throw new TypeError(\"Generator is already executing.\");\n        while (_) try {\n            if (f = 1, y \u0026\u0026 (t = y[op[0] \u0026 2 ? \"return\" : op[0] ? \"throw\" : \"next\"]) \u0026\u0026 !(t = t.call(y, op[1])).done) return t;\n            if (y = 0, t) op = [0, t.value];\n            switch (op[0]) {\n                case 0: case 1: t = op; break;\n                case 4: _.label++; return { value: op[1], done: false };\n                case 5: _.label++; y = op[1]; op = [0]; continue;\n                case 7: op = _.ops.pop(); _.trys.pop(); continue;\n                default:\n                    if (!(t = _.trys, t = t.length \u003e 0 \u0026\u0026 t[t.length - 1]) \u0026\u0026 (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }\n                    if (op[0] === 3 \u0026\u0026 (!t || (op[1] \u003e t[0] \u0026\u0026 op[1] \u003c t[3]))) { _.label = op[1]; break; }\n                    if (op[0] === 6 \u0026\u0026 _.label \u003c t[1]) { _.label = t[1]; t = op; break; }\n                    if (t \u0026\u0026 _.label \u003c t[2]) { _.label = t[2]; _.ops.push(op); break; }\n                    if (t[2]) _.ops.pop();\n                    _.trys.pop(); continue;\n            }\n            op = body.call(thisArg, _);\n        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }\n        if (op[0] \u0026 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };\n    }\n}\n",
+                                "text": "exports.handler = __56afe9c2df27fa0cbd4d008f2a0e59957ced3741;\n\nfunction __56afe9c2df27fa0cbd4d008f2a0e59957ced3741() {\n  var _this;\n  with({ apiGatewayToReqRes: __7f406900de69b661f1b1fba6322c5498c0d43045, middleware: [ __088770ee71ab8d6760adb4209c029c15b6e148b5 ], handler: __cd84a7168ffd85379be5c6e4821e3e574a1b8e8c }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n            let body;\n            if (ev.body !== null) {\n                if (ev.isBase64Encoded) {\n                    body = Buffer.from(ev.body, \"base64\");\n                }\n                else {\n                    body = Buffer.from(ev.body, \"utf8\");\n                }\n            }\n            ctx.callbackWaitsForEmptyEventLoop = false;\n            let reqres = apiGatewayToReqRes(ev, body, cb);\n            let i = 0;\n            let next = () =\u003e {\n                let nextMiddleware = middleware[i++];\n                if (nextMiddleware !== undefined) {\n                    nextMiddleware(reqres.req, reqres.res, next);\n                }\n                else {\n                    handler(reqres.req, reqres.res, () =\u003e { return; });\n                }\n            };\n            next();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __7f406900de69b661f1b1fba6322c5498c0d43045() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((ev, body, cb) =\u003e {\n    let response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([]),\n    };\n    let req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path,\n    };\n    let res = {\n        status: (code) =\u003e {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: (name, value) =\u003e {\n            response.headers[name] = value;\n            return res;\n        },\n        write: (data, encoding) =\u003e {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: (data, encoding) =\u003e {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\"),\n            });\n        },\n        json: (obj) =\u003e {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        },\n    };\n    return { req, res };\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __088770ee71ab8d6760adb4209c029c15b6e148b5() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((req, res, next) =\u003e {\n    let auth = req.headers[\"Authorization\"];\n    if (auth !== \"Bearer SECRETPASSWORD\") {\n        res.status(401).end(\"Authorization header required\");\n        return;\n    }\n    next();\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __cd84a7168ffd85379be5c6e4821e3e574a1b8e8c() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, todos: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((req, res) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(\"GET /todo/\" + req.params[\"id\"]);\n    try {\n        let item = yield todos.get({ id: req.params[\"id\"] });\n        res.status(200).json(item.value);\n    }\n    catch (err) {\n        res.status(500).json(err);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __48cf5aa4db88b506a79423381c78671d8f81306a() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().get({\n                TableName: this.tableName,\n                Key: query,\n            }).promise().then((x) =\u003e x.Item);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __17caf9df985b159b0f95269f155924083781d4b2() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (() =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            return new awssdk.DynamoDB.DocumentClient();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            return db().put({\n                TableName: this.tableName,\n                Item: item,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ab085023313475713fa6a8b9c4160c9d51f2c217() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn (() =\u003e {\n            return db().scan({\n                TableName: this.tableName,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __4710723cfbdcd4c093854c0650f51c18096a0e59() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query, updates) =\u003e {\n            let updateExpression = \"\";\n            let attributeValues = {};\n            for (let key of Object.keys(updates)) {\n                let val = updates[key];\n                if (updateExpression === \"\") {\n                    updateExpression += \"SET \";\n                }\n                else {\n                    updateExpression += \", \";\n                }\n                updateExpression += `${key} = :${key}`;\n                attributeValues[`:${key}`] = val;\n            }\n            return db().update({\n                TableName: this.tableName,\n                Key: query,\n                UpdateExpression: updateExpression,\n                ExpressionAttributeValues: attributeValues,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __a3aeb8a3298039263b13e949d981ba8b98f55517() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().delete({\n                TableName: this.tableName,\n                Key: query,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
                                 "uri": ""
                             },
                             "node_modules": {
@@ -309,44 +302,43 @@
                     },
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "handler": "index.handler",
-                    "role": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+                    "role": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                     "runtime": "nodejs6.10",
-                    "timeout": 180,
-                    "urnName": "todo600341533e58e948000b1a0c26670f16254d6612"
+                    "timeout": 180
                 },
                 "defaults": {
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf324375636",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf981941391",
                     "memorySize": "128",
-                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
                     "publish": false,
                     "timeout": "180"
                 },
                 "outputs": {
-                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf354269603",
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf023396514",
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "description": "",
                     "environment": [],
                     "handler": "index.handler",
-                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
-                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973/invocations",
+                    "id": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715/invocations",
                     "kmsKeyArn": "",
-                    "lastModified": "2017-08-26T23:35:56.386+0000",
+                    "lastModified": "2017-09-11T21:00:47.370+0000",
                     "memorySize": "128",
-                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
                     "publish": false,
-                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973:$LATEST",
-                    "role": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-f01925770e6",
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/todo600341533e58e948000b1a0c26670f16254d6612-iamrole-42140735791",
                     "runtime": "nodejs6.10",
-                    "sourceCodeHash": "ETKwbGuunSxzDHoT1cNI41uJdhT8wUcSHxHRzxJDfTw=",
+                    "sourceCodeHash": "En+2FwyKK7UfJoeW/z5ZvvusWhzFF3khuKoVce++RlI=",
                     "tags": {},
                     "timeout": "180",
                     "tracingConfig": [
@@ -358,45 +350,61 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/role:Role::todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole": {
-                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::todo600341533e58e948000b1a0c26670f16254d6612": {
+                "id": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                "type": "aws:cloudwatch/logGroup:LogGroup",
+                "inputs": {
+                    "name": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "retentionInDays": 1
+                },
+                "defaults": {
+                    "retentionInDays": "1"
+                },
+                "outputs": {
+                    "arn": "arn:aws:logs:us-east-2:153052954103:log-group:/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715:*",
+                    "id": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "name": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "retentionInDays": "1",
+                    "tags": {}
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::pulumi-app-log-collector-iamrole": {
+                "id": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
                 "type": "aws:iam/role:Role",
                 "inputs": {
-                    "assumeRolePolicy": "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Action\": \"sts:AssumeRole\", \"Principal\": { \"Service\": \"lambda.amazonaws.com\"}, \"Effect\": \"Allow\", \"Sid\": \"\"}]}",
-                    "urnName": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole"
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
                 },
                 "defaults": {
                     "forceDetachPolicies": false,
-                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+                    "name": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
                     "path": "/"
                 },
                 "outputs": {
-                    "arn": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+                    "arn": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
-                    "createDate": "2017-08-26T23:36:11Z",
+                    "createDate": "2017-09-11T21:00:50Z",
                     "forceDetachPolicies": false,
-                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
-                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+                    "id": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
+                    "name": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
                     "path": "/",
-                    "uniqueId": "AROAIS6TCQWRWHHUI3A7M"
+                    "uniqueId": "AROAJBCSKXTGUOFDZTVXE"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todoe0999b769746c706c9bce38d0743252af7526ae9-iampolicy-0": {
-                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd-0096a282236c7a1073a712e4c5",
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::pulumi-app-log-collector-iampolicy-0": {
+                "id": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281-20170911210051481500000004",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
-                    "urnName": "todoe0999b769746c706c9bce38d0743252af7526ae9-iampolicy-0"
+                    "role": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281"
                 },
                 "outputs": {
-                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd-0096a282236c7a1073a712e4c5",
+                    "id": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281-20170911210051481500000004",
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd"
+                    "role": "pulumi-app-log-collector-iamrole-be77b6f6e72b1281"
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/function:Function::todoe0999b769746c706c9bce38d0743252af7526ae9": {
-                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
+            "urn:lumi:test2::todo::aws:lambda/function:Function::pulumi-app-log-collector": {
+                "id": "pulumi-app-log-collector-5346f8a09d8356d9",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -405,7 +413,145 @@
                             "index.js": {
                                 "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
                                 "path": "",
-                                "text": "exports.handler = __ba238e887249a657418793861f65611c0071cba6;\n\nfunction __ba238e887249a657418793861f65611c0071cba6() {\n  var _this;\n  with({ apiGatewayToReqRes: __5dc0df62ce3d9779aed7d34610566d889ce05722, handler: __3406efd38d169f0fce1534f6b74f5364002b1f54, middleware: [] }) {\n    return (function() {\n\nreturn function (ev, ctx, cb) {\n    var body;\n    if (ev.body !== null) {\n        if (ev.isBase64Encoded) {\n            body = Buffer.from(ev.body, \"base64\");\n        }\n        else {\n            body = Buffer.from(ev.body, \"utf8\");\n        }\n    }\n    ctx.callbackWaitsForEmptyEventLoop = false;\n    var reqres = apiGatewayToReqRes(ev, body, cb);\n    var i = 0;\n    var next = function () {\n        var nextMiddleware = middleware[i++];\n        if (nextMiddleware !== undefined) {\n            nextMiddleware(reqres.req, reqres.res, next);\n        }\n        else {\n            handler(reqres.req, reqres.res, function () { return; });\n        }\n    };\n    next();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __5dc0df62ce3d9779aed7d34610566d889ce05722() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function (ev, body, cb) {\n    var response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([])\n    };\n    var req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path\n    };\n    var res = {\n        status: function (code) {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: function (name, value) {\n            response.headers[name] = value;\n            return res;\n        },\n        write: function (data, encoding) {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: function (data, encoding) {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\")\n            });\n        },\n        json: function (obj) {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        }\n    };\n    return { req: req, res: res };\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __3406efd38d169f0fce1534f6b74f5364002b1f54() {\n  var _this;\n  with({ todos: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 } }) {\n    return (function() {\n\nvar _this = this;\nreturn function (req, res) { return __awaiter(_this, void 0, void 0, function () {\n    var err_1;\n    return __generator(this, function (_a) {\n        switch (_a.label) {\n            case 0:\n                console.log(\"POST /todo/\" + req.params.id);\n                _a.label = 1;\n            case 1:\n                _a.trys.push([1, 3, , 4]);\n                return [4 /*yield*/, todos.insert({ id: req.params.id, value: req.body.toString() })];\n            case 2:\n                _a.sent();\n                res.status(201).json({});\n                return [3 /*break*/, 4];\n            case 3:\n                err_1 = _a.sent();\n                res.status(500).json(err_1);\n                return [3 /*break*/, 4];\n            case 4: return [2 /*return*/];\n        }\n    });\n}); };\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db().get({\n        TableName: _this.tableName,\n        Key: query\n    }).promise().then(function (x) { return x.Item; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __baec7e39106a37340476521a55e83dfcf7d33d61() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (item) {\n    return db().put({\n        TableName: _this.tableName,\n        Item: item\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __6096da85c9a20fe5bc49ca9b656741f1bc070f71() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function () {\n    return db().scan({\n        TableName: _this.tableName\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __22886086cb67beb66b42573777b86d10f3b3dd59() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query, updates) {\n    var updateExpression = \"\";\n    var attributeValues = {};\n    var keys = Object.keys(updates);\n    for (var i = 0; i \u003c keys.length; i++) {\n        var key = keys[i];\n        var val = updates[key];\n        if (updateExpression === \"\") {\n            updateExpression += \"SET \";\n        }\n        else {\n            updateExpression += \", \";\n        }\n        updateExpression += key + \" = :\" + key;\n        attributeValues[\":\" + key] = val;\n    }\n    return db().update({\n        TableName: _this.tableName,\n        Key: query,\n        UpdateExpression: updateExpression,\n        ExpressionAttributeValues: attributeValues\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __1c6314fff918df9a96494416fe2c46d6bfa2b931() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db()[\"delete\"]({\n        TableName: _this.tableName,\n        Key: query\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __fc8ddd140ac817434c59437a8928a2f0ff567173() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function () {\n    var aws = require(\"aws-sdk\");\n    return new aws.DynamoDB.DocumentClient();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n\nfunction __awaiter(thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n}\n\nfunction __generator(thisArg, body) {\n    var _ = { label: 0, sent: function() { if (t[0] \u0026 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;\n    return g = { next: verb(0), \"throw\": verb(1), \"return\": verb(2) }, typeof Symbol === \"function\" \u0026\u0026 (g[Symbol.iterator] = function() { return this; }), g;\n    function verb(n) { return function (v) { return step([n, v]); }; }\n    function step(op) {\n        if (f) throw new TypeError(\"Generator is already executing.\");\n        while (_) try {\n            if (f = 1, y \u0026\u0026 (t = y[op[0] \u0026 2 ? \"return\" : op[0] ? \"throw\" : \"next\"]) \u0026\u0026 !(t = t.call(y, op[1])).done) return t;\n            if (y = 0, t) op = [0, t.value];\n            switch (op[0]) {\n                case 0: case 1: t = op; break;\n                case 4: _.label++; return { value: op[1], done: false };\n                case 5: _.label++; y = op[1]; op = [0]; continue;\n                case 7: op = _.ops.pop(); _.trys.pop(); continue;\n                default:\n                    if (!(t = _.trys, t = t.length \u003e 0 \u0026\u0026 t[t.length - 1]) \u0026\u0026 (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }\n                    if (op[0] === 3 \u0026\u0026 (!t || (op[1] \u003e t[0] \u0026\u0026 op[1] \u003c t[3]))) { _.label = op[1]; break; }\n                    if (op[0] === 6 \u0026\u0026 _.label \u003c t[1]) { _.label = t[1]; t = op; break; }\n                    if (t \u0026\u0026 _.label \u003c t[2]) { _.label = t[2]; _.ops.push(op); break; }\n                    if (t[2]) _.ops.pop();\n                    _.trys.pop(); continue;\n            }\n            op = body.call(thisArg, _);\n        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }\n        if (op[0] \u0026 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };\n    }\n}\n",
+                                "text": "exports.handler = __b61282713b1270694c8f861357e1709b2c11fb78;\n\nfunction __b61282713b1270694c8f861357e1709b2c11fb78() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n            let zlib = require(\"zlib\");\n            let payload = new Buffer(ev.awslogs.data, \"base64\");\n            zlib.gunzip(payload, (err, result) =\u003e {\n                if (err !== undefined \u0026\u0026 err !== null) {\n                    cb(err, null);\n                }\n                else {\n                    console.log(result.toString(\"utf8\"));\n                    cb(null, {});\n                }\n            });\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "uri": ""
+                            },
+                            "node_modules": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "node_modules",
+                                "text": "",
+                                "uri": ""
+                            }
+                        },
+                        "path": "",
+                        "uri": ""
+                    },
+                    "handler": "index.handler",
+                    "role": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
+                    "runtime": "nodejs6.10",
+                    "timeout": 180
+                },
+                "defaults": {
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf627897241",
+                    "memorySize": "128",
+                    "name": "pulumi-app-log-collector-5346f8a09d8356d9",
+                    "publish": false,
+                    "timeout": "180"
+                },
+                "outputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf816303140",
+                    "deadLetterConfig": [],
+                    "description": "",
+                    "environment": [],
+                    "handler": "index.handler",
+                    "id": "pulumi-app-log-collector-5346f8a09d8356d9",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9/invocations",
+                    "kmsKeyArn": "",
+                    "lastModified": "2017-09-11T21:01:00.902+0000",
+                    "memorySize": "128",
+                    "name": "pulumi-app-log-collector-5346f8a09d8356d9",
+                    "publish": false,
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-be77b6f6e72b1281",
+                    "runtime": "nodejs6.10",
+                    "sourceCodeHash": "CFh5dyaOmp7wwBgBAJnLv/J5i2NxQqu724wHl1d1C2w=",
+                    "tags": {},
+                    "timeout": "180",
+                    "tracingConfig": [
+                        {
+                            "mode": "PassThrough"
+                        }
+                    ],
+                    "version": "$LATEST",
+                    "vpcConfig": []
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::pulumi-app-log-collector": {
+                "id": "pulumi-app-log-collector-d8931f21148c1111",
+                "type": "aws:lambda/permission:Permission",
+                "inputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "pulumi-app-log-collector-5346f8a09d8356d9",
+                    "principal": "logs.us-east-2.amazonaws.com"
+                },
+                "defaults": {
+                    "statementId": "pulumi-app-log-collector-d8931f21148c1111"
+                },
+                "outputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "pulumi-app-log-collector-5346f8a09d8356d9",
+                    "id": "pulumi-app-log-collector-d8931f21148c1111",
+                    "principal": "logs.us-east-2.amazonaws.com",
+                    "qualifier": "",
+                    "statementId": "pulumi-app-log-collector-d8931f21148c1111"
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::todo600341533e58e948000b1a0c26670f16254d6612": {
+                "id": "cwlsf-1086448563",
+                "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
+                "inputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "logGroup": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715"
+                },
+                "defaults": {
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-68db3d6f89608984"
+                },
+                "outputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "id": "cwlsf-1086448563",
+                    "logGroup": "/aws/lambda/todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "name": "todo600341533e58e948000b1a0c26670f16254d6612-68db3d6f89608984"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole": {
+                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
+                "type": "aws:iam/role:Role",
+                "inputs": {
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
+                },
+                "defaults": {
+                    "forceDetachPolicies": false,
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
+                    "path": "/"
+                },
+                "outputs": {
+                    "arn": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+                    "createDate": "2017-09-11T21:01:03Z",
+                    "forceDetachPolicies": false,
+                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
+                    "path": "/",
+                    "uniqueId": "AROAJSGQRZNL4RFMZWIPA"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todoe0999b769746c706c9bce38d0743252af7526ae9-iampolicy-0": {
+                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612-20170911210104540600000005",
+                "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
+                "inputs": {
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612"
+                },
+                "outputs": {
+                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612-20170911210104540600000005",
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/function:Function::todoe0999b769746c706c9bce38d0743252af7526ae9": {
+                "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                "type": "aws:lambda/function:Function",
+                "inputs": {
+                    "code": {
+                        "4dabf18193072939515e22adb298388d": "0def7320c3a5731c473e5ecbe6d01bc7",
+                        "assets": {
+                            "index.js": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "",
+                                "text": "exports.handler = __56afe9c2df27fa0cbd4d008f2a0e59957ced3741;\n\nfunction __56afe9c2df27fa0cbd4d008f2a0e59957ced3741() {\n  var _this;\n  with({ apiGatewayToReqRes: __7f406900de69b661f1b1fba6322c5498c0d43045, middleware: [  ], handler: __81d168b448dea33d1ed605eaba5b3e1c6a0d9d53 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n            let body;\n            if (ev.body !== null) {\n                if (ev.isBase64Encoded) {\n                    body = Buffer.from(ev.body, \"base64\");\n                }\n                else {\n                    body = Buffer.from(ev.body, \"utf8\");\n                }\n            }\n            ctx.callbackWaitsForEmptyEventLoop = false;\n            let reqres = apiGatewayToReqRes(ev, body, cb);\n            let i = 0;\n            let next = () =\u003e {\n                let nextMiddleware = middleware[i++];\n                if (nextMiddleware !== undefined) {\n                    nextMiddleware(reqres.req, reqres.res, next);\n                }\n                else {\n                    handler(reqres.req, reqres.res, () =\u003e { return; });\n                }\n            };\n            next();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __7f406900de69b661f1b1fba6322c5498c0d43045() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((ev, body, cb) =\u003e {\n    let response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([]),\n    };\n    let req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path,\n    };\n    let res = {\n        status: (code) =\u003e {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: (name, value) =\u003e {\n            response.headers[name] = value;\n            return res;\n        },\n        write: (data, encoding) =\u003e {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: (data, encoding) =\u003e {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\"),\n            });\n        },\n        json: (obj) =\u003e {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        },\n    };\n    return { req, res };\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __81d168b448dea33d1ed605eaba5b3e1c6a0d9d53() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, todos: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((req, res) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(\"POST /todo/\" + req.params[\"id\"]);\n    try {\n        yield todos.insert({ id: req.params[\"id\"], value: req.body.toString() });\n        res.status(201).json({});\n    }\n    catch (err) {\n        res.status(500).json(err);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __48cf5aa4db88b506a79423381c78671d8f81306a() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().get({\n                TableName: this.tableName,\n                Key: query,\n            }).promise().then((x) =\u003e x.Item);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __17caf9df985b159b0f95269f155924083781d4b2() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (() =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            return new awssdk.DynamoDB.DocumentClient();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            return db().put({\n                TableName: this.tableName,\n                Item: item,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ab085023313475713fa6a8b9c4160c9d51f2c217() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn (() =\u003e {\n            return db().scan({\n                TableName: this.tableName,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __4710723cfbdcd4c093854c0650f51c18096a0e59() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query, updates) =\u003e {\n            let updateExpression = \"\";\n            let attributeValues = {};\n            for (let key of Object.keys(updates)) {\n                let val = updates[key];\n                if (updateExpression === \"\") {\n                    updateExpression += \"SET \";\n                }\n                else {\n                    updateExpression += \", \";\n                }\n                updateExpression += `${key} = :${key}`;\n                attributeValues[`:${key}`] = val;\n            }\n            return db().update({\n                TableName: this.tableName,\n                Key: query,\n                UpdateExpression: updateExpression,\n                ExpressionAttributeValues: attributeValues,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __a3aeb8a3298039263b13e949d981ba8b98f55517() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().delete({\n                TableName: this.tableName,\n                Key: query,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
                                 "uri": ""
                             },
                             "node_modules": {
@@ -420,44 +566,43 @@
                     },
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "handler": "index.handler",
-                    "role": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+                    "role": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
                     "runtime": "nodejs6.10",
-                    "timeout": 180,
-                    "urnName": "todoe0999b769746c706c9bce38d0743252af7526ae9"
+                    "timeout": 180
                 },
                 "defaults": {
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf715115720",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf144250163",
                     "memorySize": "128",
-                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
                     "publish": false,
                     "timeout": "180"
                 },
                 "outputs": {
-                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf965488519",
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf538790134",
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "description": "",
                     "environment": [],
                     "handler": "index.handler",
-                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
-                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c/invocations",
+                    "id": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173/invocations",
                     "kmsKeyArn": "",
-                    "lastModified": "2017-08-26T23:36:21.601+0000",
+                    "lastModified": "2017-09-11T21:01:18.768+0000",
                     "memorySize": "128",
-                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
                     "publish": false,
-                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c:$LATEST",
-                    "role": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-8ba9c6f50bd",
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/todoe0999b769746c706c9bce38d0743252af7526ae9-iamrole-07d63b8d612",
                     "runtime": "nodejs6.10",
-                    "sourceCodeHash": "cJ0G5c9AP08FF4HmGwhR/S+rROBxgdxgU7aWSNbBEuU=",
+                    "sourceCodeHash": "CKisIBKpfuT25gdxCmKQfLZRB5JFzvBhEFDeid8Qp8M=",
                     "tags": {},
                     "timeout": "180",
                     "tracingConfig": [
@@ -469,45 +614,80 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/role:Role::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole": {
-                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::todoe0999b769746c706c9bce38d0743252af7526ae9": {
+                "id": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                "type": "aws:cloudwatch/logGroup:LogGroup",
+                "inputs": {
+                    "name": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "retentionInDays": 1
+                },
+                "defaults": {
+                    "retentionInDays": "1"
+                },
+                "outputs": {
+                    "arn": "arn:aws:logs:us-east-2:153052954103:log-group:/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173:*",
+                    "id": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "name": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "retentionInDays": "1",
+                    "tags": {}
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::todoe0999b769746c706c9bce38d0743252af7526ae9": {
+                "id": "cwlsf-877406210",
+                "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
+                "inputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "logGroup": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173"
+                },
+                "defaults": {
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-f84955d5162d2b1c"
+                },
+                "outputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "id": "cwlsf-877406210",
+                    "logGroup": "/aws/lambda/todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "name": "todoe0999b769746c706c9bce38d0743252af7526ae9-f84955d5162d2b1c"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole": {
+                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                 "type": "aws:iam/role:Role",
                 "inputs": {
-                    "assumeRolePolicy": "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Action\": \"sts:AssumeRole\", \"Principal\": { \"Service\": \"lambda.amazonaws.com\"}, \"Effect\": \"Allow\", \"Sid\": \"\"}]}",
-                    "urnName": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole"
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
                 },
                 "defaults": {
                     "forceDetachPolicies": false,
-                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                     "path": "/"
                 },
                 "outputs": {
-                    "arn": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+                    "arn": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
-                    "createDate": "2017-08-26T23:36:24Z",
+                    "createDate": "2017-09-11T21:01:22Z",
                     "forceDetachPolicies": false,
-                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
-                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                     "path": "/",
-                    "uniqueId": "AROAIUMMHJLDZUMN4NMKO"
+                    "uniqueId": "AROAJY6EW4EERCIVWZW5I"
                 }
             },
-            "urn:lumi:test::todo:index::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iampolicy-0": {
-                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b-0096a282236c7a1073a712e4c6",
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iampolicy-0": {
+                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a-20170911210123573900000006",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
-                    "urnName": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iampolicy-0"
+                    "role": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a"
                 },
                 "outputs": {
-                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b-0096a282236c7a1073a712e4c6",
+                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a-20170911210123573900000006",
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
-                    "role": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b"
+                    "role": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a"
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/function:Function::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b": {
-                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
+            "urn:lumi:test2::todo::aws:lambda/function:Function::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b": {
+                "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -516,7 +696,7 @@
                             "index.js": {
                                 "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
                                 "path": "",
-                                "text": "exports.handler = __ba238e887249a657418793861f65611c0071cba6;\n\nfunction __ba238e887249a657418793861f65611c0071cba6() {\n  var _this;\n  with({ apiGatewayToReqRes: __5dc0df62ce3d9779aed7d34610566d889ce05722, handler: __b534cdfd4e36ae0c7cb86d907ac4f8dccd9fa251, middleware: [] }) {\n    return (function() {\n\nreturn function (ev, ctx, cb) {\n    var body;\n    if (ev.body !== null) {\n        if (ev.isBase64Encoded) {\n            body = Buffer.from(ev.body, \"base64\");\n        }\n        else {\n            body = Buffer.from(ev.body, \"utf8\");\n        }\n    }\n    ctx.callbackWaitsForEmptyEventLoop = false;\n    var reqres = apiGatewayToReqRes(ev, body, cb);\n    var i = 0;\n    var next = function () {\n        var nextMiddleware = middleware[i++];\n        if (nextMiddleware !== undefined) {\n            nextMiddleware(reqres.req, reqres.res, next);\n        }\n        else {\n            handler(reqres.req, reqres.res, function () { return; });\n        }\n    };\n    next();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __5dc0df62ce3d9779aed7d34610566d889ce05722() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function (ev, body, cb) {\n    var response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([])\n    };\n    var req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path\n    };\n    var res = {\n        status: function (code) {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: function (name, value) {\n            response.headers[name] = value;\n            return res;\n        },\n        write: function (data, encoding) {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: function (data, encoding) {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\")\n            });\n        },\n        json: function (obj) {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        }\n    };\n    return { req: req, res: res };\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __b534cdfd4e36ae0c7cb86d907ac4f8dccd9fa251() {\n  var _this;\n  with({ todos: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 } }) {\n    return (function() {\n\nvar _this = this;\nreturn function (req, res) { return __awaiter(_this, void 0, void 0, function () {\n    var items, err_1;\n    return __generator(this, function (_a) {\n        switch (_a.label) {\n            case 0:\n                console.log(\"GET /todo\");\n                _a.label = 1;\n            case 1:\n                _a.trys.push([1, 3, , 4]);\n                return [4 /*yield*/, todos.scan()];\n            case 2:\n                items = _a.sent();\n                res.status(200).json(items);\n                return [3 /*break*/, 4];\n            case 3:\n                err_1 = _a.sent();\n                res.status(500).json(err_1);\n                return [3 /*break*/, 4];\n            case 4: return [2 /*return*/];\n        }\n    });\n}); };\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db().get({\n        TableName: _this.tableName,\n        Key: query\n    }).promise().then(function (x) { return x.Item; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __baec7e39106a37340476521a55e83dfcf7d33d61() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (item) {\n    return db().put({\n        TableName: _this.tableName,\n        Item: item\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __6096da85c9a20fe5bc49ca9b656741f1bc070f71() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function () {\n    return db().scan({\n        TableName: _this.tableName\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __22886086cb67beb66b42573777b86d10f3b3dd59() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query, updates) {\n    var updateExpression = \"\";\n    var attributeValues = {};\n    var keys = Object.keys(updates);\n    for (var i = 0; i \u003c keys.length; i++) {\n        var key = keys[i];\n        var val = updates[key];\n        if (updateExpression === \"\") {\n            updateExpression += \"SET \";\n        }\n        else {\n            updateExpression += \", \";\n        }\n        updateExpression += key + \" = :\" + key;\n        attributeValues[\":\" + key] = val;\n    }\n    return db().update({\n        TableName: _this.tableName,\n        Key: query,\n        UpdateExpression: updateExpression,\n        ExpressionAttributeValues: attributeValues\n    }).promise().then(function (x) { return x.Items; });\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __1c6314fff918df9a96494416fe2c46d6bfa2b931() {\n  var _this;\n  with({ _this: { table: { urnName: \"todo\", attribute: [ { name: \"id\", type: \"S\" }], globalSecondaryIndex: [], hashKey: \"id\", localSecondaryIndex: [], name: \"todo-c0dc4cf4ec16\", readCapacity: 5, writeCapacity: 5, urn: \"urn:lumi:test::todo:index::aws:dynamodb/table:Table::todo\", id: \"todo-c0dc4cf4ec16\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-c0dc4cf4ec16\", streamArn: { }, streamLabel: { } }, tableName: \"todo-c0dc4cf4ec16\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: 5, writeCapacity: 5, get: __8d0777ef4f6df1f0db00a85b563cb33a8a0ff424, insert: __baec7e39106a37340476521a55e83dfcf7d33d61, scan: __6096da85c9a20fe5bc49ca9b656741f1bc070f71, update: __22886086cb67beb66b42573777b86d10f3b3dd59, delete: __1c6314fff918df9a96494416fe2c46d6bfa2b931 }, db: __fc8ddd140ac817434c59437a8928a2f0ff567173 }) {\n    return (function() {\n\nvar _this = this;\nreturn function (query) {\n    return db()[\"delete\"]({\n        TableName: _this.tableName,\n        Key: query\n    }).promise();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __fc8ddd140ac817434c59437a8928a2f0ff567173() {\n  var _this;\n  with({ }) {\n    return (function() {\n\nreturn function () {\n    var aws = require(\"aws-sdk\");\n    return new aws.DynamoDB.DocumentClient();\n};\n\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n\nfunction __awaiter(thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n}\n\nfunction __generator(thisArg, body) {\n    var _ = { label: 0, sent: function() { if (t[0] \u0026 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;\n    return g = { next: verb(0), \"throw\": verb(1), \"return\": verb(2) }, typeof Symbol === \"function\" \u0026\u0026 (g[Symbol.iterator] = function() { return this; }), g;\n    function verb(n) { return function (v) { return step([n, v]); }; }\n    function step(op) {\n        if (f) throw new TypeError(\"Generator is already executing.\");\n        while (_) try {\n            if (f = 1, y \u0026\u0026 (t = y[op[0] \u0026 2 ? \"return\" : op[0] ? \"throw\" : \"next\"]) \u0026\u0026 !(t = t.call(y, op[1])).done) return t;\n            if (y = 0, t) op = [0, t.value];\n            switch (op[0]) {\n                case 0: case 1: t = op; break;\n                case 4: _.label++; return { value: op[1], done: false };\n                case 5: _.label++; y = op[1]; op = [0]; continue;\n                case 7: op = _.ops.pop(); _.trys.pop(); continue;\n                default:\n                    if (!(t = _.trys, t = t.length \u003e 0 \u0026\u0026 t[t.length - 1]) \u0026\u0026 (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }\n                    if (op[0] === 3 \u0026\u0026 (!t || (op[1] \u003e t[0] \u0026\u0026 op[1] \u003c t[3]))) { _.label = op[1]; break; }\n                    if (op[0] === 6 \u0026\u0026 _.label \u003c t[1]) { _.label = t[1]; t = op; break; }\n                    if (t \u0026\u0026 _.label \u003c t[2]) { _.label = t[2]; _.ops.push(op); break; }\n                    if (t[2]) _.ops.pop();\n                    _.trys.pop(); continue;\n            }\n            op = body.call(thisArg, _);\n        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }\n        if (op[0] \u0026 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };\n    }\n}\n",
+                                "text": "exports.handler = __56afe9c2df27fa0cbd4d008f2a0e59957ced3741;\n\nfunction __56afe9c2df27fa0cbd4d008f2a0e59957ced3741() {\n  var _this;\n  with({ apiGatewayToReqRes: __7f406900de69b661f1b1fba6322c5498c0d43045, middleware: [  ], handler: __a53e7f2d86668dec21b51a9bda5df72a2630eb8a }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n            let body;\n            if (ev.body !== null) {\n                if (ev.isBase64Encoded) {\n                    body = Buffer.from(ev.body, \"base64\");\n                }\n                else {\n                    body = Buffer.from(ev.body, \"utf8\");\n                }\n            }\n            ctx.callbackWaitsForEmptyEventLoop = false;\n            let reqres = apiGatewayToReqRes(ev, body, cb);\n            let i = 0;\n            let next = () =\u003e {\n                let nextMiddleware = middleware[i++];\n                if (nextMiddleware !== undefined) {\n                    nextMiddleware(reqres.req, reqres.res, next);\n                }\n                else {\n                    handler(reqres.req, reqres.res, () =\u003e { return; });\n                }\n            };\n            next();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __7f406900de69b661f1b1fba6322c5498c0d43045() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((ev, body, cb) =\u003e {\n    let response = {\n        statusCode: 200,\n        headers: {},\n        body: Buffer.from([]),\n    };\n    let req = {\n        headers: ev.headers,\n        body: body,\n        method: ev.httpMethod,\n        params: ev.pathParameters,\n        query: ev.queryStringParameters,\n        path: ev.path,\n    };\n    let res = {\n        status: (code) =\u003e {\n            response.statusCode = code;\n            return res;\n        },\n        setHeader: (name, value) =\u003e {\n            response.headers[name] = value;\n            return res;\n        },\n        write: (data, encoding) =\u003e {\n            if (encoding === undefined) {\n                encoding = \"utf8\";\n            }\n            if (typeof data === \"string\") {\n                data = Buffer.from(data, encoding);\n            }\n            response.body = Buffer.concat([response.body, data]);\n            return res;\n        },\n        end: (data, encoding) =\u003e {\n            if (data !== undefined) {\n                res.write(data, encoding);\n            }\n            cb(null, {\n                statusCode: response.statusCode,\n                headers: response.headers,\n                isBase64Encoded: true,\n                body: response.body.toString(\"base64\"),\n            });\n        },\n        json: (obj) =\u003e {\n            res.setHeader(\"content-type\", \"application/json\");\n            res.end(JSON.stringify(obj));\n        },\n    };\n    return { req, res };\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __a53e7f2d86668dec21b51a9bda5df72a2630eb8a() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, todos: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((req, res) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(\"GET /todo\");\n    try {\n        let items = yield todos.scan();\n        res.status(200).json(items);\n    }\n    catch (err) {\n        res.status(500).json(err);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __48cf5aa4db88b506a79423381c78671d8f81306a() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().get({\n                TableName: this.tableName,\n                Key: query,\n            }).promise().then((x) =\u003e x.Item);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __17caf9df985b159b0f95269f155924083781d4b2() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (() =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            return new awssdk.DynamoDB.DocumentClient();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            return db().put({\n                TableName: this.tableName,\n                Item: item,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __ab085023313475713fa6a8b9c4160c9d51f2c217() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn (() =\u003e {\n            return db().scan({\n                TableName: this.tableName,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __4710723cfbdcd4c093854c0650f51c18096a0e59() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query, updates) =\u003e {\n            let updateExpression = \"\";\n            let attributeValues = {};\n            for (let key of Object.keys(updates)) {\n                let val = updates[key];\n                if (updateExpression === \"\") {\n                    updateExpression += \"SET \";\n                }\n                else {\n                    updateExpression += \", \";\n                }\n                updateExpression += `${key} = :${key}`;\n                attributeValues[`:${key}`] = val;\n            }\n            return db().update({\n                TableName: this.tableName,\n                Key: query,\n                UpdateExpression: updateExpression,\n                ExpressionAttributeValues: attributeValues,\n            }).promise().then((x) =\u003e x.Items);\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __a3aeb8a3298039263b13e949d981ba8b98f55517() {\n  var _this;\n  with({ db: __17caf9df985b159b0f95269f155924083781d4b2, _this: { table: { urn: \"urn:lumi:test2::todo::aws:dynamodb/table:Table::todo\", id: \"todo-e05186c73b99cfa4\", attribute: [ { name: \"id\", type: \"S\" } ], globalSecondaryIndex: [  ], hashKey: \"id\", localSecondaryIndex: [  ], name: \"todo-e05186c73b99cfa4\", readCapacity: \"5\", writeCapacity: \"5\", arn: \"arn:aws:dynamodb:us-east-2:153052954103:table/todo-e05186c73b99cfa4\" }, tableName: \"todo-e05186c73b99cfa4\", primaryKey: \"id\", primaryKeyType: \"S\", readCapacity: \"5\", writeCapacity: \"5\", get: __48cf5aa4db88b506a79423381c78671d8f81306a, insert: __ef6911b9e2625d90f0d8ecd1905ed172fc7b28ec, scan: __ab085023313475713fa6a8b9c4160c9d51f2c217, update: __4710723cfbdcd4c093854c0650f51c18096a0e59, delete: __a3aeb8a3298039263b13e949d981ba8b98f55517 } }) {\n    return (function() {\n\nreturn ((query) =\u003e {\n            return db().delete({\n                TableName: this.tableName,\n                Key: query,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
                                 "uri": ""
                             },
                             "node_modules": {
@@ -531,44 +711,43 @@
                     },
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "handler": "index.handler",
-                    "role": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+                    "role": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                     "runtime": "nodejs6.10",
-                    "timeout": 180,
-                    "urnName": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b"
+                    "timeout": 180
                 },
                 "defaults": {
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf021611834",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf209624029",
                     "memorySize": "128",
-                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
                     "publish": false,
                     "timeout": "180"
                 },
                 "outputs": {
-                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
-                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf848856913",
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf681682328",
                     "deadLetterConfig": [
                         {
-                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-b44dffdb4acd"
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-f09208640ea97f17"
                         }
                     ],
                     "description": "",
                     "environment": [],
                     "handler": "index.handler",
-                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
-                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66/invocations",
+                    "id": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad/invocations",
                     "kmsKeyArn": "",
-                    "lastModified": "2017-08-26T23:36:34.611+0000",
+                    "lastModified": "2017-09-11T21:01:37.566+0000",
                     "memorySize": "128",
-                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
                     "publish": false,
-                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66:$LATEST",
-                    "role": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-5dd4b5d8a7b",
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-iamrole-62492bbfc8a",
                     "runtime": "nodejs6.10",
-                    "sourceCodeHash": "zv8Ng6GCAF+UqNV25MBzJr2oy8JXZ7VhITK0tLgDbtM=",
+                    "sourceCodeHash": "X/BRqKHQvPX5jEP3j78B+3vVKhrwWXb2fvZ1+NFxUCs=",
                     "tags": {},
                     "timeout": "180",
                     "tracingConfig": [
@@ -580,134 +759,165 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test::todo:index::aws:apigateway/restApi:RestApi::todo": {
-                "id": "yuhtl4t6n5",
+            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b": {
+                "id": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                "type": "aws:cloudwatch/logGroup:LogGroup",
+                "inputs": {
+                    "name": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "retentionInDays": 1
+                },
+                "defaults": {
+                    "retentionInDays": "1"
+                },
+                "outputs": {
+                    "arn": "arn:aws:logs:us-east-2:153052954103:log-group:/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad:*",
+                    "id": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "name": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "retentionInDays": "1",
+                    "tags": {}
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b": {
+                "id": "cwlsf-3838439228",
+                "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
+                "inputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "logGroup": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad"
+                },
+                "defaults": {
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-16744626a7b536a1"
+                },
+                "outputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-5346f8a09d8356d9",
+                    "filterPattern": "",
+                    "id": "cwlsf-3838439228",
+                    "logGroup": "/aws/lambda/todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "name": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-16744626a7b536a1"
+                }
+            },
+            "urn:lumi:test2::todo::aws:apigateway/restApi:RestApi::todo": {
+                "id": "qafoio2d46",
                 "type": "aws:apigateway/restApi:RestApi",
                 "inputs": {
-                    "body": "{ \"swagger\": \"2.0\", \"info\": { \"title\": \"todo\", \"version\": \"1.0\"}, \"paths\": { \"/\": { \"get\": { \"responses\": { \"200\": { \"description\": \"200 response\", \"schema\": { \"type\": \"object\"}, \"headers\": { \"Content-Type\": { \"type\": \"string\"}, \"content-type\": { \"type\": \"string\"}}}, \"400\": { \"description\": \"400 response\"}, \"500\": { \"description\": \"500 response\"}}, \"x-amazon-apigateway-integration\": { \"credentials\": \"arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb\", \"uri\": \"arn:aws:apigateway:us-east-2:s3:path/todo-c4f6edbfde56/todo3454b7045a88364b5cecad7c4d8bbef4513062e4\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"GET\", \"type\": \"aws\", \"responses\": { \"4\\\\d{2}\": { \"statusCode\": \"400\"}, \"default\": { \"statusCode\": \"200\", \"responseParameters\": { \"method.response.header.Content-Type\": \"integration.response.header.Content-Type\", \"method.response.header.content-type\": \"integration.response.header.content-type\"}}, \"5\\\\d{2}\": { \"statusCode\": \"500\"}}}}}, \"/favicon.ico\": { \"get\": { \"responses\": { \"200\": { \"description\": \"200 response\", \"schema\": { \"type\": \"object\"}, \"headers\": { \"Content-Type\": { \"type\": \"string\"}, \"content-type\": { \"type\": \"string\"}}}, \"400\": { \"description\": \"400 response\"}, \"500\": { \"description\": \"500 response\"}}, \"x-amazon-apigateway-integration\": { \"credentials\": \"arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73\", \"uri\": \"arn:aws:apigateway:us-east-2:s3:path/todo-c4f6edbfde56/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"GET\", \"type\": \"aws\", \"responses\": { \"4\\\\d{2}\": { \"statusCode\": \"400\"}, \"default\": { \"statusCode\": \"200\", \"responseParameters\": { \"method.response.header.Content-Type\": \"integration.response.header.Content-Type\", \"method.response.header.content-type\": \"integration.response.header.content-type\"}}, \"5\\\\d{2}\": { \"statusCode\": \"500\"}}}}}, \"/todo/{id}\": { \"get\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}, \"post\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}}, \"/todo\": { \"get\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}}}, \"x-amazon-apigateway-binary-media-types\": [ \"*/*\"]}",
-                    "urnName": "todo"
+                    "body": "{\"swagger\":\"2.0\",\"info\":{\"title\":\"todo\",\"version\":\"1.0\"},\"paths\":{\"/\":{\"get\":{\"responses\":{\"200\":{\"description\":\"200 response\",\"schema\":{\"type\":\"object\"},\"headers\":{\"Content-Type\":{\"type\":\"string\"},\"content-type\":{\"type\":\"string\"}}},\"400\":{\"description\":\"400 response\"},\"500\":{\"description\":\"500 response\"}},\"x-amazon-apigateway-integration\":{\"credentials\":\"arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf\",\"uri\":\"arn:aws:apigateway:us-east-2:s3:path/todo/todo3454b7045a88364b5cecad7c4d8bbef4513062e4\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"GET\",\"type\":\"aws\",\"responses\":{\"4\\\\d{2}\":{\"statusCode\":\"400\"},\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Content-Type\":\"integration.response.header.Content-Type\",\"method.response.header.content-type\":\"integration.response.header.content-type\"}},\"5\\\\d{2}\":{\"statusCode\":\"500\"}}}}},\"/favicon.ico\":{\"get\":{\"responses\":{\"200\":{\"description\":\"200 response\",\"schema\":{\"type\":\"object\"},\"headers\":{\"Content-Type\":{\"type\":\"string\"},\"content-type\":{\"type\":\"string\"}}},\"400\":{\"description\":\"400 response\"},\"500\":{\"description\":\"500 response\"}},\"x-amazon-apigateway-integration\":{\"credentials\":\"arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7\",\"uri\":\"arn:aws:apigateway:us-east-2:s3:path/todo/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"GET\",\"type\":\"aws\",\"responses\":{\"4\\\\d{2}\":{\"statusCode\":\"400\"},\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Content-Type\":\"integration.response.header.Content-Type\",\"method.response.header.content-type\":\"integration.response.header.content-type\"}},\"5\\\\d{2}\":{\"statusCode\":\"500\"}}}}},\"/todo/{id}\":{\"get\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}},\"post\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}}},\"/todo\":{\"get\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}}}},\"x-amazon-apigateway-binary-media-types\":[\"*/*\"]}"
                 },
                 "defaults": {
-                    "name": "todo-5b3cb073b8d1"
+                    "name": "todo-6f13a5163a564e34"
                 },
                 "outputs": {
-                    "body": "{ \"swagger\": \"2.0\", \"info\": { \"title\": \"todo\", \"version\": \"1.0\"}, \"paths\": { \"/\": { \"get\": { \"responses\": { \"200\": { \"description\": \"200 response\", \"schema\": { \"type\": \"object\"}, \"headers\": { \"Content-Type\": { \"type\": \"string\"}, \"content-type\": { \"type\": \"string\"}}}, \"400\": { \"description\": \"400 response\"}, \"500\": { \"description\": \"500 response\"}}, \"x-amazon-apigateway-integration\": { \"credentials\": \"arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-45358068c9eb\", \"uri\": \"arn:aws:apigateway:us-east-2:s3:path/todo-c4f6edbfde56/todo3454b7045a88364b5cecad7c4d8bbef4513062e4\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"GET\", \"type\": \"aws\", \"responses\": { \"4\\\\d{2}\": { \"statusCode\": \"400\"}, \"default\": { \"statusCode\": \"200\", \"responseParameters\": { \"method.response.header.Content-Type\": \"integration.response.header.Content-Type\", \"method.response.header.content-type\": \"integration.response.header.content-type\"}}, \"5\\\\d{2}\": { \"statusCode\": \"500\"}}}}}, \"/favicon.ico\": { \"get\": { \"responses\": { \"200\": { \"description\": \"200 response\", \"schema\": { \"type\": \"object\"}, \"headers\": { \"Content-Type\": { \"type\": \"string\"}, \"content-type\": { \"type\": \"string\"}}}, \"400\": { \"description\": \"400 response\"}, \"500\": { \"description\": \"500 response\"}}, \"x-amazon-apigateway-integration\": { \"credentials\": \"arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-10d8cf2adb73\", \"uri\": \"arn:aws:apigateway:us-east-2:s3:path/todo-c4f6edbfde56/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"GET\", \"type\": \"aws\", \"responses\": { \"4\\\\d{2}\": { \"statusCode\": \"400\"}, \"default\": { \"statusCode\": \"200\", \"responseParameters\": { \"method.response.header.Content-Type\": \"integration.response.header.Content-Type\", \"method.response.header.content-type\": \"integration.response.header.content-type\"}}, \"5\\\\d{2}\": { \"statusCode\": \"500\"}}}}}, \"/todo/{id}\": { \"get\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}, \"post\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}}, \"/todo\": { \"get\": { \"x-amazon-apigateway-integration\": { \"uri\": \"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66/invocations\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"type\": \"aws_proxy\"}}}}, \"x-amazon-apigateway-binary-media-types\": [ \"*/*\"]}",
-                    "createdDate": "2017-08-26T23:36:37Z",
+                    "body": "{\"swagger\":\"2.0\",\"info\":{\"title\":\"todo\",\"version\":\"1.0\"},\"paths\":{\"/\":{\"get\":{\"responses\":{\"200\":{\"description\":\"200 response\",\"schema\":{\"type\":\"object\"},\"headers\":{\"Content-Type\":{\"type\":\"string\"},\"content-type\":{\"type\":\"string\"}}},\"400\":{\"description\":\"400 response\"},\"500\":{\"description\":\"500 response\"}},\"x-amazon-apigateway-integration\":{\"credentials\":\"arn:aws:iam::153052954103:role/todo3454b7045a88364b5cecad7c4d8bbef4513062e4-cbabd8a86f7730cf\",\"uri\":\"arn:aws:apigateway:us-east-2:s3:path/todo/todo3454b7045a88364b5cecad7c4d8bbef4513062e4\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"GET\",\"type\":\"aws\",\"responses\":{\"4\\\\d{2}\":{\"statusCode\":\"400\"},\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Content-Type\":\"integration.response.header.Content-Type\",\"method.response.header.content-type\":\"integration.response.header.content-type\"}},\"5\\\\d{2}\":{\"statusCode\":\"500\"}}}}},\"/favicon.ico\":{\"get\":{\"responses\":{\"200\":{\"description\":\"200 response\",\"schema\":{\"type\":\"object\"},\"headers\":{\"Content-Type\":{\"type\":\"string\"},\"content-type\":{\"type\":\"string\"}}},\"400\":{\"description\":\"400 response\"},\"500\":{\"description\":\"500 response\"}},\"x-amazon-apigateway-integration\":{\"credentials\":\"arn:aws:iam::153052954103:role/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9-e9fc9465f86edac7\",\"uri\":\"arn:aws:apigateway:us-east-2:s3:path/todo/todobe14e924eed46147948ca9e1d1b01cf7b63d80a9\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"GET\",\"type\":\"aws\",\"responses\":{\"4\\\\d{2}\":{\"statusCode\":\"400\"},\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Content-Type\":\"integration.response.header.Content-Type\",\"method.response.header.content-type\":\"integration.response.header.content-type\"}},\"5\\\\d{2}\":{\"statusCode\":\"500\"}}}}},\"/todo/{id}\":{\"get\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}},\"post\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}}},\"/todo\":{\"get\":{\"x-amazon-apigateway-integration\":{\"uri\":\"arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad/invocations\",\"passthroughBehavior\":\"when_no_match\",\"httpMethod\":\"POST\",\"type\":\"aws_proxy\"}}}},\"x-amazon-apigateway-binary-media-types\":[\"*/*\"]}",
+                    "createdDate": "2017-09-11T21:01:41Z",
                     "description": "",
-                    "id": "yuhtl4t6n5",
+                    "id": "qafoio2d46",
                     "name": "todo",
-                    "rootResourceId": "4z15sutvyc"
+                    "rootResourceId": "ngqbkdagyh"
                 }
             },
-            "urn:lumi:test::todo:index::aws:apigateway/deployment:Deployment::todo_76cf7dab03cebd1b84f1a04a539e49935fe8930a": {
-                "id": "0bft8s",
+            "urn:lumi:test2::todo::aws:apigateway/deployment:Deployment::todo_3451a891d6d4ffa899e58edc169f2808f88ff54e": {
+                "id": "36gi1k",
                 "type": "aws:apigateway/deployment:Deployment",
                 "inputs": {
-                    "description": "Deployment of version 76cf7dab03cebd1b84f1a04a539e49935fe8930a",
-                    "restApi": "yuhtl4t6n5",
-                    "stageName": "",
-                    "urnName": "todo_76cf7dab03cebd1b84f1a04a539e49935fe8930a"
+                    "description": "Deployment of version 3451a891d6d4ffa899e58edc169f2808f88ff54e",
+                    "restApi": "qafoio2d46",
+                    "stageName": ""
                 },
                 "outputs": {
-                    "createdDate": "2017-08-26T23:36:39Z",
-                    "description": "Deployment of version 76cf7dab03cebd1b84f1a04a539e49935fe8930a",
-                    "executionArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/",
-                    "id": "0bft8s",
-                    "invokeUrl": "https://yuhtl4t6n5.execute-api.us-east-2.amazonaws.com/",
-                    "restApi": "yuhtl4t6n5",
+                    "createdDate": "2017-09-11T21:01:44Z",
+                    "description": "Deployment of version 3451a891d6d4ffa899e58edc169f2808f88ff54e",
+                    "executionArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/",
+                    "id": "36gi1k",
+                    "invokeUrl": "https://qafoio2d46.execute-api.us-east-2.amazonaws.com/",
+                    "restApi": "qafoio2d46",
                     "stageName": ""
                 }
             },
-            "urn:lumi:test::todo:index::aws:apigateway/stage:Stage::todo_stage": {
-                "id": "ags-yuhtl4t6n5-stage",
+            "urn:lumi:test2::todo::aws:apigateway/stage:Stage::todo_stage": {
+                "id": "ags-qafoio2d46-stage",
                 "type": "aws:apigateway/stage:Stage",
                 "inputs": {
-                    "deployment": "0bft8s",
+                    "deployment": "36gi1k",
                     "description": "The current deployment of the API.",
-                    "restApi": "yuhtl4t6n5",
-                    "stageName": "stage",
-                    "urnName": "todo_stage"
+                    "restApi": "qafoio2d46",
+                    "stageName": "stage"
                 },
                 "outputs": {
                     "cacheClusterEnabled": false,
                     "cacheClusterSize": "",
                     "clientCertificateId": "",
-                    "deployment": "0bft8s",
+                    "deployment": "36gi1k",
                     "description": "The current deployment of the API.",
                     "documentationVersion": "",
-                    "id": "ags-yuhtl4t6n5-stage",
-                    "restApi": "yuhtl4t6n5",
+                    "id": "ags-qafoio2d46-stage",
+                    "restApi": "qafoio2d46",
                     "stageName": "stage",
                     "variables": {}
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/permission:Permission::todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241": {
-                "id": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-868ba428880f",
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241": {
+                "id": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-d138b8b26a87450a",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
+                    "function": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
                     "principal": "apigateway.amazonaws.com",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/GET/todo/{id}",
-                    "urnName": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/GET/todo/{id}"
                 },
                 "defaults": {
-                    "statementId": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-868ba428880f"
+                    "statementId": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-d138b8b26a87450a"
                 },
                 "outputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todo600341533e58e948000b1a0c26670f16254d6612-6847725dd973",
-                    "id": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-868ba428880f",
+                    "function": "todo600341533e58e948000b1a0c26670f16254d6612-19f1469c402b9715",
+                    "id": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-d138b8b26a87450a",
                     "principal": "apigateway.amazonaws.com",
                     "qualifier": "",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/GET/todo/{id}",
-                    "statementId": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-868ba428880f"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/GET/todo/{id}",
+                    "statementId": "todo_invoke_f0c1d77e5037c9d876034ae9a5c197e994057241-d138b8b26a87450a"
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/permission:Permission::todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22": {
-                "id": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-1b70e20e6fe0",
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22": {
+                "id": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-d5824b478c3f1963",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
+                    "function": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
                     "principal": "apigateway.amazonaws.com",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/POST/todo/{id}",
-                    "urnName": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/POST/todo/{id}"
                 },
                 "defaults": {
-                    "statementId": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-1b70e20e6fe0"
+                    "statementId": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-d5824b478c3f1963"
                 },
                 "outputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todoe0999b769746c706c9bce38d0743252af7526ae9-aecd46a1828c",
-                    "id": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-1b70e20e6fe0",
+                    "function": "todoe0999b769746c706c9bce38d0743252af7526ae9-742d3a9e855f4173",
+                    "id": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-d5824b478c3f1963",
                     "principal": "apigateway.amazonaws.com",
                     "qualifier": "",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/POST/todo/{id}",
-                    "statementId": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-1b70e20e6fe0"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/POST/todo/{id}",
+                    "statementId": "todo_invoke_44308e8fc06b3d05202dce0de789f92ae92c7c22-d5824b478c3f1963"
                 }
             },
-            "urn:lumi:test::todo:index::aws:lambda/permission:Permission::todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0": {
-                "id": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-ca26e694093d",
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0": {
+                "id": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-c4c510ab0fa208e0",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
+                    "function": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
                     "principal": "apigateway.amazonaws.com",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/GET/todo",
-                    "urnName": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/GET/todo"
                 },
                 "defaults": {
-                    "statementId": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-ca26e694093d"
+                    "statementId": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-c4c510ab0fa208e0"
                 },
                 "outputs": {
                     "action": "lambda:invokeFunction",
-                    "function": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-59d88db7bb66",
-                    "id": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-ca26e694093d",
+                    "function": "todo1705a374e1efdbedfd1bb75fe8d9c596a46f057b-c6904947832ca7ad",
+                    "id": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-c4c510ab0fa208e0",
                     "principal": "apigateway.amazonaws.com",
                     "qualifier": "",
-                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:yuhtl4t6n5/stage/GET/todo",
-                    "statementId": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-ca26e694093d"
+                    "sourceArn": "arn:aws:execute-api:us-east-2:153052954103:qafoio2d46/stage/GET/todo",
+                    "statementId": "todo_invoke_a55f2cbc0184a9ff19b1e1b198ed1264e8f2ffe0-c4c510ab0fa208e0"
                 }
             }
         }

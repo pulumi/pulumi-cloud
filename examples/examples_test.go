@@ -64,8 +64,11 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-				endpoint, ok := pulumiResources[resource.URN("urn:lumi:test::todo:index::pulumi:framework:Endpoint::todo")]
-				assert.True(t, ok)
+				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
+				endpoint, ok := pulumiResources[urn]
+				if !assert.True(t, ok, "expected to find endpoint") {
+					return
+				}
 				baseURL := endpoint.Properties["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 

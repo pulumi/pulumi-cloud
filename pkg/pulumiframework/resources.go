@@ -25,13 +25,13 @@ func GetComponents(source []*resource.State) component.Components {
 	sourceMap := makeIDLookup(source)
 	components := make(component.Components)
 	for _, res := range source {
-		name := res.Inputs["urnName"].StringValue()
+		name := string(res.URN.Name())
 		if res.Type == stageType {
 			stage := res
 			deployment := lookup(sourceMap, deploymentType, stage.Inputs["deployment"].StringValue())
 			restAPI := lookup(sourceMap, restAPIType, stage.Inputs["restApi"].StringValue())
 			baseURL := deployment.Outputs["invokeUrl"].StringValue() + stage.Inputs["stageName"].StringValue() + "/"
-			restAPIName := restAPI.Inputs["urnName"].StringValue()
+			restAPIName := restAPI.URN.Name()
 			urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiEndpointType), tokens.QName(restAPIName))
 			components[urn] = &component.Component{
 				Type: pulumiEndpointType,
