@@ -26,13 +26,13 @@ func GetComponents(source []*resource.State) component.Components {
 	components := make(component.Components)
 	for _, res := range source {
 		name := res.Inputs["urnName"].StringValue()
-		if res.Type() == stageType {
+		if res.Type == stageType {
 			stage := res
 			deployment := lookup(sourceMap, deploymentType, stage.Inputs["deployment"].StringValue())
 			restAPI := lookup(sourceMap, restAPIType, stage.Inputs["restApi"].StringValue())
 			baseURL := deployment.Outputs["invokeUrl"].StringValue() + stage.Inputs["stageName"].StringValue() + "/"
 			restAPIName := restAPI.Inputs["urnName"].StringValue()
-			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiEndpointType), tokens.QName(restAPIName))
+			urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiEndpointType), tokens.QName(restAPIName))
 			components[urn] = &component.Component{
 				Type: pulumiEndpointType,
 				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
@@ -44,8 +44,8 @@ func GetComponents(source []*resource.State) component.Components {
 					"stage":      stage,
 				},
 			}
-		} else if res.Type() == eventRuleType {
-			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTimerType), tokens.QName(name))
+		} else if res.Type == eventRuleType {
+			urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiTimerType), tokens.QName(name))
 			components[urn] = &component.Component{
 				Type: pulumiTimerType,
 				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
@@ -57,8 +57,8 @@ func GetComponents(source []*resource.State) component.Components {
 					"permission": nil,
 				},
 			}
-		} else if res.Type() == tableType {
-			urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTableType), tokens.QName(name))
+		} else if res.Type == tableType {
+			urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiTableType), tokens.QName(name))
 			components[urn] = &component.Component{
 				Type: pulumiTableType,
 				Properties: resource.NewPropertyMapFromMap(map[string]interface{}{
@@ -68,9 +68,9 @@ func GetComponents(source []*resource.State) component.Components {
 					"table": res,
 				},
 			}
-		} else if res.Type() == topicType {
+		} else if res.Type == topicType {
 			if !strings.HasSuffix(name, "unhandled-error-topic") {
-				urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiTopicType), tokens.QName(name))
+				urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiTopicType), tokens.QName(name))
 				components[urn] = &component.Component{
 					Type:       pulumiTopicType,
 					Properties: resource.NewPropertyMapFromMap(map[string]interface{}{}),
@@ -79,9 +79,9 @@ func GetComponents(source []*resource.State) component.Components {
 					},
 				}
 			}
-		} else if res.Type() == functionType {
+		} else if res.Type == functionType {
 			if !strings.HasSuffix(name, "pulumi-app-log-collector") {
-				urn := newPulumiFrameworkURN(res.URN(), tokens.Type(pulumiFunctionType), tokens.QName(name))
+				urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiFunctionType), tokens.QName(name))
 				components[urn] = &component.Component{
 					Type:       pulumiFunctionType,
 					Properties: resource.NewPropertyMapFromMap(map[string]interface{}{}),
@@ -250,7 +250,7 @@ type typeid struct {
 func makeIDLookup(source []*resource.State) map[typeid]*resource.State {
 	ret := make(map[typeid]*resource.State)
 	for _, state := range source {
-		tid := typeid{Type: state.T, ID: state.ID}
+		tid := typeid{Type: state.Type, ID: state.ID}
 		ret[tid] = state
 	}
 	return ret
