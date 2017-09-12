@@ -15,12 +15,12 @@ install:
     - export VERSION=HEAD
     # Clone the Pulumi repo and use its script to fetch the latest installation packages.
     - git clone git@github.com:pulumi/pulumi ${GOPATH}/src/github.com/pulumi/pulumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi-fabric ${VERSION} ~/.pulumi
-    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} ~/.pulumi/packs/aws
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh pulumi-fabric ${VERSION} /opt/pulumi
+    - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} /opt/pulumi/packs/aws
     - dep ensure
     - yarn install
 before_script:
-    - export PULUMI=~/.pulumi
+    - export PULUMI=/opt/pulumi
     - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
 script:
     - make all
