@@ -1,0 +1,566 @@
+{
+    "target": "test2",
+    "config": {
+        "aws:config:region": "us-east-2"
+    },
+    "latest": {
+        "time": "2017-09-11T13:53:58.103095505-07:00",
+        "info": {
+            "pkg": {
+                "name": "todo",
+                "runtime": "nodejs",
+                "description": "A todo app backend."
+            },
+            "pwd": "/Users/luke/go/src/github.com/pulumi/pulumi-framework/examples/crawler",
+            "program": "",
+            "config": {
+                "aws:config:region": "us-east-2"
+            }
+        },
+        "resources": {
+            "urn:lumi:test2::todo::aws:sns/topic:Topic::countDown": {
+                "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
+                "type": "aws:sns/topic:Topic",
+                "defaults": {
+                    "name": "countDown-f2fd23dbaa619ad8"
+                },
+                "outputs": {
+                    "arn": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
+                    "displayName": "",
+                    "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
+                    "name": "countDown-f2fd23dbaa619ad8",
+                    "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
+                }
+            },
+            "urn:lumi:test2::todo::aws:sns/topic:Topic::unhandled-error-topic": {
+                "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb",
+                "type": "aws:sns/topic:Topic",
+                "defaults": {
+                    "name": "unhandled-error-topic-477b848c27dd04bb"
+                },
+                "outputs": {
+                    "arn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb",
+                    "displayName": "",
+                    "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb",
+                    "name": "unhandled-error-topic-477b848c27dd04bb",
+                    "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::countDown_watcher-iamrole": {
+                "id": "countDown_watcher-iamrole-a508724a5963b260",
+                "type": "aws:iam/role:Role",
+                "inputs": {
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
+                },
+                "defaults": {
+                    "forceDetachPolicies": false,
+                    "name": "countDown_watcher-iamrole-a508724a5963b260",
+                    "path": "/"
+                },
+                "outputs": {
+                    "arn": "arn:aws:iam::153052954103:role/countDown_watcher-iamrole-a508724a5963b260",
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+                    "createDate": "2017-09-11T20:53:07Z",
+                    "forceDetachPolicies": false,
+                    "id": "countDown_watcher-iamrole-a508724a5963b260",
+                    "name": "countDown_watcher-iamrole-a508724a5963b260",
+                    "path": "/",
+                    "uniqueId": "AROAJIH32ALQBHWNEMJIO"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::countDown_watcher-iampolicy-0": {
+                "id": "countDown_watcher-iamrole-a508724a5963b260-20170911205308517400000001",
+                "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
+                "inputs": {
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "countDown_watcher-iamrole-a508724a5963b260"
+                },
+                "outputs": {
+                    "id": "countDown_watcher-iamrole-a508724a5963b260-20170911205308517400000001",
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "countDown_watcher-iamrole-a508724a5963b260"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/function:Function::countDown_watcher": {
+                "id": "countDown_watcher-512bb9e8cf8db91d",
+                "type": "aws:lambda/function:Function",
+                "inputs": {
+                    "code": {
+                        "4dabf18193072939515e22adb298388d": "0def7320c3a5731c473e5ecbe6d01bc7",
+                        "assets": {
+                            "index.js": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "",
+                                "text": "exports.handler = __e9c5dbc59d4adae28a55e61da607b42c4b150e3c;\n\nfunction __e9c5dbc59d4adae28a55e61da607b42c4b150e3c() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, handler: __e767728a8948fd7232ea6ed2cf1e2683b525a783 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        Promise.all(ev.Records.map((record) =\u003e __awaiter(this, void 0, void 0, function* () {\n            yield handler(record.Sns);\n        })))\n            .then(() =\u003e { cb(null, null); })\n            .catch((err) =\u003e { cb(err, null); });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e767728a8948fd7232ea6ed2cf1e2683b525a783() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, shandler: __f9945b4db511d5c8d1768863540eb921c0a404cb }) {\n    return (function() {\n\nreturn ((snsItem) =\u003e __awaiter(this, void 0, void 0, function* () {\n            let item = JSON.parse(snsItem.Message);\n            // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid\n            // accidental conflict with handler inside `createSubscription`\n            yield shandler(item);\n        }))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __f9945b4db511d5c8d1768863540eb921c0a404cb() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((num) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(num);\n    if (num \u003e 0) {\n        yield countDown.publish(num - 1);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "uri": ""
+                            },
+                            "node_modules": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "node_modules",
+                                "text": "",
+                                "uri": ""
+                            }
+                        },
+                        "path": "",
+                        "uri": ""
+                    },
+                    "deadLetterConfig": [
+                        {
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb"
+                        }
+                    ],
+                    "handler": "index.handler",
+                    "role": "arn:aws:iam::153052954103:role/countDown_watcher-iamrole-a508724a5963b260",
+                    "runtime": "nodejs6.10",
+                    "timeout": 180
+                },
+                "defaults": {
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf268517154",
+                    "memorySize": "128",
+                    "name": "countDown_watcher-512bb9e8cf8db91d",
+                    "publish": false,
+                    "timeout": "180"
+                },
+                "outputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf801042969",
+                    "deadLetterConfig": [
+                        {
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb"
+                        }
+                    ],
+                    "description": "",
+                    "environment": [],
+                    "handler": "index.handler",
+                    "id": "countDown_watcher-512bb9e8cf8db91d",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d/invocations",
+                    "kmsKeyArn": "",
+                    "lastModified": "2017-09-11T20:53:20.507+0000",
+                    "memorySize": "128",
+                    "name": "countDown_watcher-512bb9e8cf8db91d",
+                    "publish": false,
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/countDown_watcher-iamrole-a508724a5963b260",
+                    "runtime": "nodejs6.10",
+                    "sourceCodeHash": "nHocF1VVhtm8Ieh665c7QWSFWMchjoOAcPvnoN2dVQg=",
+                    "tags": {},
+                    "timeout": "180",
+                    "tracingConfig": [
+                        {
+                            "mode": "PassThrough"
+                        }
+                    ],
+                    "version": "$LATEST",
+                    "vpcConfig": []
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::countDown_watcher": {
+                "id": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                "type": "aws:cloudwatch/logGroup:LogGroup",
+                "inputs": {
+                    "name": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                    "retentionInDays": 1
+                },
+                "defaults": {
+                    "retentionInDays": "1"
+                },
+                "outputs": {
+                    "arn": "arn:aws:logs:us-east-2:153052954103:log-group:/aws/lambda/countDown_watcher-512bb9e8cf8db91d:*",
+                    "id": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                    "name": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                    "retentionInDays": "1",
+                    "tags": {}
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::pulumi-app-log-collector-iamrole": {
+                "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                "type": "aws:iam/role:Role",
+                "inputs": {
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
+                },
+                "defaults": {
+                    "forceDetachPolicies": false,
+                    "name": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "path": "/"
+                },
+                "outputs": {
+                    "arn": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+                    "createDate": "2017-09-11T20:53:23Z",
+                    "forceDetachPolicies": false,
+                    "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "name": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "path": "/",
+                    "uniqueId": "AROAIU3UDUXRFVLJVXPVI"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::pulumi-app-log-collector-iampolicy-0": {
+                "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df-20170911205324858700000002",
+                "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
+                "inputs": {
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df"
+                },
+                "outputs": {
+                    "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df-20170911205324858700000002",
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/function:Function::pulumi-app-log-collector": {
+                "id": "pulumi-app-log-collector-172a843433e22751",
+                "type": "aws:lambda/function:Function",
+                "inputs": {
+                    "code": {
+                        "4dabf18193072939515e22adb298388d": "0def7320c3a5731c473e5ecbe6d01bc7",
+                        "assets": {
+                            "index.js": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "",
+                                "text": "exports.handler = __b61282713b1270694c8f861357e1709b2c11fb78;\n\nfunction __b61282713b1270694c8f861357e1709b2c11fb78() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n            let zlib = require(\"zlib\");\n            let payload = new Buffer(ev.awslogs.data, \"base64\");\n            zlib.gunzip(payload, (err, result) =\u003e {\n                if (err !== undefined \u0026\u0026 err !== null) {\n                    cb(err, null);\n                }\n                else {\n                    console.log(result.toString(\"utf8\"));\n                    cb(null, {});\n                }\n            });\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "uri": ""
+                            },
+                            "node_modules": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "node_modules",
+                                "text": "",
+                                "uri": ""
+                            }
+                        },
+                        "path": "",
+                        "uri": ""
+                    },
+                    "handler": "index.handler",
+                    "role": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "runtime": "nodejs6.10",
+                    "timeout": 180
+                },
+                "defaults": {
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf479205540",
+                    "memorySize": "128",
+                    "name": "pulumi-app-log-collector-172a843433e22751",
+                    "publish": false,
+                    "timeout": "180"
+                },
+                "outputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf382596019",
+                    "deadLetterConfig": [],
+                    "description": "",
+                    "environment": [],
+                    "handler": "index.handler",
+                    "id": "pulumi-app-log-collector-172a843433e22751",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751/invocations",
+                    "kmsKeyArn": "",
+                    "lastModified": "2017-09-11T20:53:34.367+0000",
+                    "memorySize": "128",
+                    "name": "pulumi-app-log-collector-172a843433e22751",
+                    "publish": false,
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                    "runtime": "nodejs6.10",
+                    "sourceCodeHash": "CFh5dyaOmp7wwBgBAJnLv/J5i2NxQqu724wHl1d1C2w=",
+                    "tags": {},
+                    "timeout": "180",
+                    "tracingConfig": [
+                        {
+                            "mode": "PassThrough"
+                        }
+                    ],
+                    "version": "$LATEST",
+                    "vpcConfig": []
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::pulumi-app-log-collector": {
+                "id": "pulumi-app-log-collector-f5cff8bf5d30ba1c",
+                "type": "aws:lambda/permission:Permission",
+                "inputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "pulumi-app-log-collector-172a843433e22751",
+                    "principal": "logs.us-east-2.amazonaws.com"
+                },
+                "defaults": {
+                    "statementId": "pulumi-app-log-collector-f5cff8bf5d30ba1c"
+                },
+                "outputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "pulumi-app-log-collector-172a843433e22751",
+                    "id": "pulumi-app-log-collector-f5cff8bf5d30ba1c",
+                    "principal": "logs.us-east-2.amazonaws.com",
+                    "qualifier": "",
+                    "statementId": "pulumi-app-log-collector-f5cff8bf5d30ba1c"
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::countDown_watcher": {
+                "id": "cwlsf-3635312111",
+                "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
+                "inputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
+                    "filterPattern": "",
+                    "logGroup": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d"
+                },
+                "defaults": {
+                    "name": "countDown_watcher-1c9f2eb3596ea0df"
+                },
+                "outputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
+                    "filterPattern": "",
+                    "id": "cwlsf-3635312111",
+                    "logGroup": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                    "name": "countDown_watcher-1c9f2eb3596ea0df"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::countDown_watcher": {
+                "id": "countDown_watcher-138b4ab399dec861",
+                "type": "aws:lambda/permission:Permission",
+                "inputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "countDown_watcher-512bb9e8cf8db91d",
+                    "principal": "sns.amazonaws.com",
+                    "sourceArn": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8"
+                },
+                "defaults": {
+                    "statementId": "countDown_watcher-138b4ab399dec861"
+                },
+                "outputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "countDown_watcher-512bb9e8cf8db91d",
+                    "id": "countDown_watcher-138b4ab399dec861",
+                    "principal": "sns.amazonaws.com",
+                    "qualifier": "",
+                    "sourceArn": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
+                    "statementId": "countDown_watcher-138b4ab399dec861"
+                }
+            },
+            "urn:lumi:test2::todo::aws:sns/topicSubscription:TopicSubscription::countDown_watcher": {
+                "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8:00f03929-a96a-4923-9fb6-b53124386d25",
+                "type": "aws:sns/topicSubscription:TopicSubscription",
+                "inputs": {
+                    "endpoint": "arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d",
+                    "protocol": "lambda",
+                    "topic": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8"
+                },
+                "defaults": {
+                    "confirmationTimeoutInMinutes": "1",
+                    "endpointAutoConfirms": false,
+                    "rawMessageDelivery": false
+                },
+                "outputs": {
+                    "arn": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8:00f03929-a96a-4923-9fb6-b53124386d25",
+                    "confirmationTimeoutInMinutes": "1",
+                    "endpoint": "arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d",
+                    "endpointAutoConfirms": false,
+                    "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8:00f03929-a96a-4923-9fb6-b53124386d25",
+                    "protocol": "lambda",
+                    "rawMessageDelivery": false,
+                    "topic": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/role:Role::heartbeat-iamrole": {
+                "id": "heartbeat-iamrole-0fae84bc67bdcfdd",
+                "type": "aws:iam/role:Role",
+                "inputs": {
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
+                },
+                "defaults": {
+                    "forceDetachPolicies": false,
+                    "name": "heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "path": "/"
+                },
+                "outputs": {
+                    "arn": "arn:aws:iam::153052954103:role/heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}",
+                    "createDate": "2017-09-11T20:53:40Z",
+                    "forceDetachPolicies": false,
+                    "id": "heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "name": "heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "path": "/",
+                    "uniqueId": "AROAIBRDHQN2XOWSQYVMY"
+                }
+            },
+            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::heartbeat-iampolicy-0": {
+                "id": "heartbeat-iamrole-0fae84bc67bdcfdd-20170911205341364500000003",
+                "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
+                "inputs": {
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "heartbeat-iamrole-0fae84bc67bdcfdd"
+                },
+                "outputs": {
+                    "id": "heartbeat-iamrole-0fae84bc67bdcfdd-20170911205341364500000003",
+                    "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
+                    "role": "heartbeat-iamrole-0fae84bc67bdcfdd"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/function:Function::heartbeat": {
+                "id": "heartbeat-08d01aa6def29b7a",
+                "type": "aws:lambda/function:Function",
+                "inputs": {
+                    "code": {
+                        "4dabf18193072939515e22adb298388d": "0def7320c3a5731c473e5ecbe6d01bc7",
+                        "assets": {
+                            "index.js": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "",
+                                "text": "exports.handler = __6bcab2f3eed0e1b0e016529bd83aa61fb8226488;\n\nfunction __6bcab2f3eed0e1b0e016529bd83aa61fb8226488() {\n  var _this;\n  with({ handler: __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        handler().then(() =\u003e {\n            cb(null, null);\n        }).catch((err) =\u003e {\n            cb(err, null);\n        });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn (() =\u003e __awaiter(this, void 0, void 0, function* () {\n    yield countDown.publish(25);\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "uri": ""
+                            },
+                            "node_modules": {
+                                "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
+                                "path": "node_modules",
+                                "text": "",
+                                "uri": ""
+                            }
+                        },
+                        "path": "",
+                        "uri": ""
+                    },
+                    "deadLetterConfig": [
+                        {
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb"
+                        }
+                    ],
+                    "handler": "index.handler",
+                    "role": "arn:aws:iam::153052954103:role/heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "runtime": "nodejs6.10",
+                    "timeout": 180
+                },
+                "defaults": {
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf290183030",
+                    "memorySize": "128",
+                    "name": "heartbeat-08d01aa6def29b7a",
+                    "publish": false,
+                    "timeout": "180"
+                },
+                "outputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a",
+                    "code": "/var/folders/h7/n3r2j28517g5bbvlkn1l_h_80000gn/T/lumi-archive-for-tf978873437",
+                    "deadLetterConfig": [
+                        {
+                            "targetArn": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb"
+                        }
+                    ],
+                    "description": "",
+                    "environment": [],
+                    "handler": "index.handler",
+                    "id": "heartbeat-08d01aa6def29b7a",
+                    "invokeArn": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a/invocations",
+                    "kmsKeyArn": "",
+                    "lastModified": "2017-09-11T20:53:51.038+0000",
+                    "memorySize": "128",
+                    "name": "heartbeat-08d01aa6def29b7a",
+                    "publish": false,
+                    "qualifiedArn": "arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a:$LATEST",
+                    "role": "arn:aws:iam::153052954103:role/heartbeat-iamrole-0fae84bc67bdcfdd",
+                    "runtime": "nodejs6.10",
+                    "sourceCodeHash": "EPEybpAWVmDZbXRwHLZoFrlAaSsEnBy8gJpgR4T3nEs=",
+                    "tags": {},
+                    "timeout": "180",
+                    "tracingConfig": [
+                        {
+                            "mode": "PassThrough"
+                        }
+                    ],
+                    "version": "$LATEST",
+                    "vpcConfig": []
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::heartbeat": {
+                "id": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                "type": "aws:cloudwatch/logGroup:LogGroup",
+                "inputs": {
+                    "name": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                    "retentionInDays": 1
+                },
+                "defaults": {
+                    "retentionInDays": "1"
+                },
+                "outputs": {
+                    "arn": "arn:aws:logs:us-east-2:153052954103:log-group:/aws/lambda/heartbeat-08d01aa6def29b7a:*",
+                    "id": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                    "name": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                    "retentionInDays": "1",
+                    "tags": {}
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::heartbeat": {
+                "id": "cwlsf-2739045784",
+                "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
+                "inputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
+                    "filterPattern": "",
+                    "logGroup": "/aws/lambda/heartbeat-08d01aa6def29b7a"
+                },
+                "defaults": {
+                    "name": "heartbeat-5eb3e8386582bb5e"
+                },
+                "outputs": {
+                    "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
+                    "filterPattern": "",
+                    "id": "cwlsf-2739045784",
+                    "logGroup": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                    "name": "heartbeat-5eb3e8386582bb5e"
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/eventRule:EventRule::heartbeat": {
+                "id": "heartbeat-b50e57c312324669",
+                "type": "aws:cloudwatch/eventRule:EventRule",
+                "inputs": {
+                    "scheduleExpression": "rate(5 minutes)"
+                },
+                "defaults": {
+                    "isEnabled": true,
+                    "name": "heartbeat-b50e57c312324669"
+                },
+                "outputs": {
+                    "arn": "arn:aws:events:us-east-2:153052954103:rule/heartbeat-b50e57c312324669",
+                    "description": "",
+                    "id": "heartbeat-b50e57c312324669",
+                    "isEnabled": true,
+                    "name": "heartbeat-b50e57c312324669",
+                    "roleArn": "",
+                    "scheduleExpression": "rate(5 minutes)"
+                }
+            },
+            "urn:lumi:test2::todo::aws:cloudwatch/eventTarget:EventTarget::heartbeat": {
+                "id": "heartbeat-b50e57c312324669-heartbeat",
+                "type": "aws:cloudwatch/eventTarget:EventTarget",
+                "inputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a",
+                    "rule": "heartbeat-b50e57c312324669",
+                    "targetId": "heartbeat"
+                },
+                "outputs": {
+                    "arn": "arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a",
+                    "id": "heartbeat-b50e57c312324669-heartbeat",
+                    "input": "",
+                    "inputPath": "",
+                    "roleArn": "",
+                    "rule": "heartbeat-b50e57c312324669",
+                    "targetId": "heartbeat"
+                }
+            },
+            "urn:lumi:test2::todo::aws:lambda/permission:Permission::heartbeat": {
+                "id": "heartbeat-f4fbc5a56b59f56f",
+                "type": "aws:lambda/permission:Permission",
+                "inputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "heartbeat-08d01aa6def29b7a",
+                    "principal": "events.amazonaws.com",
+                    "sourceArn": "arn:aws:events:us-east-2:153052954103:rule/heartbeat-b50e57c312324669"
+                },
+                "defaults": {
+                    "statementId": "heartbeat-f4fbc5a56b59f56f"
+                },
+                "outputs": {
+                    "action": "lambda:invokeFunction",
+                    "function": "heartbeat-08d01aa6def29b7a",
+                    "id": "heartbeat-f4fbc5a56b59f56f",
+                    "principal": "events.amazonaws.com",
+                    "qualifier": "",
+                    "sourceArn": "arn:aws:events:us-east-2:153052954103:rule/heartbeat-b50e57c312324669",
+                    "statementId": "heartbeat-f4fbc5a56b59f56f"
+                }
+            }
+        }
+    }
+}

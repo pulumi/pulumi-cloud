@@ -11,8 +11,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/pulumi/pulumi-fabric/pkg/resource"
 	"github.com/pulumi/pulumi-fabric/pkg/resource/environment"
 	"github.com/pulumi/pulumi-fabric/pkg/testing/integration"
+	"github.com/pulumi/pulumi-framework/pkg/pulumiframework"
 )
 
 func Test_Examples(t *testing.T) {
@@ -45,17 +47,15 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/pulumi",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
-				var baseURL string
-				for _, kv := range checkpoint.Latest.Resources.Iter() {
-					urn := kv.Key
-					res := kv.Value
-					if res.Type == "aws:apigateway/deployment:Deployment" &&
-						strings.HasPrefix(string(urn.Name()), "todo") {
-						baseURL = res.Outputs["invokeUrl"].(string) + "stage"
-
-					}
+				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
+				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
+				endpoint, ok := pulumiResources[urn]
+				if !assert.True(t, ok, "expected to find endpoint") {
+					return
 				}
-				assert.NotNil(t, baseURL, "expected to find a RestAPI Deployment with an `invokeURL`")
+				baseURL := endpoint.Properties["url"].StringValue()
+				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET / endpoint
 				resp, err := http.Get(baseURL)
