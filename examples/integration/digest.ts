@@ -11,7 +11,7 @@ export class Digest<T> implements pulumi.Stream<T[]> {
     public collect: () => Promise<void>;
     constructor(name: string, stream: pulumi.Stream<T>) {
         this.topic = new pulumi.Topic<T[]>(name);
-        this.table = new pulumi.Table(name, "id", "S", {});
+        this.table = new pulumi.Table(name);
         stream.subscribe(name, async (item) => {
             console.log(`adding item to digest table`);
             await this.table.insert({ id: JSON.stringify(item) });

@@ -21,17 +21,6 @@ func Test_Examples(t *testing.T) {
 		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
 	}
 	fmt.Printf("AWS Region: %v\n", region)
-	var pulumiFrameworkRegion string
-	switch region {
-	case "us-west-2":
-		pulumiFrameworkRegion = "WestUS"
-	case "us-east-2":
-		pulumiFrameworkRegion = "EastUS"
-	case "eu-west-1":
-		pulumiFrameworkRegion = "WestEU"
-	default:
-		assert.Fail(t, "Expected a valid Pulumi framework region: %v", region)
-	}
 
 	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
@@ -41,9 +30,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "crawler"),
 			Config: map[string]string{
-				// TODO[pulumi/pulumi-framework#33]: we shouldn't need to configure both region variables.
-				"aws:config:region":    region,
-				"pulumi:config:region": pulumiFrameworkRegion,
+				"aws:config:region": region,
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -52,9 +39,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "todo"),
 			Config: map[string]string{
-				// TODO[pulumi/pulumi-framework#33]: we shouldn't need to configure both region variables.
-				"aws:config:region":    region,
-				"pulumi:config:region": pulumiFrameworkRegion,
+				"aws:config:region": region,
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -66,7 +51,7 @@ func Test_Examples(t *testing.T) {
 					res := kv.Value
 					if res.Type == "aws:apigateway/deployment:Deployment" &&
 						strings.HasPrefix(string(urn.Name()), "todo") {
-						baseURL = res.Outputs["invokeUrl"].(string) + "stage/"
+						baseURL = res.Outputs["invokeUrl"].(string) + "stage"
 
 					}
 				}

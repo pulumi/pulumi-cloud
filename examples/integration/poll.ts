@@ -7,7 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 // next invocation.
 export type PollFunction<T> = (lastToken?: string) => Promise<{ items: T[]; nextToken: string; }>;
 
-let pollMarkers = new pulumi.Table("__pollMarkers", "id", "S", {});
+let pollMarkers = new pulumi.Table("__pollMarkers");
 
 // poll<T> represents a stream of items which are derived from polling at a given rate
 // using a user-provided polling function.

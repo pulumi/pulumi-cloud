@@ -3,19 +3,49 @@
 import * as aws from "@pulumi/aws";
 import { LoggedFunction } from "./function";
 
+/**
+ * IntervalRate describes the rate at which a timer will fire.
+ *
+ * At least one of [[minutes]], [[hours]] or [[days]] must be provided.
+ */
 // IntervalRate describes how often to invoke an interval timer.
 export interface IntervalRate {
+    /**
+     * The number of minutes in the interval.  Must be a positive integer.
+     */
     minutes?: number;
+    /**
+     * The number of hours in the interval.  Must be a positive integer.
+     */
     hours?: number;
+    /**
+     * The number of days in the interval.  Must be a positive integer.
+     */
     days?: number;
 }
 
+/**
+ * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]])
+ * at which a timer should fire.
+ */
 export interface DailySchedule {
+    /**
+     * The hour, in UTC, that the time should fire.
+     */
     hourUTC?: number;
+    /**
+     * The minute, in UTC, that the time should fire.
+     */
     minuteUTC?: number;
 }
 
-// interval invokes handler at a regular rate defined by the interval options.
+/**
+ * An interval timer, which fires on a regular time interval.
+ *
+ * @param name The name of this timer.
+ * @param options The interval between firing events on the timer.
+ * @param handler A handler to invoke when the timer fires.
+ */
 export function interval(name: string, options: IntervalRate, handler: () => Promise<void>) {
     let rateMinutes = 0;
     if (options.minutes) {
@@ -37,12 +67,26 @@ export function interval(name: string, options: IntervalRate, handler: () => Pro
     createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler);
 }
 
-// cron invokes handler on a custom scheduled based on a Cron tab defintion.  See http://crontab.org/ for details.
+/**
+ * A cron timer, which fires on based on a specificied cron schedule.
+ *
+ * @see http://crontab.org/
+ *
+ * @param name The name of this timer.
+ * @param cronTab A cronTab that specifies that times at which the timer will fire.
+ * @param handler A handler to invoke when the timer fires.
+ */
 export function cron(name: string, cronTab: string, handler: () => Promise<void>) {
     createScheduledEvent(name, `cron(${cronTab})`, handler);
 }
 
-// daily invokes handler every day at the specified UTC hour and minute
+/**
+ * A daily timer, firing at the specified UTC hour and minute each day.
+ *
+ * @param name The name of this timer.
+ * @param schedule The UTC hour and minute at which to fire each day.
+ * @param handler A handler to invoke when the timer fires.
+ */
 export function daily(name: string, schedule: DailySchedule, handler: () => Promise<void>) {
     let hour = schedule.hourUTC || 0;
     let minute = schedule.minuteUTC || 0;

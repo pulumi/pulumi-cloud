@@ -221,23 +221,69 @@ let apigatewayAssumeRolePolicyDocument = {
     ],
 };
 
+/**
+ * Request represents an HttpAPI request.
+ */
 export interface Request {
-    body: any; // Actually a Buffer
+    /**
+     * The body of the HTTP request.
+     */
+    body: Buffer;
+    /**
+     * The method of the HTTP request.
+     */
     method: string;
+    /**
+     * The path parameters of the HTTP request. Each `{param}` in the matched route is available as a
+     * property of this oject.
+     */
     params: { [param: string]: string; };
+    /**
+     * The headers of the HTTP request.
+     */
     headers: { [header: string]: string; };
+    /**
+     * The query parameters parsed from the query string of the request URL.
+     */
     query: { [query: string]: string; };
+    /**
+     * The raw path from the HTTP request.
+     */
     path: string;
 }
 
+/**
+ * Response represents the response to an HttpAPI request.
+ */
 export interface Response {
+    /**
+     * Sets the HTTP response status code and returns a `Response` for chaining operations.
+     */
     status(code: number): Response;
+    /**
+     * Sets a header on the HTTP response and returns the `Response` for chaining operations.
+     */
     setHeader(name: string, value: string): Response;
+    /**
+     * Writes a string to the HTTP response body and returns the `Response` for chaining operations.
+     */
     write(data: string): Response;
+    /**
+     * Sends the HTTP response, optionally including data to write to the HTTP response body.
+     */
     end(data?: string): void;
+    /**
+     * JSON serializes an object, writes it to the HTTP response body, and sends the HTTP response.
+     */
     json(obj: any): void;
 }
 
+/**
+ * RouteHandler represents a handler for a route on an HttpAPI.
+ *
+ * Implementations should invoke methods on `res` to respond to the request, or invoke `next`
+ * to pass control to the next available handler on the route for further processing.
+ */
 export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
 interface ReqRes {
@@ -301,8 +347,29 @@ let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqR
 
 let stageName = "stage";
 
-// API is a higher level abstraction for working with AWS APIGateway reources.
+/**
+ * HttpAPI publishes an internet-facing HTTP API, for serving web applications or REST APIs.
+ *
+ * ```javascript
+ * let api = new HttpAPI("myapi")
+ * api.get("/", (req, res) => res.json({hello: "world"}));
+ * api.publish();
+ * api.url.mapValue(url =>
+ *   console.log(`Serving myapi at ${url}`)
+ * );
+ * ```
+ *
+ * Paths are `/` seperated.  A path can use `{param}` to capture zero-or-more non-`/` characters
+ * and make the captured path segment available in `req.params.param`, or `{param+}` to greedily
+ * capture all remaining characters in the url path into `req.params.param`.
+ *
+ * Paths and routing are defined statically, and cannot overlap. Code inside a route handler
+ * can be used to provide dynamic decisions about sub-routing within a static path.
+ */
 export class HttpAPI {
+    /**
+     * The url that the HttpAPI is being served at. Set only after a succesful call to `publish`.
+     */
     public url?: fabric.Computed<string>;
 
     private api: aws.apigateway.RestApi;
@@ -312,13 +379,25 @@ export class HttpAPI {
     private lambdas: { [key: string]: LoggedFunction };
     private bucket: aws.s3.Bucket;
 
+    // Outside API (constructor and methods)
+
     constructor(apiName: string) {
         this.apiName = apiName;
         this.swaggerSpec = createBaseSpec(apiName);
         this.lambdas = {};
     }
 
+    /**
+     * staticFile serves a static file from within the source folder at the requested path.
+     *
+     * @param path The route path at which to serve the file.
+     * @param filePath The local file path relative to the Pulumi program folder.
+     * @param contentType The `content-type` to serve the file as.
+     */
     public staticFile(path: string, filePath: string, contentType?: string) {
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
         let method = "GET";
         let swaggerMethod = this.routePrepare(method, path);
         let name = this.apiName + sha1hash(method + ":" + path);
@@ -348,6 +427,9 @@ export class HttpAPI {
     }
 
     private routeLambda(method: string, path: string, func: LoggedFunction) {
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
         let swaggerMethod = this.routePrepare(method, path);
         this.swaggerSpec.paths[path][swaggerMethod] =
             func.lambda.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn));
@@ -378,9 +460,13 @@ export class HttpAPI {
         return swaggerMethod;
     }
 
-    // TODO[pulumi/pulumi-fabric#51]: Should accept a `...handlers: RouteHandler[]` but that is not supported
-    // in LumiJS and the Lumi runtime yet.
-    public route(method: string, path: string, middleware: RouteHandler[], handler: RouteHandler) {
+    /**
+     * Routes any requests with given HTTP method on the given path to the provided handler(s).
+     * @param method The HTTP method to handle.
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public route(method: string, path: string, ...handlers: RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
@@ -397,11 +483,9 @@ export class HttpAPI {
                 let reqres = apiGatewayToReqRes(ev, body, cb);
                 let i = 0;
                 let next = () => {
-                    let nextMiddleware = middleware[i++];
-                    if (nextMiddleware !== undefined) {
-                        nextMiddleware(reqres.req, reqres.res, next);
-                    } else {
-                        handler(reqres.req, reqres.res, () => { return; });
+                    let nextHandler = handlers[i++];
+                    if (nextHandler !== undefined) {
+                        nextHandler(reqres.req, reqres.res, next);
                     }
                 };
                 next();
@@ -410,30 +494,67 @@ export class HttpAPI {
         this.routeLambda(method, path, lambda);
     }
 
-    public get(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("GET", path, middleware, handler);
+    /**
+     * Routes GET requests on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public get(path: string, ...handlers: RouteHandler[]) {
+        this.route("GET", path, ...handlers);
     }
 
-    public put(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("PUT", path, middleware, handler);
+    /**
+     * Routes PUT requests on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public put(path: string, ...handlers: RouteHandler[]) {
+        this.route("PUT", path, ...handlers);
     }
 
-    public post(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("POST", path, middleware, handler);
+    /**
+     * Routes POST requests on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public post(path: string, ...handlers: RouteHandler[]) {
+        this.route("POST", path, ...handlers);
     }
 
-    public delete(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("DELETE", path, middleware, handler);
+    /**
+     * Routes DELETE requests on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public delete(path: string, ...handlers: RouteHandler[]) {
+        this.route("DELETE", path, ...handlers);
     }
 
-    public options(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("OPTIONS", path, middleware, handler);
+    /**
+     * Routes OPTIONS requests on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public options(path: string, ...handlers: RouteHandler[]) {
+        this.route("OPTIONS", path, ...handlers);
     }
 
-    public all(path: string, middleware: RouteHandler[], handler: RouteHandler) {
-        this.route("ANY", path, middleware, handler);
+    /**
+     * Routes all HTTP methods on the given path to the provided handler(s).
+     * @param path The path to handle requests on.
+     * @param handlers One or more handlers to apply to requests.
+     */
+    public all(path: string, ...handlers: RouteHandler[]) {
+        this.route("ANY", path, ...handlers);
     }
 
+    /**
+     * Publishes an HttpAPI to be internet accessible.
+     *
+     * This should be called after describing desired routes.
+     *
+     * @returns A computed string representing the URL at which the HttpAPI is available to the internet.
+     */
     public publish(): fabric.Computed<string> {
         let { json, hash } = jsonStringifySwaggerSpec(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
@@ -477,10 +598,13 @@ export class HttpAPI {
         return this.url;
     }
 
-    // Attach a custom domain to this HttpAPI.
-    // Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
-    // The return value is a domain name that you must map your custom domain to using a DNS A record.
-    // _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
+    /**
+     * Attach a custom domain to this HttpAPI.
+     *
+     * Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
+     * The return value is a domain name that you must map your custom domain to using a DNS A record.
+     * _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
+     */
     private attachCustomDomain(domain: Domain): fabric.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
@@ -498,12 +622,25 @@ export class HttpAPI {
     }
 }
 
-// Domain includes the domain name and certificate data
-// to enable hosting an HttpAPI on a custom domain.
+/**
+ * Domain includes the domain name and certificate data to enable hosting an HttpAPI on a custom domain.
+ */
 export interface Domain {
+    /**
+     * The domain name to associate with the HttpAPI.
+     */
     domainName: string;
+    /**
+     * An SSL/TLS certficicate issued for this domain (`cert.pem`).
+     */
     certificateBody: string;
+    /**
+     * An SSL/TLS private key issued for thie domain (`privkey.pem`).
+     */
     certificatePrivateKey: string;
+    /**
+     * The certificate chain for the SSL/TLS certificate provided for this domain (`chain.pem`).
+     */
     certificateChain: string;
 }
 
