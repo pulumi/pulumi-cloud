@@ -2,10 +2,10 @@ PROCCNT=$(shell nproc --all)
 TESTPARALLELISM=10
 
 .PHONY: default
-default: banner lint build install
+default: banner lint build test install
 
 .PHONY: all
-all: banner lint build install examples
+all: banner lint build test install examples
 
 .PHONY: banner
 banner:
@@ -28,6 +28,11 @@ build:
 	@echo "\033[0;32mBUILD:\033[0m"
 	yarn link @pulumi/pulumi-fabric @pulumi/aws # ensure we link dependencies.
 	yarn run build # compile the LumiPack
+
+.PHONY: test
+test:
+	@echo "\033[0;32mTEST:\033[0m"
+	go test ./pkg/...
 
 .PHONY: install
 install:
