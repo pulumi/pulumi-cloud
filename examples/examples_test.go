@@ -23,17 +23,6 @@ func Test_Examples(t *testing.T) {
 		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
 	}
 	fmt.Printf("AWS Region: %v\n", region)
-	var pulumiFrameworkRegion string
-	switch region {
-	case "us-west-2":
-		pulumiFrameworkRegion = "WestUS"
-	case "us-east-2":
-		pulumiFrameworkRegion = "EastUS"
-	case "eu-west-1":
-		pulumiFrameworkRegion = "WestEU"
-	default:
-		assert.Fail(t, "Expected a valid Pulumi framework region: %v", region)
-	}
 
 	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
@@ -43,9 +32,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "crawler"),
 			Config: map[string]string{
-				// TODO[pulumi/pulumi-framework#33]: we shouldn't need to configure both region variables.
-				"aws:config:region":    region,
-				"pulumi:config:region": pulumiFrameworkRegion,
+				"aws:config:region": region,
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -54,9 +41,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "todo"),
 			Config: map[string]string{
-				// TODO[pulumi/pulumi-framework#33]: we shouldn't need to configure both region variables.
-				"aws:config:region":    region,
-				"pulumi:config:region": pulumiFrameworkRegion,
+				"aws:config:region": region,
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -76,8 +61,7 @@ func Test_Examples(t *testing.T) {
 				resp, err := http.Get(baseURL)
 				assert.NoError(t, err, "expected to be able to GET /")
 				contentType := resp.Header.Get("Content-Type")
-				// BUGBUG[pulumi/pulumi-framework#36]: reenable once we get to the bottom of the issue.
-				// assert.Equal(t, "text/html", contentType)
+				assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
@@ -85,8 +69,7 @@ func Test_Examples(t *testing.T) {
 				// Validate the GET /favico.ico endpoint
 				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
-				// BUGBUG[pulumi/pulumi-framework#36]: reenable once we get to the bottom of the issue.
-				// assert.Equal(t, int64(1150), resp.ContentLength)
+				assert.Equal(t, int64(1150), resp.ContentLength)
 				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
 
 				// Validate the POST /todo/{id} endpoint

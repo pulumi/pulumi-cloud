@@ -3,7 +3,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { authMiddleware } from "./middleware";
 
-let todos = new pulumi.Table("todo", "id", "S", {});
+let todos = new pulumi.Table("todo");
 let api = new pulumi.HttpAPI("todo");
 
 // Index handler
@@ -11,7 +11,7 @@ api.staticFile("/", "index.html", "text/html");
 api.staticFile("/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
-api.get("/todo/{id}", [authMiddleware], async (req, res) => {
+api.get("/todo/{id}", authMiddleware, async (req, res) => {
     console.log("GET /todo/" + req.params["id"]);
     try {
         let item = await todos.get({ id: req.params["id"] });
@@ -20,7 +20,7 @@ api.get("/todo/{id}", [authMiddleware], async (req, res) => {
         res.status(500).json(err);
     }
 });
-api.post("/todo/{id}", [], async (req, res) => {
+api.post("/todo/{id}", async (req, res) => {
     console.log("POST /todo/" + req.params["id"]);
     try {
         await todos.insert({ id: req.params["id"], value: req.body.toString() });
@@ -29,7 +29,7 @@ api.post("/todo/{id}", [], async (req, res) => {
         res.status(500).json(err);
     }
 });
-api.get("/todo", [], async (req, res) => {
+api.get("/todo", async (req, res) => {
     console.log("GET /todo");
     try {
         let items = await todos.scan();
