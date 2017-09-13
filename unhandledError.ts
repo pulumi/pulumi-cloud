@@ -11,11 +11,19 @@ export function getUnhandledErrorTopic(): aws.sns.Topic {
     return unhandledErrorTopic;
 }
 
+/**
+ * The type for global unhandled error handlers
+ */
 export type ErrorHandler = (message: string, payload: any) => void;
 
-// onError registers a global error handler which will be passed the payload
-// and error messages associated with any function which fails during program
-// execution.
+/**
+ * onError registers a global error handler which will be passed the payload
+ * and error messages associated with any function which fails during program
+ * execution.
+ *
+ * @param name The name of this gobal error handler.
+ * @param handler The callback to invoke on unhandled errors.
+ */
 export function onError(name: string, handler: ErrorHandler) {
     sns.createSubscription(name, getUnhandledErrorTopic(), async (item: sns.SNSItem) => {
         let errorMessage = JSON.stringify(item.MessageAttributes["ErrorMessage"]);

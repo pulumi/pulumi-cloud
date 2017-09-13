@@ -119,7 +119,7 @@ function exampleSalesforce3() {
 
 function exampleSendSESEmail() {
     let api = new pulumi.HttpAPI("sadsad");
-    api.get("/", [], async (req, res) => {
+    api.get("/", async (req, res) => {
         try {
             await sendSESEmail({
                 to: ["luke@pulumi.com"],
@@ -134,7 +134,7 @@ function exampleSendSESEmail() {
             res.status(500).json(err);
         }
     });
-    api.get("/insertSalesforce", [], async (req, res) => {
+    api.get("/insertSalesforce", async (req, res) => {
         try {
             await salesforceInsert("Lead", {Email: "lukehoban@gmail.com", LastName: "Hoban", Company: "Pulumi"});
             res.json({});

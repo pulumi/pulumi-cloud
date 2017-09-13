@@ -74,7 +74,7 @@ export class Table {
     //////////
     // Outside
     //////////
-    constructor(tableName: string, key: string);
+    constructor(tableName: string, key?: string, keyType?: PrimaryKeyType);
     // QUESTION - trigger events on insert/update/delete?
     //////////
     // Inside
@@ -88,6 +88,8 @@ export class Table {
     count(query?: Object): Promise<number>;
     delete(query: Object): Promise<void>;
 }
+
+export type PrimaryKeyType = "string" | "number" | "boolean";
 
 // Topic is a pub/sub topic for distributing work to job handlers which can run concurrently.
 //
