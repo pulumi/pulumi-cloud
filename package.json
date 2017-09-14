@@ -7,8 +7,8 @@
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
-        "tslint": "^5.6.0",
-        "typescript": "^2.1.4"
+        "tslint": "^5.7.0",
+        "typescript": "^2.5.2"
     },
     "peerDependencies": {
         "@pulumi/aws": "*",
