@@ -603,9 +603,12 @@ export class HttpAPI {
      *
      * Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
      * The return value is a domain name that you must map your custom domain to using a DNS A record.
+     *
      * _Note_: It is strongly encouraged to store certificates in config variables and not in source code.
+     *
+     * @returns The domain name that you must map your custom domain to using a DNS A record.
      */
-    private attachCustomDomain(domain: Domain): fabric.Computed<string> {
+    public attachCustomDomain(domain: Domain): fabric.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
