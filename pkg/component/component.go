@@ -53,9 +53,30 @@ type MetricDataPoint struct {
 // state of a Component (or Components)
 type OperationsProvider interface {
 	// GetLogs returns logs matching a query
-	GetLogs(query *LogQuery) ([]LogEntry, error)
+	GetLogs(query LogQuery) ([]LogEntry, error)
 	// ListMetrics returns the list of supported metrics for the requested component type
 	ListMetrics() []MetricName
 	// GetMetricStatistics provides metrics data for a given metric request
 	GetMetricStatistics(metric MetricRequest) ([]MetricDataPoint, error)
+}
+
+// FilterByType returns only components matching the requested type
+func (c Components) FilterByType(t tokens.Type) Components {
+	ret := make(Components)
+	for k, v := range c {
+		if v.Type == t {
+			ret[k] = v
+		}
+	}
+	return ret
+}
+
+// GetByTypeAndName returns the component with the requested type and name
+func (c Components) GetByTypeAndName(t tokens.Type, name tokens.QName) *Component {
+	for k, v := range c {
+		if k.Type() == t && k.Name() == name {
+			return v
+		}
+	}
+	return nil
 }

@@ -103,18 +103,18 @@ func GetComponents(source []*resource.State) component.Components {
 // OperationsProviderForComponent creates an OperationsProvider capable of answering
 // operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
 func OperationsProviderForComponent(sess *session.Session, component *component.Component) component.OperationsProvider {
-	return &opsProvider{
+	return &componentOpsProvider{
 		awsConnection: newAWSConnection(sess),
 		component:     component,
 	}
 }
 
-type opsProvider struct {
+type componentOpsProvider struct {
 	awsConnection *awsConnection
 	component     *component.Component
 }
 
-var _ component.OperationsProvider = (*opsProvider)(nil)
+var _ component.OperationsProvider = (*componentOpsProvider)(nil)
 
 const (
 	// AWS Resource Types
@@ -153,7 +153,7 @@ const (
 	tableThrottles             component.MetricName = "throttles"
 )
 
-func (ops *opsProvider) GetLogs(query *component.LogQuery) ([]component.LogEntry, error) {
+func (ops *componentOpsProvider) GetLogs(query component.LogQuery) ([]component.LogEntry, error) {
 	if query.StartTime != nil || query.EndTime != nil || query.Query != nil {
 		contract.Failf("not yet implemented - StartTime, Endtime, Query")
 	}
@@ -168,7 +168,7 @@ func (ops *opsProvider) GetLogs(query *component.LogQuery) ([]component.LogEntry
 	}
 }
 
-func (ops *opsProvider) ListMetrics() []component.MetricName {
+func (ops *componentOpsProvider) ListMetrics() []component.MetricName {
 	switch ops.component.Type {
 	case pulumiFunctionType:
 		// Don't include these which are internal implementation metrics: DLQ delivery errors
@@ -190,7 +190,7 @@ func (ops *opsProvider) ListMetrics() []component.MetricName {
 	}
 }
 
-func (ops *opsProvider) GetMetricStatistics(metric component.MetricRequest) ([]component.MetricDataPoint, error) {
+func (ops *componentOpsProvider) GetMetricStatistics(metric component.MetricRequest) ([]component.MetricDataPoint, error) {
 
 	var dimensions []*cloudwatch.Dimension
 	var namespace string
@@ -240,6 +240,48 @@ func (ops *opsProvider) GetMetricStatistics(metric component.MetricRequest) ([]c
 		})
 	}
 	return metrics, nil
+}
+
+// OperationsProviderForComponents creates an OperationsProvider capable of answering
+// operational queries about a collection of Pulumi Framework Components based on the
+// underlying resources of the AWS  Pulumi Framework implementation.
+func OperationsProviderForComponents(sess *session.Session, components component.Components) component.OperationsProvider {
+	return &componentsOpsProvider{
+		awsConnection: newAWSConnection(sess),
+		components:    components,
+	}
+}
+
+type componentsOpsProvider struct {
+	awsConnection *awsConnection
+	components    component.Components
+}
+
+var _ component.OperationsProvider = (*componentsOpsProvider)(nil)
+
+// GetLogs for a collection of Components returns combined logs from all Pulumi Function
+// components in the collection.
+func (ops *componentsOpsProvider) GetLogs(query component.LogQuery) ([]component.LogEntry, error) {
+	if query.StartTime != nil || query.EndTime != nil || query.Query != nil {
+		contract.Failf("not yet implemented - StartTime, Endtime, Query")
+	}
+	var functionNames []string
+	functionComponents := ops.components.FilterByType(pulumiFunctionType)
+	for _, v := range functionComponents {
+		functionName := v.Resources["function"].Outputs["name"].StringValue()
+		functionNames = append(functionNames, functionName)
+	}
+	logResults := ops.awsConnection.getLogsForFunctionsConcurrently(functionNames)
+	sort.SliceStable(logResults, func(i, j int) bool { return logResults[i].Timestamp < logResults[j].Timestamp })
+	return logResults, nil
+}
+
+func (ops *componentsOpsProvider) ListMetrics() []component.MetricName {
+	return []component.MetricName{}
+}
+
+func (ops *componentsOpsProvider) GetMetricStatistics(metric component.MetricRequest) ([]component.MetricDataPoint, error) {
+	return nil, fmt.Errorf("not yet implemented")
 }
 
 type typeid struct {
