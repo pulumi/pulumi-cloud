@@ -293,7 +293,7 @@ interface ReqRes {
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
 
-let apiGatewayToReqRes: (ev: APIGatewayRequest, body: any, cb: Callback) => ReqRes = (ev, body, cb) => {
+let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRes => {
     let response = {
         statusCode: 200,
         headers: <{[header: string]: string}>{},
@@ -470,7 +470,7 @@ export class HttpAPI {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
-            (ev: APIGatewayRequest, ctx: any, cb) => {
+            (ev: APIGatewayRequest, ctx, cb) => {
                 let body: any;
                 if (ev.body !== null) {
                     if (ev.isBase64Encoded) {
