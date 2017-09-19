@@ -42,5 +42,5 @@ examples:
 
 publish:
 	@echo "\033[0;32mPublishing current release:\033[0m"
-	./scripts/publish.sh
+	../scripts/publish.sh
 .PHONY: publish
