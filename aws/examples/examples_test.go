@@ -30,7 +30,7 @@ func Test_Examples(t *testing.T) {
 	}
 	examples := []integration.LumiProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "crawler"),
+			Dir: path.Join(cwd, "../../examples/crawler"),
 			Config: map[string]string{
 				"aws:config:region": region,
 			},
@@ -39,7 +39,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "todo"),
+			Dir: path.Join(cwd, "../../examples/todo"),
 			Config: map[string]string{
 				"aws:config:region": region,
 			},
