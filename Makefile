@@ -8,11 +8,11 @@ all: aws_all test
 
 .PHONY: aws_default
 aws_default:
-	cd aws && make
+	cd aws && $(MAKE)
 
 .PHONY: aws_all
 aws_all:
-	cd aws && make all
+	cd aws && $(MAKE) all
 
 .PHONY: test
 test:

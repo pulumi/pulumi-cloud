@@ -18,11 +18,6 @@ lint:
 	@echo "\033[0;32mLINT:\033[0m"
 	@./node_modules/.bin/tslint ...
 
-.PHONY: clean
-clean:
-	rm -rf ./.lumi/bin
-	rm -rf ${THISLIB}
-
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
