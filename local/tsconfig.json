@@ -8,7 +8,6 @@
         "sourceMap": true,
         "stripInternal": true,
         "experimentalDecorators": true,
-        "pretty": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,

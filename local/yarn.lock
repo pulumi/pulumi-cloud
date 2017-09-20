@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/cron@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@types/cron/-/cron-1.2.1.tgz#95c1e432d6106ca34c92f0743638bc786c073faa"
+
 "@types/node@^8.0.26":
   version "8.0.28"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.28.tgz#86206716f8d9251cf41692e384264cbd7058ad60"
@@ -54,6 +58,12 @@ commander@^2.9.0:
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
+
+cron@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/cron/-/cron-1.3.0.tgz#7e459968eaf94e1a445be796ce402166c234659d"
+  dependencies:
+    moment-timezone "^0.5.x"
 
 diff@^3.2.0:
   version "3.3.1"
@@ -108,6 +118,16 @@ minimatch@^3.0.4:
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   dependencies:
     brace-expansion "^1.1.7"
+
+moment-timezone@^0.5.x:
+  version "0.5.13"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.13.tgz#99ce5c7d827262eb0f1f702044177f60745d7b90"
+  dependencies:
+    moment ">= 2.9.0"
+
+"moment@>= 2.9.0":
+  version "2.18.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
 
 once@^1.3.0:
   version "1.4.0"

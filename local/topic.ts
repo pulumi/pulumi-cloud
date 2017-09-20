@@ -1,45 +1,32 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-export interface TopicConstructor {
-    new<T>(name: string): Topic<T>;
-}
+import * as types from "./../api/types";
+import * as util from "./util";
 
-export let Topic: TopicConstructor;
+const globalTopicToSubscribers: { [topic: string]: {(item: any): Promise<void>}[] } = util.createDictionaryObject();
 
-export interface Topic<T> extends Stream<T> {
-    /**
-     * Publish an item to this Topic.
-     *
-     * @param item The item to publish.
-     */
-    publish: (item: T) => Promise<void>;
+export class Topic<T> {
+    public publish: (item: T) => Promise<void>;
+    public subscribe: (name: string, handler: (item: T) => Promise<void>) => void;
 
-    /**
-     * Subscribe to items published to this topic.
-     *
-     * Each subscription receives all items published to the topic.
-     *
-     * @param name The name of the subscription.
-     * @param handler A callback to handle each item published to the topic.
-     */
-    subscribe(name: string, handler: (item: T) => Promise<void>): void;
-}
+    constructor(name: string) {
+        const subscribers = globalTopicToSubscribers[name] || (globalTopicToSubscribers[name] = []);
 
-/**
- * A Stream<T> provides access to listen to an (infinite) stream of items coming from a
- * data source.  Unlike [[Topic]], a Stream provides only access to read from the stream,
- * not the ability to publish new items to the stream.
- *
- * @param T The type of items published to the stream.
- */
-export interface Stream<T> {
-    /**
-     * Subscribe to items published to this stream.
-     *
-     * Each subscription receives all items published to the stream.
-     *
-     * @param name The name of the subscription.
-     * @param handler A callback to handle each item published to the stream.
-     */
-    subscribe(name: string, handler: (item: T) => Promise<void>): void;
+        this.publish = item => {
+            // Make publishing seem asynchronous by actually doing the notification on the next
+            // event loop.
+            setTimeout(
+                () => {
+                    for (const subscriber of subscribers) {
+                        subscriber(item);
+                    }
+                },
+                1);
+            return Promise.resolve();
+        };
+
+        this.subscribe = (unused, handler) => {
+            subscribers.push(handler);
+        };
+    }
 }

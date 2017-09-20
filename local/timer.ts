@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import {timer} from "./../api/types"
+import * as node_cron from "cron";
+import { timer } from "./../api/types";
 
 /**
  * An interval timer, which fires on a regular time interval.
@@ -24,7 +25,7 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
         throw new Error("Interval must be at least 1 minute");
     }
 
-    let rateMS = rateMinutes * 60 * 1000;
+    const rateMS = rateMinutes * 60 * 1000;
     setInterval(handler, rateMS);
 }
 
@@ -37,7 +38,10 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
  * @param cronTab A cronTab that specifies that times at which the timer will fire.
  * @param handler A handler to invoke when the timer fires.
  */
-export let cron: { (name: string, cronTab: string, handler: () => Promise<void>): void };
+export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {
+    const job = new node_cron.CronJob(cronTab, handler);
+    job.start();
+}
 
 /**
  * A daily timer, firing at the specified UTC hour and minute each day.
@@ -46,4 +50,8 @@ export let cron: { (name: string, cronTab: string, handler: () => Promise<void>)
  * @param schedule The UTC hour and minute at which to fire each day.
  * @param handler A handler to invoke when the timer fires.
  */
-export let daily: { (name: string, schedule: DailySchedule, handler: () => Promise<void>): void };
+export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>): void {
+    const hour = schedule.hourUTC || 0;
+    const minute = schedule.minuteUTC || 0;
+    cron(name, `${minute} ${hour} * * ? *`, handler);
+}
