@@ -18,7 +18,7 @@ export class Table implements types.Table {
     constructor(name: string,
                 public readonly primaryKey: string = "id",
                 public readonly primaryKeyType: string = "string") {
-        this.tableName = util.makeComputed(name);
+        this.tableName = Promise.resolve(name);
 
         const localDatabase = globalDatabase[name] || (globalDatabase[name] = util.createDictionaryObject());
         this.get = (query: any) => {

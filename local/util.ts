@@ -1,11 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import { Computed, MaybeComputed } from "@pulumi/pulumi-fabric";
-
-export const makeComputed = <T>(value: T): Computed<T> => ({
-    mapValue: <U>(callback: (v: T) => MaybeComputed<U>) => <Computed<U>>callback(value),
-});
-
 // Creates a simple object that can be used safely as a dictionary (i.e. no worries about it having
 // pre-existing members with certain names, like you would get with a normal javascript object.)
 export function createDictionaryObject(): any {
