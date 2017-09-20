@@ -4,7 +4,7 @@ export interface TopicConstructor {
     new<T>(name: string): Topic<T>;
 }
 
-export let Topic: TopicConstructor;
+export let Topic: TopicConstructor; // tslint:disable-line
 
 export interface Topic<T> extends Stream<T> {
     /**

@@ -11,7 +11,7 @@ export interface TableConstructor {
     new (name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType): Table;
 }
 
-export let Table: TableConstructor;
+export let Table: TableConstructor; // tslint:disable-line
 
 /**
  * Table is a simple document store for persistent application backend storage.

@@ -71,7 +71,7 @@ export interface HttpAPIConstructor {
     new (apiName: string): HttpAPI;
 }
 
-export let HttpAPI: HttpAPIConstructor;
+export let HttpAPI: HttpAPIConstructor; // tslint:disable-line
 
 /**
  * HttpAPI publishes an internet-facing HTTP API, for serving web applications or REST APIs.
