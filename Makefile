@@ -1,10 +1,20 @@
 PROCCNT=$(shell nproc --all)
 
 .PHONY: default
-default: aws_default test
+default: api_default aws_default test
 
 .PHONY: all
-all: aws_all test
+all: api_all aws_all test
+
+
+.PHONY: api_default
+api_default:
+	cd api && $(MAKE)
+
+.PHONY: api_all
+api_all:
+	cd api && $(MAKE) all
+
 
 .PHONY: aws_default
 aws_default:
@@ -13,6 +23,7 @@ aws_default:
 .PHONY: aws_all
 aws_all:
 	cd aws && $(MAKE) all
+
 
 .PHONY: test
 test:
