@@ -1,9 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as types from "./../api/types";
-import * as util from "./util";
 
-const globalTopicToSubscribers: { [topic: string]: {(item: any): Promise<void>}[] } = util.createDictionaryObject();
+const globalTopicToSubscribers: { [topic: string]: {(item: any): Promise<void>}[] } = Object.create(null);
 
 export class Topic<T> {
     public publish: (item: T) => Promise<void>;

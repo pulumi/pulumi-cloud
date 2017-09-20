@@ -2,9 +2,8 @@
 
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as types from "../api/types";
-import * as util from "./util";
 
-const globalDatabase = util.createDictionaryObject();
+const globalDatabase = Object.create(null);
 
 export class Table implements types.Table {
     public tableName: fabric.Computed<string>;
@@ -20,7 +19,7 @@ export class Table implements types.Table {
                 public readonly primaryKeyType: string = "string") {
         this.tableName = Promise.resolve(name);
 
-        const localDatabase = globalDatabase[name] || (globalDatabase[name] = util.createDictionaryObject());
+        const localDatabase = globalDatabase[name] || (globalDatabase[name] = Object.create(null));
         this.get = (query: any) => {
             const pk = query[primaryKey];
             if (pk === undefined) {
