@@ -9,7 +9,7 @@ import * as fabric from "@pulumi/pulumi-fabric";
 declare let module: any;
 declare function require(name: string): any;
 
-let config = new fabric.Config("pulumi:framework");
+const config = new fabric.Config("pulumi:framework");
 
 // TODO before committing.  We should not be falling back to the local provider. That makes it far
 // too simple to accidently publish some broken version of pulumi that ends up working in the cloud
@@ -23,7 +23,7 @@ if (!provider) {
     console.warn("Warning: Provider not given.  Falling back to 'local' provider.");
 }
 
-let frameworkModule = `@pulumi/pulumi-framework-${provider}`;
+const frameworkModule = `@pulumi/pulumi-framework-${provider}`;
 
 console.log(`Loading ${frameworkModule} for current environment.`);
 module.exports = require(frameworkModule);
