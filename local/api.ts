@@ -77,7 +77,13 @@ export class HttpAPI implements types.HttpAPI {
         }
 
         function convertResponse(expressResponse: core.Response): types.Response {
-            throw new Error("Method not implemented.");
+            return {
+                status: (code: number) => convertResponse(expressResponse.status(code)),
+                setHeader: (name: string, value: string) => (expressResponse.setHeader(name, value), this),
+                write: (data: string) => (expressResponse.write(data), this),
+                end: (data?: string) => expressResponse.end(),
+                json: (obj: any) => expressResponse.json(obj)
+            };
         }
     }
 
