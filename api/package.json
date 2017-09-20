@@ -4,7 +4,7 @@
     "types": "types.ts",
     "scripts": {
         "build": "tsc && yarn run lint",
-        "lint": "tslint '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
+        "lint": "tslint -c ../tslint.json '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
