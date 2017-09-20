@@ -20,7 +20,7 @@ const config = new fabric.Config("pulumi:framework");
 let provider = config.get("provider");
 if (!provider) {
     provider = "local";
-    console.warn("Warning: Provider not given.  Falling back to 'local' provider.");
+    console.warn(`Warning: Provider not given.  Falling back to ${provider} provider.`);
 }
 
 const frameworkModule = `@pulumi/pulumi-framework-${provider}`;

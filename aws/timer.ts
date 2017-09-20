@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import { LoggedFunction } from "./function";
+import { timer } from "./../api/types"
 
 /**
  * IntervalRate describes the rate at which a timer will fire.
@@ -9,20 +10,20 @@ import { LoggedFunction } from "./function";
  * At least one of [[minutes]], [[hours]] or [[days]] must be provided.
  */
 // IntervalRate describes how often to invoke an interval timer.
-export interface IntervalRate {
-    /**
-     * The number of minutes in the interval.  Must be a positive integer.
-     */
-    minutes?: number;
-    /**
-     * The number of hours in the interval.  Must be a positive integer.
-     */
-    hours?: number;
-    /**
-     * The number of days in the interval.  Must be a positive integer.
-     */
-    days?: number;
-}
+// export interface IntervalRate {
+//     /**
+//      * The number of minutes in the interval.  Must be a positive integer.
+//      */
+//     minutes?: number;
+//     /**
+//      * The number of hours in the interval.  Must be a positive integer.
+//      */
+//     hours?: number;
+//     /**
+//      * The number of days in the interval.  Must be a positive integer.
+//      */
+//     days?: number;
+// }
 
 /**
  * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]])
@@ -46,7 +47,7 @@ export interface DailySchedule {
  * @param options The interval between firing events on the timer.
  * @param handler A handler to invoke when the timer fires.
  */
-export function interval(name: string, options: IntervalRate, handler: () => Promise<void>) {
+export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>) {
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
