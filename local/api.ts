@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as fabric from "@pulumi/pulumi-fabric";
+import * as express from "express";
 
 /**
  * Request represents an HttpAPI request.
