@@ -1,8 +1,10 @@
 PROCCNT=$(shell nproc --all)
 
 .PHONY: default
-default: api aws local test
+default: all
 
+.PHONY: all
+all: api aws local test
 
 .PHONY: api
 api:
@@ -23,4 +25,3 @@ local:
 test:
 	@echo "\033[0;32mTEST:\033[0m"
 	go test ./pkg/...
-  
