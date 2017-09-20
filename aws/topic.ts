@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as types from "./../api/types";
 import * as sns from "./sns";
 
 /**
@@ -17,7 +18,7 @@ import * as sns from "./sns";
  *
  * @param T The type of items published to the topic.
  */
-export class Topic<T> implements Stream<T> {
+export class Topic<T> implements types.Stream<T> {
     // Inside + Outside API
 
     private name: string;
@@ -63,24 +64,4 @@ export class Topic<T> implements Stream<T> {
             await handler(item);
         });
     }
-}
-
-
-/**
- * A Stream<T> provides access to listen to an (infinite) stream of items coming from a
- * data source.  Unlike [[Topic]], a Stream provides only access to read from the stream,
- * not the ability to publish new items to the stream.
- *
- * @param T The type of items published to the stream.
- */
-export interface Stream<T> {
-    /**
-     * Subscribe to items published to this stream.
-     *
-     * Each subscription receives all items published to the stream.
-     *
-     * @param name The name of the subscription.
-     * @param handler A callback to handle each item published to the stream.
-     */
-    subscribe(name: string, handler: (item: T) => Promise<void>): void;
 }

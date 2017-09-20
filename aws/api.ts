@@ -3,7 +3,9 @@
 import * as aws from "@pulumi/aws";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
+import * as types from "./../api/types";
 import { LoggedFunction } from "./function";
+
 declare let JSON: any;
 declare let Buffer: any;
 
@@ -221,74 +223,9 @@ let apigatewayAssumeRolePolicyDocument = {
     ],
 };
 
-/**
- * Request represents an HttpAPI request.
- */
-export interface Request {
-    /**
-     * The body of the HTTP request.
-     */
-    body: Buffer;
-    /**
-     * The method of the HTTP request.
-     */
-    method: string;
-    /**
-     * The path parameters of the HTTP request. Each `{param}` in the matched route is available as a
-     * property of this oject.
-     */
-    params: { [param: string]: string; };
-    /**
-     * The headers of the HTTP request.
-     */
-    headers: { [header: string]: string; };
-    /**
-     * The query parameters parsed from the query string of the request URL.
-     */
-    query: { [query: string]: string; };
-    /**
-     * The raw path from the HTTP request.
-     */
-    path: string;
-}
-
-/**
- * Response represents the response to an HttpAPI request.
- */
-export interface Response {
-    /**
-     * Sets the HTTP response status code and returns a `Response` for chaining operations.
-     */
-    status(code: number): Response;
-    /**
-     * Sets a header on the HTTP response and returns the `Response` for chaining operations.
-     */
-    setHeader(name: string, value: string): Response;
-    /**
-     * Writes a string to the HTTP response body and returns the `Response` for chaining operations.
-     */
-    write(data: string): Response;
-    /**
-     * Sends the HTTP response, optionally including data to write to the HTTP response body.
-     */
-    end(data?: string): void;
-    /**
-     * JSON serializes an object, writes it to the HTTP response body, and sends the HTTP response.
-     */
-    json(obj: any): void;
-}
-
-/**
- * RouteHandler represents a handler for a route on an HttpAPI.
- *
- * Implementations should invoke methods on `res` to respond to the request, or invoke `next`
- * to pass control to the next available handler on the route for further processing.
- */
-export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
-
 interface ReqRes {
-    req: Request;
-    res: Response;
+    req: types.Request;
+    res: types.Response;
 }
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
@@ -466,7 +403,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public route(method: string, path: string, ...handlers: RouteHandler[]) {
+    public route(method: string, path: string, ...handlers: types.RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
@@ -499,7 +436,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public get(path: string, ...handlers: RouteHandler[]) {
+    public get(path: string, ...handlers: types.RouteHandler[]) {
         this.route("GET", path, ...handlers);
     }
 
@@ -508,7 +445,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public put(path: string, ...handlers: RouteHandler[]) {
+    public put(path: string, ...handlers: types.RouteHandler[]) {
         this.route("PUT", path, ...handlers);
     }
 
@@ -517,7 +454,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public post(path: string, ...handlers: RouteHandler[]) {
+    public post(path: string, ...handlers: types.RouteHandler[]) {
         this.route("POST", path, ...handlers);
     }
 
@@ -526,7 +463,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public delete(path: string, ...handlers: RouteHandler[]) {
+    public delete(path: string, ...handlers: types.RouteHandler[]) {
         this.route("DELETE", path, ...handlers);
     }
 
@@ -535,7 +472,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public options(path: string, ...handlers: RouteHandler[]) {
+    public options(path: string, ...handlers: types.RouteHandler[]) {
         this.route("OPTIONS", path, ...handlers);
     }
 
@@ -544,7 +481,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public all(path: string, ...handlers: RouteHandler[]) {
+    public all(path: string, ...handlers: types.RouteHandler[]) {
         this.route("ANY", path, ...handlers);
     }
 
@@ -608,7 +545,7 @@ export class HttpAPI {
      *
      * @returns The domain name that you must map your custom domain to using a DNS A record.
      */
-    public attachCustomDomain(domain: Domain): fabric.Computed<string> {
+    public attachCustomDomain(domain: types.Domain): fabric.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
@@ -623,28 +560,6 @@ export class HttpAPI {
         });
         return awsDomain.cloudfrontDomainName;
     }
-}
-
-/**
- * Domain includes the domain name and certificate data to enable hosting an HttpAPI on a custom domain.
- */
-export interface Domain {
-    /**
-     * The domain name to associate with the HttpAPI.
-     */
-    domainName: string;
-    /**
-     * An SSL/TLS certficicate issued for this domain (`cert.pem`).
-     */
-    certificateBody: string;
-    /**
-     * An SSL/TLS private key issued for thie domain (`privkey.pem`).
-     */
-    certificatePrivateKey: string;
-    /**
-     * The certificate chain for the SSL/TLS certificate provided for this domain (`chain.pem`).
-     */
-    certificateChain: string;
 }
 
 // sha1hash returns the SHA1 hash of the input string.
