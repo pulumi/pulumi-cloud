@@ -11,7 +11,6 @@
         "typescript": "^2.5.2"
     },
     "peerDependencies": {
-        "@pulumi/aws": "*",
         "@pulumi/pulumi-fabric": "*"
     }
 }
