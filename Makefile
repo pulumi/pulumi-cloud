@@ -23,3 +23,4 @@ local:
 test:
 	@echo "\033[0;32mTEST:\033[0m"
 	go test ./pkg/...
+  

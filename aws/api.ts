@@ -63,7 +63,7 @@ interface SwaggerSpec {
 
 // jsonStringifySwaggerSpec creates a JSON string out of a Swagger spec object.  This is required versus an
 // ordinary JSON.stringify because the spec contains computed values.
-function jsonStringifySwaggerSpec(spec: SwaggerSpec): { json: string | fabric.Computed<string>, hash: string } {
+function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: fabric.Computed<string> } {
     let last: fabric.Computed<void> | undefined;
     let pathValues: {[path: string]: {[method: string]: SwaggerOperation} } = {};
     for (let path of Object.keys(spec.paths)) {
@@ -71,11 +71,12 @@ function jsonStringifySwaggerSpec(spec: SwaggerSpec): { json: string | fabric.Co
         for (let method of Object.keys(spec.paths[path])) {
             // Set up a callback to remember the final value, and chain it on the previous one.
             let resolvePathValue: fabric.Computed<void> =
-                spec.paths[path][method].mapValue((op: SwaggerOperation) => { pathValues[path][method] = op; });
-            last = last ? last.mapValue(() => resolvePathValue) : resolvePathValue;
+                spec.paths[path][method].then((op: SwaggerOperation) => { pathValues[path][method] = op; });
+            last = last ? last.then(() => resolvePathValue) : resolvePathValue;
         }
     }
 
+    // Produce a hash of all the promptly available values.
     let promptSpec = {
         swagger: spec.swagger,
         info: spec.info,
@@ -83,22 +84,17 @@ function jsonStringifySwaggerSpec(spec: SwaggerSpec): { json: string | fabric.Co
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
     };
 
-    // Produce a hash of all the promptly available values.
     // BUGBUG[pulumi/pulumi-fabric#331]: we are skipping hashing of the actual operation objects, because they
     //     are possibly computed, and we need the hash promptly for resource URN creation.  This isn't correct,
     //     and will lead to hash collisions; we need to fix this as part of fixing pulumi/pulumi-fabric#331
     let promptHash: string = sha1hash(JSON.stringify(promptSpec));
 
     // After all values have settled, we can produce the resulting string.
-    if (last) {
-        return {
-            json: last.mapValue(() => JSON.stringify(Object.assign({}, promptSpec, { paths: pathValues }))),
-            hash: promptHash,
-        };
-    }
     return {
-        json: JSON.stringify(promptSpec),
         hash: promptHash,
+        json: last ?
+            last.then(() => JSON.stringify(Object.assign({}, promptSpec, { paths: pathValues }))) :
+            JSON.stringify(promptSpec),
     };
 }
 
@@ -356,11 +352,9 @@ export class HttpAPI {
             contentType: contentType,
         });
         this.swaggerSpec.paths[path][swaggerMethod] =
-            role.arn.mapValue((arn: aws.ARN) => {
-                return this.bucket.bucket.mapValue((bucketName: string) => {
-                    return createPathSpecObject(arn, bucketName, name);
-                });
-            });
+            role.arn.then((arn: aws.ARN | undefined) =>
+                arn ? this.bucket.bucket.then((bucketName: string | undefined) =>
+                    bucketName ? createPathSpecObject(arn, bucketName, name) : undefined) : undefined);
     }
 
     private routeLambda(method: string, path: string, func: LoggedFunction) {
@@ -369,7 +363,7 @@ export class HttpAPI {
         }
         let swaggerMethod = this.routePrepare(method, path);
         this.swaggerSpec.paths[path][swaggerMethod] =
-            func.lambda.arn.mapValue((arn: aws.ARN) => createPathSpecLambda(arn));
+            func.lambda.arn.then((arn: aws.ARN | undefined) => arn ? createPathSpecLambda(arn) : undefined);
         this.lambdas[swaggerMethod + ":" + path] = func;
     }
 
@@ -493,7 +487,7 @@ export class HttpAPI {
      * @returns A computed string representing the URL at which the HttpAPI is available to the internet.
      */
     public publish(): fabric.Computed<string> {
-        let { json, hash } = jsonStringifySwaggerSpec(this.swaggerSpec);
+        let { hash, json } = jsonStringifySwaggerSpec(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: json,
         });
@@ -524,14 +518,14 @@ export class HttpAPI {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: this.deployment.executionArn.mapValue((arn: aws.ARN) =>
-                            arn + stageName + "/" + method + path),
+                        sourceArn: this.deployment.executionArn.then((arn: aws.ARN | undefined) =>
+                            arn && (arn + stageName + "/" + method + path)),
                     });
                 }
             }
         }
 
-        this.url = this.deployment.invokeUrl.mapValue((url: string) => url + stageName + "/");
+        this.url = this.deployment.invokeUrl.then((url: string | undefined) => url && (url + stageName + "/"));
         return this.url;
     }
 

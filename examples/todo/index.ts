@@ -40,5 +40,9 @@ api.get("/todo", async (req, res) => {
 });
 
 // Publish
-api.publish().mapValue((url: string) => console.log(`Listening at: ${url}`));
+api.publish().then((url: string | undefined) => {
+    if (url) {
+        console.log(`Listening at: ${url}`);
+    }
+});
 

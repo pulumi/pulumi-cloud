@@ -27,7 +27,7 @@ export class LoggedFunction {
         this.role = lambda.role;
 
         let loggroup = new aws.cloudwatch.LogGroup(name, {
-            name: this.lambda.name.mapValue((n: string) => "/aws/lambda/" + n),
+            name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
             retentionInDays: 1,
         });
         let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
