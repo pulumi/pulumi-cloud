@@ -1,14 +1,16 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-// Note that we only export APIs with no AWS types exposed
-// We must ensure that consumers of the Pulumi framework do
-// not see any types from AWS when calling APIs in these
-// exported modules.
+// Note: We only export APIs with no AWS types exposed We must ensure that consumers of the
+// Pulumi framework do not see any types from AWS when calling APIs in these exported modules.
+
+// Note: We only export values (not types) from this module.  Nothing should ever be referencing
+// this package.  Instead things should only reference the @pulumi/pulumi package.  That package
+// actually exports the API types.
 
 export * from "./api";
 export * from "./table";
 export * from "./topic";
-export { onError, ErrorHandler } from "./unhandledError";
+export { onError } from "./unhandledError";
 import * as timer from "./timer";
 export { timer };
 

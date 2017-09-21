@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as types from "@pulumi/pulumi";
 import * as sns from "./sns";
 
-export class Topic<T> implements types.Stream<T> {
+export class Topic<T> implements types.Topic<T> {
     // Inside + Outside API
 
     private name: string;
