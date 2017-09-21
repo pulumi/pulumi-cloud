@@ -25,7 +25,5 @@ let thisShape: typeof thisModule = undefined as any;
 // This line ensures that our exported API is a superset of the framework API.
 frameworkShape = thisShape;
 
-// This line ensures that we export strictly the same API as the framework API. right now we can't
-// uncomment it because our use of private members in classes *does* mean that we're effectively
-// exporting a larger surface area.  We can solve this in the future by using the IIFE pattern.
-// thisShape = frameworkShape;
+// This line ensures that we export strictly the same API as the framework API.
+thisShape = frameworkShape;

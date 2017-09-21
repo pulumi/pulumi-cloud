@@ -3,7 +3,9 @@
 import * as aws from "@pulumi/aws";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
+import * as types from "./../api/types";
 import { LoggedFunction } from "./function";
+
 declare let JSON: any;
 declare let Buffer: any;
 
@@ -283,8 +285,8 @@ export interface Response {
 export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
 interface ReqRes {
-    req: Request;
-    res: Response;
+    req: types.Request;
+    res: types.Response;
 }
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
@@ -460,7 +462,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public route(method: string, path: string, ...handlers: RouteHandler[]) {
+    public route(method: string, path: string, ...handlers: types.RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
@@ -493,7 +495,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public get(path: string, ...handlers: RouteHandler[]) {
+    public get(path: string, ...handlers: types.RouteHandler[]) {
         this.route("GET", path, ...handlers);
     }
 
@@ -502,7 +504,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public put(path: string, ...handlers: RouteHandler[]) {
+    public put(path: string, ...handlers: types.RouteHandler[]) {
         this.route("PUT", path, ...handlers);
     }
 
@@ -511,7 +513,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public post(path: string, ...handlers: RouteHandler[]) {
+    public post(path: string, ...handlers: types.RouteHandler[]) {
         this.route("POST", path, ...handlers);
     }
 
@@ -520,7 +522,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public delete(path: string, ...handlers: RouteHandler[]) {
+    public delete(path: string, ...handlers: types.RouteHandler[]) {
         this.route("DELETE", path, ...handlers);
     }
 
@@ -529,7 +531,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public options(path: string, ...handlers: RouteHandler[]) {
+    public options(path: string, ...handlers: types.RouteHandler[]) {
         this.route("OPTIONS", path, ...handlers);
     }
 
@@ -538,7 +540,7 @@ export class HttpAPI {
      * @param path The path to handle requests on.
      * @param handlers One or more handlers to apply to requests.
      */
-    public all(path: string, ...handlers: RouteHandler[]) {
+    public all(path: string, ...handlers: types.RouteHandler[]) {
         this.route("ANY", path, ...handlers);
     }
 
@@ -602,7 +604,7 @@ export class HttpAPI {
      *
      * @returns The domain name that you must map your custom domain to using a DNS A record.
      */
-    public attachCustomDomain(domain: Domain): fabric.Computed<string> {
+    public attachCustomDomain(domain: types.Domain): fabric.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
@@ -617,28 +619,6 @@ export class HttpAPI {
         });
         return awsDomain.cloudfrontDomainName;
     }
-}
-
-/**
- * Domain includes the domain name and certificate data to enable hosting an HttpAPI on a custom domain.
- */
-export interface Domain {
-    /**
-     * The domain name to associate with the HttpAPI.
-     */
-    domainName: string;
-    /**
-     * An SSL/TLS certficicate issued for this domain (`cert.pem`).
-     */
-    certificateBody: string;
-    /**
-     * An SSL/TLS private key issued for thie domain (`privkey.pem`).
-     */
-    certificatePrivateKey: string;
-    /**
-     * The certificate chain for the SSL/TLS certificate provided for this domain (`chain.pem`).
-     */
-    certificateChain: string;
 }
 
 // sha1hash returns the SHA1 hash of the input string.

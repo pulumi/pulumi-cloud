@@ -15,15 +15,7 @@
         "strictNullChecks": true
     },
     "files": [
-        "index.ts",
-        "api.ts",
-        "function.ts",
-        "logCollector.ts",
-        "sns.ts",
-        "table.ts",
-        "timer.ts",
-        "topic.ts",
-        "unhandledError.ts"
+        "index.ts"
     ]
 }
 

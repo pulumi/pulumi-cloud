@@ -2,13 +2,9 @@
 
 import * as aws from "@pulumi/aws";
 import * as fabric from "@pulumi/pulumi-fabric";
+import * as types from "./../api/types";
 
-/**
- * The available types for primary keys. The default primary key type is `string`.
- */
-export type PrimaryKeyType = "string" | "number" | "boolean";
-
-function pulumiKeyTypeToDynamoKeyType(keyType: PrimaryKeyType): string {
+function pulumiKeyTypeToDynamoKeyType(keyType: types.PrimaryKeyType): string {
     switch (keyType) {
         case "string": return "S";
         case "number": return "N";
@@ -92,7 +88,7 @@ export class Table {
 
     // Outside API (constructor and methods)
 
-    constructor(name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType) {
+    constructor(name: string, primaryKey?: string, primaryKeyType?: types.PrimaryKeyType) {
         if (primaryKey === undefined) {
             primaryKey = "id";
         }

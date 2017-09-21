@@ -10,7 +10,7 @@ all: default examples
 .PHONY: banner
 banner:
 	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mPulumi Framework AWS implementation package\033[0m"
+	@echo "\033[1;37mPulumi Framework local implementation package\033[0m"
 	@echo "\033[1;37m======================\033[0m"
 
 .PHONY: dependencies
@@ -25,22 +25,21 @@ lint:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link @pulumi/pulumi-fabric @pulumi/aws # ensure we link dependencies.
+	yarn link @pulumi/pulumi-fabric # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
 .PHONY: install
 install:
-	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	cp package.json bin/aws/
-	cd bin/aws/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
+#	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
+#	cp package.json bin/
+#	cd bin/ && yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:
-	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+#	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
+#	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
 
-
-publish:
-	@echo "\033[0;32mPublishing current release:\033[0m"
-	../scripts/publish.sh
-.PHONY: publish
+#publish:
+#	@echo "\033[0;32mPublishing current release:\033[0m"
+#	../scripts/publish.sh
+#.PHONY: publish

@@ -1,5 +1,9 @@
 .pulumi
+/api/bin/
+/api/node_modules/
 /aws/bin/
 /aws/node_modules/
+/local/bin/
+/local/node_modules/
 /node_modules/
 /vendor/

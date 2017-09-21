@@ -1,6 +1,7 @@
 {
     "name": "@pulumi/pulumi",
     "version": "0.1",
+    "types": "types.ts",
     "scripts": {
         "build": "tsc && yarn run lint",
         "lint": "tslint -c ../tslint.json '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
@@ -11,7 +12,6 @@
         "typescript": "^2.5.2"
     },
     "peerDependencies": {
-        "@pulumi/aws": "*",
         "@pulumi/pulumi-fabric": "*"
     }
 }

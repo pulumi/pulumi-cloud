@@ -1,21 +1,27 @@
 PROCCNT=$(shell nproc --all)
 
 .PHONY: default
-default: aws_default test
+default: all
 
 .PHONY: all
-all: aws_all test
+all: api aws local test
 
-.PHONY: aws_default
-aws_default:
-	cd aws && $(MAKE)
+.PHONY: api
+api:
+	cd api && $(MAKE) $(MAKECMDGOALS)
 
-.PHONY: aws_all
-aws_all:
-	cd aws && $(MAKE) all
+
+.PHONY: aws
+aws:
+	cd aws && $(MAKE) $(MAKECMDGOALS)
+
+
+.PHONY: local
+local:
+	cd local && $(MAKE) $(MAKECMDGOALS)
+
 
 .PHONY: test
 test:
 	@echo "\033[0;32mTEST:\033[0m"
 	go test ./pkg/...
-

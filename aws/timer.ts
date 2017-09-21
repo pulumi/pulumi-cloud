@@ -1,43 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import { timer } from "./../api/types";
 import { LoggedFunction } from "./function";
-
-/**
- * IntervalRate describes the rate at which a timer will fire.
- *
- * At least one of [[minutes]], [[hours]] or [[days]] must be provided.
- */
-// IntervalRate describes how often to invoke an interval timer.
-export interface IntervalRate {
-    /**
-     * The number of minutes in the interval.  Must be a positive integer.
-     */
-    minutes?: number;
-    /**
-     * The number of hours in the interval.  Must be a positive integer.
-     */
-    hours?: number;
-    /**
-     * The number of days in the interval.  Must be a positive integer.
-     */
-    days?: number;
-}
-
-/**
- * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]])
- * at which a timer should fire.
- */
-export interface DailySchedule {
-    /**
-     * The hour, in UTC, that the time should fire.
-     */
-    hourUTC?: number;
-    /**
-     * The minute, in UTC, that the time should fire.
-     */
-    minuteUTC?: number;
-}
 
 /**
  * An interval timer, which fires on a regular time interval.
@@ -46,7 +11,7 @@ export interface DailySchedule {
  * @param options The interval between firing events on the timer.
  * @param handler A handler to invoke when the timer fires.
  */
-export function interval(name: string, options: IntervalRate, handler: () => Promise<void>) {
+export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>) {
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
@@ -87,7 +52,7 @@ export function cron(name: string, cronTab: string, handler: () => Promise<void>
  * @param schedule The UTC hour and minute at which to fire each day.
  * @param handler A handler to invoke when the timer fires.
  */
-export function daily(name: string, schedule: DailySchedule, handler: () => Promise<void>) {
+export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>) {
     let hour = schedule.hourUTC || 0;
     let minute = schedule.minuteUTC || 0;
     cron(name, `${minute} ${hour} * * ? *`, handler);
