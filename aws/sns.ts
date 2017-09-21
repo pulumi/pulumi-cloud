@@ -59,4 +59,3 @@ export function createSubscription(
         endpoint: func.lambda.arn,
     });
 }
-

@@ -4,13 +4,6 @@ import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/pulumi";
 import { LoggedFunction } from "./function";
 
-/**
- * An interval timer, which fires on a regular time interval.
- *
- * @param name The name of this timer.
- * @param options The interval between firing events on the timer.
- * @param handler A handler to invoke when the timer fires.
- */
 export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>) {
     let rateMinutes = 0;
     if (options.minutes) {
@@ -32,26 +25,10 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
     createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler);
 }
 
-/**
- * A cron timer, which fires on based on a specificied cron schedule.
- *
- * @see http://crontab.org/
- *
- * @param name The name of this timer.
- * @param cronTab A cronTab that specifies that times at which the timer will fire.
- * @param handler A handler to invoke when the timer fires.
- */
 export function cron(name: string, cronTab: string, handler: () => Promise<void>) {
     createScheduledEvent(name, `cron(${cronTab})`, handler);
 }
 
-/**
- * A daily timer, firing at the specified UTC hour and minute each day.
- *
- * @param name The name of this timer.
- * @param schedule The UTC hour and minute at which to fire each day.
- * @param handler A handler to invoke when the timer fires.
- */
 export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>) {
     let hour = schedule.hourUTC || 0;
     let minute = schedule.minuteUTC || 0;
