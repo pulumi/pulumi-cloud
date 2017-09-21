@@ -1,11 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as types from "@pulumi/pulumi";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
-import * as types from "./../api/types";
 
 export class HttpAPI implements types.HttpAPI {
     public url?: fabric.Computed<string>;

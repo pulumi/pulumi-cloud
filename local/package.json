@@ -1,5 +1,5 @@
 {
-    "name": "@pulumi/pulumi",
+    "name": "@pulumi/pulumi-framework-local",
     "version": "0.1",
     "scripts": {
         "build": "tsc && yarn run lint",
@@ -14,6 +14,7 @@
         "typescript": "^2.5.2"
     },
     "peerDependencies": {
+        "@pulumi/pulumi": "*",
         "@pulumi/pulumi-fabric": "*"
     },
     "dependencies": {

@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as types from "@pulumi/pulumi";
 import * as fabric from "@pulumi/pulumi-fabric";
-import * as types from "../api/types";
 
 const globalDatabase = Object.create(null);
 

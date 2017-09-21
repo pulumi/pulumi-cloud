@@ -1,7 +1,7 @@
 {
     "name": "@pulumi/pulumi",
     "version": "0.1",
-    "types": "types.ts",
+    "types": "types.d.ts",
     "scripts": {
         "build": "tsc && yarn run lint",
         "lint": "tslint -c ../tslint.json '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"

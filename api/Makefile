@@ -30,9 +30,9 @@ build:
 
 .PHONY: install
 install:
-#	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-#	cp package.json bin/
-#	cd bin/ && yarn link # ensure NPM references resolve locally
+	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
+	cp package.json bin/
+	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:

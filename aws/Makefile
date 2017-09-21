@@ -25,14 +25,14 @@ lint:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link @pulumi/pulumi-fabric @pulumi/aws # ensure we link dependencies.
+	yarn link @pulumi/pulumi-fabric @pulumi/aws @pulumi/pulumi # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
 .PHONY: install
 install:
 	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	cp package.json bin/aws/
-	cd bin/aws/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
+	cp package.json bin/
+	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:

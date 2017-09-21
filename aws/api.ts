@@ -1,9 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as types from "@pulumi/pulumi";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
-import * as types from "./../api/types";
 import { LoggedFunction } from "./function";
 
 declare let JSON: any;
