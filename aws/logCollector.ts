@@ -39,4 +39,3 @@ export function getLogCollector(): aws.lambda.Function {
     }
     return logCollector.lambda;
 }
-

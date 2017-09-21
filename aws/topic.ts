@@ -4,20 +4,6 @@ import * as aws from "@pulumi/aws";
 import * as types from "@pulumi/pulumi";
 import * as sns from "./sns";
 
-/**
- * A Topic<T> is used to distribute work which will be run conurrently by any susbcribed
- * handlers.
- *
- * Producers can [[publish]] to the topic, and consumers can [[subscribe]] to be
- * notified when new items are published. All items published to the topics are delivered
- * to every subscriber.
- *s
- * Although most of the time each item will be received by each subscriber exactly once,
- * it is possible for an item to be delivered more than once. Subscribers should ensure
- * that receiving the same message multiple times does not create errors or inconsistencies.
- *
- * @param T The type of items published to the topic.
- */
 export class Topic<T> implements types.Stream<T> {
     // Inside + Outside API
 
@@ -26,11 +12,6 @@ export class Topic<T> implements types.Stream<T> {
 
     // Inside API
 
-    /**
-     * Publish an item to this Topic.
-     *
-     * @param item The item to publish.
-     */
     public publish: (item: T) => Promise<void>;
 
     // Outside API (constructor and methods)
@@ -50,14 +31,6 @@ export class Topic<T> implements types.Stream<T> {
         };
     }
 
-    /**
-     * Subscribe to items published to this topic.
-     *
-     * Each subscription receives all items published to the topic.
-     *
-     * @param name The name of the subscription.
-     * @param handler A callback to handle each item published to the topic.
-     */
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
         sns.createSubscription(this.name + "_" + name, this.topic, async (snsItem: sns.SNSItem) => {
             let item = JSON.parse(snsItem.Message);
