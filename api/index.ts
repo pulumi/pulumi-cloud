@@ -20,7 +20,7 @@ const config = new fabric.Config("pulumi:framework");
 let provider = config.get("provider");
 if (!provider) {
     provider = "aws";
-    console.warn(`Warning: Provider not given.  Falling back to ${provider} provider.`);
+    console.log(`Warning: Provider not given.  Falling back to ${provider} provider.`);
 }
 
 const frameworkModule = `@pulumi/pulumi-framework-${provider}`;

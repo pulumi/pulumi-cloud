@@ -33,6 +33,7 @@ install:
 	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
 	cp package.json bin/
 	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
+	cd ../api/bin/ && (yarn unlink @pulumi/pulumi-framework-aws || true) && yarn link @pulumi/pulumi-framework-aws #ensure loader can see this package
 
 .PHONY: examples
 examples:
