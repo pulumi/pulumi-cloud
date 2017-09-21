@@ -26,14 +26,14 @@ build:
 
 .PHONY: install
 install:
-	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	cp package.json bin/
-	cd bin/ && yarn link # ensure NPM references resolve locally
+#	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
+#	cp package.json bin/
+#	cd bin/ && yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:
-	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+#	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
+#	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
 
 #publish:
 #	@echo "\033[0;32mPublishing current release:\033[0m"
