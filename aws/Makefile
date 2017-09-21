@@ -32,7 +32,7 @@ build:
 install:
 	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
 	cp package.json bin/aws/
-	cd bin/aws/ && yarn link # ensure NPM references resolve locally
+	cd bin/aws/ && yarn unlink && yarn link # ensure NPM references resolve locally
 
 .PHONY: examples
 examples:
