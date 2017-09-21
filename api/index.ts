@@ -9,7 +9,7 @@ import * as fabric from "@pulumi/pulumi-fabric";
 declare let module: any;
 declare function require(name: string): any;
 
-const config = new fabric.Config("pulumi:framework");
+const config = new fabric.Config("pulumi:config");
 
 // TODO before committing.  We should not be falling back to the local provider. That makes it far
 // too simple to accidently publish some broken version of pulumi that ends up working in the cloud
