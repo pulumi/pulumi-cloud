@@ -13,7 +13,7 @@ function pulumiKeyTypeToDynamoKeyType(keyType: types.PrimaryKeyType): string {
     }
 }
 
-export class Table {
+export class Table implements types.Table {
     private table: aws.dynamodb.Table;
 
     // Inside + Outside API

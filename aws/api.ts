@@ -280,7 +280,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
 
 let stageName = "stage";
 
-export class HttpAPI {
+export class HttpAPI implements types.HttpAPI {
     /**
      * The url that the HttpAPI is being served at. Set only after a succesful call to `publish`.
      */
