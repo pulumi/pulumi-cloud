@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as types from "@pulumi/pulumi";
+import * as api from "@pulumi/pulumi";
 import * as fabric from "@pulumi/pulumi-fabric";
 import * as crypto from "crypto";
 import { LoggedFunction } from "./function";
@@ -220,8 +220,8 @@ let apigatewayAssumeRolePolicyDocument = {
 };
 
 interface ReqRes {
-    req: types.Request;
-    res: types.Response;
+    req: api.Request;
+    res: api.Response;
 }
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
@@ -280,7 +280,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
 
 let stageName = "stage";
 
-export class HttpEndpoint implements types.HttpEndpoint {
+export class HttpEndpoint implements api.HttpEndpoint {
     public url?: fabric.Computed<string>;
 
     private api: aws.apigateway.RestApi;
@@ -362,7 +362,7 @@ export class HttpEndpoint implements types.HttpEndpoint {
         return swaggerMethod;
     }
 
-    public route(method: string, path: string, ...handlers: types.RouteHandler[]) {
+    public route(method: string, path: string, ...handlers: api.RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
@@ -390,27 +390,27 @@ export class HttpEndpoint implements types.HttpEndpoint {
         this.routeLambda(method, path, lambda);
     }
 
-    public get(path: string, ...handlers: types.RouteHandler[]) {
+    public get(path: string, ...handlers: api.RouteHandler[]) {
         this.route("GET", path, ...handlers);
     }
 
-    public put(path: string, ...handlers: types.RouteHandler[]) {
+    public put(path: string, ...handlers: api.RouteHandler[]) {
         this.route("PUT", path, ...handlers);
     }
 
-    public post(path: string, ...handlers: types.RouteHandler[]) {
+    public post(path: string, ...handlers: api.RouteHandler[]) {
         this.route("POST", path, ...handlers);
     }
 
-    public delete(path: string, ...handlers: types.RouteHandler[]) {
+    public delete(path: string, ...handlers: api.RouteHandler[]) {
         this.route("DELETE", path, ...handlers);
     }
 
-    public options(path: string, ...handlers: types.RouteHandler[]) {
+    public options(path: string, ...handlers: api.RouteHandler[]) {
         this.route("OPTIONS", path, ...handlers);
     }
 
-    public all(path: string, ...handlers: types.RouteHandler[]) {
+    public all(path: string, ...handlers: api.RouteHandler[]) {
         this.route("ANY", path, ...handlers);
     }
 
@@ -457,7 +457,7 @@ export class HttpEndpoint implements types.HttpEndpoint {
         return this.url;
     }
 
-    public attachCustomDomain(domain: types.Domain): fabric.Computed<string> {
+    public attachCustomDomain(domain: api.Domain): fabric.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
