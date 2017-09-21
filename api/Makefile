@@ -2,16 +2,20 @@ PROCCNT=$(shell nproc --all)
 TESTPARALLELISM=10
 
 .PHONY: default
-default: banner lint build install
+default: banner dependencies lint build install
 
 .PHONY: all
-all: banner lint build install examples
+all: default examples
 
 .PHONY: banner
 banner:
 	@echo "\033[1;37m======================\033[0m"
 	@echo "\033[1;37mPulumi Framework API package\033[0m"
 	@echo "\033[1;37m======================\033[0m"
+
+.PHONY: dependencies
+dependencies:
+	yarn install
 
 .PHONY: lint
 lint:
