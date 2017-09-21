@@ -118,7 +118,7 @@ function exampleSalesforce3() {
 }
 
 function exampleSendSESEmail() {
-    let api = new pulumi.HttpAPI("sadsad");
+    let api = new pulumi.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
             await sendSESEmail({

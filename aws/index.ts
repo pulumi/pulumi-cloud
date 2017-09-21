@@ -7,7 +7,7 @@
 // this package.  Instead things should only reference the @pulumi/pulumi package.  That package
 // actually exports the API types.
 
-export * from "./api";
+export * from "./httpEndpoint";
 export * from "./table";
 export * from "./topic";
 export { onError } from "./unhandledError";
@@ -18,14 +18,14 @@ export { timer };
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
 // cost here.  This code can also go into a separate file if we don't want it cluttering this one.
 
-import * as frameworkModule from "@pulumi/pulumi";
+import * as apiModule from "@pulumi/pulumi";
 import * as thisModule from "./index";
 
-let frameworkShape: typeof frameworkModule = undefined as any;
+let apiShape: typeof apiModule = undefined as any;
 let thisShape: typeof thisModule = undefined as any;
 
 // This line ensures that our exported API is a superset of the framework API.
-frameworkShape = thisShape;
+apiShape = thisShape;
 
 // This line ensures that we export strictly the same API as the framework API. right now we can't
 // uncomment it because our use of private members in classes *does* mean that we're effectively

@@ -3,7 +3,7 @@
 import * as fabric from "@pulumi/pulumi-fabric";
 
 /**
- * Request represents an HttpAPI request.
+ * Request represents an HttpEndpoint request.
  */
 export interface Request {
     /**
@@ -34,7 +34,7 @@ export interface Request {
 }
 
 /**
- * Response represents the response to an HttpAPI request.
+ * Response represents the response to an HttpEndpoint request.
  */
 export interface Response {
     /**
@@ -60,24 +60,24 @@ export interface Response {
 }
 
 /**
- * RouteHandler represents a handler for a route on an HttpAPI.
+ * RouteHandler represents a handler for a route on an HttpEndpoint.
  *
  * Implementations should invoke methods on `res` to respond to the request, or invoke `next`
  * to pass control to the next available handler on the route for further processing.
  */
 export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
-export interface HttpAPIConstructor {
-    new (apiName: string): HttpAPI;
+export interface HttpEndpointConstructor {
+    new (apiName: string): HttpEndpoint;
 }
 
-export let HttpAPI: HttpAPIConstructor; // tslint:disable-line
+export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
 
 /**
- * HttpAPI publishes an internet-facing HTTP API, for serving web applications or REST APIs.
+ * HttpEndpoint publishes an internet-facing HTTP API, for serving web applications or REST APIs.
  *
  * ```javascript
- * let api = new HttpAPI("myapi")
+ * let api = new HttpEndpoint("myapi")
  * api.get("/", (req, res) => res.json({hello: "world"}));
  * api.publish();
  * api.url.mapValue(url =>
@@ -92,9 +92,9 @@ export let HttpAPI: HttpAPIConstructor; // tslint:disable-line
  * Paths and routing are defined statically, and cannot overlap. Code inside a route handler
  * can be used to provide dynamic decisions about sub-routing within a static path.
  */
-export interface HttpAPI {
+export interface HttpEndpoint {
     /**
-     * The url that the HttpAPI is being served at. Set only after a succesful call to `publish`.
+     * The url that the HttpEndpoint is being served at. Set only after a succesful call to `publish`.
      */
     url?: fabric.Computed<string>;
 
@@ -158,16 +158,16 @@ export interface HttpAPI {
     all(path: string, ...handlers: RouteHandler[]): void;
 
     /**
-     * Publishes an HttpAPI to be internet accessible.
+     * Publishes an HttpEndpoint to be internet accessible.
      *
      * This should be called after describing desired routes.
      *
-     * @returns A computed string representing the URL at which the HttpAPI is available to the internet.
+     * @returns A computed string representing the URL at which the HttpEndpoint is available to the internet.
      */
     publish(): fabric.Computed<string>;
 
     /**
-     * Attach a custom domain to this HttpAPI.
+     * Attach a custom domain to this HttpEndpoint.
      *
      * Provide a domain name you own, along with SSL certificates from a certificate authority (e.g. LetsEncrypt).
      * The return value is a domain name that you must map your custom domain to using a DNS A record.
@@ -180,11 +180,11 @@ export interface HttpAPI {
 }
 
 /**
- * Domain includes the domain name and certificate data to enable hosting an HttpAPI on a custom domain.
+ * Domain includes the domain name and certificate data to enable hosting an HttpEndpoint on a custom domain.
  */
 export interface Domain {
     /**
-     * The domain name to associate with the HttpAPI.
+     * The domain name to associate with the HttpEndpoint.
      */
     domainName: string;
     /**

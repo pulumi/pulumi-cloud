@@ -1,11 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as types from "@pulumi/pulumi";
+import * as api from "@pulumi/pulumi";
 import * as fabric from "@pulumi/pulumi-fabric";
 
 const globalDatabase = Object.create(null);
 
-export class Table implements types.Table {
+export class Table implements api.Table {
     public tableName: fabric.Computed<string>;
 
     public get: (query: Object) => Promise<any>;
