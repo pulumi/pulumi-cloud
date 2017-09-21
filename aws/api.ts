@@ -219,6 +219,71 @@ let apigatewayAssumeRolePolicyDocument = {
     ],
 };
 
+/**
+ * Request represents an HttpAPI request.
+ */
+export interface Request {
+    /**
+     * The body of the HTTP request.
+     */
+    body: Buffer;
+    /**
+     * The method of the HTTP request.
+     */
+    method: string;
+    /**
+     * The path parameters of the HTTP request. Each `{param}` in the matched route is available as a
+     * property of this oject.
+     */
+    params: { [param: string]: string; };
+    /**
+     * The headers of the HTTP request.
+     */
+    headers: { [header: string]: string; };
+    /**
+     * The query parameters parsed from the query string of the request URL.
+     */
+    query: { [query: string]: string; };
+    /**
+     * The raw path from the HTTP request.
+     */
+    path: string;
+}
+
+/**
+ * Response represents the response to an HttpAPI request.
+ */
+export interface Response {
+    /**
+     * Sets the HTTP response status code and returns a `Response` for chaining operations.
+     */
+    status(code: number): Response;
+    /**
+     * Sets a header on the HTTP response and returns the `Response` for chaining operations.
+     */
+    setHeader(name: string, value: string): Response;
+    /**
+     * Writes a string to the HTTP response body and returns the `Response` for chaining operations.
+     */
+    write(data: string): Response;
+    /**
+     * Sends the HTTP response, optionally including data to write to the HTTP response body.
+     */
+    end(data?: string): void;
+    /**
+     * JSON serializes an object, writes it to the HTTP response body, and sends the HTTP response.
+     */
+    json(obj: any): void;
+}
+
+/**
+ * RouteHandler represents a handler for a route on an HttpAPI.
+ *
+ * Implementations should invoke methods on `res` to respond to the request, or invoke `next`
+ * to pass control to the next available handler on the route for further processing.
+ */
+export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
+
 interface ReqRes {
     req: types.Request;
     res: types.Response;

@@ -5,13 +5,6 @@
 // not see any types from AWS when calling APIs in these
 // exported modules.
 
-// This is unfortunate, and should go away once our dependencies stop referencing the 'aws' package
-// directly and instead reference the 'api' package.  Because the 'aws' package does not have types
-// we need to forward the type exports from the 'api' package.
-export { RouteHandler } from "./../api";
-
-// Actual 'value' exports from the aws implementation.
-
 export * from "./api";
 export * from "./table";
 export * from "./topic";
