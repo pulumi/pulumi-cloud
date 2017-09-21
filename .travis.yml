@@ -22,7 +22,9 @@ install:
     - pushd aws && dep ensure && popd
     - pushd local && dep ensure && popd
     - yarn install
+    - pushd api && yarn install && popd
     - pushd aws && yarn install && popd
+    - pushd local && yarn install && popd
 before_script:
     - export PULUMI=/opt/pulumi
     - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
