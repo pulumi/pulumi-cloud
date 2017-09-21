@@ -36,6 +36,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/pulumi-framework-aws",
 			},
 		},
 		{
@@ -45,6 +46,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/pulumi-framework-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
