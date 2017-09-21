@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as fabric from "@pulumi/pulumi-fabric";
+import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
@@ -21,6 +22,9 @@ export class HttpAPI implements types.HttpAPI {
 
     constructor(unused: string) {
         let app = express();
+
+        // use 'raw' body parsing to convert populate any request body properly with a buffer.
+        app.use(bodyParser.raw());
         let server: http.Server | undefined = undefined;
 
         this.staticFile = (path, filePath) => {
@@ -46,7 +50,35 @@ export class HttpAPI implements types.HttpAPI {
             }
 
             let routerMatcher = <{ (path: string, ...handlers: express.RequestHandler[]): void }>(<any>app)[method];
-            routerMatcher(path, ...handlers.map(rh => convertRequestHandler(rh)));
+
+            function handler(req: express.Request, res: express.Response, next: express.NextFunction) {
+                // Convert express' request/response forms to our own.
+                const convertedRequest = convertRequest(req);
+                const convertedResponse = convertResponse(res);
+
+                let index = 0;
+                function callNextHandler() {
+                    if (index < handlers.length) {
+                        const nextHandler = handlers[index];
+                        index++;
+                        nextHandler(convertedRequest, convertedResponse, callNextHandler);
+                    }
+                    else {
+                        // Reached the end of our own handler chain.  Call into the next handler
+                        // that express passed us.
+                        next();
+                    }
+                }
+
+                // Delegate to the first handler in the chain.  Allowing it to process the
+                // request/response pair. This handlers can choose to call "next()" which will
+                // delegate to the next handler in the chain. Once the end of the chain is reached
+                // any calls in the handler to next() will call into express' next handler that
+                // they have passed to us.
+                callNextHandler();
+            }
+
+            routerMatcher(path, handler);
         };
 
         this.get = (path, ...handlers) => this.route("get", path, ...handlers);
@@ -73,7 +105,18 @@ export class HttpAPI implements types.HttpAPI {
         }
 
         function convertRequest(expressRequest: core.Request): types.Request {
-            throw new Error("Method not implemented.");
+            return {
+                // Safe to directly convert the body to a buffer because we are using raw body
+                // parsing above.
+                body: <Buffer>expressRequest.body,
+                method: expressRequest.method,
+                params: expressRequest.params,
+                // TODO(cyrusn): express can represent headers as a string[].  We should probably
+                // consider exposing them in the same way.
+                headers: <{ [header: string]: string }> expressRequest.headers,
+                query: expressRequest.query,
+                path: expressRequest.path,
+            };
         }
 
         function convertResponse(expressResponse: core.Response): types.Response {
@@ -82,7 +125,7 @@ export class HttpAPI implements types.HttpAPI {
                 setHeader: (name: string, value: string) => { expressResponse.setHeader(name, value); return this; },
                 write: (data: string) => { expressResponse.write(data); return this; },
                 end: (data?: string) => expressResponse.end(),
-                json: (obj: any) => expressResponse.json(obj)
+                json: (obj: any) => expressResponse.json(obj),
             };
         }
     }
