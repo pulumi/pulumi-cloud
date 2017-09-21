@@ -7,7 +7,7 @@
 // this package.  Instead things should only reference the @pulumi/pulumi package.  That package
 // actually exports the API types.
 
-export * from "./api";
+export * from "./httpEndpoint";
 export * from "./table";
 export * from "./topic";
 export { onError } from "./unhandledError";

@@ -4,7 +4,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { authMiddleware } from "./middleware";
 
 let todos = new pulumi.Table("todo");
-let api = new pulumi.HttpAPI("todo");
+let api = new pulumi.HttpEndpoint("todo");
 
 // Index handler
 api.staticFile("/", "index.html", "text/html");

@@ -7,7 +7,7 @@ import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
 
-export class HttpAPI implements types.HttpAPI {
+export class HttpEndpoint implements types.HttpEndpoint {
     public url?: fabric.Computed<string>;
 
     public staticFile: (path: string, filePath: string, contentType?: string) => void;
