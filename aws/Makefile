@@ -39,8 +39,3 @@ install:
 examples:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
 	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
-
-.PHONY: publish
-publish:
-	@echo "\033[0;32mPublishing current release:\033[0m"
-	../scripts/publish.sh
