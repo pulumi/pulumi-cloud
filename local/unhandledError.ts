@@ -2,4 +2,6 @@
 
 export type ErrorHandler = (message: string, payload: any) => void;
 
-export let onError: { (name: string, handler: ErrorHandler): void };
+export function onError(name: string, handler: ErrorHandler): void {
+    throw new Error("Not yet implemented.");
+}
