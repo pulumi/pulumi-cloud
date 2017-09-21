@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import { timer } from "@pulumi/pulumi";
 import * as node_cron from "cron";
-import { timer } from "./../api/types";
 
 export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>): void {
     let rateMinutes = 0;

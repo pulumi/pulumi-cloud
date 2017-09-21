@@ -25,7 +25,7 @@ lint:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link @pulumi/pulumi-fabric # ensure we link dependencies.
+	yarn link @pulumi/pulumi-fabric @pulumi/pulumi # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
 .PHONY: install
@@ -39,6 +39,8 @@ examples:
 #	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
 #	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
 
+.PHONY: publish
+publish:
 #publish:
 #	@echo "\033[0;32mPublishing current release:\033[0m"
 #	../scripts/publish.sh

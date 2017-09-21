@@ -1,5 +1,5 @@
 {
-    "name": "@pulumi/pulumi",
+    "name": "@pulumi/pulumi-framework-aws",
     "version": "0.1",
     "scripts": {
         "build": "tsc && yarn run lint",
@@ -12,6 +12,7 @@
     },
     "peerDependencies": {
         "@pulumi/aws": "*",
+        "@pulumi/pulumi": "*",
         "@pulumi/pulumi-fabric": "*"
     }
 }

@@ -9,18 +9,19 @@ import * as fabric from "@pulumi/pulumi-fabric";
 declare let module: any;
 declare function require(name: string): any;
 
-const config = new fabric.Config("pulumi:framework");
+const config = new fabric.Config("pulumi:config");
 
-// TODO before committing.  We should not be falling back to the local provider. That makes it far
-// too simple to accidently publish some broken version of pulumi that ends up working in the cloud
-// while only using a local provider.
+// TODO(cyrusn): We probably want to move to a model where there is no fallback. It's probably best
+// that if the appropriate provider is not set by the runtime environment, we just want to fail-fast
+// so that that problem is addressed immediately.
 //
-// If the appropriate provider is not set by the runtime environment, we just want to immediately
-// fail so that that problem is addressed immediately.
+// However, for now, it's fine to fall back to aws as that's the only provider we initially support
+// and there's no need to force all consumers to have to set pulumi:config:provider.
 let provider = config.get("provider");
 if (!provider) {
-    provider = "local";
-    console.warn(`Warning: Provider not given.  Falling back to ${provider} provider.`);
+    provider = "aws";
+
+    // console.log(`Warning: Provider not given.  Falling back to ${provider} provider.`);
 }
 
 const frameworkModule = `@pulumi/pulumi-framework-${provider}`;

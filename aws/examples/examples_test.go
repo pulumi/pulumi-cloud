@@ -32,19 +32,23 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../../examples/crawler"),
 			Config: map[string]string{
-				"aws:config:region": region,
+				"aws:config:region":      region,
+				"pulumi:config:provider": "aws",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/pulumi-framework-aws",
 			},
 		},
 		{
 			Dir: path.Join(cwd, "../../examples/todo"),
 			Config: map[string]string{
-				"aws:config:region": region,
+				"aws:config:region":      region,
+				"pulumi:config:provider": "aws",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/pulumi-framework-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)

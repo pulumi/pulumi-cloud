@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as types from "./../api/types";
+import * as types from "@pulumi/pulumi";
 
 const globalTopicToSubscribers: { [topic: string]: {(item: any): Promise<void>}[] } = Object.create(null);
 

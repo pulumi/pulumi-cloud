@@ -16,7 +16,7 @@ export { timer };
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
 // cost here.  This code can also go into a separate file if we don't want it cluttering this one.
 
-import * as frameworkModule from "./../api/types";
+import * as frameworkModule from "@pulumi/pulumi";
 import * as thisModule from "./index";
 
 let frameworkShape: typeof frameworkModule = undefined as any;
