@@ -19,8 +19,12 @@ install:
     - ${GOPATH}/src/github.com/pulumi/pulumi/scripts/install.sh aws ${VERSION} /opt/pulumi/packs/aws
     - dep ensure
     - yarn install
+    - pushd api && dep ensure && popd
+    - pushd api && yarn install && popd
     - pushd aws && dep ensure && popd
     - pushd aws && yarn install && popd
+    - pushd local && dep ensure && popd
+    - pushd local && yarn install && popd
 before_script:
     - export PULUMI=/opt/pulumi
     - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
