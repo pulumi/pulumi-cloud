@@ -26,6 +26,7 @@ before_script:
     - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
 script:
     - make all
+after_success:
     - if [ $TRAVIS_EVENT_TYPE = "push" ] && [ $TRAVIS_BRANCH = "master" ]; then PUBFORCE=true make publish; fi
 notifications:
   slack:
