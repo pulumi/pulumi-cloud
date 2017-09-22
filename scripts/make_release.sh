@@ -9,8 +9,10 @@ PUBFILE=$(dirname ${PUBDIR})/${GITVER}.tgz
 declare -a PUBTARGETS=(${GITVER} $(git describe --tags 2>/dev/null) $(git rev-parse --abbrev-ref HEAD))
 
 # Copy the pack.
-mkdir -p $PUBDIR
-cp -R ${ROOT}/aws/bin/. ${PUBDIR}/
+mkdir -p $PUBDIR/node_modules/@pulumi/pulumi
+mkdir -p $PUBDIR/node_modules/@pulumi/pulumi-framework-aws
+cp -R ${ROOT}/api/bin/. ${PUBDIR}/node_modules/@pulumi/pulumi
+cp -R ${ROOT}/aws/bin/. ${PUBDIR}/node_modules/@pulumi/pulumi-framework-aws
 echo . >> ${PUBDIR}/packs.txt
 echo . pulumi >> ${PUBDIR}/packdeps.txt
 echo . @pulumi/aws >> ${PUBDIR}/packdeps.txt
