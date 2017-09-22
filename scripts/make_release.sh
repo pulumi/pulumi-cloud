@@ -6,7 +6,11 @@ ROOT=$(dirname $0)/..
 PUBDIR=$(mktemp -du)
 GITVER=$(git rev-parse HEAD)
 PUBFILE=$(dirname ${PUBDIR})/${GITVER}.tgz
-declare -a PUBTARGETS=(${GITVER} $(git describe --tags 2>/dev/null) $(git rev-parse --abbrev-ref HEAD))
+
+# Figure out which branch we're on. Prefer $TRAVIS_BRANCH, if set, since
+# Travis leaves us at detached HEAD and `git rev-parse` just returns "HEAD".
+BRANCH=${TRAVIS_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}
+declare -a PUBTARGETS=(${GITVER} $(git describe --tags) ${BRANCH})
 
 # Copy the pack.
 mkdir -p $PUBDIR
@@ -18,4 +22,3 @@ echo . @pulumi/aws >> ${PUBDIR}/packdeps.txt
 # Tar up the file and then print it out for use by the caller or script.
 tar -czf ${PUBFILE} -C ${PUBDIR} .
 echo ${PUBFILE} ${PUBTARGETS[@]}
-
