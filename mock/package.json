@@ -1,5 +1,5 @@
 {
-    "name": "@pulumi/cloud-local",
+    "name": "@pulumi/cloud-mock",
     "version": "0.1",
     "scripts": {
         "build": "tsc && yarn run lint",
