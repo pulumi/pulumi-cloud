@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
 import { Digest } from "./digest";
 import * as mailgun from "./mailgun";
@@ -30,14 +30,14 @@ function exampleTwitter1() {
 
 function exampleTwitter2() {
     // Get a stream of all tweets matching this query, forever...
-    let tweets: pulumi.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
+    let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
     // Collect them into bunches
     let digest = new Digest("tweetdigest", tweets);
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
-    pulumi.timer.daily("nightly", { hourUTC: 7 },  async () => {
+    cloud.timer.daily("nightly", { hourUTC: 7 },  async () => {
         await digest.collect();
     });
 
@@ -118,7 +118,7 @@ function exampleSalesforce3() {
 }
 
 function exampleSendSESEmail() {
-    let api = new pulumi.HttpEndpoint("sadsad");
+    let api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
             await sendSESEmail({

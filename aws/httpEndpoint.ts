@@ -1,9 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as api from "@pulumi/pulumi";
-import * as fabric from "@pulumi/pulumi-fabric";
+import * as cloud from "@pulumi/cloud";
 import * as crypto from "crypto";
+import * as pulumi from "pulumi";
 import { LoggedFunction } from "./function";
 
 declare let JSON: any;
@@ -57,20 +57,20 @@ interface APIGatewayResponse {
 interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: fabric.Computed<SwaggerOperation>; }; };
+    paths: { [path: string]: { [method: string]: pulumi.Computed<SwaggerOperation>; }; };
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
 // jsonStringifySwaggerSpec creates a JSON string out of a Swagger spec object.  This is required versus an
 // ordinary JSON.stringify because the spec contains computed values.
-function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: fabric.Computed<string> } {
-    let last: fabric.Computed<void> | undefined;
+function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: pulumi.Computed<string> } {
+    let last: pulumi.Computed<void> | undefined;
     let pathValues: {[path: string]: {[method: string]: SwaggerOperation} } = {};
     for (let path of Object.keys(spec.paths)) {
         pathValues[path] = {};
         for (let method of Object.keys(spec.paths[path])) {
             // Set up a callback to remember the final value, and chain it on the previous one.
-            let resolvePathValue: fabric.Computed<void> =
+            let resolvePathValue: pulumi.Computed<void> =
                 spec.paths[path][method].then((op: SwaggerOperation) => { pathValues[path][method] = op; });
             last = last ? last.then(() => resolvePathValue) : resolvePathValue;
         }
@@ -84,9 +84,9 @@ function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: fabr
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
     };
 
-    // BUGBUG[pulumi/pulumi-fabric#331]: we are skipping hashing of the actual operation objects, because they
+    // BUGBUG[pulumi/pulumi#331]: we are skipping hashing of the actual operation objects, because they
     //     are possibly computed, and we need the hash promptly for resource URN creation.  This isn't correct,
-    //     and will lead to hash collisions; we need to fix this as part of fixing pulumi/pulumi-fabric#331
+    //     and will lead to hash collisions; we need to fix this as part of fixing pulumi/pulumi#331
     let promptHash: string = sha1hash(JSON.stringify(promptSpec));
 
     // After all values have settled, we can produce the resulting string.
@@ -220,8 +220,8 @@ let apigatewayAssumeRolePolicyDocument = {
 };
 
 interface ReqRes {
-    req: api.Request;
-    res: api.Response;
+    req: cloud.Request;
+    res: cloud.Response;
 }
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
@@ -280,8 +280,8 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
 
 let stageName = "stage";
 
-export class HttpEndpoint implements api.HttpEndpoint {
-    public url?: fabric.Computed<string>;
+export class HttpEndpoint implements cloud.HttpEndpoint {
+    public url?: pulumi.Computed<string>;
 
     private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
@@ -319,7 +319,7 @@ export class HttpEndpoint implements api.HttpEndpoint {
         let obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
-            source: new fabric.asset.FileAsset(filePath),
+            source: new pulumi.asset.FileAsset(filePath),
             contentType: contentType,
         });
         this.swaggerSpec.paths[path][swaggerMethod] =
@@ -362,7 +362,7 @@ export class HttpEndpoint implements api.HttpEndpoint {
         return swaggerMethod;
     }
 
-    public route(method: string, path: string, ...handlers: api.RouteHandler[]) {
+    public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
@@ -390,31 +390,31 @@ export class HttpEndpoint implements api.HttpEndpoint {
         this.routeLambda(method, path, lambda);
     }
 
-    public get(path: string, ...handlers: api.RouteHandler[]) {
+    public get(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("GET", path, ...handlers);
     }
 
-    public put(path: string, ...handlers: api.RouteHandler[]) {
+    public put(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("PUT", path, ...handlers);
     }
 
-    public post(path: string, ...handlers: api.RouteHandler[]) {
+    public post(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("POST", path, ...handlers);
     }
 
-    public delete(path: string, ...handlers: api.RouteHandler[]) {
+    public delete(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("DELETE", path, ...handlers);
     }
 
-    public options(path: string, ...handlers: api.RouteHandler[]) {
+    public options(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("OPTIONS", path, ...handlers);
     }
 
-    public all(path: string, ...handlers: api.RouteHandler[]) {
+    public all(path: string, ...handlers: cloud.RouteHandler[]) {
         this.route("ANY", path, ...handlers);
     }
 
-    public publish(): fabric.Computed<string> {
+    public publish(): pulumi.Computed<string> {
         let { hash, json } = jsonStringifySwaggerSpec(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: json,
@@ -457,7 +457,7 @@ export class HttpEndpoint implements api.HttpEndpoint {
         return this.url;
     }
 
-    public attachCustomDomain(domain: api.Domain): fabric.Computed<string> {
+    public attachCustomDomain(domain: cloud.Domain): pulumi.Computed<string> {
         let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,

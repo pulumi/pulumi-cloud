@@ -10,10 +10,10 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-fabric/pkg/resource"
-	"github.com/pulumi/pulumi-fabric/pkg/resource/environment"
-	"github.com/pulumi/pulumi-fabric/pkg/tokens"
-	"github.com/pulumi/pulumi-framework/pkg/component"
+	"github.com/pulumi/pulumi-cloud/pkg/component"
+	"github.com/pulumi/pulumi/pkg/resource"
+	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
 var sess *session.Session

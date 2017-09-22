@@ -12,7 +12,7 @@ declare -a PUBTARGETS=(${GITVER} $(git describe --tags 2>/dev/null) $(git rev-pa
 mkdir -p $PUBDIR
 cp -R ${ROOT}/aws/bin/. ${PUBDIR}/
 echo . >> ${PUBDIR}/packs.txt
-echo . @pulumi/pulumi-fabric >> ${PUBDIR}/packdeps.txt
+echo . pulumi >> ${PUBDIR}/packdeps.txt
 echo . @pulumi/aws >> ${PUBDIR}/packdeps.txt
 
 # Tar up the file and then print it out for use by the caller or script.

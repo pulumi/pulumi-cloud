@@ -25,7 +25,7 @@ lint:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link @pulumi/pulumi-fabric @pulumi/aws @pulumi/pulumi # ensure we link dependencies.
+	yarn link pulumi @pulumi/aws @pulumi/cloud # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
 .PHONY: install
@@ -33,9 +33,10 @@ install:
 	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
 	cp package.json bin/
 	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
-	cd ../api/bin/ && (yarn unlink @pulumi/pulumi-framework-aws || true) && yarn link @pulumi/pulumi-framework-aws #ensure loader can see this package
+	cd ../api/bin/ && (yarn unlink @pulumi/cloud-aws || true) && yarn link @pulumi/cloud-aws #ensure loader can see this package
 
 .PHONY: examples
 examples:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
 	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+

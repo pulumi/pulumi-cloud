@@ -8,5 +8,5 @@ if [ ! -f $PUBLISH ]; then
     exit 1
 fi
 
-${INSTALL} pulumi $1 $2
+${INSTALL} cloud $1 $2
 

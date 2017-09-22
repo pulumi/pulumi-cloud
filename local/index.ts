@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 // Note; We only export values (not types) from this module.  Nothing should ever be referencing
-// this package.  Instead things should only reference the @pulumi/pulumi package.  That package
+// this package.  Instead things should only reference the @pulumi/cloud package.  That package
 // actually exports the API types.
 
 export * from "./httpEndpoint";
@@ -15,7 +15,7 @@ export { timer };
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
 // cost here.  This code can also go into a separate file if we don't want it cluttering this one.
 
-import * as apiModule from "@pulumi/pulumi";
+import * as apiModule from "@pulumi/cloud";
 import * as thisModule from "./index";
 
 let apiShape: typeof apiModule = undefined as any;

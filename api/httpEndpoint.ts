@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as fabric from "@pulumi/pulumi-fabric";
+import * as pulumi from "pulumi";
 
 /**
  * Request represents an HttpEndpoint request.
@@ -96,7 +96,7 @@ export interface HttpEndpoint {
     /**
      * The url that the HttpEndpoint is being served at. Set only after a succesful call to `publish`.
      */
-    url?: fabric.Computed<string>;
+    url?: pulumi.Computed<string>;
 
     /**
      * staticFile serves a static file from within the source folder at the requested path.
@@ -164,7 +164,7 @@ export interface HttpEndpoint {
      *
      * @returns A computed string representing the URL at which the HttpEndpoint is available to the internet.
      */
-    publish(): fabric.Computed<string>;
+    publish(): pulumi.Computed<string>;
 
     /**
      * Attach a custom domain to this HttpEndpoint.
@@ -176,7 +176,7 @@ export interface HttpEndpoint {
      *
      * @returns The domain name that you must map your custom domain to using a DNS A record.
      */
-    attachCustomDomain(domain: Domain): fabric.Computed<string>;
+    attachCustomDomain(domain: Domain): pulumi.Computed<string>;
 }
 
 /**

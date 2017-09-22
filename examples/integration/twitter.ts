@@ -1,11 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 import * as config from "./config";
 import { poll } from "./poll";
 
 // Search returns a stream of all tweets matching the search term.
-export function search(name: string, term: string): pulumi.Stream<Tweet> {
+export function search(name: string, term: string): cloud.Stream<Tweet> {
     let accessToken = config.twitterAccessToken;
     let searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
         let request = require("request-promise-native");

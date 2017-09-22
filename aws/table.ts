@@ -1,10 +1,10 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as api from "@pulumi/pulumi";
-import * as fabric from "@pulumi/pulumi-fabric";
+import * as cloud from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 
-function pulumiKeyTypeToDynamoKeyType(keyType: api.PrimaryKeyType): string {
+function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
         case "string": return "S";
         case "number": return "N";
@@ -13,12 +13,12 @@ function pulumiKeyTypeToDynamoKeyType(keyType: api.PrimaryKeyType): string {
     }
 }
 
-export class Table implements api.Table {
+export class Table implements cloud.Table {
     private table: aws.dynamodb.Table;
 
     // Inside + Outside API
 
-    public tableName: fabric.Computed<string>;
+    public tableName: pulumi.Computed<string>;
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
 
@@ -30,7 +30,7 @@ export class Table implements api.Table {
 
     // Outside API (constructor and methods)
 
-    constructor(name: string, primaryKey?: string, primaryKeyType?: api.PrimaryKeyType) {
+    constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType) {
         if (primaryKey === undefined) {
             primaryKey = "id";
         }

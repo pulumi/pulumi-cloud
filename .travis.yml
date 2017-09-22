@@ -12,11 +12,10 @@ before_install:
     - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.24.6
     - export PATH=$HOME/.yarn/bin:$PATH
 install:
-    - export VERSION=HEAD
     # Clone the Pulumi repo and use its script to fetch the latest installation packages.
     - git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home
-    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh pulumi-fabric ${VERSION} /opt/pulumi
-    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh aws ${VERSION} /opt/pulumi/packs/aws
+    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh pulumi master /opt/pulumi
+    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh aws HEAD /opt/pulumi/packs/aws
     - dep ensure
     - pushd api && dep ensure && popd
     - pushd aws && dep ensure && popd
