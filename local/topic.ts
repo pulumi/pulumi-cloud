@@ -1,10 +1,10 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as api from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 
 const globalTopicToSubscribers: { [topic: string]: {(item: any): Promise<void>}[] } = Object.create(null);
 
-export class Topic<T> implements api.Topic<T> {
+export class Topic<T> implements cloud.Topic<T> {
     public publish: (item: T) => Promise<void>;
     public subscribe: (name: string, handler: (item: T) => Promise<void>) => void;
 

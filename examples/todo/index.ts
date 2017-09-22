@@ -1,10 +1,10 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
 
-let todos = new pulumi.Table("todo");
-let api = new pulumi.HttpEndpoint("todo");
+let todos = new cloud.Table("todo");
+let api = new cloud.HttpEndpoint("todo");
 
 // Index handler
 api.staticFile("/", "index.html", "text/html");

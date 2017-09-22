@@ -1,10 +1,10 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as api from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 import * as sns from "./sns";
 
-export class Topic<T> implements api.Topic<T> {
+export class Topic<T> implements cloud.Topic<T> {
     // Inside + Outside API
 
     private name: string;
@@ -19,7 +19,7 @@ export class Topic<T> implements api.Topic<T> {
     constructor(name: string) {
         this.name = name;
         this.topic = new aws.sns.Topic(name, {});
-        // TODO[pulumi/pulumi-fabric#331]: bring this back once deadlock issues are resolved.
+        // TODO[pulumi/pulumi#331]: bring this back once deadlock issues are resolved.
         // this.subscriptions = [];
         this.publish = (item) => {
             let awssdk = require("aws-sdk");

@@ -11,14 +11,14 @@
                 "runtime": "nodejs",
                 "description": "A todo app backend."
             },
-            "pwd": "/Users/luke/go/src/github.com/pulumi/pulumi-framework/examples/crawler",
+            "pwd": "/Users/luke/go/src/github.com/pulumi/pulumi-cloud/examples/crawler",
             "program": "",
             "config": {
                 "aws:config:region": "us-east-2"
             }
         },
         "resources": {
-            "urn:lumi:test2::todo::aws:sns/topic:Topic::countDown": {
+            "urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown": {
                 "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
                 "type": "aws:sns/topic:Topic",
                 "defaults": {
@@ -32,7 +32,7 @@
                     "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
                 }
             },
-            "urn:lumi:test2::todo::aws:sns/topic:Topic::unhandled-error-topic": {
+            "urn:pulumi:test2::todo::aws:sns/topic:Topic::unhandled-error-topic": {
                 "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb",
                 "type": "aws:sns/topic:Topic",
                 "defaults": {
@@ -46,7 +46,7 @@
                     "policy": "{\"Id\":\"__default_policy_ID\",\"Statement\":[{\"Action\":[\"SNS:GetTopicAttributes\",\"SNS:SetTopicAttributes\",\"SNS:AddPermission\",\"SNS:RemovePermission\",\"SNS:DeleteTopic\",\"SNS:Subscribe\",\"SNS:ListSubscriptionsByTopic\",\"SNS:Publish\",\"SNS:Receive\"],\"Condition\":{\"StringEquals\":{\"AWS:SourceOwner\":\"153052954103\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Resource\":\"arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb\",\"Sid\":\"__default_statement_ID\"}],\"Version\":\"2008-10-17\"}"
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/role:Role::countDown_watcher-iamrole": {
+            "urn:pulumi:test2::todo::aws:iam/role:Role::countDown_watcher-iamrole": {
                 "id": "countDown_watcher-iamrole-a508724a5963b260",
                 "type": "aws:iam/role:Role",
                 "inputs": {
@@ -68,7 +68,7 @@
                     "uniqueId": "AROAJIH32ALQBHWNEMJIO"
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::countDown_watcher-iampolicy-0": {
+            "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::countDown_watcher-iampolicy-0": {
                 "id": "countDown_watcher-iamrole-a508724a5963b260-20170911205308517400000001",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
@@ -81,7 +81,7 @@
                     "role": "countDown_watcher-iamrole-a508724a5963b260"
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/function:Function::countDown_watcher": {
+            "urn:pulumi:test2::todo::aws:lambda/function:Function::countDown_watcher": {
                 "id": "countDown_watcher-512bb9e8cf8db91d",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
@@ -91,7 +91,7 @@
                             "index.js": {
                                 "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
                                 "path": "",
-                                "text": "exports.handler = __e9c5dbc59d4adae28a55e61da607b42c4b150e3c;\n\nfunction __e9c5dbc59d4adae28a55e61da607b42c4b150e3c() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, handler: __e767728a8948fd7232ea6ed2cf1e2683b525a783 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        Promise.all(ev.Records.map((record) =\u003e __awaiter(this, void 0, void 0, function* () {\n            yield handler(record.Sns);\n        })))\n            .then(() =\u003e { cb(null, null); })\n            .catch((err) =\u003e { cb(err, null); });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e767728a8948fd7232ea6ed2cf1e2683b525a783() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, shandler: __f9945b4db511d5c8d1768863540eb921c0a404cb }) {\n    return (function() {\n\nreturn ((snsItem) =\u003e __awaiter(this, void 0, void 0, function* () {\n            let item = JSON.parse(snsItem.Message);\n            // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid\n            // accidental conflict with handler inside `createSubscription`\n            yield shandler(item);\n        }))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __f9945b4db511d5c8d1768863540eb921c0a404cb() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((num) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(num);\n    if (num \u003e 0) {\n        yield countDown.publish(num - 1);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "text": "exports.handler = __e9c5dbc59d4adae28a55e61da607b42c4b150e3c;\n\nfunction __e9c5dbc59d4adae28a55e61da607b42c4b150e3c() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, handler: __e767728a8948fd7232ea6ed2cf1e2683b525a783 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        Promise.all(ev.Records.map((record) =\u003e __awaiter(this, void 0, void 0, function* () {\n            yield handler(record.Sns);\n        })))\n            .then(() =\u003e { cb(null, null); })\n            .catch((err) =\u003e { cb(err, null); });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e767728a8948fd7232ea6ed2cf1e2683b525a783() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, shandler: __f9945b4db511d5c8d1768863540eb921c0a404cb }) {\n    return (function() {\n\nreturn ((snsItem) =\u003e __awaiter(this, void 0, void 0, function* () {\n            let item = JSON.parse(snsItem.Message);\n            // TODO[pulumi/pulumi-fabric#238] For now we need to use a different name for `shandler` to avoid\n            // accidental conflict with handler inside `createSubscription`\n            yield shandler(item);\n        }))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __f9945b4db511d5c8d1768863540eb921c0a404cb() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((num) =\u003e __awaiter(this, void 0, void 0, function* () {\n    console.log(num);\n    if (num \u003e 0) {\n        yield countDown.publish(num - 1);\n    }\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
                                 "uri": ""
                             },
                             "node_modules": {
@@ -154,7 +154,7 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::countDown_watcher": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::countDown_watcher": {
                 "id": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
                 "type": "aws:cloudwatch/logGroup:LogGroup",
                 "inputs": {
@@ -172,7 +172,7 @@
                     "tags": {}
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/role:Role::pulumi-app-log-collector-iamrole": {
+            "urn:pulumi:test2::todo::aws:iam/role:Role::pulumi-app-log-collector-iamrole": {
                 "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
                 "type": "aws:iam/role:Role",
                 "inputs": {
@@ -194,7 +194,7 @@
                     "uniqueId": "AROAIU3UDUXRFVLJVXPVI"
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::pulumi-app-log-collector-iampolicy-0": {
+            "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::pulumi-app-log-collector-iampolicy-0": {
                 "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df-20170911205324858700000002",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
@@ -207,7 +207,7 @@
                     "role": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df"
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/function:Function::pulumi-app-log-collector": {
+            "urn:pulumi:test2::todo::aws:lambda/function:Function::pulumi-app-log-collector": {
                 "id": "pulumi-app-log-collector-172a843433e22751",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
@@ -271,7 +271,7 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/permission:Permission::pulumi-app-log-collector": {
+            "urn:pulumi:test2::todo::aws:lambda/permission:Permission::pulumi-app-log-collector": {
                 "id": "pulumi-app-log-collector-f5cff8bf5d30ba1c",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
@@ -291,7 +291,7 @@
                     "statementId": "pulumi-app-log-collector-f5cff8bf5d30ba1c"
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::countDown_watcher": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::countDown_watcher": {
                 "id": "cwlsf-3635312111",
                 "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
                 "inputs": {
@@ -310,7 +310,7 @@
                     "name": "countDown_watcher-1c9f2eb3596ea0df"
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/permission:Permission::countDown_watcher": {
+            "urn:pulumi:test2::todo::aws:lambda/permission:Permission::countDown_watcher": {
                 "id": "countDown_watcher-138b4ab399dec861",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
@@ -332,7 +332,7 @@
                     "statementId": "countDown_watcher-138b4ab399dec861"
                 }
             },
-            "urn:lumi:test2::todo::aws:sns/topicSubscription:TopicSubscription::countDown_watcher": {
+            "urn:pulumi:test2::todo::aws:sns/topicSubscription:TopicSubscription::countDown_watcher": {
                 "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8:00f03929-a96a-4923-9fb6-b53124386d25",
                 "type": "aws:sns/topicSubscription:TopicSubscription",
                 "inputs": {
@@ -356,7 +356,7 @@
                     "topic": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8"
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/role:Role::heartbeat-iamrole": {
+            "urn:pulumi:test2::todo::aws:iam/role:Role::heartbeat-iamrole": {
                 "id": "heartbeat-iamrole-0fae84bc67bdcfdd",
                 "type": "aws:iam/role:Role",
                 "inputs": {
@@ -378,7 +378,7 @@
                     "uniqueId": "AROAIBRDHQN2XOWSQYVMY"
                 }
             },
-            "urn:lumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::heartbeat-iampolicy-0": {
+            "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::heartbeat-iampolicy-0": {
                 "id": "heartbeat-iamrole-0fae84bc67bdcfdd-20170911205341364500000003",
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
@@ -391,7 +391,7 @@
                     "role": "heartbeat-iamrole-0fae84bc67bdcfdd"
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/function:Function::heartbeat": {
+            "urn:pulumi:test2::todo::aws:lambda/function:Function::heartbeat": {
                 "id": "heartbeat-08d01aa6def29b7a",
                 "type": "aws:lambda/function:Function",
                 "inputs": {
@@ -401,7 +401,7 @@
                             "index.js": {
                                 "4dabf18193072939515e22adb298388d": "c44067f5952c0a294b673a41bacd8c17",
                                 "path": "",
-                                "text": "exports.handler = __6bcab2f3eed0e1b0e016529bd83aa61fb8226488;\n\nfunction __6bcab2f3eed0e1b0e016529bd83aa61fb8226488() {\n  var _this;\n  with({ handler: __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        handler().then(() =\u003e {\n            cb(null, null);\n        }).catch((err) =\u003e {\n            cb(err, null);\n        });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn (() =\u003e __awaiter(this, void 0, void 0, function* () {\n    yield countDown.publish(25);\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:lumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
+                                "text": "exports.handler = __6bcab2f3eed0e1b0e016529bd83aa61fb8226488;\n\nfunction __6bcab2f3eed0e1b0e016529bd83aa61fb8226488() {\n  var _this;\n  with({ handler: __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4 }) {\n    return (function() {\n\nreturn ((ev, ctx, cb) =\u003e {\n        handler().then(() =\u003e {\n            cb(null, null);\n        }).catch((err) =\u003e {\n            cb(err, null);\n        });\n    })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __91dfcb824d5f56c10ecfd6bf99122970f5dd18c4() {\n  var _this;\n  with({ __awaiter: __e74d2e8c8e82fcde3027b68a81de83190981f944, countDown: { name: \"countDown\", topic: { urn: \"urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn (() =\u003e __awaiter(this, void 0, void 0, function* () {\n    yield countDown.publish(25);\n}))\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __e74d2e8c8e82fcde3027b68a81de83190981f944() {\n  var _this;\n  with({  }) {\n    return (function() {\n\nreturn (function (thisArg, _arguments, P, generator) {\n    return new (P || (P = Promise))(function (resolve, reject) {\n        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }\n        function rejected(value) { try { step(generator[\"throw\"](value)); } catch (e) { reject(e); } }\n        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }\n        step((generator = generator.apply(thisArg, _arguments || [])).next());\n    });\n})\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\nfunction __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a() {\n  var _this;\n  with({ _this: { name: \"countDown\", topic: { urn: \"urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown\", id: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\", displayName: \"\", name: \"countDown-f2fd23dbaa619ad8\", policy: \"{\\\"Id\\\":\\\"__default_policy_ID\\\",\\\"Statement\\\":[{\\\"Action\\\":[\\\"SNS:GetTopicAttributes\\\",\\\"SNS:SetTopicAttributes\\\",\\\"SNS:AddPermission\\\",\\\"SNS:RemovePermission\\\",\\\"SNS:DeleteTopic\\\",\\\"SNS:Subscribe\\\",\\\"SNS:ListSubscriptionsByTopic\\\",\\\"SNS:Publish\\\",\\\"SNS:Receive\\\"],\\\"Condition\\\":{\\\"StringEquals\\\":{\\\"AWS:SourceOwner\\\":\\\"153052954103\\\"}},\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"AWS\\\":\\\"*\\\"},\\\"Resource\\\":\\\"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\\\",\\\"Sid\\\":\\\"__default_statement_ID\\\"}],\\\"Version\\\":\\\"2008-10-17\\\"}\", arn: \"arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8\" }, publish: __0185c95b98ae2f9658f4ea92bcd1b3ad739f905a } }) {\n    return (function() {\n\nreturn ((item) =\u003e {\n            let awssdk = require(\"aws-sdk\");\n            let snsconn = awssdk.SNS();\n            return new snsconn.publish({\n                Message: JSON.stringify(item),\n                TopicArn: this.topic.id,\n            }).promise();\n        })\n    }).apply(_this).apply(undefined, arguments);\n  }\n}\n\n",
                                 "uri": ""
                             },
                             "node_modules": {
@@ -464,7 +464,7 @@
                     "vpcConfig": []
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::heartbeat": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::heartbeat": {
                 "id": "/aws/lambda/heartbeat-08d01aa6def29b7a",
                 "type": "aws:cloudwatch/logGroup:LogGroup",
                 "inputs": {
@@ -482,7 +482,7 @@
                     "tags": {}
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::heartbeat": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::heartbeat": {
                 "id": "cwlsf-2739045784",
                 "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
                 "inputs": {
@@ -501,7 +501,7 @@
                     "name": "heartbeat-5eb3e8386582bb5e"
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/eventRule:EventRule::heartbeat": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/eventRule:EventRule::heartbeat": {
                 "id": "heartbeat-b50e57c312324669",
                 "type": "aws:cloudwatch/eventRule:EventRule",
                 "inputs": {
@@ -521,7 +521,7 @@
                     "scheduleExpression": "rate(5 minutes)"
                 }
             },
-            "urn:lumi:test2::todo::aws:cloudwatch/eventTarget:EventTarget::heartbeat": {
+            "urn:pulumi:test2::todo::aws:cloudwatch/eventTarget:EventTarget::heartbeat": {
                 "id": "heartbeat-b50e57c312324669-heartbeat",
                 "type": "aws:cloudwatch/eventTarget:EventTarget",
                 "inputs": {
@@ -539,7 +539,7 @@
                     "targetId": "heartbeat"
                 }
             },
-            "urn:lumi:test2::todo::aws:lambda/permission:Permission::heartbeat": {
+            "urn:pulumi:test2::todo::aws:lambda/permission:Permission::heartbeat": {
                 "id": "heartbeat-f4fbc5a56b59f56f",
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {

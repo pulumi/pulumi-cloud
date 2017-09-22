@@ -25,7 +25,7 @@ lint:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link @pulumi/pulumi-fabric @pulumi/pulumi # ensure we link dependencies.
+	yarn link pulumi @pulumi/cloud # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
 .PHONY: install

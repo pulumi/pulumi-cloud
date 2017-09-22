@@ -1,24 +1,24 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as api from "@pulumi/pulumi";
-import * as fabric from "@pulumi/pulumi-fabric";
+import * as cloud from "@pulumi/cloud";
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
+import * as pulumi from "pulumi";
 
-export class HttpEndpoint implements api.HttpEndpoint {
-    public url?: fabric.Computed<string>;
+export class HttpEndpoint implements cloud.HttpEndpoint {
+    public url?: pulumi.Computed<string>;
 
     public staticFile: (path: string, filePath: string, contentType?: string) => void;
-    public route: (method: string, path: string, ...handlers: api.RouteHandler[]) => void;
-    public get: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public put: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public post: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public delete: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public options: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public all: (path: string, ...handlers: api.RouteHandler[]) => void;
-    public publish: () => fabric.Computed<string>;
+    public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public post: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public delete: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public options: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public all: (path: string, ...handlers: cloud.RouteHandler[]) => void;
+    public publish: () => pulumi.Computed<string>;
 
     constructor(unused: string) {
         let app = express();
@@ -98,13 +98,13 @@ export class HttpEndpoint implements api.HttpEndpoint {
             return this.url;
         };
 
-        function convertRequestHandler(handler: api.RouteHandler): express.RequestHandler {
+        function convertRequestHandler(handler: cloud.RouteHandler): express.RequestHandler {
             return (expressRequest: core.Request, expressResponse: core.Response, expressNext: core.NextFunction) => {
                 return handler(convertRequest(expressRequest), convertResponse(expressResponse), expressNext);
             };
         }
 
-        function convertRequest(expressRequest: core.Request): api.Request {
+        function convertRequest(expressRequest: core.Request): cloud.Request {
             return {
                 // Safe to directly convert the body to a buffer because we are using raw body
                 // parsing above.
@@ -119,7 +119,7 @@ export class HttpEndpoint implements api.HttpEndpoint {
             };
         }
 
-        function convertResponse(expressResponse: core.Response): api.Response {
+        function convertResponse(expressResponse: core.Response): cloud.Response {
             return {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 setHeader: (name: string, value: string) => { expressResponse.setHeader(name, value); return this; },
@@ -130,7 +130,7 @@ export class HttpEndpoint implements api.HttpEndpoint {
         }
     }
 
-    public attachCustomDomain(domain: api.Domain): Promise<string | undefined> {
+    public attachCustomDomain(domain: cloud.Domain): Promise<string | undefined> {
         throw new Error("Method not implemented.");
     }
 }

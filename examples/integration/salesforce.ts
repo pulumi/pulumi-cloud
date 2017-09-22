@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
 import * as config from "./config";
 import { poll } from "./poll";
 
@@ -23,7 +23,7 @@ export function query(
     soql: (watermark: string) => string,
     watermarkDefault: string,
     watermarkField: string,
-    watermarkSelection: (a: string, b: string) => string): pulumi.Stream<Record> {
+    watermarkSelection: (a: string, b: string) => string): cloud.Stream<Record> {
     let queryPoll = poll<Record>(name, {minutes: 1}, async (watermark) => {
         let conn = await getAuthenticatedSalesforceConnection();
         if (watermark === undefined) {
@@ -69,7 +69,7 @@ interface QueryResult {
 
 // allObjectModifications returns a stream of all Salesforce records for modifications to an object.
 // This is a deployment-time API.
-export function allObjectModifications(name: string, object: string, fields: string): pulumi.Stream<Record> {
+export function allObjectModifications(name: string, object: string, fields: string): cloud.Stream<Record> {
     if ((<any>fields).length === 0) {
         throw new Error("Expect at least one field name in the format `FieldA,FieldB`");
     }

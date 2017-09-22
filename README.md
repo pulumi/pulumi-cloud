@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/pulumi/pulumi-framework.svg?token=eHg7Zp5zdDDJfTjY8ejq&branch=master)](https://travis-ci.com/pulumi/pulumi-framework)
+[![Build Status](https://travis-ci.com/pulumi/pulumi-cloud.svg?token=eHg7Zp5zdDDJfTjY8ejq&branch=master)](https://travis-ci.com/pulumi/pulumi-cloud)
 
-# Pulumi Framework
+# Pulumi Cloud Framework
 
-Lumi's cloud programming package.
+Pulumi's framework for building modern cloud applications.
 

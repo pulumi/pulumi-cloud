@@ -11,10 +11,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-fabric/pkg/resource"
-	"github.com/pulumi/pulumi-fabric/pkg/resource/environment"
-	"github.com/pulumi/pulumi-fabric/pkg/testing/integration"
-	"github.com/pulumi/pulumi-framework/pkg/pulumiframework"
+	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
+	"github.com/pulumi/pulumi/pkg/resource"
+	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
 func Test_Examples(t *testing.T) {
@@ -32,23 +32,23 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../../examples/crawler"),
 			Config: map[string]string{
-				"aws:config:region":      region,
-				"pulumi:config:provider": "aws",
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
-				"@pulumi/pulumi-framework-aws",
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
 			},
 		},
 		{
 			Dir: path.Join(cwd, "../../examples/todo"),
 			Config: map[string]string{
-				"aws:config:region":      region,
-				"pulumi:config:provider": "aws",
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
-				"@pulumi/pulumi-framework-aws",
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
 				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)

@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import { timer } from "@pulumi/pulumi";
+import { timer } from "@pulumi/cloud";
 import { LoggedFunction } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>) {

@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as fabric from "@pulumi/pulumi-fabric";
+import * as pulumi from "pulumi";
 
 /**
  * The available types for primary keys. The default primary key type is `string`.
@@ -34,7 +34,7 @@ export interface Table {
     /**
      * The computed name of the table.
      */
-    tableName: fabric.Computed<string>;
+    tableName: pulumi.Computed<string>;
     /**
      * The name of the primary key.
      */

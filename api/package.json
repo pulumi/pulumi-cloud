@@ -1,6 +1,6 @@
 {
-    "name": "@pulumi/pulumi",
-    "version": "0.1",
+    "name": "@pulumi/cloud",
+    "version": "0.6.1",
     "types": "types.d.ts",
     "scripts": {
         "build": "tsc && yarn run lint",
@@ -12,6 +12,6 @@
         "typescript": "^2.5.2"
     },
     "peerDependencies": {
-        "@pulumi/pulumi-fabric": "*"
+        "pulumi": "*"
     }
 }

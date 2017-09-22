@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/golang/glog"
-	"github.com/pulumi/pulumi-framework/pkg/component"
+	"github.com/pulumi/pulumi-cloud/pkg/component"
 )
 
 type awsConnection struct {
