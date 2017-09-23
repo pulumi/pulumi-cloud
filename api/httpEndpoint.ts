@@ -31,6 +31,18 @@ export interface Request {
      * The raw path from the HTTP request.
      */
     path: string;
+    /**
+     * The protocol of the request (e.g. HTTP/HTTPS).
+     */
+    protocol: string;
+    /**
+     * The base url on which this http request was served.
+     */
+    baseUrl: string;
+    /**
+     * The hostname of the request.
+     */
+    hostname: string;
 }
 
 /**
@@ -51,12 +63,12 @@ export interface Response {
      * Writes a string to the HTTP response body and returns the `Response` for
      * chaining operations.
      */
-    write(data: string): Response;
+    write(data: string | Buffer, encoding?: string): Response;
     /**
      * Sends the HTTP response, optionally including data to write to the HTTP
      * response body.
      */
-    end(data?: string): void;
+    end(data?: string | Buffer, encoding?: string): void;
     /**
      * JSON serializes an object, writes it to the HTTP response body, and sends
      * the HTTP response.

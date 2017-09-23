@@ -232,15 +232,18 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
         headers: <{[header: string]: string}>{},
         body: Buffer.from([]),
     };
-    let req = {
+    let req: cloud.Request = {
         headers: ev.headers,
         body: body,
         method: ev.httpMethod,
         params: ev.pathParameters,
         query: ev.queryStringParameters,
         path: ev.path,
+        baseUrl: "/" + stageName,
+        hostname: ev.headers["Host"],
+        protocol: ev.headers["X-Forwarded-Proto"],
     };
-    let res = {
+    let res: cloud.Response = {
         status: (code: number) => {
             response.statusCode = code;
             return res;
@@ -249,7 +252,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
             response.headers![name] = value;
             return res;
         },
-        write: (data: string | any, encoding?: string) => {
+        write: (data: string | Buffer, encoding?: string) => {
             if (encoding === undefined) {
                 encoding = "utf8";
             }
@@ -259,7 +262,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
             response.body = Buffer.concat([response.body, data]);
             return res;
         },
-        end: (data?: string | any, encoding?: string) => {
+        end: (data?: string | Buffer, encoding?: string) => {
             if (data !== undefined) {
                 res.write(data, encoding);
             }

@@ -116,6 +116,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 headers: <{ [header: string]: string }> expressRequest.headers,
                 query: expressRequest.query,
                 path: expressRequest.path,
+                baseUrl: expressRequest.baseUrl,
+                hostname: expressRequest.hostname,
+                protocol: expressRequest.protocol,
             };
         }
 
@@ -123,8 +126,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             return {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 setHeader: (name: string, value: string) => { expressResponse.setHeader(name, value); return this; },
-                write: (data: string) => { expressResponse.write(data); return this; },
-                end: (data?: string) => expressResponse.end(),
+                write: (data: string, encoding?: string) => { expressResponse.write(data, encoding); return this; },
+                end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),
                 json: (obj: any) => expressResponse.json(obj),
             };
         }
