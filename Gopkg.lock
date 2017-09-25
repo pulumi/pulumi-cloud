@@ -59,13 +59,13 @@
   branch = "master"
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/pack","pkg/resource","pkg/resource/deploy","pkg/resource/environment","pkg/resource/plugin","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/mapper","pkg/util/rpcutil","sdk/proto/go"]
-  revision = "cb54cfcf0f92e98bf6e22777ab93b78be2d52a0e"
+  revision = "e65348e2460643031408cfec295e49c64e915fe1"
 
 [[projects]]
   branch = "master"
   name = "github.com/pulumi/pulumi-cloud"
   packages = ["pkg/component","pkg/pulumiframework"]
-  revision = "23dcf4277772f241701eb5c6e706c419a7cda08e"
+  revision = "12a5c80df06133940b5a3a7ee95c3f12218c937f"
 
 [[projects]]
   branch = "master"
@@ -95,7 +95,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "7d9177d70076375b9a59c8fde23d52d9c4a7ecd5"
+  revision = "847319b7fc94cab682988f93da778204da164588"
 
 [[projects]]
   branch = "master"
