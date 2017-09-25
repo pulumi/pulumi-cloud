@@ -1,9 +1,4 @@
 .pulumi
-/api/bin/
-/api/node_modules/
-/aws/bin/
-/aws/node_modules/
-/mock/bin/
-/mock/node_modules/
-/node_modules/
-/vendor/
+**/bin/
+**/node_modules/
+**/vendor/
