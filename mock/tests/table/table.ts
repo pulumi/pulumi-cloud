@@ -39,5 +39,11 @@ describe("Table", () => {
             await table.insert({[table.primaryKey]: "val", value: 1});
             assert.equal((await table.get({[table.primaryKey]: "val"})).value, 1);
         });
+
+        it("should-not-be-affected-by-query-data", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val", value: 1});
+            assert.equal((await table.get({[table.primaryKey]: "val", value: 2})).value, 1);
+        });
     });
 });
