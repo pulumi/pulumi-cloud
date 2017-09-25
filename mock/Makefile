@@ -5,7 +5,7 @@ TESTPARALLELISM=10
 default: banner dependencies lint build install
 
 .PHONY: all
-all: default examples
+all: default tests
 
 .PHONY: banner
 banner:
@@ -37,10 +37,10 @@ install:
 	cd ../api/bin/ && (yarn unlink @pulumi/cloud-mock || true) && yarn link @pulumi/cloud-mock #ensure loader can see this package
 
 
-.PHONY: examples
-examples:
+.PHONY: tests
+tests:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests
 
 .PHONY: publish
 publish:
