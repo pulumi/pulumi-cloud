@@ -19,7 +19,7 @@ install:
     - dep ensure
     - pushd api && dep ensure && popd
     - pushd aws && dep ensure && popd
-    - pushd local && dep ensure && popd
+    - pushd mock && dep ensure && popd
 before_script:
     - export PULUMI=/opt/pulumi
     - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
