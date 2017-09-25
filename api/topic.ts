@@ -6,6 +6,13 @@ export interface TopicConstructor {
 
 export let Topic: TopicConstructor; // tslint:disable-line
 
+/**
+ * A Topic<T> is used to distribute work which will be run concurrently by any
+ * susbcribed handlers.  Producers can [[publish]] to the topic, and consumers
+ * can [[subscribe]] to be notified when new items are published.
+ *
+ * @param T The type of items published to the topic.
+ */
 export interface Topic<T> extends Stream<T> {
     /**
      * Publish an item to this Topic.
@@ -26,9 +33,9 @@ export interface Topic<T> extends Stream<T> {
 }
 
 /**
- * A Stream<T> provides access to listen to an (infinite) stream of items coming from a
- * data source.  Unlike [[Topic]], a Stream provides only access to read from the stream,
- * not the ability to publish new items to the stream.
+ * A Stream<T> provides access to listen to an (infinite) stream of items coming
+ * from a data source.  Unlike [[Topic]], a Stream provides only access to read
+ * from the stream, not the ability to publish new items to the stream.
  *
  * @param T The type of items published to the stream.
  */

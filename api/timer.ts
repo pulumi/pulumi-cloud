@@ -22,8 +22,8 @@ export interface IntervalRate {
 }
 
 /**
- * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]])
- * at which a timer should fire.
+ * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]]) at
+ * which a timer should fire.
  */
 export interface DailySchedule {
     /**

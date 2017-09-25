@@ -2,11 +2,11 @@
 # install.sh installs an existing release.
 set -e
 
-INSTALL=$GOPATH/src/github.com/pulumi/home/scripts/install.sh
+INSTALL=$GOPATH/src/github.com/pulumi/home/scripts/install2.sh
 if [ ! -f $PUBLISH ]; then
     >&2 echo "error: Missing publish script at $INSTALL"
     exit 1
 fi
 
-${INSTALL} cloud $1 $2
+${INSTALL} pulumi-cloud $1 $2
 
