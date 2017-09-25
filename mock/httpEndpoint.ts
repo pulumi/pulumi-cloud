@@ -118,7 +118,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 path: expressRequest.path,
                 protocol: expressRequest.protocol,
                 baseUrl: expressRequest.baseUrl,
-                hostname: expressRequest.hostname
+                hostname: expressRequest.hostname,
             };
         }
 
