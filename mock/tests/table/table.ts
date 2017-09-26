@@ -9,7 +9,6 @@ import * as chai from "chai";
 
 describe("Table", () => {
     describe("#get()", () => {
-
         it("should-throw-with-no-primary-key", async () => {
             let table = new cloud.Table("");
             try {
@@ -44,6 +43,70 @@ describe("Table", () => {
             let table = new cloud.Table("");
             await table.insert({[table.primaryKey]: "val", value: 1});
             assert.equal((await table.get({[table.primaryKey]: "val", value: 2})).value, 1);
+        });
+
+        it("should-see-second insert", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val", value: 1});
+            await table.insert({[table.primaryKey]: "val", value: 2});
+            assert.equal((await table.get({[table.primaryKey]: "val", value: 3})).value, 2);
+        });
+
+        it("should-not-see-deleted-value", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val", value: 1});
+            await table.delete({[table.primaryKey]: "val" });
+            try {
+                await table.get({[table.primaryKey]: "val"});
+            }
+            catch (err) {
+                return;
+            }
+
+            throw new Error("Expected error to be thrown");
+        });
+    });
+
+    describe("#update()", () => {
+        it("should-only-update-provided-keys", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val", value1: 1, value2: "2"});
+            await table.update({[table.primaryKey]: "val" }, {value1: 3});
+
+            assert.equal((await table.get({[table.primaryKey]: "val"})).value1, 3);
+            assert.equal((await table.get({[table.primaryKey]: "val"})).value2, "2");
+        });
+    });
+
+    describe("#scan()", () => {
+        it("returns-all-values", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val1", value1: 1, value2: "1"});
+            await table.insert({[table.primaryKey]: "val2", value1: 2, value2: "2"});
+
+            let values = await table.scan();
+            assert.equal(values.length, 2);
+
+            let value1 = values.find(v => v[table.primaryKey] == "val1");
+            let value2 = values.find(v => v[table.primaryKey] == "val2");
+
+            assert.notEqual(value1, value2);
+            assert.equal(value1.value1, 1);
+            assert.equal(value2.value1, 2);
+        });
+
+        it("does-not-return-deleted-value", async () => {
+            let table = new cloud.Table("");
+            await table.insert({[table.primaryKey]: "val1", value1: 1, value2: "1"});
+            await table.insert({[table.primaryKey]: "val2", value1: 2, value2: "2"});
+            await table.delete({[table.primaryKey]: "val1"});
+
+            let values = await table.scan();
+            assert.equal(values.length, 1);
+
+            let value = values[0];
+
+            assert.equal(value.value1, 2);
         });
     });
 });
