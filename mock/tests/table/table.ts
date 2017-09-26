@@ -8,9 +8,11 @@ import * as assert from "assert";
 import * as chai from "chai";
 
 describe("Table", () => {
+    let uniqueId = 0;
+
     describe("#get()", () => {
         it("should-throw-with-no-primary-key", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             try {
                 await table.get({});
             }
@@ -22,7 +24,7 @@ describe("Table", () => {
         });
 
         it("should-throw-with-primary-key-not-present", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             try {
                 await table.get({[table.primaryKey]: "val"});
             }
@@ -34,26 +36,26 @@ describe("Table", () => {
         });
 
         it("should-find-inserted-value", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             assert.equal((await table.get({[table.primaryKey]: "val"})).value, 1);
         });
 
         it("should-not-be-affected-by-query-data", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             assert.equal((await table.get({[table.primaryKey]: "val", value: 2})).value, 1);
         });
 
         it("should-see-second insert", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             await table.insert({[table.primaryKey]: "val", value: 2});
             assert.equal((await table.get({[table.primaryKey]: "val", value: 3})).value, 2);
         });
 
         it("should-not-see-deleted-value", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             await table.delete({[table.primaryKey]: "val" });
             try {
@@ -69,7 +71,7 @@ describe("Table", () => {
 
     describe("#update()", () => {
         it("should-only-update-provided-keys", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value1: 1, value2: "2"});
             await table.update({[table.primaryKey]: "val" }, {value1: 3});
 
@@ -80,7 +82,7 @@ describe("Table", () => {
 
     describe("#scan()", () => {
         it("returns-all-values", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val1", value1: 1, value2: "1"});
             await table.insert({[table.primaryKey]: "val2", value1: 2, value2: "2"});
 
@@ -96,7 +98,7 @@ describe("Table", () => {
         });
 
         it("does-not-return-deleted-value", async () => {
-            let table = new cloud.Table("");
+            let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val1", value1: 1, value2: "1"});
             await table.insert({[table.primaryKey]: "val2", value1: 2, value2: "2"});
             await table.delete({[table.primaryKey]: "val1"});
