@@ -7,11 +7,17 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as chai from "chai";
 
-async function throwsAsync(body: () => Promise<void>): Promise<void> {
+declare module "assert" {
+    function throwsAsync(body: () => Promise<void>): Promise<void>;
+}
+
+(<any>assert).throwsAsync = async function(body: () => Promise<void>): Promise<void> {
     try {
+        console.log("Start");
         await body();
     }
     catch (err) {
+        console.log("Threw error");
         return;
     }
 
@@ -24,12 +30,12 @@ describe("Table", () => {
     describe("#get()", () => {
         it("should-throw-with-no-primary-key", async () => {
             let table = new cloud.Table("table" + uniqueId++);
-            await throwsAsync(async () => await table.get({}));
+            await assert.throwsAsync(async () => await table.get({}));
         });
 
         it("should-throw-with-primary-key-not-present", async () => {
             let table = new cloud.Table("table" + uniqueId++);
-            await throwsAsync(async () => await table.get({[table.primaryKey]: "val"}));
+            await assert.throwsAsync(async () => await table.get({[table.primaryKey]: "val"}));
         });
 
         it("should-find-inserted-value", async () => {
@@ -55,7 +61,7 @@ describe("Table", () => {
             let table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             await table.delete({[table.primaryKey]: "val" });
-            await throwsAsync(async () => await table.get({[table.primaryKey]: "val"}));
+            await assert.throwsAsync(async () => await table.get({[table.primaryKey]: "val"}));
         });
 
         it("should-not-see-inserts-to-other-table", async () => {
@@ -63,7 +69,7 @@ describe("Table", () => {
             let table2 = new cloud.Table("table" + uniqueId++);
 
             await table1.insert({[table1.primaryKey]: "val", value: 1});
-            await throwsAsync(async () => await table2.get({[table2.primaryKey]: "val"}));
+            await assert.throwsAsync(async () => await table2.get({[table2.primaryKey]: "val"}));
         });
     });
 
