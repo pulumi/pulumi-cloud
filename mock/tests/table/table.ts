@@ -67,6 +67,21 @@ describe("Table", () => {
 
             throw new Error("Expected error to be thrown");
         });
+
+        it("should-not-see-inserts-to-other-table", async () => {
+            let table1 = new cloud.Table("table" + uniqueId++);
+            let table2 = new cloud.Table("table" + uniqueId++);
+
+            await table1.insert({[table1.primaryKey]: "val", value: 1});
+            try {
+                await table2.get({[table2.primaryKey]: "val"});
+            }
+            catch (err) {
+                return;
+            }
+
+            throw new Error("Expected error to be thrown");
+        });
     });
 
     describe("#update()", () => {
