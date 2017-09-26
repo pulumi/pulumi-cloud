@@ -5,12 +5,12 @@ TESTPARALLELISM=10
 default: banner dependencies lint build install
 
 .PHONY: all
-all: default examples
+all: default tests
 
 .PHONY: banner
 banner:
 	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mPulumi Framework local implementation package\033[0m"
+	@echo "\033[1;37mPulumi Framework mock implementation package\033[0m"
 	@echo "\033[1;37m======================\033[0m"
 
 .PHONY: dependencies
@@ -28,16 +28,19 @@ build:
 	yarn link pulumi @pulumi/cloud # ensure we link dependencies.
 	yarn run build # compile the LumiPack
 
+
 .PHONY: install
 install:
-#	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-#	cp package.json bin/
-#	cd bin/ && yarn link # ensure NPM references resolve locally
+	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
+	cp package.json bin/
+	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
+	cd ../api/bin/ && (yarn unlink @pulumi/cloud-mock || true) && yarn link @pulumi/cloud-mock #ensure loader can see this package
 
-.PHONY: examples
-examples:
-#	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-#	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+
+.PHONY: tests
+tests:
+	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests
 
 .PHONY: publish
 publish:

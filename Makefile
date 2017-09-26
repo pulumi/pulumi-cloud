@@ -4,7 +4,7 @@ PROCCNT=$(shell nproc --all)
 default: all
 
 .PHONY: all
-all: api aws local test
+all: api aws mock test
 
 .PHONY: api
 api:
@@ -14,9 +14,9 @@ api:
 aws:
 	cd aws && $(MAKE) $(MAKECMDGOALS)
 
-.PHONY: local
-local:
-	cd local && $(MAKE) $(MAKECMDGOALS)
+.PHONY: mock
+mock:
+	cd mock && $(MAKE) $(MAKECMDGOALS)
 
 .PHONY: test
 test:
