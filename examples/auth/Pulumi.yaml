@@ -1,0 +1,4 @@
+name: auth
+description: A simple auth component.
+runtime: nodejs
+

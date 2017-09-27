@@ -1,0 +1,20 @@
+{
+    "name": "auth",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "*"
+    },
+    "dependencies": {
+        "bcrypt-nodejs": "^0.0.3",
+        "jwt-simple": "^0.5.1"
+    }
+}
