@@ -1,4 +1,7 @@
+SHELL=/bin/bash
+.SHELLFLAGS=-ec
 PROCCNT=$(shell nproc --all)
+ECHO=echo -e
 
 .PHONY: all
 all: crawler integration todo
