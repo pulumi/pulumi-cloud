@@ -283,6 +283,10 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
 
 let stageName = "stage";
 
+function safeS3BucketName(apiName: string): string {
+    return apiName.toLowerCase().replace(/[^a-z0-0\-]/g, "");
+}
+
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
 
@@ -317,7 +321,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             policyArn: aws.iam.AmazonS3FullAccess,
         });
         if (this.bucket === undefined) {
-            this.bucket = new aws.s3.Bucket(this.apiName, {});
+            let bucketNamePrefix = safeS3BucketName(this.apiName);
+            this.bucket = new aws.s3.Bucket(bucketNamePrefix, {});
         }
         let obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
