@@ -13,7 +13,11 @@ export class LoggedFunction {
     public lambda: aws.lambda.Function;
     public role: aws.iam.Role;
 
-    constructor(name: string, policies: aws.ARN[], func: aws.serverless.Handler) {
+    constructor(name: string, func: aws.serverless.Handler) {
+        let policies = [
+            aws.iam.AWSLambdaFullAccess,
+            aws.iam.AmazonEC2ContainerServiceFullAccess,
+        ];
         let options = {
             policies: policies,
             deadLetterConfig: {

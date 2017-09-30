@@ -8,6 +8,7 @@
         "sourceMap": true,
         "stripInternal": true,
         "experimentalDecorators": true,
+        "pretty": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
@@ -15,16 +16,6 @@
         "strictNullChecks": true
     },
     "files": [
-        "index.ts",
-        "httpEndpoint.ts",
-        "function.ts",
-        "logCollector.ts",
-        "sns.ts",
-        "table.ts",
-        "timer.ts",
-        "topic.ts",
-        "unhandledError.ts",
-        "config/index.ts"
+        "index.ts"
     ]
 }
-

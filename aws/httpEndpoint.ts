@@ -368,7 +368,6 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
         let lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
-            [ aws.iam.AWSLambdaFullAccess ],
             (ev: APIGatewayRequest, ctx, cb) => {
                 let body: any;
                 if (ev.body !== null) {

@@ -38,7 +38,6 @@ export function daily(name: string, schedule: timer.DailySchedule, handler: () =
 function createScheduledEvent(name: string, scheduleExpression: string, handler: () => Promise<void>) {
     let func = new LoggedFunction(
         name,
-        [ aws.iam.AWSLambdaFullAccess ],
         (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
             handler().then(() => {
                 cb(null, null);
