@@ -4,10 +4,14 @@ import * as cloud from "@pulumi/cloud";
 import fetch from "node-fetch";
 
 let nginx = new cloud.Service("nginx", {
-    name: "nginx",
-    image: "nginx",
-    memory: 128,
-    portMappings: [{containerPort: 80}],
+    containers: {
+        nginx: {
+            image: "nginx",
+            memory: 128,
+            portMappings: [{ containerPort: 80 }],
+        },
+    },
+    scale: 3,
 });
 
 let api = new cloud.HttpEndpoint("myendpoint");
@@ -25,7 +29,7 @@ api.get("/", async (req, res) => {
         }
         res.setHeader("X-Forwarded-By", "my-pulumi-proxy");
         res.end(buffer);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).end(`Pulumi proxy service error: ${err}`);
     }

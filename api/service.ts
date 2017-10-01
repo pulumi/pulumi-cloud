@@ -1,13 +1,13 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+export interface Containers {
+    [name: string]: Container;
+}
+
 /**
  * Container specifies the metadata for a component of a Service.
  */
 export interface Container {
-    /**
-     * The name of the container.
-     */
-    name: string;
     /**
      * The image to use for the container.
      */
@@ -21,6 +21,11 @@ export interface Container {
      * the protocal that is used on that port.
      */
     portMappings?: {containerPort: number; protocol?: string}[];
+}
+
+export interface ServiceArguments {
+    containers: Containers;
+    scale?: number;
 }
 
 /**
@@ -41,7 +46,7 @@ export interface Service {
 }
 
 export interface ServiceConstructor {
-    new (name: string, ...containeers: Container[]): Service;
+    new (name: string, args: ServiceArguments): Service;
 }
 
 export let Service: ServiceConstructor; // tslint:disable-line

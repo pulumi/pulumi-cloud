@@ -14,6 +14,9 @@ type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSP
 
 type ECSLogDriver = "json-file" | "syslog" | "journald" | "gelf" | "fluentd" | "awslogs" | "splunk";
 
+type ECSUlimitName = "core" | "cpu" | "data" | "fsize" | "locks" | "memlock" | "msgqueue" | "nice" |
+    "nofile" | "nproc" | "rss" | "rtprio" | "rttime" | "sigpending" | "stack";
+
 interface ECSContainerDefinition {
     command?: string[];
     cpu?: number;
@@ -31,6 +34,17 @@ interface ECSContainerDefinition {
     links?: string[];
     linuxParameters?: { capabilities?: { add?: ECSKernelCapability[]; drop?: ECSKernelCapability[] } };
     logConfiguration?: { logDriver: ECSLogDriver; options?: { [key: string]: string } };
+    memory?: number;
+    memoryReservation?: number;
+    mountPoints?: {containerPath?: string; readOnly?: boolean; sourceVolume?: string}[];
+    name: string;
+    portMappings?: {containerPort?: number; hostPort?: number; protocol?: string; }[];
+    privileged?: boolean;
+    readonlyRootFilesystem?: boolean;
+    ulimits?: {name: ECSUlimitName; hardLimit: number; softLimit: number}[];
+    user?: string;
+    volumesFrom?: {sourceContainer?: string; readOnly?: boolean}[];
+    workingDirectory?: string;
 }
 
 // The shared Load Balancer management role used across all Services.
@@ -100,7 +114,7 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
         }
         let subnets = ecsClusterSubnets.split(",");
         let subnetmapping = subnets.map(s => ({ subnetId: s }));
-        let lbname = `pulumi-s-lb-${listenerIndex/MAX_LISTENERS_PER_NLB + 1}`;
+        let lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
             loadBalancerType: "network",
             subnetMapping: subnetmapping,
@@ -118,7 +132,7 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
         vpcId: ecsClusterVpcId,
     });
     // Listen on a new port on the NLB and forward to the target.
-    let listenerPort =  34567+listenerIndex%MAX_LISTENERS_PER_NLB;
+    let listenerPort = 34567 + listenerIndex % MAX_LISTENERS_PER_NLB;
     let listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
         loadBalancerArn: loadBalancer!.arn,
         protocol: "TCP",
@@ -141,31 +155,43 @@ export class Service implements cloud.Service {
 
     getHostAndPort: (containerName: string, containerPort: number) => Promise<string>;
 
-    constructor(name: string, ...containers: cloud.Container[]) {
+    constructor(name: string, args: cloud.ServiceArguments) {
         if (!ecsClusterARN) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
+        let containers = args.containers;
+        let scale = args.scale === undefined ? 1 : args.scale;
         this.name = name;
+
+        // Create a single log group for all logging associated with the Service
         let logGroup = new aws.cloudwatch.LogGroup(name, {});
+
+        // Create the task definition for the group of containers associated with this Service.
         let taskDefinition = new aws.ecs.TaskDefinition(name, {
             family: name,
-            containerDefinitions: logGroup.id.then(logGroupId => JSON.stringify(containers.map(container => ({
-                name: container.name,
-                image: container.image,
-                memoryReservation: container.memory,
-                portMappings: container.portMappings,
-                logConfiguration: {
-                    logDriver: "awslogs",
-                    options: {
-                        "awslogs-group": logGroupId,
-                        "awslogs-region": "us-east-1",
-                        "awslogs-stream-prefix": container.name,
-                    },
-                },
-            } as ECSContainerDefinition)))),
+            containerDefinitions: logGroup.id.then(logGroupId =>
+                JSON.stringify(Object.keys(containers).map(containerName => {
+                    let container = containers[containerName];
+                    let containerDefinition: ECSContainerDefinition = {
+                        name: containerName,
+                        image: container.image,
+                        memoryReservation: container.memory,
+                        portMappings: container.portMappings,
+                        logConfiguration: {
+                            logDriver: "awslogs",
+                            options: {
+                                "awslogs-group": logGroupId!,
+                                "awslogs-region": "us-east-1",
+                                "awslogs-stream-prefix": containerName,
+                            },
+                        },
+                    };
+                    return containerDefinition;
+                })),
+            ),
         });
 
-        // Create load balancer listeners/targets.
+        // Create load balancer listeners/targets for each exposed port.
         let loadBalancers = [];
         let exposedPorts: {
             [name: string]: {
@@ -175,17 +201,18 @@ export class Service implements cloud.Service {
                 },
             },
         } = {};
-        for (let container of containers) {
-            exposedPorts[container.name] = {};
+        for (let containerName of Object.keys(containers)) {
+            let container = containers[containerName];
+            exposedPorts[containerName] = {};
             if (container.portMappings) {
                 for (let portMapping of container.portMappings) {
                     let info = newLoadBalancerTargetGroup(container, portMapping.containerPort);
-                    exposedPorts[container.name][portMapping.containerPort] = {
+                    exposedPorts[containerName][portMapping.containerPort] = {
                         host: info.loadBalancer,
                         port: info.listenerPort,
                     };
                     loadBalancers.push({
-                        containerName: container.name,
+                        containerName: containerName,
                         containerPort: portMapping.containerPort,
                         targetGroupArn: info.targetGroup.arn,
                     });
@@ -195,7 +222,7 @@ export class Service implements cloud.Service {
 
         // Create the service.
         let service = new aws.ecs.Service(name, {
-            desiredCount: 1,
+            desiredCount: scale,
             taskDefinition: taskDefinition.arn,
             cluster: ecsClusterARN,
             loadBalancers: loadBalancers,
@@ -203,8 +230,14 @@ export class Service implements cloud.Service {
         });
         let serviceName = service.name;
 
+        // getHostAndPort returns the host and port info for a given
+        // containerName and exposed port.
         this.getHostAndPort = async (containerName, port) => {
-            let info = exposedPorts[containerName][port];
+            let containerPorts = exposedPorts[containerName] || {};
+            let info = containerPorts[port];
+            if (!info) {
+                throw new Error(`No exposed port for ${containerName} on port ${port}`);
+            }
             return `${info.host.dnsName}:${info.port}`;
         };
     }
