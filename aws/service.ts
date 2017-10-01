@@ -3,7 +3,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { ecsClusterARN } from "./config";
+import { ecsClusterARN, ecsClusterSubnets, ecsClusterVpcId } from "./config";
 
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
     "DAC_READ_SEARCH" | "FOWNER" | "FSETID" | "IPC_LOCK" | "IPC_OWNER" | "KILL" | "LEASE" | "LINUX_IMMUTABLE" |
@@ -20,23 +20,126 @@ interface ECSContainerDefinition {
     disableNetworking?: boolean;
     dnsSearchDomains?: boolean;
     dnsServers?: string[];
-    dockerLabels?: {[label: string]: string};
+    dockerLabels?: { [label: string]: string };
     dockerSecurityOptions?: string[];
     entryPoint?: string[];
     environment?: { name: string; value: string; }[];
     essential?: boolean;
-    extraHosts?: {hostname: string; ipAddress: string}[];
+    extraHosts?: { hostname: string; ipAddress: string }[];
     hostname?: string;
     image?: string;
     links?: string[];
-    linuxParameters?: {capabilities?: { add?: ECSKernelCapability[]; drop?: ECSKernelCapability[]}};
-    logConfiguration?: { logDriver: ECSLogDriver; options?: {[key: string]: string}};
+    linuxParameters?: { capabilities?: { add?: ECSKernelCapability[]; drop?: ECSKernelCapability[] } };
+    logConfiguration?: { logDriver: ECSLogDriver; options?: { [key: string]: string } };
+}
+
+// The shared Load Balancer management role used across all Services.
+let serviceLoadBalancerRole: aws.iam.Role | undefined;
+function getServiceLoadBalancerRole(): aws.iam.Role {
+    if (!serviceLoadBalancerRole) {
+        let assumeRolePolicy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "sts:AssumeRole",
+                    "Principal": {
+                        "Service": "ecs.amazonaws.com",
+                    },
+                    "Effect": "Allow",
+                    "Sid": "",
+                },
+            ],
+        };
+        let policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                        "elasticloadbalancing:DeregisterTargets",
+                        "elasticloadbalancing:Describe*",
+                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                        "elasticloadbalancing:RegisterTargets",
+                        "ec2:Describe*",
+                        "ec2:AuthorizeSecurityGroupIngress",
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "*",
+                },
+            ],
+        };
+        serviceLoadBalancerRole = new aws.iam.Role("pulumi-s-lb-role", {
+            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
+        });
+        let rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
+            role: serviceLoadBalancerRole.name,
+            policy: JSON.stringify(policy),
+        });
+    }
+    return serviceLoadBalancerRole;
+}
+
+let MAX_LISTENERS_PER_NLB = 50;
+let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let listenerIndex = 0;
+
+interface ContainerPortLoadBalancer {
+    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
+    targetGroup: aws.elasticloadbalancingv2.TargetGroup;
+    listenerPort: number;
+}
+
+// createLoadBalancer allocates a new Load Balancer TargetGroup that can be
+// attached to a Service container and port pair. Allocates a new NLB is needed
+// (currently 50 ports can be exposed on a single NLB).
+function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
+    if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
+        // Create a new Load Balancer every 50 requests for a new TargetGroup.
+        if (!ecsClusterSubnets) {
+            throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
+        }
+        let subnets = ecsClusterSubnets.split(",");
+        let subnetmapping = subnets.map(s => ({ subnetId: s }));
+        let lbname = `pulumi-s-lb-${listenerIndex/MAX_LISTENERS_PER_NLB + 1}`;
+        loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
+            loadBalancerType: "network",
+            subnetMapping: subnetmapping,
+            internal: false,
+        });
+    }
+    if (!ecsClusterVpcId) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
+    }
+    let targetListenerName = `pulumi-s-lb-${listenerIndex}`;
+    // Create the target group for the new container/port pair.
+    let target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
+        port: port,
+        protocol: "TCP",
+        vpcId: ecsClusterVpcId,
+    });
+    // Listen on a new port on the NLB and forward to the target.
+    let listenerPort =  34567+listenerIndex%MAX_LISTENERS_PER_NLB;
+    let listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
+        loadBalancerArn: loadBalancer!.arn,
+        protocol: "TCP",
+        port: listenerPort,
+        defaultActions: [{
+            type: "forward",
+            targetGroupArn: target.arn,
+        }],
+    });
+    listenerIndex++;
+    return {
+        loadBalancer: loadBalancer!,
+        targetGroup: target,
+        listenerPort: listenerPort,
+    };
 }
 
 export class Service implements cloud.Service {
     name: string;
 
-    getHostAndPort: (containerIndex: number, containerPort: number) => Promise<string>;
+    getHostAndPort: (containerName: string, containerPort: number) => Promise<string>;
 
     constructor(name: string, ...containers: cloud.Container[]) {
         if (!ecsClusterARN) {
@@ -46,7 +149,7 @@ export class Service implements cloud.Service {
         let logGroup = new aws.cloudwatch.LogGroup(name, {});
         let taskDefinition = new aws.ecs.TaskDefinition(name, {
             family: name,
-            containerDefinitions: logGroup.id.then(logGroupId=> JSON.stringify(containers.map(container => ({
+            containerDefinitions: logGroup.id.then(logGroupId => JSON.stringify(containers.map(container => ({
                 name: container.name,
                 image: container.image,
                 memoryReservation: container.memory,
@@ -61,55 +164,48 @@ export class Service implements cloud.Service {
                 },
             } as ECSContainerDefinition)))),
         });
+
+        // Create load balancer listeners/targets.
+        let loadBalancers = [];
+        let exposedPorts: {
+            [name: string]: {
+                [port: number]: {
+                    host: aws.elasticloadbalancingv2.LoadBalancer,
+                    port: number,
+                },
+            },
+        } = {};
+        for (let container of containers) {
+            exposedPorts[container.name] = {};
+            if (container.portMappings) {
+                for (let portMapping of container.portMappings) {
+                    let info = newLoadBalancerTargetGroup(container, portMapping.containerPort);
+                    exposedPorts[container.name][portMapping.containerPort] = {
+                        host: info.loadBalancer,
+                        port: info.listenerPort,
+                    };
+                    loadBalancers.push({
+                        containerName: container.name,
+                        containerPort: portMapping.containerPort,
+                        targetGroupArn: info.targetGroup.arn,
+                    });
+                }
+            }
+        }
+
+        // Create the service.
         let service = new aws.ecs.Service(name, {
             desiredCount: 1,
-            taskDefinition:  taskDefinition.arn,
+            taskDefinition: taskDefinition.arn,
             cluster: ecsClusterARN,
+            loadBalancers: loadBalancers,
+            iamRole: getServiceLoadBalancerRole().arn,
         });
         let serviceName = service.name;
 
-        this.getHostAndPort = async (containerIndex, containerPort) => {
-            let awssdk = require("aws-sdk");
-            let ecs = new awssdk.ECS();
-            let ec2 = new awssdk.EC2();
-            // Get all tasks associated with this service
-            let listTasksResp = await ecs.listTasks({serviceName: serviceName as any}).promise();
-            if (!listTasksResp.taskArns || listTasksResp.taskArns.length < 1) {
-                console.error(`Error: ${listTasksResp}`);
-                throw new Error("No tasks in service");
-            }
-            let taskArn = listTasksResp.taskArns[0];
-            // Get metadata for the task
-            let describeTasksResp = await ecs.describeTasks({tasks: [taskArn]}).promise();
-            if (!describeTasksResp.tasks || describeTasksResp.tasks.length < 1) {
-                console.error(`Error: ${describeTasksResp.failures}`);
-                throw new Error("No tasks in service");
-            }
-            let task = describeTasksResp.tasks[0];
-            let containerInstanceArn = task.containerInstanceArn!;
-            // Get the containers instance that this task is running o
-            let ciResp = await ecs.describeContainerInstances({ containerInstances: [containerInstanceArn]}).promise();
-            if (!ciResp.containerInstances || ciResp.containerInstances.length < 1) {
-                console.error(`Error: ${ciResp.failures}`);
-                throw new Error("No instances running service");
-            }
-            let instanceId = ciResp.containerInstances[0].ec2InstanceId!;
-            // Get the metadata about the EC2 instance associated with the container instance
-            let instancesResp = await ec2.describeInstances({InstanceIds: [instanceId]}).promise();
-            if (!instancesResp.Reservations || instancesResp.Reservations.length < 1) {
-                console.error(`Error: ${instancesResp}`);
-                throw new Error("No instances running service");
-            }
-            let ipAddress = instancesResp.Reservations[0].Instances![0].PublicIpAddress!;
-            let networkBindings = task.containers![containerIndex].networkBindings!;
-            // Find the network binding and return it
-            for (let binding of networkBindings) {
-                if (binding.containerPort === containerPort) {
-                    return `${ipAddress}:${binding.hostPort}`;
-                }
-            }
-            // If no network binding matching the request, throw an error
-            throw new Error(`No bound host/port found for container ${containerIndex} port ${containerPort}`);
+        this.getHostAndPort = async (containerName, port) => {
+            let info = exposedPorts[containerName][port];
+            return `${info.host.dnsName}:${info.port}`;
         };
     }
 

@@ -37,7 +37,7 @@ export interface Service {
      * The exposed host and port for connecting to the given containerIndex on
      * the given containerPort.
      */
-    getHostAndPort(containerIndex: number, containerPort: number): Promise<string>;
+    getHostAndPort(containerName: string, containerPort: number): Promise<string>;
 }
 
 export interface ServiceConstructor {

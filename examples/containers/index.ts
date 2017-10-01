@@ -14,7 +14,7 @@ let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/", async (req, res) => {
     try {
         console.log("timer starting")
-        let hostandport = await nginx.getHostAndPort(0, 80);
+        let hostandport = await nginx.getHostAndPort("nginx", 80);
         console.log("got host and port:" + hostandport);
         let resp = await fetch(`http://${hostandport}/`);
         let buffer = await resp.buffer();
