@@ -13,6 +13,11 @@ interface APIGatewayRequest {
     resource: string;
     path: string;
     httpMethod: string;
+    // Note: cloud.Request.headers is typed as { [header: string]: string | string[]; }.  However,
+    // currently AWS does not support duplicated headers.  See:
+    //
+    // https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-known-issues.html
+    // > Duplicated headers are not supported."
     headers: { [header: string]: string; };
     queryStringParameters: { [param: string]: string; };
     pathParameters: { [param: string]: string; };
