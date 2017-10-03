@@ -14,11 +14,9 @@ declare module "assert" {
 
 (<any>assert).throwsAsync = async function(body: () => Promise<void>): Promise<void> {
     try {
-        console.log("Start");
         await body();
     }
     catch (err) {
-        console.log("Threw error");
         return;
     }
 
@@ -45,6 +43,32 @@ describe("HttpEndpoint", () => {
 
             let address = await app.publish();
             await supertest(address).get("/frob").expect(404);
+        });
+
+        it("Does not call second handler unless requested", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res, next) {
+                res.status(200).write("ok").end();
+            },
+            function (req, res) {
+                throw new Error("Should not have been called");
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").expect(200);
+        });
+
+        it("Does call second handler when requested", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res, next) {
+                next();
+            },
+            function (req, res) {
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").expect(200);
         });
     });
 });
