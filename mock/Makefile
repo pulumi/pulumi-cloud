@@ -39,8 +39,8 @@ install:
 
 .PHONY: tests
 tests:
-	cd tests/table && yarn && yarn run build && yarn run test
-	cd tests/topic && yarn && yarn run build && yarn run test
+#	cd tests/table && yarn && yarn run build && yarn run test
+#	cd tests/topic && yarn && yarn run build && yarn run test
 	cd tests/httpEndpoint && yarn && yarn run build && yarn run test
 
 .PHONY: publish

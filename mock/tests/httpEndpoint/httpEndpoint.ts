@@ -6,6 +6,7 @@ pulumi.runtime.setConfig("cloud:config:provider", "mock");
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as chai from "chai";
+import * as supertest from "supertest";
 
 declare module "assert" {
     function throwsAsync(body: () => Promise<void>): Promise<void>;
@@ -24,16 +25,26 @@ declare module "assert" {
     throw new Error("Expected error to be thrown");
 };
 
-let app = new cloud.HttpEndpoint("_");
-app.get("/", function (req, res) {
-    res.status(200).write("ok").end();
-});
+describe("HttpEndpoint", () => {
+    describe("#get", () => {
+        it("responds to /", async function () {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res) {
+                res.status(200).write("ok").end();
+            });
 
-let promise = app.publish();
-promise.then(
-res => {
-    console.log(`Example app listening at port ${res}`);
-},
-rej => {
-    console.log("Failed %s", rej);
+            let address = await app.publish();
+            await supertest(address).get("/").expect(200);
+        });
+
+        it("404 for anything else", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res) {
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/frob").expect(404);
+        });
+    });
 });

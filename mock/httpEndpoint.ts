@@ -49,8 +49,6 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                     throw new Error("Method not supported: " + method);
             }
 
-            let routerMatcher = <{ (path: string, ...handlers: express.RequestHandler[]): void }>(<any>app)[method];
-
             function handler(req: express.Request, res: express.Response, next: express.NextFunction) {
                 // Convert express' request/response forms to our own.
                 const convertedRequest = convertRequest(req);
@@ -78,7 +76,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 callNextHandler();
             }
 
-            routerMatcher.apply(app, [path, handler]);
+            let routerMatcher: Function = (<any>app)[method];
+            routerMatcher.apply(app, [path, [handler]]);
         };
 
         this.get = (path, ...handlers) => this.route("get", path, ...handlers);
@@ -95,7 +94,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
             server = app.listen(0);
 
-            this.url = Promise.resolve(`http://localhost:${server.address().port}/`);
+            this.url = Promise.resolve(`http://localhost:${server.address().port}`);
             return this.url;
         };
 
