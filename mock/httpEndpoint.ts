@@ -78,7 +78,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 callNextHandler();
             }
 
-            routerMatcher(path, handler);
+            routerMatcher.apply(app, [path, handler]);
         };
 
         this.get = (path, ...handlers) => this.route("get", path, ...handlers);
@@ -94,7 +94,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             }
 
             server = app.listen(0);
-            this.url = Promise.resolve(server.address().address);
+
+            this.url = Promise.resolve(`http://localhost:${server.address().port}/`);
             return this.url;
         };
 
@@ -113,7 +114,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 params: expressRequest.params,
                 headers: expressRequest.headers,
                 query: expressRequest.query,
-                path: expressRequest.path,
+                path:   expressRequest.path,
                 protocol: expressRequest.protocol,
                 baseUrl: expressRequest.baseUrl,
                 hostname: expressRequest.hostname,
@@ -123,10 +124,16 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         function convertResponse(expressResponse: core.Response): cloud.Response {
             return {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
-                setHeader: (name: string, value: string) => { expressResponse.setHeader(name, value); return this; },
-                write: (data: string, encoding?: string) => { expressResponse.write(data, encoding); return this; },
                 end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),
                 json: (obj: any) => expressResponse.json(obj),
+                setHeader(name: string, value: string) {
+                    expressResponse.setHeader(name, value);
+                    return this;
+                },
+                write(data: string, encoding?: string) {
+                    expressResponse.write(data, encoding);
+                    return this;
+                },
             };
         }
     }
