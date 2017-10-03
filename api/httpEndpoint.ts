@@ -22,7 +22,7 @@ export interface Request {
     /**
      * The headers of the HTTP request.
      */
-    headers: { [header: string]: string; };
+    headers: { [header: string]: string | string[]; };
     /**
      * The query parameters parsed from the query string of the request URL.
      */
