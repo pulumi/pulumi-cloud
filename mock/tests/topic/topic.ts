@@ -93,7 +93,7 @@ describe("Topic", () => {
 
             topic1.publish(10);
 
-            var allPromise = Promise.all([promise1, promise2]);
+            const allPromise = Promise.all([promise1, promise2]);
             await allPromise;
 
             assert.equal(2, numbers.length);
