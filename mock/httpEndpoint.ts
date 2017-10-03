@@ -111,9 +111,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 body: <Buffer>expressRequest.body,
                 method: expressRequest.method,
                 params: expressRequest.params,
-                // TODO(cyrusn): express can represent headers as a string[].  We should probably
-                // consider exposing them in the same way.
-                headers: <{ [header: string]: string }> expressRequest.headers,
+                headers: expressRequest.headers,
                 query: expressRequest.query,
                 path: expressRequest.path,
                 protocol: expressRequest.protocol,
