@@ -70,5 +70,60 @@ describe("HttpEndpoint", () => {
             let address = await app.publish();
             await supertest(address).get("/").expect(200);
         });
+
+        it("Can call into default handler", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res, next) {
+                res.status(200).write("ok").end();
+                next();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").expect(200);
+        });
+
+        it("Can get parameters", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/goo", function (req, res, next) {
+                assert.equal(req.query.name, "baz");
+                assert.equal(req.query.color, "purple");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/goo?name=baz&color=purple").expect(200);
+        });
+
+        it("Can get array parameters", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/goo", function (req, res, next) {
+                assert.deepEqual(req.query["name"], ["baz", "quux"]);
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/goo?name[]=baz&name[]=quux").expect(200);
+        });
+
+        it("Can get body", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res, next) {
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").expect("ok");
+        });
+
+        it("Can get headers", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res, next) {
+                assert.equal(req.headers.customheader, "value");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").set({ customheader: "value" }).expect(200);
+        });
     });
 });

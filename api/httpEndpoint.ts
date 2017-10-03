@@ -26,7 +26,7 @@ export interface Request {
     /**
      * The query parameters parsed from the query string of the request URL.
      */
-    query: { [query: string]: string; };
+    query: { [query: string]: string | string[]; };
     /**
      * The raw path from the HTTP request.
      */
