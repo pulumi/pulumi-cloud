@@ -130,6 +130,7 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
         port: port,
         protocol: "TCP",
         vpcId: ecsClusterVpcId,
+        deregistrationDelay: 30,
     });
     // Listen on a new port on the NLB and forward to the target.
     let listenerPort = 34567 + listenerIndex % MAX_LISTENERS_PER_NLB;
@@ -152,6 +153,14 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
 
 export class Service implements cloud.Service {
     name: string;
+    exposedPorts: {
+        [name: string]: {
+            [port: number]: {
+                host: aws.elasticloadbalancingv2.LoadBalancer,
+                port: number,
+            },
+        },
+    };
 
     getHostAndPort: (containerName: string, containerPort: number) => Promise<string>;
 
@@ -175,6 +184,7 @@ export class Service implements cloud.Service {
                     let containerDefinition: ECSContainerDefinition = {
                         name: containerName,
                         image: container.image,
+                        command: container.command,
                         memoryReservation: container.memory,
                         portMappings: container.portMappings,
                         logConfiguration: {
@@ -193,21 +203,14 @@ export class Service implements cloud.Service {
 
         // Create load balancer listeners/targets for each exposed port.
         let loadBalancers = [];
-        let exposedPorts: {
-            [name: string]: {
-                [port: number]: {
-                    host: aws.elasticloadbalancingv2.LoadBalancer,
-                    port: number,
-                },
-            },
-        } = {};
+        this.exposedPorts = {};
         for (let containerName of Object.keys(containers)) {
             let container = containers[containerName];
-            exposedPorts[containerName] = {};
+            this.exposedPorts[containerName] = {};
             if (container.portMappings) {
                 for (let portMapping of container.portMappings) {
                     let info = newLoadBalancerTargetGroup(container, portMapping.containerPort);
-                    exposedPorts[containerName][portMapping.containerPort] = {
+                    this.exposedPorts[containerName][portMapping.containerPort] = {
                         host: info.loadBalancer,
                         port: info.listenerPort,
                     };
@@ -232,14 +235,22 @@ export class Service implements cloud.Service {
 
         // getHostAndPort returns the host and port info for a given
         // containerName and exposed port.
-        this.getHostAndPort = async (containerName, port) => {
-            let containerPorts = exposedPorts[containerName] || {};
+        this.getHostAndPort = async function(containerName, port) {
+            let containerPorts = this.exposedPorts[containerName] || {};
             let info = containerPorts[port];
             if (!info) {
-                throw new Error(`No exposed port for ${containerName} on port ${port}`);
+                throw new Error(
+                    `No exposed port for ${containerName} port ${port}`,
+                );
             }
             return `${info.host.dnsName}:${info.port}`;
         };
     }
 
+}
+
+export class FileSystem implements cloud.FileSystem {
+    constructor(name: string) {
+        console.log("creating FS: " + name);
+    }
 }

@@ -10,3 +10,9 @@ export class Service implements cloud.Service {
         throw new Error(`Service not yet supported in mock implementation.`);
     }
 }
+
+export class FileSystem implements cloud.FileSystem {
+    constructor(name: string) {
+        throw new Error(`FileSystem not yet supported in mock implementation.`);
+    }
+}

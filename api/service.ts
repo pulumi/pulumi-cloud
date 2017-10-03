@@ -21,7 +21,32 @@ export interface Container {
      * the protocal that is used on that port.
      */
     portMappings?: {containerPort: number; protocol?: string}[];
+    /**
+     * The command line that is passed to the container. This parameter maps to
+     * `Cmd` in the [Create a
+     * container](https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/#create-a-container)
+     * section of the [Docker Remote
+     * API](https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/)
+     * and the `COMMAND` parameter to [docker run](docker run). For more information about the
+     * Docker `CMD` parameter, go to
+     * https://docs.docker.com/engine/reference/builder/#cmd.
+     */
+    command?: string[];
 }
+
+/**
+ * A shared file system that can be mounted into one or more containers.
+ */
+export interface FileSystem {}
+
+export interface FileSystemConstructor {
+    /**
+     * Construct a new FileSystem with the given unique name.
+     */
+    new (name: string): FileSystem;
+}
+
+export let FileSystem: FileSystemConstructor; // tslint:disable-line
 
 export interface ServiceArguments {
     containers: Containers;
