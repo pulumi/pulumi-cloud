@@ -74,7 +74,7 @@ describe("Topic", () => {
             let resolve1: () => void;
             let promise1 = new Promise((res, reject) => resolve1 = res);
 
-            topic1.subscribe("", num => {
+            topic1.subscribe("1", num => {
                 numbers.push(num);
                 resolve1();
                 return Promise.resolve();
@@ -83,7 +83,7 @@ describe("Topic", () => {
             let resolve2: () => void;
             let promise2 = new Promise((res, reject) => resolve2 = res);
 
-            topic1.subscribe("", num => {
+            topic1.subscribe("2", num => {
                 numbers.push(num);
                 resolve2();
                 return Promise.resolve();

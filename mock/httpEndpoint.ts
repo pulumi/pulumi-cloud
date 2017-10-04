@@ -6,6 +6,9 @@ import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
 import * as pulumi from "pulumi";
+import * as utils from "./utils";
+
+let usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
@@ -20,7 +23,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public all: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public publish: () => pulumi.Computed<string>;
 
-    constructor(unused: string) {
+    constructor(name: string) {
+        utils.ensureUnique(usedNames, name, "HttpEndpoint");
+
         let app = express();
 
         // Use 'raw' body parsing to convert populate any request body properly with a buffer.
@@ -127,8 +132,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),
                 json: (obj: any) => expressResponse.json(obj),
-                setHeader(name: string, value: string) {
-                    expressResponse.setHeader(name, value);
+                setHeader(headerName: string, value: string) {
+                    expressResponse.setHeader(headerName, value);
                     return this;
                 },
                 write(data: string, encoding?: string) {
