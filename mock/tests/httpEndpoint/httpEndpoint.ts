@@ -24,8 +24,19 @@ declare module "assert" {
 };
 
 describe("HttpEndpoint", () => {
-    describe("#get", () => {
-        it("responds to /", async function () {
+    describe("#get()", () => {
+        it("Is get method", async function () {
+            let app = new cloud.HttpEndpoint("_");
+            app.get("/", function (req, res) {
+                assert.equal(req.method, "GET");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).get("/").expect(200);
+        });
+
+        it("Responds to /", async function () {
             let app = new cloud.HttpEndpoint("_");
             app.get("/", function (req, res) {
                 res.status(200).write("ok").end();
@@ -124,6 +135,67 @@ describe("HttpEndpoint", () => {
 
             let address = await app.publish();
             await supertest(address).get("/").set({ customheader: "value" }).expect(200);
+        });
+    });
+
+    describe("#post()", () => {
+        it ("Is post method", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.post("/", function (req, res, next) {
+                assert.equal(req.method, "POST");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).post("/").send("body-content").expect(200);
+        });
+
+        it ("Can get post body", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.post("/", function (req, res, next) {
+                assert.equal(req.body.toString(), "body-content");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).post("/").send("body-content").expect(200);
+        });
+    });
+
+    describe("#delete()", () => {
+        it ("Is delete method", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.delete("/", function (req, res, next) {
+                assert.equal(req.method, "DELETE");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).delete("/").expect(200);
+        });
+    });
+
+    describe("#put()", () => {
+        it ("Is put method", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.put("/", function (req, res, next) {
+                assert.equal(req.method, "PUT");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).put("/").expect(200);
+        });
+
+        it ("Can get put body", async () => {
+            let app = new cloud.HttpEndpoint("_");
+            app.put("/", function (req, res, next) {
+                assert.equal(req.body.toString(), "body-content");
+                res.status(200).write("ok").end();
+            });
+
+            let address = await app.publish();
+            await supertest(address).put("/").send("body-content").expect(200);
         });
     });
 });

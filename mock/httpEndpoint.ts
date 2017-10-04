@@ -24,7 +24,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         let app = express();
 
         // use 'raw' body parsing to convert populate any request body properly with a buffer.
-        app.use(bodyParser.raw());
+        app.use(bodyParser.raw({ type: () => true }));
         let server: http.Server | undefined = undefined;
 
         this.staticFile = (path, filePath) => {
