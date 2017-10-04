@@ -14,11 +14,9 @@ declare module "assert" {
 
 (<any>assert).throwsAsync = async function(body: () => Promise<void>): Promise<void> {
     try {
-        console.log("Start");
         await body();
     }
     catch (err) {
-        console.log("Threw error");
         return;
     }
 
