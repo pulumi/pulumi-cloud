@@ -23,7 +23,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     constructor(unused: string) {
         let app = express();
 
-        // use 'raw' body parsing to convert populate any request body properly with a buffer.
+        // Use 'raw' body parsing to convert populate any request body properly with a buffer.
+        // Pass an always-true function as our options so that always convert the request body
+        // into a buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
         let server: http.Server | undefined = undefined;
 
