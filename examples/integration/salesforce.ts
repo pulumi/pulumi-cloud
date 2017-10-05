@@ -1,13 +1,15 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
-import * as config from "./config";
 import { poll } from "./poll";
 
-let salesforceEmail = config.salesforceEmail;
-let salesforcePassword = config.salesforcePassword;
+const config = new pulumi.Config("salesforce");
 
 let getAuthenticatedSalesforceConnection: () => Promise<any> = async () => {
+    const salesforceEmail = config.require("email");
+    const salesforcePassword = config.require("password");
+
     let jsforce = require("jsforce");
     console.log(`loaded jsforce`);
     let conn = new jsforce.Connection();

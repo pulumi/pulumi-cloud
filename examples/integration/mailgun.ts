@@ -1,11 +1,13 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as config from "./config";
+import * as pulumi from "pulumi";
 
-let domain = config.mailgunDomain;
-let apiKey = config.mailgunApiKey;
+const config = new pulumi.Config("mailgun");
 
 export let send: (message: EmailMessage) => Promise<void> = async (message) => {
+    const domain = config.require("domain");
+    const apiKey = config.require("api_key");
+
     let request = require("request-promise-native");
     let body = await request({
         method: "POST",
@@ -21,7 +23,7 @@ export let send: (message: EmailMessage) => Promise<void> = async (message) => {
             text:  message.body,
         },
     });
-    console.log(`response body ${body}`);
+    console.log(`MailGun response: ${body}`);
 };
 
 export interface EmailMessage {

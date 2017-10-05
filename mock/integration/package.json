@@ -11,7 +11,8 @@
         "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "@pulumi/cloud": "*"
+        "@pulumi/cloud": "*",
+        "@pulumi/integration-examples": "*"
     },
     "dependencies": {
         "jsforce": "^1.8.0",
