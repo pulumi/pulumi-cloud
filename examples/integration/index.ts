@@ -13,13 +13,12 @@ let salesforceQueryAll = salesforce.queryAll;
 let sendSESEmail = aws.sendEmail;
 let salesforceInsert = salesforce.insert;
 
-function exampleTwitter1() {
+export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
     let tweets = twitter.search("pulumi", "vscode");
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
-        console.log(tweet);
         await sendEmail({
             to: "luke@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
@@ -28,7 +27,7 @@ function exampleTwitter1() {
     });
 }
 
-function exampleTwitter2() {
+export function exampleTwitter2() {
     // Get a stream of all tweets matching this query, forever...
     let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
@@ -59,7 +58,7 @@ function exampleTwitter2() {
     });
 }
 
-function exampleSalesforce1() {
+export function exampleSalesforce1() {
     // Get a stream of all modifications to the Contact list...
     let contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
         if (timestamp === undefined) {
@@ -91,7 +90,7 @@ function exampleSalesforce1() {
     });
 }
 
-function exampleSalesforce2() {
+export function exampleSalesforce2() {
     // Get a stream of all modifications to the Contact list...
     let contacts = salesforce.query(
         "contacts",
@@ -107,7 +106,7 @@ function exampleSalesforce2() {
     });
 }
 
-function exampleSalesforce3() {
+export function exampleSalesforce3() {
     // Get a stream of all modifications to the Contact list...
     let contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
 
@@ -117,7 +116,7 @@ function exampleSalesforce3() {
     });
 }
 
-function exampleSendSESEmail() {
+export function exampleSendSESEmail() {
     let api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
@@ -143,7 +142,5 @@ function exampleSendSESEmail() {
         }
     });
 
-    api.publish().mapValue((url: string) => { console.log(`URL: ${url}`); });
+    api.publish().then((url: string) => { console.log(`URL: ${url}`); });
 }
-
-exampleSendSESEmail();

@@ -24,7 +24,13 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
     }
 
     const rateMS = rateMinutes * 60 * 1000;
-    setInterval(handler, rateMS);
+
+    // Run the handler very quickly, then set it up to run and the requested interval after that.
+    // This way the user doesn't have to wait up to a minute to see the first interval fire.
+    setTimeout(() => {
+        handler();
+        setInterval(handler, rateMS);
+    }, 5);
 }
 
 export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {

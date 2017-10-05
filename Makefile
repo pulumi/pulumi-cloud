@@ -1,7 +1,7 @@
 PROCCNT=$(shell nproc --all)
 
 .PHONY: all
-all: api aws mock test
+all: api aws examples mock test
 
 .PHONY: api
 api:
@@ -10,6 +10,10 @@ api:
 .PHONY: aws
 aws:
 	$(MAKE) -C ./aws all
+
+.PHONY: examples
+examples:
+	$(MAKE) -C ./examples all
 
 .PHONY: mock
 mock:

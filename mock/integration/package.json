@@ -1,5 +1,5 @@
 {
-    "name": "@pulumi/integration-examples",
+    "name": "integration",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -11,8 +11,8 @@
         "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "pulumi": "*",
-        "@pulumi/cloud": "*"
+        "@pulumi/cloud": "*",
+        "@pulumi/integration-examples": "*"
     },
     "dependencies": {
         "jsforce": "^1.8.0",
