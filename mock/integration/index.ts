@@ -3,6 +3,18 @@
 import * as pulumi from "pulumi";
 pulumi.runtime.setConfig("cloud:config:provider", "mock");
 
+const envConfig = process.env.PULUMI_CONFIG;
+if (envConfig) {
+    console.log("Populating config with PULUMI_CONFIG environment variable...");
+    const parsed = JSON.parse(envConfig);
+
+    for (const key in parsed) {
+        const value = parsed[key];
+        console.log(`Adding ${key}=${value} to the config store.`)
+        pulumi.runtime.setConfig(key, value);
+    }
+}
+
 for (const arg of process.argv.slice(2)) {
     const equalIndex = arg.indexOf("=");
     if (equalIndex > 0) {

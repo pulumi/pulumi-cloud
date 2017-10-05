@@ -10,6 +10,6 @@ export function requireConfig(config: pulumi.Config, name: string): string {
         let key = err.key;
         throw new Error(
             `Missing required configuration variable '${key}'\n` +
-            `\tplease provide this value on the command line as: ${key}=value\``)
+            `\tPlease add PULUMI_CONFIG='{ "${key}": "value" }' to your environment or pass ${key}=value in as command line parameter.`)
     }
 }

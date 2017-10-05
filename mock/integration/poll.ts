@@ -15,6 +15,8 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
     let topic = new cloud.Topic<T>(name);
 
     cloud.timer.interval(name, rate, async () => {
+        console.log(`Starting polling...`);
+
         console.log(`Getting pollMarker for ${name}`);
         let pollMarker = await pollMarkers.get({id: name});
         console.log(`pollMarker is ${JSON.stringify(pollMarker, null, "")}`);
@@ -25,17 +27,21 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
         }
 
         console.log(`lastToken is ${lastToken}`);
+
+        console.log("Polling for results...");
         let results = await poller(lastToken);
-        console.log(`results is ${JSON.stringify(results, null, "")}`);
+        console.log(`Got ${results.items.length} results...`);
         pollMarkers.update({id: name}, {lastToken: results.nextToken});
-        console.log(`updated pollmarker ${name} to ${results.nextToken}`);
-        for (let i = 0; i < (<any>results.items).length; i++) {
+        console.log(`Updating pollmarker ${name} to ${results.nextToken}...`);
+
+        console.log(`Publishing results to topic '${name}'...`);
+        for (let i = 0; i < results.items.length; i++) {
             let result = results.items[i];
             await topic.publish(result);
-            console.log(`published to topic ${JSON.stringify(result, null, "")}`);
         }
+        console.log("Done publishing results...");
 
-        console.log(`done`);
+        console.log(`Done polling...`);
     });
 
     return { subscribe: topic.subscribe, };
