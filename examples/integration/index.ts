@@ -19,7 +19,6 @@ export function exampleTwitter1() {
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
-        console.log(tweet);
         await sendEmail({
             to: "luke@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
