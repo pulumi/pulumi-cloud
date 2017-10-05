@@ -17,6 +17,8 @@ function getTwitterAuthorizationBearer() {
 }
 
 async function getTwitterAuthorizationBearerWorker(): Promise<string> {
+    // Consumer key and secret from https://apps.twitter.com/.  Create a new app and request a
+    // request these to make API requests on behalf of the logged in account.
     const twitterConsumerKey = config.require("consumer_key");
     const twitterConsumerSecret = config.require("consumer_secret");
 

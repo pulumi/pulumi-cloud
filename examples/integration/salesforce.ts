@@ -7,6 +7,9 @@ import { poll } from "./poll";
 const config = new pulumi.Config("salesforce");
 
 let getAuthenticatedSalesforceConnection: () => Promise<any> = async () => {
+    // Email and Password for Salesforce account.  Password should be in the form:
+    //    <password><security_token>
+    // See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
     const salesforceEmail = config.require("email");
     const salesforcePassword = config.require("password");
 

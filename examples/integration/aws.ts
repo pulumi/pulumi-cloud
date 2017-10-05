@@ -5,6 +5,8 @@ import * as pulumi from "pulumi";
 const config = new pulumi.Config("aws");
 
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
+    // AWS IAM credentials for making calls agaisnt AWS resources.
+    // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html
     const accessKeyID = config.require("access_key");
     const secretAccessKey = config.require("scret_access_key");
     const region = config.require("region");
