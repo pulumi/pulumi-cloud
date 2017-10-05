@@ -31,7 +31,7 @@ export class Table implements cloud.Table {
             }
 
             const result = database[pk];
-            return result ? Promise.resolve(result) : Promise.reject(new Error("Key not found"));
+            return Promise.resolve(result);
         };
 
         this.insert = (query: any) => {
