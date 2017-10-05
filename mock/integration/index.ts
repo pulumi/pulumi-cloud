@@ -3,6 +3,18 @@
 import * as pulumi from "pulumi";
 pulumi.runtime.setConfig("cloud:config:provider", "mock");
 
+// Configuration for the local integration example can be provided in two ways.  The first is as an
+// environment variable of the form:
+//
+//      PULUMI_CONFIG='{ "config_key_1": "config_value_1", ..., "config_key_n": "config_value_n" }'
+//
+// The second is through arguments passed to the nodejs process of the form:
+//
+//      nodejs index.js config_key_1=config_value_1 ...  config_key_n=config_value_n
+//
+// Both of these can be provided, allowing for values to be provided both from the environment and
+// from the command line.  Command line arguments will supercede environment values with the same
+// name.
 const envConfig = process.env.PULUMI_CONFIG;
 if (envConfig) {
     console.log("Populating config with PULUMI_CONFIG environment variable...");
