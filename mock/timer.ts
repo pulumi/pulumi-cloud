@@ -2,8 +2,13 @@
 
 import { timer } from "@pulumi/cloud";
 import * as node_cron from "cron";
+import * as utils from "./utils";
+
+const usedNames: { [name: string]: string } = Object.create(null);
 
 export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>): void {
+    utils.ensureUnique(usedNames, name, "Timer");
+
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
@@ -23,6 +28,8 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
 }
 
 export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {
+    utils.ensureUnique(usedNames, name, "Timer");
+
     const job = new node_cron.CronJob(cronTab, handler);
     job.start();
 }

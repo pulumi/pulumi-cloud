@@ -2,8 +2,9 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
+import * as utils from "./utils";
 
-const globalDatabase = Object.create(null);
+const usedNames: { [name: string]: string } = Object.create(null);
 
 export class Table implements cloud.Table {
     public tableName: pulumi.Computed<string>;
@@ -17,16 +18,19 @@ export class Table implements cloud.Table {
     constructor(name: string,
                 public readonly primaryKey: string = "id",
                 public readonly primaryKeyType: string = "string") {
+
+        utils.ensureUnique(usedNames, name, "Table");
+
         this.tableName = Promise.resolve(name);
 
-        const localDatabase = globalDatabase[name] || (globalDatabase[name] = Object.create(null));
+        const database = Object.create(null);
         this.get = (query: any) => {
             const pk = query[primaryKey];
             if (pk === undefined) {
                 return Promise.reject(new Error("PrimaryKey not provided"));
             }
 
-            const result = localDatabase[pk];
+            const result = database[pk];
             return result ? Promise.resolve(result) : Promise.reject(new Error("Key not found"));
         };
 
@@ -36,7 +40,7 @@ export class Table implements cloud.Table {
                 return Promise.reject(new Error("PrimaryKey not provided"));
             }
 
-            localDatabase[pk] = query;
+            database[pk] = query;
             return Promise.resolve();
         };
 
@@ -46,12 +50,12 @@ export class Table implements cloud.Table {
                 return Promise.reject(new Error("PrimaryKey not provided"));
             }
 
-            const existingValue = localDatabase[pk];
+            const existingValue = database[pk];
             if (existingValue === undefined) {
                 return Promise.reject(new Error("Item not found"));
             }
 
-            delete localDatabase[pk];
+            delete database[pk];
             return Promise.resolve();
         };
 
@@ -61,7 +65,7 @@ export class Table implements cloud.Table {
                 return Promise.reject(new Error("PrimaryKey not provided"));
             }
 
-            const existingValue = localDatabase[pk];
+            const existingValue = database[pk];
             if (existingValue === undefined) {
                 updates[primaryKey] = pk;
                 return this.insert(updates);
@@ -76,8 +80,8 @@ export class Table implements cloud.Table {
 
         this.scan = () =>  {
             const result = [];
-            for (const key of Object.keys(localDatabase)) {
-                result.push(localDatabase[key]);
+            for (const key of Object.keys(database)) {
+                result.push(database[key]);
             }
 
             return Promise.resolve(result);
