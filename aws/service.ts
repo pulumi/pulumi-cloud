@@ -3,8 +3,10 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { ecsClusterARN, ecsClusterSubnets, ecsClusterVpcId } from "./config";
+import { ecsClusterARN, ecsClusterEfsMountPath, ecsClusterSubnets, ecsClusterVpcId } from "./config";
 
+
+// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
     "DAC_READ_SEARCH" | "FOWNER" | "FSETID" | "IPC_LOCK" | "IPC_OWNER" | "KILL" | "LEASE" | "LINUX_IMMUTABLE" |
     "MAC_ADMIN" | "MAC_OVERRIDE" | "MKNOD" | "NET_ADMIN" | "NET_BIND_SERVICE" | "NET_BROADCAST" | "NET_RAW" |
@@ -12,11 +14,14 @@ type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSP
     "SYS_NICE" | "SYS_PACCT" | "SYS_PTRACE" | "SYS_RAWIO" | "SYS_RESOURCE" | "SYS_TIME" | "SYS_TTY_CONFIG" |
     "SYSLOG" | "WAKE_ALARM";
 
+// See `logdriver` at http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
 type ECSLogDriver = "json-file" | "syslog" | "journald" | "gelf" | "fluentd" | "awslogs" | "splunk";
 
+// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Ulimit.html
 type ECSUlimitName = "core" | "cpu" | "data" | "fsize" | "locks" | "memlock" | "msgqueue" | "nice" |
     "nofile" | "nproc" | "rss" | "rtprio" | "rttime" | "sigpending" | "stack";
 
+// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html
 interface ECSContainerDefinition {
     command?: string[];
     cpu?: number;
@@ -107,11 +112,14 @@ interface ContainerPortLoadBalancer {
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
 function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
+    if (!ecsClusterVpcId) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
+    }
+    if (!ecsClusterSubnets) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
+    }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        if (!ecsClusterSubnets) {
-            throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
-        }
         let subnets = ecsClusterSubnets.split(",");
         let subnetmapping = subnets.map(s => ({ subnetId: s }));
         let lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
@@ -120,9 +128,6 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
             subnetMapping: subnetmapping,
             internal: false,
         });
-    }
-    if (!ecsClusterVpcId) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
     }
     let targetListenerName = `pulumi-s-lb-${listenerIndex}`;
     // Create the target group for the new container/port pair.
@@ -162,7 +167,7 @@ export class Service implements cloud.Service {
         },
     };
 
-    getHostAndPort: (containerName: string, containerPort: number) => Promise<string>;
+    getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
         if (!ecsClusterARN) {
@@ -174,6 +179,31 @@ export class Service implements cloud.Service {
 
         // Create a single log group for all logging associated with the Service
         let logGroup = new aws.cloudwatch.LogGroup(name, {});
+
+        // Find all referenced Volumes
+        let volumes: {hostPath?: string; name: string}[] = [];
+        for (let containerName of Object.keys(containers)) {
+            let container = containers[containerName];
+            if (container.mountPoints) {
+                for (let mountPoint of container.mountPoints) {
+                    if (!ecsClusterEfsMountPath) {
+                        throw new Error(
+                            "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
+                        );
+                    }
+                    let volume = mountPoint.sourceVolume;
+                    volumes.push({
+                        // TODO: [pulumi/pulumi##381] We should most likely be
+                        // including a unique identifier for this deployment
+                        // into the path, so that Volumes in this deployment
+                        // don't accidentally overlap with Volumes from other
+                        // deployments on the same cluster.
+                        hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
+                        name: volume.name,
+                    });
+                }
+            }
+        }
 
         // Create the task definition for the group of containers associated with this Service.
         let taskDefinition = new aws.ecs.TaskDefinition(name, {
@@ -199,6 +229,7 @@ export class Service implements cloud.Service {
                     return containerDefinition;
                 })),
             ),
+            volume: volumes,
         });
 
         // Create load balancer listeners/targets for each exposed port.
@@ -233,24 +264,60 @@ export class Service implements cloud.Service {
         });
         let serviceName = service.name;
 
-        // getHostAndPort returns the host and port info for a given
+        // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
-        this.getHostAndPort = async function(containerName, port) {
+        this.getEndpoint = async function(containerName, port): Promise<cloud.Endpoint> {
+            if (!containerName) {
+                // If no container name provided, choose the first container
+                containerName = Object.keys(this.exposedPorts)[0];
+                if (!containerName) {
+                    throw new Error(
+                        `No containers available in this service`,
+                    );
+                }
+            }
             let containerPorts = this.exposedPorts[containerName] || {};
+            if (!port) {
+                // If no port provided, choose the first exposed port on the container.
+                port = +Object.keys(containerPorts)[0];
+                if (!port) {
+                    throw new Error(
+                        `No ports available in service container ${containerName}`,
+                    );
+                }
+            }
             let info = containerPorts[port];
             if (!info) {
                 throw new Error(
                     `No exposed port for ${containerName} port ${port}`,
                 );
             }
-            return `${info.host.dnsName}:${info.port}`;
+            return {
+                hostname: info.host.dnsName,
+                port: info.port,
+            };
         };
     }
 
 }
 
-export class FileSystem implements cloud.FileSystem {
+let volumeNames = new Set<string>();
+
+// TODO: In the current EFS-backed model, a Volume is purely virtual - it
+// doesn't actually manage any underlying resource.  It is used just to provide
+// a handle to a folder on the EFS share which can be mounted by conatainer(s).
+// On platforms like ACI, we may be able to acrtually provision a unique File
+// Share per Volume to keep these independently managable.  For now, on AWS
+// thoguh, we rely on this File Share having been set up as part of the ECS
+// Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
+// longer than any individual deployment.
+export class Volume implements cloud.Volume {
+    name: string;
     constructor(name: string) {
-        console.log("creating FS: " + name);
+        if (volumeNames.has(name)) {
+            throw new Error("Must provide a unique volumen name");
+        }
+        this.name = name;
+        volumeNames.add(name);
     }
 }

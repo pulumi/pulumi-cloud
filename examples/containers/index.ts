@@ -3,6 +3,7 @@
 import * as cloud from "@pulumi/cloud";
 import fetch from "node-fetch";
 
+// A simple NGINX service, scaled out over two containers.
 let nginx = new cloud.Service("nginx", {
     containers: {
         nginx: {
@@ -14,11 +15,24 @@ let nginx = new cloud.Service("nginx", {
     scale: 2,
 });
 
+// A simple MongoDB service, using a data volume which persists on the backing
+// storage beyond the lifetime of the deployment.
+let dataVolume = new cloud.Volume("mymongodb-data");
+let mongodb = new cloud.Service("mymongodb", {
+    containers: {
+        mongodb: {
+            image: "mongo",
+            memory: 128,
+            portMappings: [{ containerPort: 27017 }],
+            mountPoints: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
+        },
+    },
+});
+
 // TODO: Would be nice if this was a Secret<T> and closure serialization
 //       knew to pass it in encrypted env vars.
 // TODO: Might also be nice if this could be generated uniquely per stack.
 let redisPassword = "SECRETPASSWORD";
-
 
 /**
  * A simple Cache abstration, built on top of a Redis container Service.
@@ -40,9 +54,9 @@ class Cache {
             },
         });
         this.get = (key: string) => {
-            return redis.getHostAndPort("redis", 6379).then(hostandport => {
-                console.log(hostandport);
-                let client = require("redis").createClient(`redis://${hostandport}`, {password: redisPassword});
+            return redis.getEndpoint("redis", 6379).then(endpoint => {
+                console.log(`Endpoint: ${endpoint}`);
+                let client = require("redis").createClient(endpoint.port, endpoint.hostname, {password: redisPassword});
                 console.log(client);
                 return new Promise<string>((resolve, reject) => {
                     client.get(key, (err: any, v: any) => {
@@ -56,9 +70,9 @@ class Cache {
             });
         };
         this.set = (key: string, value: string) => {
-            return redis.getHostAndPort("redis", 6379).then(hostandport => {
-                console.log(hostandport);
-                let client = require("redis").createClient(`redis://${hostandport}`, {password: redisPassword});
+            return redis.getEndpoint("redis", 6379).then(endpoint => {
+                console.log(`Endpoint: ${endpoint}`);
+                let client = require("redis").createClient(endpoint.port, endpoint.hostname, {password: redisPassword});
                 console.log(client);
                 return new Promise<void>((resolve, reject) => {
                     client.set(key, value, (err: any, v: any) => {
@@ -77,19 +91,25 @@ class Cache {
 let cache = new Cache("mycache");
 
 let api = new cloud.HttpEndpoint("myendpoint");
-
+api.get("/test", async (req, res) => {
+    res.json({
+        nginx: await nginx.getEndpoint(),
+        mongodb: await mongodb.getEndpoint(),
+    });
+});
 api.get("/", async (req, res) => {
     try {
-        console.log("timer starting");
+        // Use the NGINX or Redis Services to respond to the request.
+        console.log("handling /");
         let page = await cache.get("page");
         if (page) {
             res.setHeader("X-Powered-By", "redis");
             res.end(page);
             return;
         }
-        let hostandport = await nginx.getHostAndPort("nginx", 80);
-        console.log("got host and port:" + hostandport);
-        let resp = await fetch(`http://${hostandport}/`);
+        let endpoint = await nginx.getEndpoint("nginx", 80);
+        console.log("got host and port:" + endpoint);
+        let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());
         await cache.set("page", buffer.toString());
