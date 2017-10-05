@@ -25,6 +25,13 @@ declare module "assert" {
 describe("Table", () => {
     let uniqueId = 0;
 
+    describe("#new()", () => {
+        it("should-throw-when-name-is-already-in-use", () => {
+            let table = new cloud.Table("table");
+            assert.throws(() => new cloud.Table("table"));
+        });
+    });
+
     describe("#get()", () => {
         it("should-throw-with-no-primary-key", async () => {
             let table = new cloud.Table("table" + uniqueId++);

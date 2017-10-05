@@ -26,7 +26,20 @@ declare module "assert" {
 describe("Topic", () => {
     let uniqueId = 0;
 
+    describe("#new()", () => {
+        it("should-throw-when-name-is-already-in-use", () => {
+            let topic = new cloud.Topic("topic");
+            assert.throws(() => new cloud.Topic("topic"));
+        });
+    });
+
     describe("#subscribe()", () => {
+        it("should-throw-when-name-is-already-in-use", () => {
+            let topic = new cloud.Topic("topic" + uniqueId++);
+            topic.subscribe("", x => Promise.resolve());
+            assert.throws(() => topic.subscribe("", x => Promise.resolve()));
+        });
+
         it("should-see-published-value", async () => {
             let topic = new cloud.Topic<number>("topic" + uniqueId++);
 

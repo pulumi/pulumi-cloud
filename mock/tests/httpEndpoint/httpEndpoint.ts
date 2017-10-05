@@ -25,6 +25,14 @@ declare module "assert" {
 
 describe("HttpEndpoint", () => {
     let uniqueId = 0;
+
+    describe("#new()", () => {
+        it("should-throw-when-name-is-already-in-use", () => {
+            let app = new cloud.HttpEndpoint("");
+            assert.throws(() => new cloud.HttpEndpoint(""));
+        });
+    });
+
     describe("#get()", () => {
         it("Is get method", async function () {
             let app = new cloud.HttpEndpoint("" + uniqueId++);
