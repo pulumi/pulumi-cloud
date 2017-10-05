@@ -1,14 +1,13 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
-import { requireConfig } from "./utils"
 
 const config = new pulumi.Config("aws");
 
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
-    const accessKeyID = requireConfig(config, "access_key");
-    const secretAccessKey = requireConfig(config, "scret_access_key");
-    const region = requireConfig(config, "region");
+    const accessKeyID = config.require("access_key");
+    const secretAccessKey = config.require("scret_access_key");
+    const region = config.require("region");
 
     let AWS = require("aws-sdk");
     AWS.config = new AWS.Config({

@@ -38,6 +38,20 @@ for (const arg of process.argv.slice(2)) {
     }
 }
 
+// Override config.require to provide a better error message to the user.
+const originalRequire = pulumi.Config.prototype.require;
+pulumi.Config.prototype.require = function require(key: string) {
+    try {
+        return originalRequire.apply(this, [key]);
+    }
+    catch (err) {
+        let key = err.key;
+        throw new Error(
+            `Missing required configuration variable '${key}'\n` +
+            `\tPlease add PULUMI_CONFIG='{ "${key}": "value" }' to your environment or pass ${key}=value in as command line parameter.`)
+    }
+}
+
 import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
 import { Digest } from "./digest";

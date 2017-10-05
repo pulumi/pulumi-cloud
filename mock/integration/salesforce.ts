@@ -3,13 +3,12 @@
 import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
 import { poll } from "./poll";
-import { requireConfig } from "./utils"
 
 const config = new pulumi.Config("salesforce");
 
 let getAuthenticatedSalesforceConnection: () => Promise<any> = async () => {
-    const salesforceEmail = requireConfig(config, "email");
-    const salesforcePassword = requireConfig(config, "password");
+    const salesforceEmail = config.require("email");
+    const salesforcePassword = config.require("password");
 
     let jsforce = require("jsforce");
     console.log(`loaded jsforce`);

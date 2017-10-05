@@ -1,13 +1,12 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
-import { requireConfig } from "./utils"
 
 const config = new pulumi.Config("mailgun");
 
 export let send: (message: EmailMessage) => Promise<void> = async (message) => {
-    const domain = requireConfig(config, "domain");
-    const apiKey = requireConfig(config, "api_key");
+    const domain = config.require("domain");
+    const apiKey = config.require("api_key");
 
     let request = require("request-promise-native");
     let body = await request({

@@ -3,7 +3,6 @@
 import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
 import { poll } from "./poll";
-import { requireConfig } from "./utils"
 
 const config = new pulumi.Config("twitter");
 
@@ -18,8 +17,8 @@ function getTwitterAuthorizationBearer() {
 }
 
 async function getTwitterAuthorizationBearerWorker(): Promise<string> {
-    const twitterConsumerKey = requireConfig(config, "consumer_key");
-    const twitterConsumerSecret = requireConfig(config, "consumer_secret");
+    const twitterConsumerKey = config.require("consumer_key");
+    const twitterConsumerSecret = config.require("consumer_secret");
 
     let keyAndSecret = twitterConsumerKey + ":" + twitterConsumerSecret;
     let credentials = new Buffer(keyAndSecret).toString('base64');
