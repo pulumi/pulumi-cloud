@@ -1,0 +1,101 @@
+// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+
+import * as pulumi from "pulumi";
+import * as cloud from "@pulumi/cloud";
+import { poll } from "./poll";
+import { requireConfig } from "./utils"
+
+const config = new pulumi.Config("twitter");
+
+let bearerPromise: Promise<string> | undefined;
+
+function getTwitterAuthorizationBearer() {
+    if (bearerPromise === undefined) {
+        bearerPromise = getTwitterAuthorizationBearerWorker();
+    }
+
+    return bearerPromise;
+}
+
+async function getTwitterAuthorizationBearerWorker(): Promise<string> {
+    const twitterConsumerKey = requireConfig(config, "consumer_key");
+    const twitterConsumerSecret = requireConfig(config, "consumer_secret");
+
+    let keyAndSecret = twitterConsumerKey + ":" + twitterConsumerSecret;
+    let credentials = new Buffer(keyAndSecret).toString('base64');
+
+    let url = 'https://api.twitter.com/oauth2/token';
+
+    let request = require("request-promise-native");
+    let body = await request({
+        url: url,
+        method:'POST',
+        headers: {
+            "Authorization": "Basic " + credentials,
+            "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        body: "grant_type=client_credentials",
+        json: true
+    });
+
+    let accessToken = body.access_token;
+    console.log("Bearer token: " + accessToken);
+
+    return accessToken;
+}
+
+// Search returns a stream of all tweets matching the search term.
+export function search(name: string, term: string): cloud.Stream<Tweet> {
+    console.log("Creating poll...");
+    let searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
+        console.log("Getting bearer token...");
+        var bearerToken = await getTwitterAuthorizationBearer();
+
+        console.log("Running poll...");
+        let request = require("request-promise-native");
+        let querystring = lastToken;
+        if (lastToken === undefined) {
+            querystring = `?q=${term}`;
+        }
+        console.log("Requesting twitter data...");
+
+        let url = "https://api.twitter.com/1.1/search/tweets.json" + querystring;
+        console.log("Url: " + url);
+
+        let body = await request({
+            url: url,
+            headers: {
+                "Authorization": "Bearer " + bearerToken,
+            },
+        });
+
+        let data = <TwitterSearchResponse>JSON.parse(body);
+
+        // console.log(`Twitter response: ${JSON.stringify(data, null, "")}`);
+        return {
+            nextToken: data.search_metadata.refresh_url,
+            items: data.statuses,
+        };
+    });
+
+    return searchPoll;
+}
+
+interface TwitterSearchResponse {
+    statuses: Tweet[];
+    search_metadata: {
+        max_id_str: string;
+        since_id_str: string;
+        refresh_url: string;
+        next_results: string;
+    };
+}
+
+export interface Tweet {
+    text: string;
+    id_str: string;
+    created_at: string;
+    user: {
+        screen_name: string;
+    };
+}
