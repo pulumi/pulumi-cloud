@@ -1,12 +1,13 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-export function toShortString(obj: any): string {
-    const maxLength = 120;
-    const ellipses = "...";
+const wcstring = require("wcstring");
+
+export function toShortString(obj: string): string {
+    const maxLength = process.stdout.columns || 120;
 
     let result: string = obj ? obj.toString() : "";
     result = result.replace(/[\n\r]/g, " ");
-    return result.length > maxLength
-        ? result.substr(0, maxLength - ellipses.length) + ellipses
-        : result;
+    let str = wcstring(result);
+
+    return str.truncate(maxLength, "...");
 }

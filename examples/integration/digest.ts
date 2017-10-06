@@ -17,7 +17,7 @@ export class Digest<T> implements cloud.Stream<T[]> {
 
         stream.subscribe(name, async (item) => {
             const value = JSON.stringify(item);
-            console.log(`Adding item to digest table: ${utils.toShortString(value)}`);
+            console.log(utils.toShortString(`Adding item to digest table: ${value}`));
             await this.table.insert({ id: value });
         });
 
@@ -29,7 +29,7 @@ export class Digest<T> implements cloud.Stream<T[]> {
             for (let item of items) {
                 ret.push(JSON.parse(item.id));
                 await this.table.delete({ id: item.id });
-                console.log(`Moved item from table to digest: ${utils.toShortString(item.id)}`);
+                console.log(utils.toShortString(`Moved item from table to digest: ${item.id}`));
             }
 
             await this.topic.publish(ret);

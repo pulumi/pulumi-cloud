@@ -72,7 +72,7 @@ export function search(name: string, term: string): cloud.Stream<Tweet> {
 
         let data = <TwitterSearchResponse>JSON.parse(body);
 
-        console.log(`Twitter response: ${utils.toShortString(JSON.stringify(data, null, ""))}`);
+        console.log(utils.toShortString(`Twitter response: ${JSON.stringify(data, null, "")}`));
         return {
             nextToken: data.search_metadata.refresh_url,
             items: data.statuses,

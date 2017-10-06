@@ -27,7 +27,7 @@ export let send: (message: EmailMessage) => Promise<void> = async (message) => {
         },
     });
 
-    console.log(`MailGun response: ${utils.toShortString(body)}`);
+    console.log(utils.toShortString(`MailGun response: ${body}`));
 };
 
 export interface EmailMessage {
