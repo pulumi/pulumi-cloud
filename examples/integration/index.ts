@@ -20,7 +20,7 @@ export function exampleTwitter1() {
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: `@${tweet.user.screen_name}: ${tweet.text}\n`,
         });
@@ -28,6 +28,8 @@ export function exampleTwitter1() {
 }
 
 export function exampleTwitter2() {
+    console.log("Running Twitter example 2...");
+
     // Get a stream of all tweets matching this query, forever...
     let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
@@ -36,22 +38,31 @@ export function exampleTwitter2() {
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
-    cloud.timer.daily("nightly", { hourUTC: 7 },  async () => {
+    // cloud.timer.daily("nightly", { hourUTC: 7 },  async () => {
+    //     await digest.collect();
+    // });
+    cloud.timer.interval("every-minute", { minutes: 1 }, async () => {
+        console.log("Collecting digest...");
         await digest.collect();
     });
 
     // For every group of tweets published to the digest stream (nightly)
     // send an email.
     digest.subscribe("digest", async (dailyTweets) => {
+        if (dailyTweets.length === 0) {
+            return;
+        }
+
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (let i = 0; i < (<any>dailyTweets).length; i++) {
+        for (let i = 0; i < dailyTweets.length; i++) {
             let tweet = dailyTweets[i];
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
+
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: text,
         });
@@ -70,7 +81,7 @@ export function exampleSalesforce1() {
             `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         );
         // Update timetamp to latest of all received edits.
-        let newTimestamp = (<any>records).reduce(
+        let newTimestamp = records.reduce(
             (ts: string, record: salesforce.Record) => {
                 let newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;
