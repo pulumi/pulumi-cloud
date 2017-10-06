@@ -2,47 +2,47 @@
 
 import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
+import * as utils from "./utils"
 import { poll } from "./poll";
 
 const config = new pulumi.Config("twitter");
 
-let bearerPromise: Promise<string> | undefined;
+const bearerTable = new cloud.Table("bearer");
 
-function getTwitterAuthorizationBearer() {
-    if (bearerPromise === undefined) {
-        bearerPromise = getTwitterAuthorizationBearerWorker();
-    }
-
-    return bearerPromise;
-}
-
-async function getTwitterAuthorizationBearerWorker(): Promise<string> {
+async function getTwitterAuthorizationBearer(): Promise<string> {
     // Consumer key and secret from https://apps.twitter.com/.  Create a new app and request a
     // request these to make API requests on behalf of the logged in account.
     const twitterConsumerKey = config.require("consumer_key");
     const twitterConsumerSecret = config.require("consumer_secret");
 
     let keyAndSecret = twitterConsumerKey + ":" + twitterConsumerSecret;
-    let credentials = new Buffer(keyAndSecret).toString('base64');
+    let cachedToken = await bearerTable.get({ id: keyAndSecret });
+    if (cachedToken === undefined) {
+        console.log("Bearer token not in cache. Retrieving from twitter...");
+        let credentials = new Buffer(keyAndSecret).toString('base64');
 
-    let url = 'https://api.twitter.com/oauth2/token';
+        let url = 'https://api.twitter.com/oauth2/token';
 
-    let request = require("request-promise-native");
-    let body = await request({
-        url: url,
-        method:'POST',
-        headers: {
-            "Authorization": "Basic " + credentials,
-            "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"
-        },
-        body: "grant_type=client_credentials",
-        json: true
-    });
+        let request = require("request-promise-native");
+        let body = await request({
+            url: url,
+            method:'POST',
+            headers: {
+                "Authorization": "Basic " + credentials,
+                "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"
+            },
+            body: "grant_type=client_credentials",
+            json: true
+        });
 
-    let accessToken = body.access_token;
-    console.log("Bearer token: " + accessToken);
+        let accessToken = body.access_token;
+        cachedToken = { id: keyAndSecret, access_token: accessToken };
+        await bearerTable.insert(cachedToken);
+    }
 
-    return accessToken;
+    console.log("Bearer token: " + cachedToken.access_token);
+
+    return cachedToken.access_token;
 }
 
 // Search returns a stream of all tweets matching the search term.
@@ -72,7 +72,7 @@ export function search(name: string, term: string): cloud.Stream<Tweet> {
 
         let data = <TwitterSearchResponse>JSON.parse(body);
 
-        // console.log(`Twitter response: ${JSON.stringify(data, null, "")}`);
+        console.log(`Twitter response: ${utils.toShortString(JSON.stringify(data, null, ""))}`);
         return {
             nextToken: data.search_metadata.refresh_url,
             items: data.statuses,

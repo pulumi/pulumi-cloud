@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
+import * as utils from "./utils"
 
 const config = new pulumi.Config("mailgun");
 
@@ -25,7 +26,8 @@ export let send: (message: EmailMessage) => Promise<void> = async (message) => {
             text:  message.body,
         },
     });
-    console.log(`MailGun response: ${body}`);
+
+    console.log(`MailGun response: ${utils.toShortString(body)}`);
 };
 
 export interface EmailMessage {
