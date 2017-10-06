@@ -47,8 +47,7 @@ function exampleTwitter2() {
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (let i = 0; i < (<any>dailyTweets).length; i++) {
-            let tweet = dailyTweets[i];
+        for (let tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
         await sendEmail({
@@ -71,7 +70,7 @@ function exampleSalesforce1() {
             `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         );
         // Update timetamp to latest of all received edits.
-        let newTimestamp = (<any>records).reduce(
+        let newTimestamp = records.reduce(
             (ts: string, record: salesforce.Record) => {
                 let newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;

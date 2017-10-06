@@ -33,10 +33,10 @@ export function query(
         console.log(`query text: ${queryText}`);
         let res: QueryResult = await conn.query(queryText).run({autoFetch: true});
         console.log(`data from Salesforce: ${JSON.stringify(res, null, "")}`);
-        watermark = (<string>(<any>res.records).reduce(
+        watermark = res.records.reduce(
             (a: string, b: Record) => watermarkSelection(a, b[watermarkField]),
             watermark,
-        ));
+        );
         return {
             nextToken: watermark,
             items: res.records,
@@ -53,7 +53,7 @@ export let queryAll: (soql: string) => Promise<Record[]> = async (soql) => {
     let res: QueryResult = await conn.query(soql).run({autoFetch: true});
     console.log(`data from Salesforce: ${JSON.stringify(res, null, "")}`);
     if (!res.done) {
-        throw new Error(`expected to fetch all results - got ${(<any>res.records).length} of ${<any>res.totalSize}`);
+        throw new Error(`expected to fetch all results - got ${res.records.length} of ${<any>res.totalSize}`);
     }
     return <any>res.records;
 };
@@ -70,7 +70,7 @@ interface QueryResult {
 // allObjectModifications returns a stream of all Salesforce records for modifications to an object.
 // This is a deployment-time API.
 export function allObjectModifications(name: string, object: string, fields: string): cloud.Stream<Record> {
-    if ((<any>fields).length === 0) {
+    if (fields.length === 0) {
         throw new Error("Expect at least one field name in the format `FieldA,FieldB`");
     }
     return query(
