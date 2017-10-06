@@ -14,9 +14,9 @@ const twitterConsumerSecret = config.require("consumer_secret");
 const bearerTable = new cloud.Table("bearer");
 
 async function getTwitterAuthorizationBearer(): Promise<string> {
-
     let keyAndSecret = twitterConsumerKey + ":" + twitterConsumerSecret;
     let cachedToken = await bearerTable.get({ id: keyAndSecret });
+
     if (cachedToken === undefined) {
         console.log("Bearer token not in cache. Retrieving from twitter...");
         let credentials = new Buffer(keyAndSecret).toString('base64');
