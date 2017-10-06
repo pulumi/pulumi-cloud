@@ -26,8 +26,7 @@ export class Digest<T> implements cloud.Stream<T[]> {
 
             let items = await this.table.scan();
             let ret: T[] = [];
-            for (let i = 0; i < items.length; i++) {
-                let item = items[i];
+            for (let item of items) {
                 ret.push(JSON.parse(item.id));
                 await this.table.delete({ id: item.id });
                 console.log(`Moved item from table to digest: ${utils.toShortString(item.id)}`);

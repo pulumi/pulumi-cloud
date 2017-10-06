@@ -35,8 +35,7 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
         console.log(`Updating pollmarker ${name} to ${results.nextToken}...`);
 
         console.log(`Publishing results to topic '${name}'...`);
-        for (let i = 0; i < results.items.length; i++) {
-            let result = results.items[i];
+        for (let result of results.items) {
             await topic.publish(result);
         }
         console.log("Done publishing results...");

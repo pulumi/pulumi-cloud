@@ -58,8 +58,7 @@ export function exampleTwitter2() {
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (let i = 0; i < dailyTweets.length; i++) {
-            let tweet = dailyTweets[i];
+        for (let tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
 
