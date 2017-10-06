@@ -44,7 +44,7 @@ pulumi.Config.prototype.require = function require(key: string) {
         return originalRequire.apply(this, [key]);
     }
     catch (err) {
-        let fullKey = err.key;
+        const fullKey = err.key;
         throw new Error(
             `Missing required configuration variable '${fullKey}'\n` +
             `\tPlease add PULUMI_CONFIG='{ "${fullKey}": "value" }' to your environment ` +
