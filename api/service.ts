@@ -107,3 +107,28 @@ export interface ServiceConstructor {
 }
 
 export let Service: ServiceConstructor; // tslint:disable-line
+
+
+/**
+ * Arguments to use for initializing a single run of the Task
+ */
+export interface TaskRunOptions {
+    environment: { [name: string]: string};
+}
+
+/**
+ * A Task represents a containers which can be [run] dynamically whenever (and
+ * as many times as) needed.
+ */
+export interface Task {
+    /**
+     * Run the task, passing in additional task run options.
+     */
+    run(options?: TaskRunOptions): Promise<void>;
+}
+
+export interface TaskConstructor {
+    new (name: string, container: Container): Task;
+}
+
+export let Task: TaskConstructor; // tslint:disable-line

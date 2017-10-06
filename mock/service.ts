@@ -11,6 +11,13 @@ export class Service implements cloud.Service {
     }
 }
 
+export class Task implements cloud.Task {
+    run: (options?: cloud.TaskRunOptions) => Promise<void>;
+    constructor(name: string, container: cloud.Container) {
+        throw new Error(`Task not yet supported in mock implementation.`);
+    }
+}
+
 export class Volume implements cloud.Volume {
     name: string;
     constructor(name: string) {

@@ -156,6 +156,65 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     };
 }
 
+function createTaskDefinition(name: string, containers: cloud.Containers): aws.ecs.TaskDefinition {
+    // Create a single log group for all logging associated with the Service
+    let logGroup = new aws.cloudwatch.LogGroup(name, {});
+
+    // Find all referenced Volumes
+    let volumes: {hostPath?: string; name: string}[] = [];
+    for (let containerName of Object.keys(containers)) {
+        let container = containers[containerName];
+        if (container.mountPoints) {
+            for (let mountPoint of container.mountPoints) {
+                if (!ecsClusterEfsMountPath) {
+                    throw new Error(
+                        "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
+                    );
+                }
+                let volume = mountPoint.sourceVolume;
+                volumes.push({
+                    // TODO: [pulumi/pulumi##381] We should most likely be
+                    // including a unique identifier for this deployment
+                    // into the path, so that Volumes in this deployment
+                    // don't accidentally overlap with Volumes from other
+                    // deployments on the same cluster.
+                    hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
+                    name: volume.name,
+                });
+            }
+        }
+    }
+
+    // Create the task definition for the group of containers associated with this Service.
+    let taskDefinition = new aws.ecs.TaskDefinition(name, {
+        family: name,
+        containerDefinitions: logGroup.id.then(logGroupId =>
+            JSON.stringify(Object.keys(containers).map(containerName => {
+                let container = containers[containerName];
+                let containerDefinition: ECSContainerDefinition = {
+                    name: containerName,
+                    image: container.image,
+                    command: container.command,
+                    memoryReservation: container.memory,
+                    portMappings: container.portMappings,
+                    logConfiguration: {
+                        logDriver: "awslogs",
+                        options: {
+                            "awslogs-group": logGroupId!,
+                            "awslogs-region": "us-east-1",
+                            "awslogs-stream-prefix": containerName,
+                        },
+                    },
+                };
+                return containerDefinition;
+            })),
+        ),
+        volume: volumes,
+    });
+
+    return taskDefinition;
+}
+
 export class Service implements cloud.Service {
     name: string;
     exposedPorts: {
@@ -177,60 +236,7 @@ export class Service implements cloud.Service {
         let scale = args.scale === undefined ? 1 : args.scale;
         this.name = name;
 
-        // Create a single log group for all logging associated with the Service
-        let logGroup = new aws.cloudwatch.LogGroup(name, {});
-
-        // Find all referenced Volumes
-        let volumes: {hostPath?: string; name: string}[] = [];
-        for (let containerName of Object.keys(containers)) {
-            let container = containers[containerName];
-            if (container.mountPoints) {
-                for (let mountPoint of container.mountPoints) {
-                    if (!ecsClusterEfsMountPath) {
-                        throw new Error(
-                            "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
-                        );
-                    }
-                    let volume = mountPoint.sourceVolume;
-                    volumes.push({
-                        // TODO: [pulumi/pulumi##381] We should most likely be
-                        // including a unique identifier for this deployment
-                        // into the path, so that Volumes in this deployment
-                        // don't accidentally overlap with Volumes from other
-                        // deployments on the same cluster.
-                        hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
-                        name: volume.name,
-                    });
-                }
-            }
-        }
-
-        // Create the task definition for the group of containers associated with this Service.
-        let taskDefinition = new aws.ecs.TaskDefinition(name, {
-            family: name,
-            containerDefinitions: logGroup.id.then(logGroupId =>
-                JSON.stringify(Object.keys(containers).map(containerName => {
-                    let container = containers[containerName];
-                    let containerDefinition: ECSContainerDefinition = {
-                        name: containerName,
-                        image: container.image,
-                        command: container.command,
-                        memoryReservation: container.memory,
-                        portMappings: container.portMappings,
-                        logConfiguration: {
-                            logDriver: "awslogs",
-                            options: {
-                                "awslogs-group": logGroupId!,
-                                "awslogs-region": "us-east-1",
-                                "awslogs-stream-prefix": containerName,
-                            },
-                        },
-                    };
-                    return containerDefinition;
-                })),
-            ),
-            volume: volumes,
-        });
+        let taskDefinition = createTaskDefinition(name, containers);
 
         // Create load balancer listeners/targets for each exposed port.
         let loadBalancers = [];
@@ -266,7 +272,7 @@ export class Service implements cloud.Service {
 
         // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
-        this.getEndpoint = async function(containerName, port): Promise<cloud.Endpoint> {
+        this.getEndpoint = async function(this: Service, containerName, port): Promise<cloud.Endpoint> {
             if (!containerName) {
                 // If no container name provided, choose the first container
                 containerName = Object.keys(this.exposedPorts)[0];
@@ -292,8 +298,13 @@ export class Service implements cloud.Service {
                     `No exposed port for ${containerName} port ${port}`,
                 );
             }
+            // TODO [pulumi/pulumi#331] When we capture promise values, they get
+            // exposed on the inside as the unwrapepd value inside the promise.
+            // This means we have to hack the types away. See
+            // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
+            let hostname = <string><any>info.host.dnsName;
             return {
-                hostname: info.host.dnsName,
+                hostname: hostname,
                 port: info.port,
             };
         };
@@ -319,5 +330,52 @@ export class Volume implements cloud.Volume {
         }
         this.name = name;
         volumeNames.add(name);
+    }
+}
+
+
+/**
+ * A Task represents a containers which can be [run] dynamically whenever (and
+ * as many times as) needed.
+ */
+export class Task implements cloud.Task {
+    taskDefinition: aws.ecs.TaskDefinition;
+    run: (options?: cloud.TaskRunOptions) => Promise<void>;
+
+    constructor(name: string, container: cloud.Container) {
+        if (!ecsClusterARN) {
+            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+        }
+
+        this.taskDefinition = createTaskDefinition(name, {container: container});
+        let clusterARN = ecsClusterARN;
+
+        this.run = function(this: Task, options?: cloud.TaskRunOptions) {
+            let awssdk = require("aws-sdk");
+            let ecs = new awssdk.ECS();
+
+            // Extract the envrionment values from the options
+            let environment: {name: string; value: string; }[] = [];
+            if (options && options.environment) {
+                for (let envName of Object.keys(options.environment)) {
+                    let envVal = options.environment[envName];
+                    environment.push({name: envName, value: envVal});
+                }
+            }
+
+            // Run the task
+            return ecs.runTask({
+                cluster: clusterARN,
+                taskDefinition: this.taskDefinition.arn,
+                overrides: {
+                    containerOverrides: [
+                        {
+                            name: "container",
+                            environment: environment,
+                        },
+                    ],
+                },
+            }).promise().then((data: any) => undefined);
+        };
     }
 }

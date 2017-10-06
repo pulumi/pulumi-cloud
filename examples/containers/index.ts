@@ -29,9 +29,9 @@ let mongodb = new cloud.Service("mymongodb", {
     },
 });
 
-// TODO: Would be nice if this was a Secret<T> and closure serialization
-//       knew to pass it in encrypted env vars.
-// TODO: Might also be nice if this could be generated uniquely per stack.
+// TODO[pulumi/pulumi#397] Would be nice if this was a Secret<T> and closure
+// serialization knew to pass it in encrypted env vars.
+// TODO[pulumi/pulumi#381] Might also be nice if this could be generated uniquely per stack.
 let redisPassword = "SECRETPASSWORD";
 
 /**
@@ -90,6 +90,11 @@ class Cache {
 
 let cache = new Cache("mycache");
 
+let helloTask = new cloud.Task("hello-world", {
+    image: "hello-world",
+    memory: 20,
+});
+
 let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/test", async (req, res) => {
     res.json({
@@ -118,6 +123,20 @@ api.get("/", async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).end(`Pulumi proxy service error: ${err}`);
+    }
+});
+api.get("/run", async (req, res) => {
+    try {
+        // Launch 10 instances of the Task.
+        let tasks: Promise<void>[] = [];
+        for (let i = 0; i < 10; i++) {
+            tasks.push(helloTask.run());
+        }
+        await Promise.all(tasks);
+        res.json({success: true});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: "Error running task."});
     }
 });
 api.publish().then(url => console.log(`Serving at: ${url}`));
