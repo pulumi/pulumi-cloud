@@ -22,8 +22,8 @@ export class Topic<T> implements cloud.Topic<T> {
         // TODO[pulumi/pulumi#331]: bring this back once deadlock issues are resolved.
         // this.subscriptions = [];
         this.publish = (item) => {
-            let awssdk = require("aws-sdk");
-            let snsconn = awssdk.SNS();
+            const awssdk = require("aws-sdk");
+            const snsconn = awssdk.SNS();
             return new snsconn.publish({
                 Message: JSON.stringify(item),
                 TopicArn: this.topic.id,
@@ -33,7 +33,7 @@ export class Topic<T> implements cloud.Topic<T> {
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
         sns.createSubscription(this.name + "_" + name, this.topic, async (snsItem: sns.SNSItem) => {
-            let item = JSON.parse(snsItem.Message);
+            const item = JSON.parse(snsItem.Message);
             await handler(item);
         });
     }

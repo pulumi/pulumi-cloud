@@ -28,24 +28,24 @@ describe("Topic", () => {
 
     describe("#new()", () => {
         it("should-throw-when-name-is-already-in-use", () => {
-            let topic = new cloud.Topic("topic");
+            const topic = new cloud.Topic("topic");
             assert.throws(() => new cloud.Topic("topic"));
         });
     });
 
     describe("#subscribe()", () => {
         it("should-throw-when-name-is-already-in-use", () => {
-            let topic = new cloud.Topic("topic" + uniqueId++);
+            const topic = new cloud.Topic("topic" + uniqueId++);
             topic.subscribe("", x => Promise.resolve());
             assert.throws(() => topic.subscribe("", x => Promise.resolve()));
         });
 
         it("should-see-published-value", async () => {
-            let topic = new cloud.Topic<number>("topic" + uniqueId++);
+            const topic = new cloud.Topic<number>("topic" + uniqueId++);
 
-            let numbers: number[] = [];
+            const numbers: number[] = [];
             let resolve: () => void;
-            let promise = new Promise((res, reject) => resolve = res);
+            const promise = new Promise((res, reject) => resolve = res);
 
             topic.subscribe("", num => {
                 numbers.push(num);
@@ -61,11 +61,11 @@ describe("Topic", () => {
         });
 
         it("should-not-see-published-value-to-different-topic", async () => {
-            let topic1 = new cloud.Topic<number>("topic" + uniqueId++);
-            let topic2 = new cloud.Topic<number>("topic" + uniqueId++);
+            const topic1 = new cloud.Topic<number>("topic" + uniqueId++);
+            const topic2 = new cloud.Topic<number>("topic" + uniqueId++);
 
             let resolve: () => void;
-            let promise = new Promise((res, reject) => resolve = res);
+            const promise = new Promise((res, reject) => resolve = res);
 
             topic1.subscribe("", num => {
                 throw new Error("Should not get called");
@@ -81,11 +81,11 @@ describe("Topic", () => {
         });
 
         it("multiple-subscribers-should-all-see-published-value", async () => {
-            let topic1 = new cloud.Topic<number>("topic" + uniqueId++);
+            const topic1 = new cloud.Topic<number>("topic" + uniqueId++);
 
-            let numbers: number[] = [];
+            const numbers: number[] = [];
             let resolve1: () => void;
-            let promise1 = new Promise((res, reject) => resolve1 = res);
+            const promise1 = new Promise((res, reject) => resolve1 = res);
 
             topic1.subscribe("1", num => {
                 numbers.push(num);
@@ -94,7 +94,7 @@ describe("Topic", () => {
             });
 
             let resolve2: () => void;
-            let promise2 = new Promise((res, reject) => resolve2 = res);
+            const promise2 = new Promise((res, reject) => resolve2 = res);
 
             topic1.subscribe("2", num => {
                 numbers.push(num);
@@ -111,11 +111,11 @@ describe("Topic", () => {
         });
 
         it("should-see-multiple-values-published", async () => {
-            let topic = new cloud.Topic<number>("topic" + uniqueId++);
+            const topic = new cloud.Topic<number>("topic" + uniqueId++);
 
-            let numbers: number[] = [];
+            const numbers: number[] = [];
             let resolve: () => void;
-            let promise = new Promise((res, reject) => resolve = res);
+            const promise = new Promise((res, reject) => resolve = res);
 
             const count = 3;
             topic.subscribe("", num => {

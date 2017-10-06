@@ -30,13 +30,13 @@ export function cron(name: string, cronTab: string, handler: () => Promise<void>
 }
 
 export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>) {
-    let hour = schedule.hourUTC || 0;
-    let minute = schedule.minuteUTC || 0;
+    const hour = schedule.hourUTC || 0;
+    const minute = schedule.minuteUTC || 0;
     cron(name, `${minute} ${hour} * * ? *`, handler);
 }
 
 function createScheduledEvent(name: string, scheduleExpression: string, handler: () => Promise<void>) {
-    let func = new LoggedFunction(
+    const func = new LoggedFunction(
         name,
         [ aws.iam.AWSLambdaFullAccess ],
         (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
@@ -47,15 +47,15 @@ function createScheduledEvent(name: string, scheduleExpression: string, handler:
             });
         },
     );
-    let rule = new aws.cloudwatch.EventRule(name, {
+    const rule = new aws.cloudwatch.EventRule(name, {
         scheduleExpression: scheduleExpression,
     });
-    let target = new aws.cloudwatch.EventTarget(name, {
+    const target = new aws.cloudwatch.EventTarget(name, {
         rule: rule.name,
         arn: func.lambda.arn,
         targetId: name,
     });
-    let permission = new aws.lambda.Permission(name, {
+    const permission = new aws.lambda.Permission(name, {
         action: "lambda:invokeFunction",
         function: func.lambda,
         principal: "events.amazonaws.com",

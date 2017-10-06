@@ -8,7 +8,7 @@ import * as http from "http";
 import * as pulumi from "pulumi";
 import * as utils from "./utils";
 
-let usedNames: { [name: string]: string } = Object.create(null);
+const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
@@ -26,7 +26,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     constructor(name: string) {
         utils.ensureUnique(usedNames, name, "HttpEndpoint");
 
-        let app = express();
+        const app = express();
 
         // Use 'raw' body parsing to convert populate any request body properly with a buffer.
         // Pass an always-true function as our options so that always convert the request body
@@ -83,7 +83,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 callNextHandler();
             }
 
-            let routerMatcher: Function = (<any>app)[method];
+            const routerMatcher: Function = (<any>app)[method];
             routerMatcher.apply(app, [path, [handler]]);
         };
 
