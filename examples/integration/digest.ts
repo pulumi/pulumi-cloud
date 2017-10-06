@@ -20,15 +20,14 @@ export class Digest<T> implements cloud.Stream<T[]> {
             console.log(`collecting digest`);
             let items = await this.table.scan();
             let ret: T[] = [];
-            for (let i = 0; i < (<any>items).length; i++) {
-                let item = items[i];
-                (<any>ret).push(JSON.parse(item.id));
+            for (let item of items) {
+                ret.push(JSON.parse(item.id));
                 console.log(`added item to digest ${item.id}`);
                 await this.table.delete({ id: item.id });
                 console.log(`deleted item from table ${item.id}`);
             }
             await this.topic.publish(ret);
-            console.log(`published digest with ${(<any>ret).length} items`);
+            console.log(`published digest with ${ret.length} items`);
         };
     }
     subscribe(name: string, handler: (item: T[]) => Promise<void>) {
