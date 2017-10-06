@@ -44,5 +44,5 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
         console.log(`Done polling...`);
     });
 
-    return { subscribe: topic.subscribe, };
+    return { subscribe: topic.subscribe };
 }
