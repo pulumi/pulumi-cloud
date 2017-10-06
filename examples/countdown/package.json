@@ -1,5 +1,5 @@
 {
-    "name": "crawler",
+    "name": "countdown",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -12,11 +12,6 @@
     },
     "peerDependencies": {
         "@pulumi/cloud": "*"
-    },
-    "dependencies": {
-        "@types/cheerio": "^0.22.2",
-        "@types/node-fetch": "^1.6.7",
-        "cheerio": "^1.0.0-rc.2",
-        "node-fetch": "^1.7.3"
     }
 }
+
