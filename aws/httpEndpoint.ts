@@ -70,19 +70,19 @@ interface SwaggerSpec {
 // ordinary JSON.stringify because the spec contains computed values.
 function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: pulumi.Computed<string> } {
     let last: pulumi.Computed<void> | undefined;
-    let pathValues: {[path: string]: {[method: string]: SwaggerOperation} } = {};
-    for (let path of Object.keys(spec.paths)) {
+    const pathValues: {[path: string]: {[method: string]: SwaggerOperation} } = {};
+    for (const path of Object.keys(spec.paths)) {
         pathValues[path] = {};
-        for (let method of Object.keys(spec.paths[path])) {
+        for (const method of Object.keys(spec.paths[path])) {
             // Set up a callback to remember the final value, and chain it on the previous one.
-            let resolvePathValue: pulumi.Computed<void> =
+            const resolvePathValue: pulumi.Computed<void> =
                 spec.paths[path][method].then((op: SwaggerOperation) => { pathValues[path][method] = op; });
             last = last ? last.then(() => resolvePathValue) : resolvePathValue;
         }
     }
 
     // Produce a hash of all the promptly available values.
-    let promptSpec = {
+    const promptSpec = {
         swagger: spec.swagger,
         info: spec.info,
         paths: pathValues,
@@ -92,7 +92,7 @@ function jsonStringifySwaggerSpec(spec: SwaggerSpec): { hash: string, json: pulu
     // BUGBUG[pulumi/pulumi#331]: we are skipping hashing of the actual operation objects, because they
     //     are possibly computed, and we need the hash promptly for resource URN creation.  This isn't correct,
     //     and will lead to hash collisions; we need to fix this as part of fixing pulumi/pulumi#331
-    let promptHash: string = sha1hash(JSON.stringify(promptSpec));
+    const promptHash: string = sha1hash(JSON.stringify(promptSpec));
 
     // After all values have settled, we can produce the resulting string.
     return {
@@ -155,7 +155,7 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 }
 
 function createPathSpecLambda(lambdaARN: string): SwaggerOperation {
-    let region = aws.config.requireRegion();
+    const region = aws.config.requireRegion();
     return {
         "x-amazon-apigateway-integration": {
             uri: "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations",
@@ -167,7 +167,7 @@ function createPathSpecLambda(lambdaARN: string): SwaggerOperation {
 }
 
 function createPathSpecObject(roleARN: string, bucket: string, key: string): SwaggerOperation {
-    let region = aws.config.requireRegion();
+    const region = aws.config.requireRegion();
     return {
         responses: {
             "200": {
@@ -210,7 +210,7 @@ function createPathSpecObject(roleARN: string, bucket: string, key: string): Swa
     };
 }
 
-let apigatewayAssumeRolePolicyDocument = {
+const apigatewayAssumeRolePolicyDocument = {
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -231,13 +231,13 @@ interface ReqRes {
 
 type Callback = (err: any, result: APIGatewayResponse) => void;
 
-let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRes => {
-    let response = {
+const apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRes => {
+    const response = {
         statusCode: 200,
         headers: <{[header: string]: string}>{},
         body: Buffer.from([]),
     };
-    let req: cloud.Request = {
+    const req: cloud.Request = {
         headers: ev.headers,
         body: body,
         method: ev.httpMethod,
@@ -248,7 +248,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
         hostname: ev.headers["Host"],
         protocol: ev.headers["X-Forwarded-Proto"],
     };
-    let res: cloud.Response = {
+    const res: cloud.Response = {
         status: (code: number) => {
             response.statusCode = code;
             return res;
@@ -286,7 +286,7 @@ let apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): ReqRe
     return { req, res };
 };
 
-let stageName = "stage";
+const stageName = "stage";
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
@@ -310,21 +310,21 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
-        let method = "GET";
-        let swaggerMethod = this.routePrepare(method, path);
-        let name = this.apiName + sha1hash(method + ":" + path);
-        let rolePolicyJSON = JSON.stringify(apigatewayAssumeRolePolicyDocument);
-        let role = new aws.iam.Role(name, {
+        const method = "GET";
+        const swaggerMethod = this.routePrepare(method, path);
+        const name = this.apiName + sha1hash(method + ":" + path);
+        const rolePolicyJSON = JSON.stringify(apigatewayAssumeRolePolicyDocument);
+        const role = new aws.iam.Role(name, {
             assumeRolePolicy: rolePolicyJSON,
         });
-        let attachment = new aws.iam.RolePolicyAttachment(name, {
+        const attachment = new aws.iam.RolePolicyAttachment(name, {
             role: role,
             policyArn: aws.iam.AmazonS3FullAccess,
         });
         if (this.bucket === undefined) {
             this.bucket = new aws.s3.Bucket(this.apiName, {});
         }
-        let obj = new aws.s3.BucketObject(name, {
+        const obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
             source: new pulumi.asset.FileAsset(filePath),
@@ -340,7 +340,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
-        let swaggerMethod = this.routePrepare(method, path);
+        const swaggerMethod = this.routePrepare(method, path);
         this.swaggerSpec.paths[path][swaggerMethod] =
             func.lambda.arn.then((arn: aws.ARN | undefined) => arn ? createPathSpecLambda(arn) : undefined);
         this.lambdas[swaggerMethod + ":" + path] = func;
@@ -371,7 +371,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
-        let lambda = new LoggedFunction(
+        const lambda = new LoggedFunction(
             this.apiName + sha1hash(method + ":" + path),
             [ aws.iam.AWSLambdaFullAccess ],
             (ev: APIGatewayRequest, ctx, cb) => {
@@ -384,10 +384,10 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                     }
                 }
                 ctx.callbackWaitsForEmptyEventLoop = false;
-                let reqres = apiGatewayToReqRes(ev, body, cb);
+                const reqres = apiGatewayToReqRes(ev, body, cb);
                 let i = 0;
-                let next = () => {
-                    let nextHandler = handlers[i++];
+                const next = () => {
+                    const nextHandler = handlers[i++];
                     if (nextHandler !== undefined) {
                         nextHandler(reqres.req, reqres.res, next);
                     }
@@ -423,7 +423,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 
     public publish(): pulumi.Computed<string> {
-        let { hash, json } = jsonStringifySwaggerSpec(this.swaggerSpec);
+        const { hash, json } = jsonStringifySwaggerSpec(this.swaggerSpec);
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: json,
         });
@@ -432,16 +432,16 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             stageName: "",
             description: "Deployment of version " + hash,
         });
-        let stage = new aws.apigateway.Stage(this.apiName + "_stage", {
+        const stage = new aws.apigateway.Stage(this.apiName + "_stage", {
             stageName: stageName,
             description: "The current deployment of the API.",
             restApi: this.api,
             deployment: this.deployment,
         });
 
-        for (let path of Object.keys(this.swaggerSpec.paths)) {
+        for (const path of Object.keys(this.swaggerSpec.paths)) {
             for (let method of Object.keys(this.swaggerSpec.paths[path])) {
-                let lambda = this.lambdas[method + ":" + path];
+                const lambda = this.lambdas[method + ":" + path];
                 if (lambda !== undefined) {
                     if (method === "x-amazon-apigateway-any-method") {
                         method = "*";
@@ -449,8 +449,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                     else {
                         method = method.toUpperCase();
                     }
-                    let permissionName = this.apiName + "_invoke_" + sha1hash(method + path);
-                    let invokePermission = new aws.lambda.Permission(permissionName, {
+                    const permissionName = this.apiName + "_invoke_" + sha1hash(method + path);
+                    const invokePermission = new aws.lambda.Permission(permissionName, {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
@@ -466,14 +466,14 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 
     public attachCustomDomain(domain: cloud.Domain): pulumi.Computed<string> {
-        let awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
+        const awsDomain = new aws.apigateway.DomainName(this.apiName + "-" + domain.domainName, {
             domainName: domain.domainName,
             certificateName: domain.domainName,
             certificateBody: domain.certificateBody,
             certificatePrivateKey: domain.certificatePrivateKey,
             certificateChain: domain.certificateChain,
         });
-        let basePathMapping = new aws.apigateway.BasePathMapping(this.apiName + "-" + domain.domainName, {
+        const basePathMapping = new aws.apigateway.BasePathMapping(this.apiName + "-" + domain.domainName, {
             restApi: this.api,
             stageName: stageName,
             domainName: awsDomain.domainName,
@@ -484,7 +484,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
 // sha1hash returns the SHA1 hash of the input string.
 function sha1hash(s: string): string {
-    let shasum: crypto.Hash = crypto.createHash("sha1");
+    const shasum: crypto.Hash = crypto.createHash("sha1");
     shasum.update(s);
     return shasum.digest("hex");
 }
