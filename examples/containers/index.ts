@@ -29,6 +29,21 @@ let mongodb = new cloud.Service("mymongodb", {
     },
 });
 
+let customWebServer = new cloud.Service("mycustomservice", {
+    containers: {
+        webserver: {
+            memory: 128,
+            portMappings: [{ containerPort: 80 }],
+            function: () => {
+                let http = require("http");
+                http.createServer((req: any, res: any) => {
+                    res.end("Hello, world!");
+                }).listen(80);
+            },
+        },
+    },
+});
+
 // TODO[pulumi/pulumi#397] Would be nice if this was a Secret<T> and closure
 // serialization knew to pass it in encrypted env vars.
 // TODO[pulumi/pulumi#381] Might also be nice if this could be generated uniquely per stack.
@@ -145,6 +160,21 @@ api.get("/run", async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error running task." });
+    }
+});
+api.get("/custom", async (req, res) => {
+    try {
+        let endpoint = await customWebServer.getEndpoint();
+        console.log("got host and port:" + endpoint);
+        let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
+        let buffer = await resp.buffer();
+        console.log(buffer.toString());
+        await cache.set("page", buffer.toString());
+        res.setHeader("X-Powered-By", "custom web server");
+        res.end(buffer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).end(`Pulumi proxy service error: ${err}`);
     }
 });
 api.publish().then(url => console.log(`Serving at: ${url}`));

@@ -41,14 +41,14 @@ interface ECSContainerDefinition {
     logConfiguration?: { logDriver: ECSLogDriver; options?: { [key: string]: string } };
     memory?: number;
     memoryReservation?: number;
-    mountPoints?: {containerPath?: string; readOnly?: boolean; sourceVolume?: string}[];
+    mountPoints?: { containerPath?: string; readOnly?: boolean; sourceVolume?: string }[];
     name: string;
-    portMappings?: {containerPort?: number; hostPort?: number; protocol?: string; }[];
+    portMappings?: { containerPort?: number; hostPort?: number; protocol?: string; }[];
     privileged?: boolean;
     readonlyRootFilesystem?: boolean;
-    ulimits?: {name: ECSUlimitName; hardLimit: number; softLimit: number}[];
+    ulimits?: { name: ECSUlimitName; hardLimit: number; softLimit: number }[];
     user?: string;
-    volumesFrom?: {sourceContainer?: string; readOnly?: boolean}[];
+    volumesFrom?: { sourceContainer?: string; readOnly?: boolean }[];
     workingDirectory?: string;
 }
 
@@ -156,17 +156,30 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     };
 }
 
+interface ImageOptions {
+    image: string;
+    environment: { name: string; value: string; }[];
+}
+
 // computeImage turns the `image`, `function` or `build` setting on a
 // `cloud.Container` into a valid Docker image name which can be used in an ECS
 // TaskDefinition.
-async function computeImage(container: cloud.Container): Promise<string> {
+async function computeImage(container: cloud.Container): Promise<ImageOptions> {
     if (container.image) {
-        return container.image;
+        return { image: container.image, environment: [] };
     } else if (container.build) {
         throw new Error("Not yet implemented.");
     } else if (container.function) {
         let closure = await pulumi.runtime.serializeClosure(container.function);
-        throw new Error("Not yet implemented.");
+        let jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
+        // TODO: Put this in a real Pulumi-owned Docker image.
+        // TODO: Pass the full local zipped folder through to the container (via S3?)
+        return {
+            image: "lukehoban/magic", environment: [{
+                name: "PULUMI_SRC",
+                value: jsSrcText,
+            }],
+        };
     }
     throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
 }
@@ -179,13 +192,14 @@ async function computeContainerDefintions(containers: cloud.Containers, logGroup
     let logGroupId = await logGroup.id;
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         let container = containers[containerName];
-        let image = await computeImage(container);
+        let { image, environment } = await computeImage(container);
         let containerDefinition: ECSContainerDefinition = {
             name: containerName,
             image: image,
             command: container.command,
             memoryReservation: container.memory,
             portMappings: container.portMappings,
+            environment: environment,
             logConfiguration: {
                 logDriver: "awslogs",
                 options: {
@@ -205,7 +219,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
     let logGroup = new aws.cloudwatch.LogGroup(name, {});
 
     // Find all referenced Volumes
-    let volumes: {hostPath?: string; name: string}[] = [];
+    let volumes: { hostPath?: string; name: string }[] = [];
     for (let containerName of Object.keys(containers)) {
         let container = containers[containerName];
         if (container.mountPoints) {
@@ -297,7 +311,7 @@ export class Service implements cloud.Service {
 
         // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
-        this.getEndpoint = async function(this: Service, containerName, port): Promise<cloud.Endpoint> {
+        this.getEndpoint = async function (this: Service, containerName, port): Promise<cloud.Endpoint> {
             if (!containerName) {
                 // If no container name provided, choose the first container
                 containerName = Object.keys(this.exposedPorts)[0];
@@ -372,19 +386,19 @@ export class Task implements cloud.Task {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
-        this.taskDefinition = createTaskDefinition(name, {container: container});
+        this.taskDefinition = createTaskDefinition(name, { container: container });
         let clusterARN = ecsClusterARN;
 
-        this.run = function(this: Task, options?: cloud.TaskRunOptions) {
+        this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             let awssdk = require("aws-sdk");
             let ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            let environment: {name: string; value: string; }[] = [];
+            let environment: { name: string; value: string; }[] = [];
             if (options && options.environment) {
                 for (let envName of Object.keys(options.environment)) {
                     let envVal = options.environment[envName];
-                    environment.push({name: envName, value: envVal});
+                    environment.push({ name: envName, value: envVal });
                 }
             }
 
