@@ -9,9 +9,21 @@ export interface Containers {
  */
 export interface Container {
     /**
-     * The image to use for the container.
+     * The image to use for the container. Exactly one of `image`, `build`, and
+     * `function` must be specified.
      */
-    image: string;
+    image?: string;
+    /**
+     * A path to a folder within the current program directory where a Docker
+     * build should be run to construct the image for this Container. Exactly
+     * one of `image`, `build`, and `function` must be specified.
+     */
+    build?: string;
+    /**
+     * The function code to use as the implementation of the contaner. Exactly
+     * one of `image`, `build`, and `function` must be specified.
+     */
+    function?: () => void;
     /**
      * The amount of memory to reserve for the container.
      */
@@ -72,7 +84,7 @@ export interface ServiceArguments {
      */
     containers: Containers;
     /**
-     * The number of copies of this Service's contaienrs to deploy and maintain
+     * The number of copies of this Service's containers to deploy and maintain
      * as part of the running service.  Defaults to `1`.
      */
     scale?: number;
@@ -117,7 +129,7 @@ export interface TaskRunOptions {
 }
 
 /**
- * A Task represents a containers which can be [run] dynamically whenever (and
+ * A Task represents a container which can be [run] dynamically whenever (and
  * as many times as) needed.
  */
 export interface Task {

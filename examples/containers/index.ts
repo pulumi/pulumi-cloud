@@ -48,7 +48,7 @@ class Cache {
                 redis: {
                     image: "redis:alpine",
                     memory: 128,
-                    portMappings: [{containerPort: 6379}],
+                    portMappings: [{ containerPort: 6379 }],
                     command: ["redis-server", "--requirepass", redisPassword],
                 },
             },
@@ -56,7 +56,11 @@ class Cache {
         this.get = (key: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
                 console.log(`Endpoint: ${endpoint}`);
-                let client = require("redis").createClient(endpoint.port, endpoint.hostname, {password: redisPassword});
+                let client = require("redis").createClient(
+                    endpoint.port,
+                    endpoint.hostname,
+                    { password: redisPassword },
+                );
                 console.log(client);
                 return new Promise<string>((resolve, reject) => {
                     client.get(key, (err: any, v: any) => {
@@ -72,7 +76,11 @@ class Cache {
         this.set = (key: string, value: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
                 console.log(`Endpoint: ${endpoint}`);
-                let client = require("redis").createClient(endpoint.port, endpoint.hostname, {password: redisPassword});
+                let client = require("redis").createClient(
+                    endpoint.port,
+                    endpoint.hostname,
+                    { password: redisPassword },
+                );
                 console.log(client);
                 return new Promise<void>((resolve, reject) => {
                     client.set(key, value, (err: any, v: any) => {
@@ -133,10 +141,10 @@ api.get("/run", async (req, res) => {
             tasks.push(helloTask.run());
         }
         await Promise.all(tasks);
-        res.json({success: true});
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
-        res.status(500).json({error: "Error running task."});
+        res.status(500).json({ error: "Error running task." });
     }
 });
 api.publish().then(url => console.log(`Serving at: ${url}`));

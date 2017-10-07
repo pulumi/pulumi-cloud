@@ -156,6 +156,50 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     };
 }
 
+// computeImage turns the `image`, `function` or `build` setting on a
+// `cloud.Container` into a valid Docker image name which can be used in an ECS
+// TaskDefinition.
+async function computeImage(container: cloud.Container): Promise<string> {
+    if (container.image) {
+        return container.image;
+    } else if (container.build) {
+        throw new Error("Not yet implemented.");
+    } else if (container.function) {
+        let closure = await pulumi.runtime.serializeClosure(container.function);
+        throw new Error("Not yet implemented.");
+    }
+    throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
+}
+
+// computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is
+// lifted over a promise for the LogGroup and container image name generation - so should not allocate any Pulumi
+// resources.
+async function computeContainerDefintions(containers: cloud.Containers, logGroup: aws.cloudwatch.LogGroup):
+    Promise<ECSContainerDefinition[]> {
+    let logGroupId = await logGroup.id;
+    return Promise.all(Object.keys(containers).map(async (containerName) => {
+        let container = containers[containerName];
+        let image = await computeImage(container);
+        let containerDefinition: ECSContainerDefinition = {
+            name: containerName,
+            image: image,
+            command: container.command,
+            memoryReservation: container.memory,
+            portMappings: container.portMappings,
+            logConfiguration: {
+                logDriver: "awslogs",
+                options: {
+                    "awslogs-group": logGroupId!,
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": containerName,
+                },
+            },
+        };
+        return containerDefinition;
+    }));
+}
+
+// createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers): aws.ecs.TaskDefinition {
     // Create a single log group for all logging associated with the Service
     let logGroup = new aws.cloudwatch.LogGroup(name, {});
@@ -186,29 +230,10 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
     }
 
     // Create the task definition for the group of containers associated with this Service.
+    let containerDefintions = computeContainerDefintions(containers, logGroup).then(JSON.stringify);
     let taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
-        containerDefinitions: logGroup.id.then(logGroupId =>
-            JSON.stringify(Object.keys(containers).map(containerName => {
-                let container = containers[containerName];
-                let containerDefinition: ECSContainerDefinition = {
-                    name: containerName,
-                    image: container.image,
-                    command: container.command,
-                    memoryReservation: container.memory,
-                    portMappings: container.portMappings,
-                    logConfiguration: {
-                        logDriver: "awslogs",
-                        options: {
-                            "awslogs-group": logGroupId!,
-                            "awslogs-region": "us-east-1",
-                            "awslogs-stream-prefix": containerName,
-                        },
-                    },
-                };
-                return containerDefinition;
-            })),
-        ),
+        containerDefinitions: containerDefintions,
         volume: volumes,
     });
 
@@ -335,7 +360,7 @@ export class Volume implements cloud.Volume {
 
 
 /**
- * A Task represents a containers which can be [run] dynamically whenever (and
+ * A Task represents a container which can be [run] dynamically whenever (and
  * as many times as) needed.
  */
 export class Task implements cloud.Task {
