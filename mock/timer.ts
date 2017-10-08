@@ -35,7 +35,7 @@ export function cron(name: string, cronTab: string, handler: () => Promise<void>
 }
 
 export function daily(name: string,
-                      scheduleOrHandler: timer.DailySchedule | timer.Action, handler: timer.Action): void {
+                      scheduleOrHandler: timer.DailySchedule | timer.Action, handler?: timer.Action): void {
     let hour: number;
     let minute: number;
     if (typeof scheduleOrHandler === "function") {
@@ -54,7 +54,7 @@ export function daily(name: string,
 }
 
 export function hourly(name: string,
-                       scheduleOrHandler: timer.HourlySchedule | timer.Action, handler: timer.Action): void {
+                       scheduleOrHandler: timer.HourlySchedule | timer.Action, handler?: timer.Action): void {
     let minute: number;
     if (typeof scheduleOrHandler === "function") {
         handler = scheduleOrHandler as timer.Action;
