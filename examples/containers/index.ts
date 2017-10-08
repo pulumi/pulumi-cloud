@@ -35,13 +35,15 @@ let customWebServer = new cloud.Service("mycustomservice", {
             memory: 128,
             portMappings: [{ containerPort: 80 }],
             function: () => {
+                let rand = Math.random();
                 let http = require("http");
                 http.createServer((req: any, res: any) => {
-                    res.end("Hello, world!");
+                    res.end(`Hello, world! (from ${rand})`);
                 }).listen(80);
             },
         },
     },
+    scale: 2,
 });
 
 // TODO[pulumi/pulumi#397] Would be nice if this was a Secret<T> and closure
