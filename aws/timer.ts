@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import { LoggedFunction } from "./function";
 
-export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>) {
+export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>): void {
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
@@ -25,14 +25,19 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
     createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler);
 }
 
-export function cron(name: string, cronTab: string, handler: () => Promise<void>) {
+export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {
     createScheduledEvent(name, `cron(${cronTab})`, handler);
 }
 
-export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>) {
+export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>): void {
     const hour = schedule.hourUTC || 0;
     const minute = schedule.minuteUTC || 0;
     cron(name, `${minute} ${hour} * * ? *`, handler);
+}
+
+export function hourly(name: string, schedule: timer.HourlySchedule, handler: () => Promise<void>): void {
+    const minute = schedule.minuteUTC || 0;
+    cron(name, `${minute} * * * ? *`, handler);
 }
 
 function createScheduledEvent(name: string, scheduleExpression: string, handler: () => Promise<void>) {

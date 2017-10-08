@@ -39,3 +39,9 @@ export function daily(name: string, schedule: timer.DailySchedule, handler: () =
     const minute = schedule.minuteUTC || 0;
     cron(name, `${minute} ${hour} * * ? *`, handler);
 }
+
+export function hourly(name: string, schedule: timer.HourlySchedule, handler: () => Promise<void>): void {
+    const minute = schedule.minuteUTC || 0;
+    cron(name, `${minute} * * * ? *`, handler);
+}
+

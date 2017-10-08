@@ -22,16 +22,25 @@ export interface IntervalRate {
 }
 
 /**
- * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]]) at
- * which a timer should fire.
+ * DailySchedule describes a time of day ([[hourUTC]] and [[minuteUTC]]) at which a daily timer should fire.
  */
 export interface DailySchedule {
     /**
-     * The hour, in UTC, that the time should fire.
+     * The hour, in UTC, that the timer should fire.
      */
     hourUTC?: number;
     /**
-     * The minute, in UTC, that the time should fire.
+     * The minute, in UTC, that the timer should fire.
+     */
+    minuteUTC?: number;
+}
+
+/**
+ * HourlySchedule describes a time of the hour ([[minuteUTC]]) at which an hourly timer should fire.
+ */
+export interface HourlySchedule {
+    /**
+     * The minute, in UTC, that the timer should fire.
      */
     minuteUTC?: number;
 }
@@ -64,3 +73,13 @@ export let cron: { (name: string, cronTab: string, handler: () => Promise<void>)
  * @param handler A handler to invoke when the timer fires.
  */
 export let daily: { (name: string, schedule: DailySchedule, handler: () => Promise<void>): void };
+
+/**
+ * An hourly timer, firing at the specified UTC minute each hour.
+ *
+ * @param name The name of this timer.
+ * @param schedule The UTC minute at which to fire each day.
+ * @param handler A handler to invoke when the timer fires.
+ */
+export let hourly: { (name: string, schedule: HourlySchedule, handler: () => Promise<void>): void };
+
