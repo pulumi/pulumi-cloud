@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import { LoggedFunction } from "./function";
 
-export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>): void {
+export function interval(name: string, options: timer.IntervalRate, handler: timer.Action): void {
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
@@ -25,22 +25,46 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
     createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler);
 }
 
-export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {
+export function cron(name: string, cronTab: string, handler: timer.Action): void {
     createScheduledEvent(name, `cron(${cronTab})`, handler);
 }
 
-export function daily(name: string, schedule: timer.DailySchedule, handler: () => Promise<void>): void {
-    const hour = schedule.hourUTC || 0;
-    const minute = schedule.minuteUTC || 0;
+export function daily(name: string,
+                      scheduleOrHandler: timer.DailySchedule | timer.Action, handler?: timer.Action): void {
+    let hour: number;
+    let minute: number;
+    if (typeof scheduleOrHandler === "function") {
+        handler = scheduleOrHandler as timer.Action;
+        hour = 0;
+        minute = 0;
+    }
+    else if (!handler) {
+        throw new Error("Missing required timer handler function");
+    }
+    else {
+        hour = scheduleOrHandler.hourUTC || 0;
+        minute = scheduleOrHandler.minuteUTC || 0;
+    }
     cron(name, `${minute} ${hour} * * ? *`, handler);
 }
 
-export function hourly(name: string, schedule: timer.HourlySchedule, handler: () => Promise<void>): void {
-    const minute = schedule.minuteUTC || 0;
+export function hourly(name: string,
+                       scheduleOrHandler: timer.HourlySchedule | timer.Action, handler?: timer.Action): void {
+    let minute: number;
+    if (typeof scheduleOrHandler === "function") {
+        handler = scheduleOrHandler as timer.Action;
+        minute = 0;
+    }
+    else if (!handler) {
+        throw new Error("Missing required timer handler function");
+    }
+    else {
+        minute = scheduleOrHandler.minuteUTC || 0;
+    }
     cron(name, `${minute} * * * ? *`, handler);
 }
 
-function createScheduledEvent(name: string, scheduleExpression: string, handler: () => Promise<void>) {
+function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action) {
     const func = new LoggedFunction(
         name,
         [ aws.iam.AWSLambdaFullAccess ],
