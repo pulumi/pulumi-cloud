@@ -14,26 +14,26 @@ export class LoggedFunction {
     public role: aws.iam.Role;
 
     constructor(name: string, func: aws.serverless.Handler) {
-        let policies = [
+        const policies = [
             aws.iam.AWSLambdaFullAccess,
             aws.iam.AmazonEC2ContainerServiceFullAccess,
         ];
-        let options = {
+        const options = {
             policies: policies,
             deadLetterConfig: {
                 targetArn: getUnhandledErrorTopic().arn,
             },
         };
 
-        let lambda = new aws.serverless.Function(name, options, func);
+        const lambda = new aws.serverless.Function(name, options, func);
         this.lambda = lambda.lambda;
         this.role = lambda.role;
 
-        let loggroup = new aws.cloudwatch.LogGroup(name, {
+        const loggroup = new aws.cloudwatch.LogGroup(name, {
             name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
             retentionInDays: 1,
         });
-        let subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
+        const subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
             logGroup: loggroup,
             destinationArn: getLogCollector().arn,
             filterPattern: "",

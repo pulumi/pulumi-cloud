@@ -26,8 +26,7 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
         console.log(`results is ${JSON.stringify(results, null, "")}`);
         pollMarkers.update({id: name}, {lastToken: results.nextToken});
         console.log(`updated pollmarker ${name} to ${results.nextToken}`);
-        for (let i = 0; i < (<any>results.items).length; i++) {
-            let result = results.items[i];
+        for (let result of results.items) {
             await topic.publish(result);
             console.log(`published to topic ${JSON.stringify(result, null, "")}`);
         }

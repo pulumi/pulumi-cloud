@@ -6,7 +6,7 @@
 
 export * from "./httpEndpoint";
 export * from "./table";
-export * from "./topic";
+export { Topic } from "./topic";
 export * from "./service";
 export { onError } from "./unhandledError";
 import * as timer from "./timer";
