@@ -172,10 +172,10 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
     } else if (container.function) {
         let closure = await pulumi.runtime.serializeClosure(container.function);
         let jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
-        // TODO: Put this in a real Pulumi-owned Docker image.
-        // TODO: Pass the full local zipped folder through to the container (via S3?)
+        // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+        // TODO[pulumi/pulumi-cloud#86: Pass the full local zipped folder through to the container (via S3?)
         return {
-            image: "lukehoban/magic", environment: [{
+            image: "lukehoban/javascriptrunner", environment: [{
                 name: "PULUMI_SRC",
                 value: jsSrcText,
             }],
@@ -353,7 +353,7 @@ export class Service implements cloud.Service {
 
 let volumeNames = new Set<string>();
 
-// TODO: In the current EFS-backed model, a Volume is purely virtual - it
+// _Note_: In the current EFS-backed model, a Volume is purely virtual - it
 // doesn't actually manage any underlying resource.  It is used just to provide
 // a handle to a folder on the EFS share which can be mounted by conatainer(s).
 // On platforms like ACI, we may be able to acrtually provision a unique File

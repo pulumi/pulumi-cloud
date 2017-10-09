@@ -67,7 +67,7 @@ export interface VolumeConstructor {
      */
     new (name: string): Volume;
 
-    // TODO - Likely important features:
+    // TODO[pulumi/pulumi-cloud#84] - Likely important features:
     // backupToBucket(bucket: Bucket): Promise<void>
     // restoreFromBucket(bucket: Bucket): Promise<void>
 }
