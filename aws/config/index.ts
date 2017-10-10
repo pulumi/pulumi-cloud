@@ -2,7 +2,7 @@
 
 import * as pulumi from "pulumi";
 
-let config = new pulumi.Config("cloud-aws:config");
+const config = new pulumi.Config("cloud-aws:config");
 
 // Optional ECS cluster ARN, subnets and VPC.  If not provided, `Service`s and
 // `Task`s are not available for the target environment.

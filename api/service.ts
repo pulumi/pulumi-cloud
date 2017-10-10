@@ -1,5 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+/**
+ * A collection of Containers
+ */
 export interface Containers {
     [name: string]: Container;
 }
@@ -25,19 +28,32 @@ export interface Container {
      */
     function?: () => void;
     /**
-     * The amount of memory to reserve for the container.
+     * The maximum amount of memory the container will be allowed to use. Maps to the Docker
+     * `--memory` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
      */
-    memory: number;
+    memory?: number;
     /**
-     * An array of port mappings, indicating the container port to expose and
-     * the protocal that is used on that port.
+     * The amount of memory to reserve for the container, but the container will
+     * be allowed to use more memory if it's available.  At least one of
+     * `memory` and `memorReservation` must be specified.  Maps to the Docker
+     * `--memory-reservation` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
      */
-    portMappings?: {containerPort: number; protocol?: string}[];
+    memoryReservation?: number;
+    /**
+     * An array of ports to publish from the container.  Ports are exposed using the TCP protocol.  Maps to the Docker
+     * `--publish` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
+     */
+    ports?: {port: number}[];
     /**
      * An array of volume mounts, indicating a volume to mount and a path within
-     * the container at which to moung the volume.
+     * the container at which to moung the volume.  Maps to the Docker
+     * `--volume` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
      */
-    mountPoints?: {containerPath: string; sourceVolume: Volume}[];
+    volumes?: {containerPath: string; sourceVolume: Volume}[];
     /**
      * The command line that is passed to the container. This parameter maps to
      * `Cmd` in the [Create a
@@ -87,7 +103,7 @@ export interface ServiceArguments {
      * The number of copies of this Service's containers to deploy and maintain
      * as part of the running service.  Defaults to `1`.
      */
-    scale?: number;
+    replicas?: number;
 }
 
 export interface Endpoint {

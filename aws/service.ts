@@ -173,9 +173,9 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
-        // TODO[pulumi/pulumi-cloud#86: Pass the full local zipped folder through to the container (via S3?)
+        // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
         return {
-            image: "lukehoban/javascriptrunner", environment: [{
+            image: "lukehoban/nodejsrunner", environment: [{
                 name: "PULUMI_SRC",
                 value: jsSrcText,
             }],
@@ -193,12 +193,14 @@ async function computeContainerDefintions(containers: cloud.Containers, logGroup
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
         const { image, environment } = await computeImage(container);
+        const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
             image: image,
             command: container.command,
-            memoryReservation: container.memory,
-            portMappings: container.portMappings,
+            memory: container.memory,
+            memoryReservation: container.memoryReservation,
+            portMappings: portMappings,
             environment: environment,
             logConfiguration: {
                 logDriver: "awslogs",
@@ -222,14 +224,14 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
     const volumes: { hostPath?: string; name: string }[] = [];
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
-        if (container.mountPoints) {
-            for (const mountPoint of container.mountPoints) {
+        if (container.volumes) {
+            for (const volumeMount of container.volumes) {
                 if (!ecsClusterEfsMountPath) {
                     throw new Error(
                         "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
                     );
                 }
-                const volume = mountPoint.sourceVolume;
+                const volume = volumeMount.sourceVolume;
                 volumes.push({
                     // TODO: [pulumi/pulumi##381] We should most likely be
                     // including a unique identifier for this deployment
@@ -272,7 +274,7 @@ export class Service implements cloud.Service {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
         const containers = args.containers;
-        const scale = args.scale === undefined ? 1 : args.scale;
+        const replicas = args.replicas === undefined ? 1 : args.replicas;
         this.name = name;
 
         const taskDefinition = createTaskDefinition(name, containers);
@@ -283,16 +285,16 @@ export class Service implements cloud.Service {
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
             this.exposedPorts[containerName] = {};
-            if (container.portMappings) {
-                for (const portMapping of container.portMappings) {
-                    const info = newLoadBalancerTargetGroup(container, portMapping.containerPort);
-                    this.exposedPorts[containerName][portMapping.containerPort] = {
+            if (container.ports) {
+                for (const portMapping of container.ports) {
+                    const info = newLoadBalancerTargetGroup(container, portMapping.port);
+                    this.exposedPorts[containerName][portMapping.port] = {
                         host: info.loadBalancer,
                         port: info.listenerPort,
                     };
                     loadBalancers.push({
                         containerName: containerName,
-                        containerPort: portMapping.containerPort,
+                        containerPort: portMapping.port,
                         targetGroupArn: info.targetGroup.arn,
                     });
                 }
@@ -301,7 +303,7 @@ export class Service implements cloud.Service {
 
         // Create the service.
         const service = new aws.ecs.Service(name, {
-            desiredCount: scale,
+            desiredCount: replicas,
             taskDefinition: taskDefinition.arn,
             cluster: ecsClusterARN,
             loadBalancers: loadBalancers,
