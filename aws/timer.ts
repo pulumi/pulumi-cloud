@@ -67,7 +67,6 @@ export function hourly(name: string,
 function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action) {
     const func = new LoggedFunction(
         name,
-        [ aws.iam.AWSLambdaFullAccess ],
         (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
             handler().then(() => {
                 cb(null, null);
