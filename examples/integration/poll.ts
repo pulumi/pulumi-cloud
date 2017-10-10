@@ -7,18 +7,18 @@ import * as cloud from "@pulumi/cloud";
 // next invocation.
 export type PollFunction<T> = (lastToken?: string) => Promise<{ items: T[]; nextToken: string; }>;
 
-let pollMarkers = new cloud.Table("__pollMarkers");
+const pollMarkers = new cloud.Table("__pollMarkers");
 
 // poll<T> represents a stream of items which are derived from polling at a given rate
 // using a user-provided polling function.
 export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: PollFunction<T>): cloud.Stream<T> {
-    let topic = new cloud.Topic<T>(name);
+    const topic = new cloud.Topic<T>(name);
 
     cloud.timer.interval(name, rate, async () => {
         console.log(`Starting polling...`);
 
         console.log(`Getting pollMarker for ${name}`);
-        let pollMarker = await pollMarkers.get({id: name});
+        const pollMarker = await pollMarkers.get({id: name});
         console.log(`pollMarker is ${JSON.stringify(pollMarker, null, "")}`);
 
         let lastToken: string | undefined;
@@ -29,7 +29,8 @@ export function poll<T>(name: string, rate: cloud.timer.IntervalRate, poller: Po
         console.log(`lastToken is ${lastToken}`);
 
         console.log("Polling for results...");
-        let results = await poller(lastToken);
+        const results = await poller(lastToken);
+
         console.log(`Got ${results.items.length} results...`);
         pollMarkers.update({id: name}, {lastToken: results.nextToken});
         console.log(`Updating pollmarker ${name} to ${results.nextToken}...`);

@@ -10,15 +10,15 @@ const secretAccessKey = config.require("secret_access_key");
 const region = config.require("region");
 
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
-    let AWS = require("aws-sdk");
+    const AWS = require("aws-sdk");
     AWS.config = new AWS.Config({
         accessKeyId: accessKeyID,
         secretAccessKey: secretAccessKey,
         region: region,
     });
-    let ses = new AWS.SES();
+    const ses = new AWS.SES();
     console.log(`Sending email: ${JSON.stringify(message)}`);
-    let params: any = {
+    const params: any = {
         Destination: {
             ToAddresses: message.to,
         },
@@ -48,7 +48,7 @@ export let sendEmail: (message: EmailMessage) => Promise<void> = async (message)
     if (message.replyTo !== undefined) {
         params.ReplyToAddresses = message.replyTo;
     }
-    let resp = await ses.sendEmail(params).promise();
+    const resp = await ses.sendEmail(params).promise();
     console.log(resp);
 };
 

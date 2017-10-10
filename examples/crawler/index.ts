@@ -2,7 +2,7 @@
 
 import * as pulumi from "@pulumi/cloud";
 
-let countDown = new pulumi.Topic<number>("countDown");
+const countDown = new pulumi.Topic<number>("countDown");
 
 countDown.subscribe("watcher", async (num) => {
     console.log(num);

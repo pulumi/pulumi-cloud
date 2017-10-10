@@ -10,9 +10,9 @@ const domain = config.require("domain");
 const apiKey = config.require("api_key");
 
 export let send: (message: EmailMessage) => Promise<void> = async (message) => {
+    const request = require("request-promise-native");
 
-    let request = require("request-promise-native");
-    let body = await request({
+    const body = await request({
         method: "POST",
         url: `https://api.mailgun.net/v3/${domain}/messages`,
         auth: {

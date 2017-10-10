@@ -26,5 +26,6 @@ if (!provider) {
 
 const frameworkModule = `@pulumi/cloud-${provider}`;
 
-console.log(`Loading ${frameworkModule} for current environment.`);
+pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
 module.exports = require(frameworkModule);
+

@@ -38,7 +38,6 @@ export function createSubscription(
     resName: string, topic: aws.sns.Topic, handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
     const func = new LoggedFunction(
         resName,
-        [ aws.iam.AWSLambdaFullAccess ],
         (ev: SNSEvent, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
             Promise.all(ev.Records.map(async (record: SNSRecord) => {
                 await handler(record.Sns);

@@ -48,29 +48,29 @@ async function getTwitterAuthorizationBearer(): Promise<string> {
 // Search returns a stream of all tweets matching the search term.
 export function search(name: string, term: string): cloud.Stream<Tweet> {
     console.log("Creating poll...");
-    let searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
+    const searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
         console.log("Getting bearer token...");
         var bearerToken = await getTwitterAuthorizationBearer();
 
         console.log("Running poll...");
-        let request = require("request-promise-native");
+        const request = require("request-promise-native");
         let querystring = lastToken;
         if (lastToken === undefined) {
             querystring = `?q=${term}`;
         }
         console.log("Requesting twitter data...");
 
-        let url = "https://api.twitter.com/1.1/search/tweets.json" + querystring;
+        const url = "https://api.twitter.com/1.1/search/tweets.json" + querystring;
         console.log("Url: " + url);
 
-        let body = await request({
+        const body = await request({
             url: url,
             headers: {
                 "Authorization": "Bearer " + bearerToken,
             },
         });
 
-        let data = <TwitterSearchResponse>JSON.parse(body);
+        const data = <TwitterSearchResponse>JSON.parse(body);
 
         console.log(utils.toShortString(`Twitter response: ${JSON.stringify(data, null, "")}`));
         return {

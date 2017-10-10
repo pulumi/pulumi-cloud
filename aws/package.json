@@ -11,8 +11,11 @@
         "typescript": "^2.5.2"
     },
     "peerDependencies": {
-        "pulumi": "*",
         "@pulumi/aws": "*",
-        "@pulumi/cloud": "*"
+        "@pulumi/cloud": "*",
+        "pulumi": "*"
+    },
+    "dependencies": {
+        "@types/aws-sdk": "^2.7.0"
     }
 }
