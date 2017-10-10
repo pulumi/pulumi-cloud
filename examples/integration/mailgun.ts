@@ -2,12 +2,12 @@
 
 import * as config from "./config";
 
-let domain = config.mailgunDomain;
-let apiKey = config.mailgunApiKey;
+const domain = config.mailgunDomain;
+const apiKey = config.mailgunApiKey;
 
 export let send: (message: EmailMessage) => Promise<void> = async (message) => {
-    let request = require("request-promise-native");
-    let body = await request({
+    const request = require("request-promise-native");
+    const body = await request({
         method: "POST",
         url: `https://api.mailgun.net/v3/${domain}/messages`,
         auth: {

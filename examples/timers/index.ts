@@ -3,8 +3,8 @@
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
 
-let config = new pulumi.Config("timers:config");
-let message = config.require("message");
+const config = new pulumi.Config("timers:config");
+const message = config.require("message");
 
 cloud.timer.interval("test-interval", { minutes: 1 }, async () => {
     console.log(`test-interval[${Date.now()}]: ${message}`);

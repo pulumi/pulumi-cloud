@@ -18,9 +18,9 @@ export class Digest<T> implements cloud.Stream<T[]> {
         });
         this.collect = async () => {
             console.log(`collecting digest`);
-            let items = await this.table.scan();
-            let ret: T[] = [];
-            for (let item of items) {
+            const items = await this.table.scan();
+            const ret: T[] = [];
+            for (const item of items) {
                 ret.push(JSON.parse(item.id));
                 console.log(`added item to digest ${item.id}`);
                 await this.table.delete({ id: item.id });

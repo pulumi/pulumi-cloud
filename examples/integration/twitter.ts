@@ -6,20 +6,20 @@ import { poll } from "./poll";
 
 // Search returns a stream of all tweets matching the search term.
 export function search(name: string, term: string): cloud.Stream<Tweet> {
-    let accessToken = config.twitterAccessToken;
-    let searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
-        let request = require("request-promise-native");
+    const accessToken = config.twitterAccessToken;
+    const searchPoll = poll<Tweet>(name, {minutes: 1}, async (lastToken) => {
+        const request = require("request-promise-native");
         let querystring = lastToken;
         if (lastToken === undefined) {
             querystring = `?q=${term}`;
         }
-        let body = await request({
+        const body = await request({
             url: "https://api.twitter.com/1.1/search/tweets.json" + querystring,
             headers: {
                 "Authorization": "Bearer " + accessToken,
             },
         });
-        let data = <TwitterSearchResponse>JSON.parse(body);
+        const data = <TwitterSearchResponse>JSON.parse(body);
         console.log(`data from Twitter: ${JSON.stringify(data, null, "")}`);
         return {
             nextToken: data.search_metadata.refresh_url,

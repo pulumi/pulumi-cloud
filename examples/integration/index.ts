@@ -8,14 +8,14 @@ import { poll } from "./poll";
 import * as salesforce from "./salesforce";
 import * as twitter from "./twitter";
 
-let sendEmail = mailgun.send;
-let salesforceQueryAll = salesforce.queryAll;
-let sendSESEmail = aws.sendEmail;
-let salesforceInsert = salesforce.insert;
+const sendEmail = mailgun.send;
+const salesforceQueryAll = salesforce.queryAll;
+const sendSESEmail = aws.sendEmail;
+const salesforceInsert = salesforce.insert;
 
 function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
-    let tweets = twitter.search("pulumi", "vscode");
+    const tweets = twitter.search("pulumi", "vscode");
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
@@ -30,10 +30,10 @@ function exampleTwitter1() {
 
 function exampleTwitter2() {
     // Get a stream of all tweets matching this query, forever...
-    let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
+    const tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
     // Collect them into bunches
-    let digest = new Digest("tweetdigest", tweets);
+    const digest = new Digest("tweetdigest", tweets);
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
@@ -47,7 +47,7 @@ function exampleTwitter2() {
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (let tweet of dailyTweets) {
+        for (const tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
         await sendEmail({
@@ -60,19 +60,19 @@ function exampleTwitter2() {
 
 function exampleSalesforce1() {
     // Get a stream of all modifications to the Contact list...
-    let contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
+    const contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
         if (timestamp === undefined) {
             // Initial timestamp to start collecting edits from.
             timestamp = "2017-01-01T00:00:00.000Z";
         }
         // Query Salesforce
-        let records = await salesforceQueryAll(
+        const records = await salesforceQueryAll(
             `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         );
         // Update timetamp to latest of all received edits.
-        let newTimestamp = records.reduce(
+        const newTimestamp = records.reduce(
             (ts: string, record: salesforce.Record) => {
-                let newts: string = record["LastModifiedDate"];
+                const newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;
             },
             timestamp,
@@ -92,7 +92,7 @@ function exampleSalesforce1() {
 
 function exampleSalesforce2() {
     // Get a stream of all modifications to the Contact list...
-    let contacts = salesforce.query(
+    const contacts = salesforce.query(
         "contacts",
         (timestamp) => `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         "2017-01-01T00:00:00.000Z",
@@ -108,7 +108,7 @@ function exampleSalesforce2() {
 
 function exampleSalesforce3() {
     // Get a stream of all modifications to the Contact list...
-    let contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
+    const contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
 
     // Log each modification.
     contacts.subscribe("contactlistener", async (contact) => {
@@ -117,7 +117,7 @@ function exampleSalesforce3() {
 }
 
 function exampleSendSESEmail() {
-    let api = new cloud.HttpEndpoint("sadsad");
+    const api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
             await sendSESEmail({
@@ -142,7 +142,7 @@ function exampleSendSESEmail() {
         }
     });
 
-    api.publish().mapValue((url: string) => { console.log(`URL: ${url}`); });
+    api.publish().then((url: string) => { console.log(`URL: ${url}`); });
 }
 
 exampleSendSESEmail();
