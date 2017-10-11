@@ -4,6 +4,8 @@
 // this package.  Instead things should only reference the @pulumi/cloud package.  That package
 // actually exports the API types.
 
+import "./config";
+
 export * from "./httpEndpoint";
 export * from "./table";
 export { Topic } from "./topic";

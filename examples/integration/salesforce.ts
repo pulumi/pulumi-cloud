@@ -1,13 +1,17 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
-import * as config from "./config";
 import { poll } from "./poll";
 
-const salesforceEmail = config.salesforceEmail;
-const salesforcePassword = config.salesforcePassword;
+// Email and Password for Salesforce account.  Password should be in the form:
+//    <password><security_token>
+// See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
+const config = new pulumi.Config("salesforce");
+const salesforceEmail = config.require("email");
+const salesforcePassword = config.require("password");
 
-const getAuthenticatedSalesforceConnection: () => Promise<any> = async () => {
+async function getAuthenticatedSalesforceConnection(): Promise<any> {
     const jsforce = require("jsforce");
     console.log(`loaded jsforce`);
     const conn = new jsforce.Connection();

@@ -13,22 +13,23 @@ const salesforceQueryAll = salesforce.queryAll;
 const sendSESEmail = aws.sendEmail;
 const salesforceInsert = salesforce.insert;
 
-function exampleTwitter1() {
+export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
     const tweets = twitter.search("pulumi", "vscode");
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
-        console.log(tweet);
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: `@${tweet.user.screen_name}: ${tweet.text}\n`,
         });
     });
 }
 
-function exampleTwitter2() {
+export function exampleTwitter2() {
+    console.log("Running Twitter example 2...");
+
     // Get a stream of all tweets matching this query, forever...
     const tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
@@ -44,21 +45,29 @@ function exampleTwitter2() {
     // For every group of tweets published to the digest stream (nightly)
     // send an email.
     digest.subscribe("digest", async (dailyTweets) => {
+        if (dailyTweets.length === 0) {
+            console.log("No new tweets...")
+            return;
+        }
+
+        console.log(`Received ${dailyTweets.length} new tweets.  Sending email...`)
+
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
         for (const tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
+
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: text,
         });
     });
 }
 
-function exampleSalesforce1() {
+export function exampleSalesforce1() {
     // Get a stream of all modifications to the Contact list...
     const contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
         if (timestamp === undefined) {
@@ -90,7 +99,7 @@ function exampleSalesforce1() {
     });
 }
 
-function exampleSalesforce2() {
+export function exampleSalesforce2() {
     // Get a stream of all modifications to the Contact list...
     const contacts = salesforce.query(
         "contacts",
@@ -106,7 +115,7 @@ function exampleSalesforce2() {
     });
 }
 
-function exampleSalesforce3() {
+export function exampleSalesforce3() {
     // Get a stream of all modifications to the Contact list...
     const contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
 
@@ -116,7 +125,7 @@ function exampleSalesforce3() {
     });
 }
 
-function exampleSendSESEmail() {
+export function exampleSendSESEmail() {
     const api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
@@ -144,5 +153,3 @@ function exampleSendSESEmail() {
 
     api.publish().then((url: string) => { console.log(`URL: ${url}`); });
 }
-
-exampleSendSESEmail();

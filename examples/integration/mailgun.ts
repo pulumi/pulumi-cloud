@@ -1,12 +1,17 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as config from "./config";
+import * as pulumi from "pulumi";
+import * as utils from "./utils"
 
-const domain = config.mailgunDomain;
-const apiKey = config.mailgunApiKey;
+// Account API Key and desired Mailgun Domain to use for sending emails.  See
+// https://app.mailgun.com/app/domains and https://app.mailgun.com/app/account/security.
+const config = new pulumi.Config("mailgun");
+const domain = config.require("domain");
+const apiKey = config.require("api_key");
 
 export let send: (message: EmailMessage) => Promise<void> = async (message) => {
     const request = require("request-promise-native");
+
     const body = await request({
         method: "POST",
         url: `https://api.mailgun.net/v3/${domain}/messages`,
@@ -21,7 +26,8 @@ export let send: (message: EmailMessage) => Promise<void> = async (message) => {
             text:  message.body,
         },
     });
-    console.log(`response body ${body}`);
+
+    console.log(utils.toShortString(`MailGun response: ${body}`));
 };
 
 export interface EmailMessage {
