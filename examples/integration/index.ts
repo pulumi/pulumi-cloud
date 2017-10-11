@@ -38,10 +38,7 @@ export function exampleTwitter2() {
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
-    // cloud.timer.daily("nightly", { hourUTC: 7 },  async () => {
-    //     await digest.collect();
-    // });
-    cloud.timer.interval("every-minute", { minutes: 1 }, async () => {
+    cloud.timer.daily("nightly", { hourUTC: 7 },  async () => {
         await digest.collect();
     });
 
