@@ -1,4 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:enable pulumi */
 
 const wcstring = require("wcstring");
 
@@ -7,7 +8,7 @@ export function toShortString(obj: string): string {
 
     let result: string = obj ? obj.toString() : "";
     result = result.replace(/[\n\r]/g, " ");
-    let str = wcstring(result);
+    const str = wcstring(result);
 
     return str.truncate(maxLength, "...");
 }

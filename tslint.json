@@ -1,5 +1,6 @@
 {
     "rules": {
+        "pulumi": true,
         "align": [
             true,
             "parameters",

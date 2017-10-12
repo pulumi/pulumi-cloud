@@ -1,5 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 /* tslint:disable */
+/* tslint:enable pulumi */
 
 import * as pulumi from "pulumi";
 import * as utils from "./utils"

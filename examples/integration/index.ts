@@ -1,5 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 /* tslint:disable */
+/* tslint:enable pulumi */
 
 import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
@@ -17,6 +18,8 @@ let salesforceInsert = salesforce.insert;
 export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
     let tweets = twitter.search("pulumi", "vscode");
+
+    console.log(true);
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {

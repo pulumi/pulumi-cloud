@@ -1,18 +1,18 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as tslint from "tslint";
+import * as Lint from "tslint";
 import * as ts from "typescript";
 
-export class Rule extends tslint.Rules.AbstractRule {
+export class Rule extends Lint.Rules.AbstractRule {
     public static FAILURE_STRING = "import statement forbidden";
 
-    public apply(sourceFile: ts.SourceFile): tslint.RuleFailure[] {
+    public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         return this.applyWithWalker(new NoImportsWalker(sourceFile, this.getOptions()));
     }
 }
 
 // The walker takes care of all the work.
-class NoImportsWalker extends tslint.RuleWalker {
+class NoImportsWalker extends Lint.RuleWalker {
     public visitImportDeclaration(node: ts.ImportDeclaration) {
         // create a failure at the current position
         this.addFailure(this.createFailure(node.getStart(), node.getWidth(), Rule.FAILURE_STRING));
