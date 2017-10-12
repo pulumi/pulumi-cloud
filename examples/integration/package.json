@@ -1,21 +1,25 @@
 {
-    "name": "integration",
+    "name": "@pulumi/integration-examples",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
     "scripts": {
-        "build": "tsc"
+        "build": "tsc",
+        "lint": "tslint -c ../tslint.json '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
     },
     "devDependencies": {
         "@types/node": "^8.0.27",
-        "typescript": "^2.1.4"
+        "typescript": "^2.1.4",
+        "tslint": "^5.7.0"
     },
     "peerDependencies": {
+        "pulumi": "*",
         "@pulumi/cloud": "*"
     },
     "dependencies": {
         "jsforce": "^1.8.0",
         "request": "^2.81.0",
-        "request-promise-native": "^1.0.4"
+        "request-promise-native": "^1.0.4",
+        "wcstring": "^2.1.1"
     }
 }

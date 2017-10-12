@@ -37,7 +37,7 @@ export class Table implements cloud.Table {
         if (primaryKeyType === undefined) {
             primaryKeyType = "string";
         }
-        let keyType = pulumiKeyTypeToDynamoKeyType(primaryKeyType);
+        const keyType = pulumiKeyTypeToDynamoKeyType(primaryKeyType);
         this.table = new aws.dynamodb.Table(name, {
             attribute: [
                 { name: primaryKey, type: keyType },
@@ -49,8 +49,8 @@ export class Table implements cloud.Table {
         this.tableName = this.table.name;
         this.primaryKey = primaryKey;
         this.primaryKeyType = primaryKeyType;
-        let db = () => {
-            let awssdk = require("aws-sdk");
+        const db = () => {
+            const awssdk = require("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
         };
         this.get = (query) => {
@@ -72,9 +72,9 @@ export class Table implements cloud.Table {
         };
         this.update = (query: any, updates: any) => {
             let updateExpression = "";
-            let attributeValues: {[key: string]: any} = {};
-            for (let key of Object.keys(updates)) {
-                let val = updates[key];
+            const attributeValues: {[key: string]: any} = {};
+            for (const key of Object.keys(updates)) {
+                const val = updates[key];
                 if (updateExpression === "") {
                     updateExpression += "SET ";
                 } else {

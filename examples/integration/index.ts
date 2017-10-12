@@ -1,4 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
@@ -13,22 +14,23 @@ let salesforceQueryAll = salesforce.queryAll;
 let sendSESEmail = aws.sendEmail;
 let salesforceInsert = salesforce.insert;
 
-function exampleTwitter1() {
+export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
     let tweets = twitter.search("pulumi", "vscode");
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
-        console.log(tweet);
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: `@${tweet.user.screen_name}: ${tweet.text}\n`,
         });
     });
 }
 
-function exampleTwitter2() {
+export function exampleTwitter2() {
+    console.log("Running Twitter example 2...");
+
     // Get a stream of all tweets matching this query, forever...
     let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
@@ -44,22 +46,29 @@ function exampleTwitter2() {
     // For every group of tweets published to the digest stream (nightly)
     // send an email.
     digest.subscribe("digest", async (dailyTweets) => {
+        if (dailyTweets.length === 0) {
+            console.log("No new tweets...")
+            return;
+        }
+
+        console.log(`Received ${dailyTweets.length} new tweets.  Sending email...`)
+
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (let i = 0; i < (<any>dailyTweets).length; i++) {
-            let tweet = dailyTweets[i];
+        for (let tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
+
         await sendEmail({
-            to: "luke@pulumi.com",
+            to: "cyrus@pulumi.com",
             subject: `Tweets from ${new Date().toDateString()}`,
             body: text,
         });
     });
 }
 
-function exampleSalesforce1() {
+export function exampleSalesforce1() {
     // Get a stream of all modifications to the Contact list...
     let contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
         if (timestamp === undefined) {
@@ -71,7 +80,7 @@ function exampleSalesforce1() {
             `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         );
         // Update timetamp to latest of all received edits.
-        let newTimestamp = (<any>records).reduce(
+        let newTimestamp = records.reduce(
             (ts: string, record: salesforce.Record) => {
                 let newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;
@@ -91,7 +100,7 @@ function exampleSalesforce1() {
     });
 }
 
-function exampleSalesforce2() {
+export function exampleSalesforce2() {
     // Get a stream of all modifications to the Contact list...
     let contacts = salesforce.query(
         "contacts",
@@ -107,7 +116,7 @@ function exampleSalesforce2() {
     });
 }
 
-function exampleSalesforce3() {
+export function exampleSalesforce3() {
     // Get a stream of all modifications to the Contact list...
     let contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
 
@@ -117,7 +126,7 @@ function exampleSalesforce3() {
     });
 }
 
-function exampleSendSESEmail() {
+export function exampleSendSESEmail() {
     let api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
@@ -143,7 +152,5 @@ function exampleSendSESEmail() {
         }
     });
 
-    api.publish().mapValue((url: string) => { console.log(`URL: ${url}`); });
+    api.publish().then((url: string) => { console.log(`URL: ${url}`); });
 }
-
-exampleSendSESEmail();

@@ -2,7 +2,7 @@ PROCCNT=$(shell nproc --all)
 TESTPARALLELISM=10
 
 .PHONY: default
-default: banner dependencies lint build install
+default: banner dependencies lint build install integration
 
 .PHONY: all
 all: default tests
@@ -39,8 +39,15 @@ install:
 
 .PHONY: tests
 tests:
-	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests
+	cd tests/table && yarn && yarn run build && yarn run test
+	cd tests/topic && yarn && yarn run build && yarn run test
+	cd tests/httpEndpoint && yarn && yarn run build && yarn run test
+
+
+.PHONY: integration
+integration:
+	$(MAKE) -C ./integration all
+
 
 .PHONY: publish
 publish:

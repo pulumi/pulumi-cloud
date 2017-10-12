@@ -14,7 +14,7 @@ export function getUnhandledErrorTopic(): aws.sns.Topic {
 
 export function onError(name: string, handler: cloud.ErrorHandler) {
     sns.createSubscription(name, getUnhandledErrorTopic(), async (item: sns.SNSItem) => {
-        let errorMessage = JSON.stringify(item.MessageAttributes["ErrorMessage"]);
+        const errorMessage = JSON.stringify(item.MessageAttributes["ErrorMessage"]);
         await handler(errorMessage, item.Message);
     });
 }

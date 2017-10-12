@@ -1,0 +1,22 @@
+{
+    "name": "integration",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "*",
+        "@pulumi/integration-examples": "*"
+    },
+    "dependencies": {
+        "jsforce": "^1.8.0",
+        "request": "^2.81.0",
+        "request-promise-native": "^1.0.4"
+    }
+}

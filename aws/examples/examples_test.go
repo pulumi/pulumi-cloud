@@ -111,6 +111,19 @@ func Test_Examples(t *testing.T) {
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
 			},
 		},
+		{
+			Dir: path.Join(cwd, "../../examples/timers"),
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+				"timers:config:message": "Hello, Pulumi Timers!",
+			},
+			Dependencies: []string{
+				"pulumi",
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+		},
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {

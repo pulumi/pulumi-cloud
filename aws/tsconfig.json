@@ -23,7 +23,9 @@
         "table.ts",
         "timer.ts",
         "topic.ts",
-        "unhandledError.ts"
+        "service.ts",
+        "unhandledError.ts",
+        "config/index.ts"
     ]
 }
 
