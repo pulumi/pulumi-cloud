@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as ts from "typescript";
 import * as tslint from "tslint";
+import * as ts from "typescript";
 
 export class Rule extends tslint.Rules.AbstractRule {
     public static FAILURE_STRING = "import statement forbidden";
