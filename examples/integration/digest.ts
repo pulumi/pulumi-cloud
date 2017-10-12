@@ -1,4 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import * as utils from "./utils"
@@ -16,7 +17,7 @@ export class Digest<T> implements cloud.Stream<T[]> {
         this.table = new cloud.Table(name);
 
         stream.subscribe(name, async (item) => {
-            const value = JSON.stringify(item);
+            let value = JSON.stringify(item);
             console.log(utils.toShortString(`Adding item to digest table: ${value}`));
             await this.table.insert({ id: value });
         });
@@ -24,8 +25,8 @@ export class Digest<T> implements cloud.Stream<T[]> {
         this.collect = async () => {
             console.log(`Collecting digest...`);
 
-            const items = await this.table.scan();
-            const ret: T[] = [];
+            let items = await this.table.scan();
+            let ret: T[] = [];
             for (let item of items) {
                 ret.push(JSON.parse(item.id));
                 await this.table.delete({ id: item.id });

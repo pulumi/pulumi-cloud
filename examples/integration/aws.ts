@@ -1,24 +1,25 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as pulumi from "pulumi";
 
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html
-const config = new pulumi.Config("aws");
-const accessKeyID = config.require("access_key");
-const secretAccessKey = config.require("secret_access_key");
-const region = config.require("region");
+let config = new pulumi.Config("aws");
+let accessKeyID = config.require("access_key");
+let secretAccessKey = config.require("secret_access_key");
+let region = config.require("region");
 
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
-    const AWS = require("aws-sdk");
+    let AWS = require("aws-sdk");
     AWS.config = new AWS.Config({
         accessKeyId: accessKeyID,
         secretAccessKey: secretAccessKey,
         region: region,
     });
-    const ses = new AWS.SES();
+    let ses = new AWS.SES();
     console.log(`Sending email: ${JSON.stringify(message)}`);
-    const params: any = {
+    let params: any = {
         Destination: {
             ToAddresses: message.to,
         },
@@ -48,7 +49,7 @@ export let sendEmail: (message: EmailMessage) => Promise<void> = async (message)
     if (message.replyTo !== undefined) {
         params.ReplyToAddresses = message.replyTo;
     }
-    const resp = await ses.sendEmail(params).promise();
+    let resp = await ses.sendEmail(params).promise();
     console.log(resp);
 };
 

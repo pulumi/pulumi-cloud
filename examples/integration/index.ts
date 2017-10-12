@@ -1,4 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
@@ -8,14 +9,14 @@ import { poll } from "./poll";
 import * as salesforce from "./salesforce";
 import * as twitter from "./twitter";
 
-const sendEmail = mailgun.send;
-const salesforceQueryAll = salesforce.queryAll;
-const sendSESEmail = aws.sendEmail;
-const salesforceInsert = salesforce.insert;
+let sendEmail = mailgun.send;
+let salesforceQueryAll = salesforce.queryAll;
+let sendSESEmail = aws.sendEmail;
+let salesforceInsert = salesforce.insert;
 
 export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
-    const tweets = twitter.search("pulumi", "vscode");
+    let tweets = twitter.search("pulumi", "vscode");
 
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
@@ -31,10 +32,10 @@ export function exampleTwitter2() {
     console.log("Running Twitter example 2...");
 
     // Get a stream of all tweets matching this query, forever...
-    const tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
+    let tweets: cloud.Stream<twitter.Tweet> = twitter.search("pulumi", "vscode");
 
     // Collect them into bunches
-    const digest = new Digest("tweetdigest", tweets);
+    let digest = new Digest("tweetdigest", tweets);
 
     // Every night, take all of the tweets collected since the
     // last digest and publish that as a group to the digest stream.
@@ -55,7 +56,7 @@ export function exampleTwitter2() {
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.
         let text = "Tweets:\n";
-        for (const tweet of dailyTweets) {
+        for (let tweet of dailyTweets) {
             text += `@${tweet.user.screen_name}: ${tweet.text}\n`;
         }
 
@@ -69,19 +70,19 @@ export function exampleTwitter2() {
 
 export function exampleSalesforce1() {
     // Get a stream of all modifications to the Contact list...
-    const contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
+    let contactsStream = poll("contactspolling", {minutes: 1}, async (timestamp) => {
         if (timestamp === undefined) {
             // Initial timestamp to start collecting edits from.
             timestamp = "2017-01-01T00:00:00.000Z";
         }
         // Query Salesforce
-        const records = await salesforceQueryAll(
+        let records = await salesforceQueryAll(
             `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         );
         // Update timetamp to latest of all received edits.
-        const newTimestamp = records.reduce(
+        let newTimestamp = records.reduce(
             (ts: string, record: salesforce.Record) => {
-                const newts: string = record["LastModifiedDate"];
+                let newts: string = record["LastModifiedDate"];
                 return newts > ts ? newts : ts;
             },
             timestamp,
@@ -101,7 +102,7 @@ export function exampleSalesforce1() {
 
 export function exampleSalesforce2() {
     // Get a stream of all modifications to the Contact list...
-    const contacts = salesforce.query(
+    let contacts = salesforce.query(
         "contacts",
         (timestamp) => `SELECT Id,Name,LastModifiedDate FROM Contact WHERE LastModifiedDate > ${timestamp}`,
         "2017-01-01T00:00:00.000Z",
@@ -117,7 +118,7 @@ export function exampleSalesforce2() {
 
 export function exampleSalesforce3() {
     // Get a stream of all modifications to the Contact list...
-    const contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
+    let contacts = salesforce.allObjectModifications("contacts", "Contact", "Id,Name");
 
     // Log each modification.
     contacts.subscribe("contactlistener", async (contact) => {
@@ -126,7 +127,7 @@ export function exampleSalesforce3() {
 }
 
 export function exampleSendSESEmail() {
-    const api = new cloud.HttpEndpoint("sadsad");
+    let api = new cloud.HttpEndpoint("sadsad");
     api.get("/", async (req, res) => {
         try {
             await sendSESEmail({

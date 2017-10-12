@@ -1,8 +1,9 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as pulumi from "@pulumi/cloud";
 
-const countDown = new pulumi.Topic<number>("countDown");
+let countDown = new pulumi.Topic<number>("countDown");
 
 countDown.subscribe("watcher", async (num) => {
     console.log(num);

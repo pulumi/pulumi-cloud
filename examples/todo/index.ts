@@ -1,10 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
 
-const todos = new cloud.Table("todo");
-const api = new cloud.HttpEndpoint("todo");
+let todos = new cloud.Table("todo");
+let api = new cloud.HttpEndpoint("todo");
 
 // Index handler
 api.staticFile("/", "index.html", "text/html");
@@ -14,7 +15,7 @@ api.staticFile("/favicon.ico", "favicon.ico", "image/x-icon");
 api.get("/todo/{id}", authMiddleware, async (req, res) => {
     console.log("GET /todo/" + req.params["id"]);
     try {
-        const item = await todos.get({ id: req.params["id"] });
+        let item = await todos.get({ id: req.params["id"] });
         res.status(200).json(item.value);
     } catch (err) {
         res.status(500).json(err);
@@ -32,7 +33,7 @@ api.post("/todo/{id}", async (req, res) => {
 api.get("/todo", async (req, res) => {
     console.log("GET /todo");
     try {
-        const items = await todos.scan();
+        let items = await todos.scan();
         res.status(200).json(items);
     } catch (err) {
         res.status(500).json(err);

@@ -1,10 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
-const nginx = new cloud.Service("nginx", {
+let nginx = new cloud.Service("nginx", {
     containers: {
         nginx: {
             image: "nginx",
@@ -17,8 +18,8 @@ const nginx = new cloud.Service("nginx", {
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
-const dataVolume = new cloud.Volume("mymongodb-data");
-const mongodb = new cloud.Service("mymongodb", {
+let dataVolume = new cloud.Volume("mymongodb-data");
+let mongodb = new cloud.Service("mymongodb", {
     containers: {
         mongodb: {
             image: "mongo",
@@ -29,14 +30,14 @@ const mongodb = new cloud.Service("mymongodb", {
     },
 });
 
-const customWebServer = new cloud.Service("mycustomservice", {
+let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
         webserver: {
             memory: 128,
             ports: [{ port: 80 }],
             function: () => {
-                const rand = Math.random();
-                const http = require("http");
+                let rand = Math.random();
+                let http = require("http");
                 http.createServer((req: any, res: any) => {
                     res.end(`Hello, world! (from ${rand})`);
                 }).listen(80);
@@ -49,7 +50,7 @@ const customWebServer = new cloud.Service("mycustomservice", {
 // TODO[pulumi/pulumi#397] Would be nice if this was a Secret<T> and closure
 // serialization knew to pass it in encrypted env vars.
 // TODO[pulumi/pulumi#381] Might also be nice if this could be generated uniquely per stack.
-const redisPassword = "SECRETPASSWORD";
+let redisPassword = "SECRETPASSWORD";
 
 /**
  * A simple Cache abstration, built on top of a Redis container Service.
@@ -60,7 +61,7 @@ class Cache {
     set: (key: string, value: string) => Promise<void>;
 
     constructor(name: string) {
-        const redis = new cloud.Service(name, {
+        let redis = new cloud.Service(name, {
             containers: {
                 redis: {
                     image: "redis:alpine",
@@ -73,7 +74,7 @@ class Cache {
         this.get = (key: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
                 console.log(`Endpoint: ${endpoint}`);
-                const client = require("redis").createClient(
+                let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
                     { password: redisPassword },
@@ -93,7 +94,7 @@ class Cache {
         this.set = (key: string, value: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
                 console.log(`Endpoint: ${endpoint}`);
-                const client = require("redis").createClient(
+                let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
                     { password: redisPassword },
@@ -113,14 +114,14 @@ class Cache {
     }
 }
 
-const cache = new Cache("mycache");
+let cache = new Cache("mycache");
 
-const helloTask = new cloud.Task("hello-world", {
+let helloTask = new cloud.Task("hello-world", {
     image: "hello-world",
     memory: 20,
 });
 
-const api = new cloud.HttpEndpoint("myendpoint");
+let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
@@ -131,16 +132,16 @@ api.get("/", async (req, res) => {
     try {
         // Use the NGINX or Redis Services to respond to the request.
         console.log("handling /");
-        const page = await cache.get("page");
+        let page = await cache.get("page");
         if (page) {
             res.setHeader("X-Powered-By", "redis");
             res.end(page);
             return;
         }
-        const endpoint = await nginx.getEndpoint("nginx", 80);
+        let endpoint = await nginx.getEndpoint("nginx", 80);
         console.log("got host and port:" + endpoint);
-        const resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
-        const buffer = await resp.buffer();
+        let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
+        let buffer = await resp.buffer();
         console.log(buffer.toString());
         await cache.set("page", buffer.toString());
         res.setHeader("X-Powered-By", "nginx");
@@ -153,7 +154,7 @@ api.get("/", async (req, res) => {
 api.get("/run", async (req, res) => {
     try {
         // Launch 10 instances of the Task.
-        const tasks: Promise<void>[] = [];
+        let tasks: Promise<void>[] = [];
         for (let i = 0; i < 10; i++) {
             tasks.push(helloTask.run());
         }
@@ -166,10 +167,10 @@ api.get("/run", async (req, res) => {
 });
 api.get("/custom", async (req, res) => {
     try {
-        const endpoint = await customWebServer.getEndpoint();
+        let endpoint = await customWebServer.getEndpoint();
         console.log("got host and port:" + endpoint);
-        const resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
-        const buffer = await resp.buffer();
+        let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
+        let buffer = await resp.buffer();
         console.log(buffer.toString());
         await cache.set("page", buffer.toString());
         res.setHeader("X-Powered-By", "custom web server");

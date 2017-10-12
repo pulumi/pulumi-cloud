@@ -1,4 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+/* tslint:disable */
 
 import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
@@ -7,15 +8,15 @@ import { poll } from "./poll";
 // Email and Password for Salesforce account.  Password should be in the form:
 //    <password><security_token>
 // See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
-const config = new pulumi.Config("salesforce");
-const salesforceEmail = config.require("email");
-const salesforcePassword = config.require("password");
+let config = new pulumi.Config("salesforce");
+let salesforceEmail = config.require("email");
+let salesforcePassword = config.require("password");
 
 async function getAuthenticatedSalesforceConnection(): Promise<any> {
-    const jsforce = require("jsforce");
+    let jsforce = require("jsforce");
     console.log(`loaded jsforce`);
-    const conn = new jsforce.Connection();
-    const auth = await conn.login(salesforceEmail, salesforcePassword);
+    let conn = new jsforce.Connection();
+    let auth = await conn.login(salesforceEmail, salesforcePassword);
     console.log(`authed with Salesforce: ${JSON.stringify(auth, null, "")}`);
     return conn;
 };
@@ -28,14 +29,14 @@ export function query(
     watermarkDefault: string,
     watermarkField: string,
     watermarkSelection: (a: string, b: string) => string): cloud.Stream<Record> {
-    const queryPoll = poll<Record>(name, {minutes: 1}, async (watermark) => {
-        const conn = await getAuthenticatedSalesforceConnection();
+    let queryPoll = poll<Record>(name, {minutes: 1}, async (watermark) => {
+        let conn = await getAuthenticatedSalesforceConnection();
         if (watermark === undefined) {
             watermark = watermarkDefault;
         }
-        const queryText = soql(watermark);
+        let queryText = soql(watermark);
         console.log(`query text: ${queryText}`);
-        const res: QueryResult = await conn.query(queryText).run({autoFetch: true});
+        let res: QueryResult = await conn.query(queryText).run({autoFetch: true});
         console.log(`data from Salesforce: ${JSON.stringify(res, null, "")}`);
         watermark = res.records.reduce(
             (a: string, b: Record) => watermarkSelection(a, b[watermarkField]),
@@ -52,9 +53,9 @@ export function query(
 // queryAll runs a single SOQL query and returns the resulting records.
 // This is a runtime API.
 export let queryAll: (soql: string) => Promise<Record[]> = async (soql) => {
-    const conn = await getAuthenticatedSalesforceConnection();
+    let conn = await getAuthenticatedSalesforceConnection();
     console.log(`query text: ${soql}`);
-    const res: QueryResult = await conn.query(soql).run({autoFetch: true});
+    let res: QueryResult = await conn.query(soql).run({autoFetch: true});
     console.log(`data from Salesforce: ${JSON.stringify(res, null, "")}`);
     if (!res.done) {
         throw new Error(`expected to fetch all results - got ${res.records.length} of ${<any>res.totalSize}`);
@@ -87,7 +88,7 @@ export function allObjectModifications(name: string, object: string, fields: str
 }
 
 export let insert: (tableName: string, object: any) => Promise<void> = async(tableName, object) => {
-    const conn = await getAuthenticatedSalesforceConnection();
-    const record = await conn.sobject(tableName).insert(object);
+    let conn = await getAuthenticatedSalesforceConnection();
+    let record = await conn.sobject(tableName).insert(object);
     console.log(record);
 };
