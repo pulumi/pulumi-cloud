@@ -4,6 +4,11 @@
 
 import * as pulumi from "pulumi";
 
+// let foo = "foo";
+// function bar() {
+//     foo = "bar";
+// }
+
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html
 let config = new pulumi.Config("aws");

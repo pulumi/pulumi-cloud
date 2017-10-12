@@ -3,21 +3,68 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
-export class Rule extends Lint.Rules.AbstractRule {
-    public static FAILURE_STRING = "import statement forbidden";
-
-    public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithWalker(new NoImportsWalker(sourceFile, this.getOptions()));
+export class Rule extends Lint.Rules.TypedRule {
+    applyWithProgram(sourceFile: ts.SourceFile, program: ts.Program): Lint.RuleFailure[] {
+        return this.applyWithFunction(sourceFile, ctx => walk(program, ctx));
     }
 }
 
-// The walker takes care of all the work.
-class NoImportsWalker extends Lint.RuleWalker {
-    public visitImportDeclaration(node: ts.ImportDeclaration) {
-        // create a failure at the current position
-        this.addFailure(this.createFailure(node.getStart(), node.getWidth(), Rule.FAILURE_STRING));
+function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
+    const checker = program.getTypeChecker();
+    ts.forEachChild(ctx.sourceFile, cb);
+    return;
 
-        // call the base version of this visitor to actually parse this node
-        super.visitImportDeclaration(node);
+    // nested functions;
+    function cb(node: ts.Node) {
+        if (node.kind === ts.SyntaxKind.BinaryExpression) {
+            checkBinaryExpression(<ts.BinaryExpression>node);
+        }
+
+        ts.forEachChild(node, cb);
+    }
+
+    function checkBinaryExpression(node: ts.BinaryExpression) {
+        if (isAssignmentOperator(node.operatorToken.kind) && !isInTopLevel(node)) {
+            const symbol = checker.getSymbolAtLocation(node.left);
+            if (symbol &&
+                symbol.flags & ts.SymbolFlags.Variable) {
+                const declaration = symbol.valueDeclaration;
+                if (declaration &&
+                    isInTopLevel(declaration)) {
+                    ctx.addFailureAtNode(node.left, "Assignments cannot be made to top level objects.");
+                }
+            }
+        }
+    }
+
+    function isAssignmentOperator(token: ts.SyntaxKind): boolean {
+        return token >= ts.SyntaxKind.FirstAssignment && token <= ts.SyntaxKind.LastAssignment;
+    }
+
+    function isInTopLevel(node: ts.Node) {
+        while (node.parent) {
+            if (isFunctionLikeDeclarationKind(node.parent.kind)) {
+                return false;
+            }
+
+            node = node.parent;
+        }
+
+        return true;
+    }
+
+    function isFunctionLikeDeclarationKind(kind: ts.SyntaxKind): boolean {
+        switch (kind) {
+            case ts.SyntaxKind.FunctionDeclaration:
+            case ts.SyntaxKind.MethodDeclaration:
+            case ts.SyntaxKind.Constructor:
+            case ts.SyntaxKind.GetAccessor:
+            case ts.SyntaxKind.SetAccessor:
+            case ts.SyntaxKind.FunctionExpression:
+            case ts.SyntaxKind.ArrowFunction:
+                return true;
+            default:
+                return false;
+        }
     }
 }
