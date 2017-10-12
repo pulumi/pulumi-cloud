@@ -289,7 +289,7 @@ const apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): Req
 const stageName = "stage";
 
 function safeS3BucketName(apiName: string): string {
-    return apiName.toLowerCase().replace(/[^a-z0-0\-]/g, "");
+    return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
 }
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
@@ -326,7 +326,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             policyArn: aws.iam.AmazonS3FullAccess,
         });
         if (this.bucket === undefined) {
-            let bucketNamePrefix = safeS3BucketName(this.apiName);
+            const bucketNamePrefix = safeS3BucketName(this.apiName);
             this.bucket = new aws.s3.Bucket(bucketNamePrefix, {});
         }
         const obj = new aws.s3.BucketObject(name, {
