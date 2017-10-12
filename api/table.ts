@@ -50,8 +50,8 @@ export interface Table {
      *
      * @param query An object with the primary key ("id" by default) assigned
      * the value to lookup.
-     * @returns A promise for the resulting document, or a failed promise if the
-     * lookup fails.
+     * @returns A promise for the resulting document if found, or for undefined if not found,
+     *   or a failed promise if the query could not be processed.
      */
     get(query: Object): Promise<any>;
     /**
