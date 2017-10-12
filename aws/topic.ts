@@ -23,8 +23,8 @@ export class Topic<T> implements cloud.Topic<T> {
         // this.subscriptions = [];
         this.publish = (item) => {
             const awssdk = require("aws-sdk");
-            const snsconn = awssdk.SNS();
-            return new snsconn.publish({
+            const snsconn = new awssdk.SNS();
+            return snsconn.publish({
                 Message: JSON.stringify(item),
                 TopicArn: this.topic.id,
             }).promise();

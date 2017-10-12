@@ -288,6 +288,10 @@ const apiGatewayToReqRes = (ev: APIGatewayRequest, body: any, cb: Callback): Req
 
 const stageName = "stage";
 
+function safeS3BucketName(apiName: string): string {
+    return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
+}
+
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
 
@@ -322,7 +326,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             policyArn: aws.iam.AmazonS3FullAccess,
         });
         if (this.bucket === undefined) {
-            this.bucket = new aws.s3.Bucket(this.apiName, {});
+            const bucketNamePrefix = safeS3BucketName(this.apiName);
+            this.bucket = new aws.s3.Bucket(bucketNamePrefix, {});
         }
         const obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
@@ -481,9 +486,13 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 }
 
-// sha1hash returns the SHA1 hash of the input string.
+// sha1hash returns a partial SHA1 hash of the input string.
 function sha1hash(s: string): string {
     const shasum: crypto.Hash = crypto.createHash("sha1");
     shasum.update(s);
-    return shasum.digest("hex");
+    // TODO[pulumi/pulumi#377] Workaround for issue with long names not
+    // generating per-deplioyment randomness, leading to collisions.
+    // For now, limit the size of hashes to ensure we generate shorter
+    // resource names.
+    return shasum.digest("hex").substring(0, 8);
 }
