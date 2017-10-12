@@ -10,7 +10,7 @@ all: default examples
 .PHONY: banner
 banner:
 	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mPulumi Framework TSLint package\033[0m"
+	@echo "\033[1;37mPulumi Framework TSLint rules package\033[0m"
 	@echo "\033[1;37m======================\033[0m"
 
 .PHONY: dependencies

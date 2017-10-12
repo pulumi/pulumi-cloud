@@ -1,7 +1,11 @@
 PROCCNT=$(shell nproc --all)
 
 .PHONY: all
-all: api aws examples mock test
+all: tslint_rules api aws examples mock test
+
+.PHONE: tslint_rules
+tslint_rules:
+	$(MAKE) -C ./tslint_rules all
 
 .PHONY: api
 api:
