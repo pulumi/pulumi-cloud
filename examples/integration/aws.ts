@@ -4,6 +4,10 @@
 
 import * as pulumi from "pulumi";
 
+let value = 4;
+function bar() {
+    value++;
+}
 // let foo = "foo";
 // function bar() {
 //     foo = "bar";

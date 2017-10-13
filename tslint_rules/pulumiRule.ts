@@ -16,24 +16,48 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
 
     // nested functions;
     function cb(node: ts.Node) {
-        if (node.kind === ts.SyntaxKind.BinaryExpression) {
-            checkBinaryExpression(<ts.BinaryExpression>node);
+        switch (node.kind) {
+            case ts.SyntaxKind.BinaryExpression:
+                checkBinaryExpression(<ts.BinaryExpression>node);
+                break;
+            case ts.SyntaxKind.PostfixUnaryExpression:
+                checkUnaryExpression(<ts.PostfixUnaryExpression>node);
+                break;
+            case ts.SyntaxKind.PrefixUnaryExpression:
+                checkUnaryExpression(<ts.PrefixUnaryExpression>node);
+                break;
+            default:
+                break;
         }
 
         ts.forEachChild(node, cb);
     }
 
-    function checkBinaryExpression(node: ts.BinaryExpression) {
-        if (isAssignmentOperator(node.operatorToken.kind) && !isInTopLevel(node)) {
-            const symbol = checker.getSymbolAtLocation(node.left);
+    function checkForWriteOfTopLevelVariableFromInsideFunction(node: ts.Node) {
+        if (!isInTopLevel(node)) {
+            const symbol = checker.getSymbolAtLocation(node);
             if (symbol &&
                 symbol.flags & ts.SymbolFlags.Variable) {
                 const declaration = symbol.valueDeclaration;
                 if (declaration &&
                     isInTopLevel(declaration)) {
-                    ctx.addFailureAtNode(node.left, "Assignments cannot be made to top level objects.");
+                    ctx.addFailureAtNode(
+                        node, "Writes cannot be made to top level objects from inside a functions.");
                 }
             }
+        }
+    }
+
+    function checkBinaryExpression(node: ts.BinaryExpression) {
+        if (isAssignmentOperator(node.operatorToken.kind)) {
+            checkForWriteOfTopLevelVariableFromInsideFunction(node.left);
+        }
+    }
+
+    function checkUnaryExpression(node: ts.PostfixUnaryExpression | ts.PrefixUnaryExpression) {
+        if (node.operator === ts.SyntaxKind.PlusPlusToken ||
+            node.operator === ts.SyntaxKind.MinusMinusToken) {
+            checkForWriteOfTopLevelVariableFromInsideFunction(node.operand);
         }
     }
 
