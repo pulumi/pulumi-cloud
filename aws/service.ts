@@ -256,7 +256,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
     return taskDefinition;
 }
 
-export class Service implements cloud.Service {
+export class Service extends pulumi.Resource implements cloud.Service {
     name: string;
     exposedPorts: {
         [name: string]: {
@@ -270,6 +270,8 @@ export class Service implements cloud.Service {
     getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
+        super();
+
         if (!ecsClusterARN) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
@@ -309,7 +311,7 @@ export class Service implements cloud.Service {
             loadBalancers: loadBalancers,
             iamRole: getServiceLoadBalancerRole().arn,
         });
-        const serviceName = service.name;
+        this.adopt(service);
 
         // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
@@ -349,6 +351,11 @@ export class Service implements cloud.Service {
                 port: info.port,
             };
         };
+
+        this.register("pulumi:service:Service", name, false, {
+            containers: args.containers,
+            replicas: args.replicas,
+        });
     }
 
 }
@@ -363,14 +370,18 @@ const volumeNames = new Set<string>();
 // thoguh, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.
-export class Volume implements cloud.Volume {
+export class Volume extends pulumi.Resource implements cloud.Volume {
     name: string;
     constructor(name: string) {
+        super();
+
         if (volumeNames.has(name)) {
             throw new Error("Must provide a unique volumen name");
         }
         this.name = name;
         volumeNames.add(name);
+
+        this.register("cloud:service:Volume", name, false, {});
     }
 }
 
@@ -379,11 +390,13 @@ export class Volume implements cloud.Volume {
  * A Task represents a container which can be [run] dynamically whenever (and
  * as many times as) needed.
  */
-export class Task implements cloud.Task {
+export class Task extends pulumi.Resource implements cloud.Task {
     taskDefinition: aws.ecs.TaskDefinition;
     run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
+        super();
+
         if (!ecsClusterARN) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
@@ -418,5 +431,9 @@ export class Task implements cloud.Task {
                 },
             }).promise().then((data: any) => undefined);
         };
+
+        this.register("cloud:service:Task", name, false, {
+            container: container,
+        });
     }
 }

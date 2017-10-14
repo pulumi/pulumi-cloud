@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 import { LoggedFunction } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action): void {
@@ -64,29 +65,58 @@ export function hourly(name: string,
     cron(name, `${minute} * * * ? *`, handler);
 }
 
-function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action) {
-    const func = new LoggedFunction(
-        name,
-        (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
-            handler().then(() => {
-                cb(null, null);
-            }).catch((err: any) => {
-                cb(err, null);
-            });
-        },
-    );
-    const rule = new aws.cloudwatch.EventRule(name, {
-        scheduleExpression: scheduleExpression,
-    });
-    const target = new aws.cloudwatch.EventTarget(name, {
-        rule: rule.name,
-        arn: func.lambda.arn,
-        targetId: name,
-    });
-    const permission = new aws.lambda.Permission(name, {
-        action: "lambda:invokeFunction",
-        function: func.lambda,
-        principal: "events.amazonaws.com",
-        sourceArn: rule.arn,
-    });
+class Timer extends pulumi.Resource {
+    private readonly name: string;
+    private readonly scheduleExpression: string;
+    private readonly handler: timer.Action;
+    private readonly func: LoggedFunction;
+    private readonly rule: aws.cloudwatch.EventRule;
+    private readonly target: aws.cloudwatch.EventTarget;
+    private readonly permission: aws.lambda.Permission;
+
+    constructor(name: string, scheduleExpression: string, handler: timer.Action) {
+        super();
+
+        this.func = new LoggedFunction(
+            name,
+            (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+                handler().then(() => {
+                    cb(null, null);
+                }).catch((err: any) => {
+                    cb(err, null);
+                });
+            },
+        );
+        this.adopt(this.func);
+
+        this.rule = new aws.cloudwatch.EventRule(name, {
+            scheduleExpression: scheduleExpression,
+        });
+        this.adopt(this.rule);
+
+        this.target = new aws.cloudwatch.EventTarget(name, {
+            rule: this.rule.name,
+            arn: this.func.lambda.arn,
+            targetId: name,
+        });
+        this.adopt(this.target);
+
+        this.permission = new aws.lambda.Permission(name, {
+            action: "lambda:invokeFunction",
+            function: this.func.lambda,
+            principal: "events.amazonaws.com",
+            sourceArn: this.rule.arn,
+        });
+        this.adopt(this.permission);
+
+        this.register("cloud:timer:Timer", name, false, {
+            scheduleExpression: scheduleExpression,
+            handler: handler,
+        });
+    }
 }
+
+function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action) {
+    const _ = new Timer(name, scheduleExpression, handler);
+}
+

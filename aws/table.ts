@@ -13,30 +13,33 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     }
 }
 
-export class Table implements cloud.Table {
+export class Table extends pulumi.Resource implements cloud.Table {
     private table: aws.dynamodb.Table;
 
     // Inside + Outside API
 
-    public tableName: pulumi.Computed<string>;
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
+    public readonly tableName: pulumi.Computed<string>;
 
-    get: (query: Object) => Promise<any>;
-    insert: (item: Object) => Promise<void>;
-    scan: () => Promise<any[]>;
-    delete: (query: Object) => Promise<void>;
-    update: (query: Object, updates: Object) => Promise<void>;
+    public get: (query: Object) => Promise<any>;
+    public insert: (item: Object) => Promise<void>;
+    public scan: () => Promise<any[]>;
+    public delete: (query: Object) => Promise<void>;
+    public update: (query: Object, updates: Object) => Promise<void>;
 
     // Outside API (constructor and methods)
 
     constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType) {
+        super();
+
         if (primaryKey === undefined) {
             primaryKey = "id";
         }
         if (primaryKeyType === undefined) {
             primaryKeyType = "string";
         }
+
         const keyType = pulumiKeyTypeToDynamoKeyType(primaryKeyType);
         this.table = new aws.dynamodb.Table(name, {
             attribute: [
@@ -46,9 +49,12 @@ export class Table implements cloud.Table {
             readCapacity: 5,
             writeCapacity: 5,
         });
+        this.adopt(this.table);
+
         this.tableName = this.table.name;
         this.primaryKey = primaryKey;
         this.primaryKeyType = primaryKeyType;
+
         const db = () => {
             const awssdk = require("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
@@ -96,5 +102,10 @@ export class Table implements cloud.Table {
                 Key: query,
             }).promise();
         };
+
+        this.register("cloud:table:Table", name, false, {
+            primaryKey: primaryKey,
+            primaryKeyType: primaryKeyType,
+        });
     }
 }

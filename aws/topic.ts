@@ -2,9 +2,10 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 import * as sns from "./sns";
 
-export class Topic<T> implements cloud.Topic<T> {
+export class Topic<T> extends pulumi.Resource implements cloud.Topic<T> {
     // Inside + Outside API
 
     private name: string;
@@ -17,10 +18,12 @@ export class Topic<T> implements cloud.Topic<T> {
     // Outside API (constructor and methods)
 
     constructor(name: string) {
+        super();
+
         this.name = name;
         this.topic = new aws.sns.Topic(name, {});
-        // TODO[pulumi/pulumi#331]: bring this back once deadlock issues are resolved.
-        // this.subscriptions = [];
+        this.adopt(this.topic);
+
         this.publish = (item) => {
             const awssdk = require("aws-sdk");
             const snsconn = new awssdk.SNS();
@@ -29,6 +32,8 @@ export class Topic<T> implements cloud.Topic<T> {
                 TopicArn: this.topic.id,
             }).promise();
         };
+
+        this.register("cloud:topic:Topic", name, false, {});
     }
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {

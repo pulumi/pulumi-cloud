@@ -292,19 +292,20 @@ function safeS3BucketName(apiName: string): string {
     return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
 }
 
-export class HttpEndpoint implements cloud.HttpEndpoint {
+export class HttpEndpoint extends pulumi.Resource implements cloud.HttpEndpoint {
     public url?: pulumi.Computed<string>;
 
+    private readonly apiName: string;
     private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
-    private apiName: string;
     private lambdas: { [key: string]: LoggedFunction };
     private bucket: aws.s3.Bucket;
 
     // Outside API (constructor and methods)
 
     constructor(apiName: string) {
+        super();
         this.apiName = apiName;
         this.swaggerSpec = createBaseSpec(apiName);
         this.lambdas = {};
@@ -314,27 +315,37 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
+
         const method = "GET";
         const swaggerMethod = this.routePrepare(method, path);
         const name = this.apiName + sha1hash(method + ":" + path);
+
         const rolePolicyJSON = JSON.stringify(apigatewayAssumeRolePolicyDocument);
         const role = new aws.iam.Role(name, {
             assumeRolePolicy: rolePolicyJSON,
         });
+        this.adopt(role);
+
         const attachment = new aws.iam.RolePolicyAttachment(name, {
             role: role,
             policyArn: aws.iam.AmazonS3FullAccess,
         });
+        this.adopt(attachment);
+
         if (this.bucket === undefined) {
             const bucketNamePrefix = safeS3BucketName(this.apiName);
             this.bucket = new aws.s3.Bucket(bucketNamePrefix, {});
+            this.adopt(this.bucket);
         }
+
         const obj = new aws.s3.BucketObject(name, {
             bucket: this.bucket,
             key: name,
             source: new pulumi.asset.FileAsset(filePath),
             contentType: contentType,
         });
+        this.adopt(obj);
+
         this.swaggerSpec.paths[path][swaggerMethod] =
             role.arn.then((arn: aws.ARN | undefined) =>
                 arn ? this.bucket.bucket.then((bucketName: string | undefined) =>
@@ -355,6 +366,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         if (this.swaggerSpec.paths[path] === undefined) {
             this.swaggerSpec.paths[path] = {};
         }
+
         let swaggerMethod: string;
         switch (method.toLowerCase()) {
             case "get":
@@ -372,6 +384,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             default:
                 throw new Error("Method not supported: " + method);
         }
+
         return swaggerMethod;
     }
 
@@ -387,7 +400,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                         body = Buffer.from(ev.body, "utf8");
                     }
                 }
+
                 ctx.callbackWaitsForEmptyEventLoop = false;
+
                 const reqres = apiGatewayToReqRes(ev, body, cb);
                 let i = 0;
                 const next = () => {
@@ -399,6 +414,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 next();
             },
         );
+        this.adopt(lambda);
         this.routeLambda(method, path, lambda);
     }
 
@@ -428,20 +444,26 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
     public publish(): pulumi.Computed<string> {
         const { hash, json } = jsonStringifySwaggerSpec(this.swaggerSpec);
+
         this.api = new aws.apigateway.RestApi(this.apiName, {
             body: json,
         });
+        this.adopt(this.api);
+
         this.deployment = new aws.apigateway.Deployment(this.apiName + "_" + hash, {
             restApi: this.api,
             stageName: "",
             description: "Deployment of version " + hash,
         });
+        this.adopt(this.deployment);
+
         const stage = new aws.apigateway.Stage(this.apiName + "_stage", {
             stageName: stageName,
             description: "The current deployment of the API.",
             restApi: this.api,
             deployment: this.deployment,
         });
+        this.adopt(stage);
 
         for (const path of Object.keys(this.swaggerSpec.paths)) {
             for (let method of Object.keys(this.swaggerSpec.paths[path])) {
@@ -461,12 +483,18 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                         sourceArn: this.deployment.executionArn.then((arn: aws.ARN | undefined) =>
                             arn && (arn + stageName + "/" + method + path)),
                     });
+                    this.adopt(invokePermission);
                 }
             }
         }
 
-        this.url = this.deployment.invokeUrl.then((url: string | undefined) => url && (url + stageName + "/"));
-        return this.url;
+        // Manufacture a URL and finish initializing this resource with our parent.
+        const url: Promise<string | undefined> = this.deployment.invokeUrl.then(
+            (baseUrl: string | undefined) => baseUrl && (baseUrl + stageName + "/"));
+        this.register("cloud:httpEndpoint:HttpEndpoint", this.apiName, false, {
+            url: url,
+        });
+        return url;
     }
 
     public attachCustomDomain(domain: cloud.Domain): pulumi.Computed<string> {
@@ -477,11 +505,15 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             certificatePrivateKey: domain.certificatePrivateKey,
             certificateChain: domain.certificateChain,
         });
+        this.adopt(awsDomain);
+
         const basePathMapping = new aws.apigateway.BasePathMapping(this.apiName + "-" + domain.domainName, {
             restApi: this.api,
             stageName: stageName,
             domainName: awsDomain.domainName,
         });
+        this.adopt(basePathMapping);
+
         return awsDomain.cloudfrontDomainName;
     }
 }
