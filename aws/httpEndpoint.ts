@@ -360,7 +360,7 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 
 async function createPathSpecLambda(lambda: aws.lambda.Function): Promise<SwaggerOperation> {
     const region = aws.config.requireRegion();
-    const lambdaARN: aws.ARN = await lambda.arn || "<lambda.arn>";
+    const lambdaARN: aws.ARN = await lambda.arn || "computed(lambda.arn)";
     return {
         "x-amazon-apigateway-integration": {
             uri: "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations",
@@ -374,8 +374,8 @@ async function createPathSpecLambda(lambda: aws.lambda.Function): Promise<Swagge
 async function createPathSpecObject(role: aws.iam.Role,
                                     bucket: aws.s3.Bucket, key: string): Promise<SwaggerOperation> {
     const region = aws.config.requireRegion();
-    const roleARN: aws.ARN = await role.arn || "<role.arn>";
-    const bucketName: string = await bucket.bucket || "<bucket.name>";
+    const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
     return {
         responses: {
             "200": {

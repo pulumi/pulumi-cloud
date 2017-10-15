@@ -18,7 +18,7 @@ import (
 // This file contains the implementation of the component.Components interface for the
 // AWS implementation of the Pulumi Framework defined in this repo.
 
-// GetComponents exrtacts the Pulumi Framework components from a checkpoint
+// GetComponents extracts the Pulumi Framework components from a checkpoint
 // file, based on the raw resources created by the implementation of the Pulumi Framework
 // in this repo.
 func GetComponents(source []*resource.State) component.Components {
