@@ -10,45 +10,43 @@ export { Context, Handler } from "@pulumi/aws/serverless";
 // Function is a wrapper over aws.serverless.Function which applies a single shared
 // log collected across all functions in the application, allowing all application logs
 // to be read from a single place.
-export class Function extends pulumi.Resource {
-    public readonly func: aws.serverless.Handler;
+export class Function extends pulumi.ComponentResource {
+    public readonly handler: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
-    public readonly role: aws.iam.Role;
 
-    constructor(name: string, func: aws.serverless.Handler) {
-        super();
-
-        const policies = [
-            aws.iam.AWSLambdaFullAccess,
-            aws.iam.AmazonEC2ContainerServiceFullAccess,
-        ];
-        const options = {
-            policies: policies,
-            deadLetterConfig: {
-                targetArn: getUnhandledErrorTopic().arn,
+    constructor(name: string, handler: aws.serverless.Handler) {
+        let lambda: aws.lambda.Function | undefined;
+        super(
+            "cloud:function:Function",
+            name,
+            {
+                handler: handler,
             },
-        };
+            () => {
+                // First allocate a function.
+                const options = {
+                    policies: [
+                        aws.iam.AWSLambdaFullAccess,
+                        aws.iam.AmazonEC2ContainerServiceFullAccess,
+                    ],
+                    deadLetterConfig: {
+                        targetArn: getUnhandledErrorTopic().arn,
+                    },
+                };
+                lambda = new aws.serverless.Function(name, options, handler).lambda;
 
-        const lambda = new aws.serverless.Function(name, options, func);
-        this.adopt(lambda);
-
-        this.lambda = lambda.lambda;
-        this.role = lambda.role;
-
-        const logGroup = new aws.cloudwatch.LogGroup(name, {
-            name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
-            retentionInDays: 1,
-        });
-        this.adopt(logGroup);
-        const subscription = new aws.cloudwatch.LogSubscriptionFilter(name, {
-            logGroup: logGroup,
-            destinationArn: getLogCollector().arn,
-            filterPattern: "",
-        });
-        this.adopt(subscription);
-
-        this.register("cloud:function:Function", name, false, {
-            func: func,
-        });
+                // And then a log group and subscription filter for that lambda.
+                const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
+                    logGroup: new aws.cloudwatch.LogGroup(name, {
+                        name: lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
+                        retentionInDays: 1,
+                    }),
+                    destinationArn: getLogCollector().arn,
+                    filterPattern: "",
+                });
+            },
+        );
+        this.lambda = lambda!;
     }
 }
+

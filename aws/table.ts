@@ -13,14 +13,11 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     }
 }
 
-export class Table extends pulumi.Resource implements cloud.Table {
-    private table: aws.dynamodb.Table;
-
+export class Table extends pulumi.ComponentResource implements cloud.Table {
     // Inside + Outside API
 
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
-    public readonly tableName: pulumi.Computed<string>;
 
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
@@ -31,8 +28,6 @@ export class Table extends pulumi.Resource implements cloud.Table {
     // Outside API (constructor and methods)
 
     constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType) {
-        super();
-
         if (primaryKey === undefined) {
             primaryKey = "id";
         }
@@ -40,20 +35,29 @@ export class Table extends pulumi.Resource implements cloud.Table {
             primaryKeyType = "string";
         }
 
-        const keyType = pulumiKeyTypeToDynamoKeyType(primaryKeyType);
-        this.table = new aws.dynamodb.Table(name, {
-            attribute: [
-                { name: primaryKey, type: keyType },
-            ],
-            hashKey: primaryKey,
-            readCapacity: 5,
-            writeCapacity: 5,
-        });
-        this.adopt(this.table);
-
-        this.tableName = this.table.name;
-        this.primaryKey = primaryKey;
-        this.primaryKeyType = primaryKeyType;
+        let tableName: pulumi.Computed<string>;
+        super(
+            "cloud:table:Table",
+            name,
+            {
+                primaryKey: primaryKey,
+                primaryKeyType: primaryKeyType,
+            },
+            () => {
+                const table = new aws.dynamodb.Table(name, {
+                    attribute: [
+                        {
+                            name: primaryKey,
+                            type: pulumiKeyTypeToDynamoKeyType(primaryKeyType!),
+                        },
+                    ],
+                    hashKey: primaryKey,
+                    readCapacity: 5,
+                    writeCapacity: 5,
+                });
+                tableName = table.name;
+            },
+        );
 
         const db = () => {
             const awssdk = require("aws-sdk");
@@ -61,19 +65,19 @@ export class Table extends pulumi.Resource implements cloud.Table {
         };
         this.get = (query) => {
             return db().get({
-                TableName: this.tableName,
+                TableName: tableName,
                 Key: query,
             }).promise().then((x: any) => x.Item);
         };
         this.insert = (item) => {
             return db().put({
-                TableName: this.tableName,
+                TableName: tableName,
                 Item: item,
             }).promise();
         };
         this.scan = () => {
             return db().scan({
-                TableName: this.tableName,
+                TableName: tableName,
             }).promise().then((x: any) => x.Items);
         };
         this.update = (query: any, updates: any) => {
@@ -90,7 +94,7 @@ export class Table extends pulumi.Resource implements cloud.Table {
                 attributeValues[`:${key}`] = val;
             }
             return db().update({
-                TableName: this.tableName,
+                TableName: tableName,
                 Key: query,
                 UpdateExpression: updateExpression,
                 ExpressionAttributeValues: attributeValues,
@@ -98,14 +102,9 @@ export class Table extends pulumi.Resource implements cloud.Table {
         };
         this.delete = (query) => {
             return db().delete({
-                TableName: this.tableName,
+                TableName: tableName,
                 Key: query,
             }).promise();
         };
-
-        this.register("cloud:table:Table", name, false, {
-            primaryKey: primaryKey,
-            primaryKeyType: primaryKeyType,
-        });
     }
 }
