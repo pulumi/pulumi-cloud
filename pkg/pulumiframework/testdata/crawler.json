@@ -20,6 +20,7 @@
         "resources": {
             "urn:pulumi:test2::todo::aws:sns/topic:Topic::countDown": {
                 "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8",
+                "custom": true,
                 "type": "aws:sns/topic:Topic",
                 "defaults": {
                     "name": "countDown-f2fd23dbaa619ad8"
@@ -34,6 +35,7 @@
             },
             "urn:pulumi:test2::todo::aws:sns/topic:Topic::unhandled-error-topic": {
                 "id": "arn:aws:sns:us-east-2:153052954103:unhandled-error-topic-477b848c27dd04bb",
+                "custom": true,
                 "type": "aws:sns/topic:Topic",
                 "defaults": {
                     "name": "unhandled-error-topic-477b848c27dd04bb"
@@ -48,6 +50,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/role:Role::countDown_watcher-iamrole": {
                 "id": "countDown_watcher-iamrole-a508724a5963b260",
+                "custom": true,
                 "type": "aws:iam/role:Role",
                 "inputs": {
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
@@ -70,6 +73,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::countDown_watcher-iampolicy-0": {
                 "id": "countDown_watcher-iamrole-a508724a5963b260-20170911205308517400000001",
+                "custom": true,
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
@@ -83,6 +87,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/function:Function::countDown_watcher": {
                 "id": "countDown_watcher-512bb9e8cf8db91d",
+                "custom": true,
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -156,6 +161,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::countDown_watcher": {
                 "id": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
+                "custom": true,
                 "type": "aws:cloudwatch/logGroup:LogGroup",
                 "inputs": {
                     "name": "/aws/lambda/countDown_watcher-512bb9e8cf8db91d",
@@ -174,6 +180,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/role:Role::pulumi-app-log-collector-iamrole": {
                 "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df",
+                "custom": true,
                 "type": "aws:iam/role:Role",
                 "inputs": {
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
@@ -196,6 +203,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::pulumi-app-log-collector-iampolicy-0": {
                 "id": "pulumi-app-log-collector-iamrole-7cf8bf9b266f27df-20170911205324858700000002",
+                "custom": true,
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
@@ -209,6 +217,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/function:Function::pulumi-app-log-collector": {
                 "id": "pulumi-app-log-collector-172a843433e22751",
+                "custom": true,
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -273,6 +282,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/permission:Permission::pulumi-app-log-collector": {
                 "id": "pulumi-app-log-collector-f5cff8bf5d30ba1c",
+                "custom": true,
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
@@ -293,6 +303,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::countDown_watcher": {
                 "id": "cwlsf-3635312111",
+                "custom": true,
                 "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
                 "inputs": {
                     "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
@@ -312,6 +323,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/permission:Permission::countDown_watcher": {
                 "id": "countDown_watcher-138b4ab399dec861",
+                "custom": true,
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
@@ -334,6 +346,7 @@
             },
             "urn:pulumi:test2::todo::aws:sns/topicSubscription:TopicSubscription::countDown_watcher": {
                 "id": "arn:aws:sns:us-east-2:153052954103:countDown-f2fd23dbaa619ad8:00f03929-a96a-4923-9fb6-b53124386d25",
+                "custom": true,
                 "type": "aws:sns/topicSubscription:TopicSubscription",
                 "inputs": {
                     "endpoint": "arn:aws:lambda:us-east-2:153052954103:function:countDown_watcher-512bb9e8cf8db91d",
@@ -358,6 +371,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/role:Role::heartbeat-iamrole": {
                 "id": "heartbeat-iamrole-0fae84bc67bdcfdd",
+                "custom": true,
                 "type": "aws:iam/role:Role",
                 "inputs": {
                     "assumeRolePolicy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Effect\":\"Allow\",\"Sid\":\"\"}]}"
@@ -380,6 +394,7 @@
             },
             "urn:pulumi:test2::todo::aws:iam/rolePolicyAttachment:RolePolicyAttachment::heartbeat-iampolicy-0": {
                 "id": "heartbeat-iamrole-0fae84bc67bdcfdd-20170911205341364500000003",
+                "custom": true,
                 "type": "aws:iam/rolePolicyAttachment:RolePolicyAttachment",
                 "inputs": {
                     "policyArn": "arn:aws:iam::aws:policy/AWSLambdaFullAccess",
@@ -393,6 +408,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/function:Function::heartbeat": {
                 "id": "heartbeat-08d01aa6def29b7a",
+                "custom": true,
                 "type": "aws:lambda/function:Function",
                 "inputs": {
                     "code": {
@@ -466,6 +482,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/logGroup:LogGroup::heartbeat": {
                 "id": "/aws/lambda/heartbeat-08d01aa6def29b7a",
+                "custom": true,
                 "type": "aws:cloudwatch/logGroup:LogGroup",
                 "inputs": {
                     "name": "/aws/lambda/heartbeat-08d01aa6def29b7a",
@@ -484,6 +501,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter::heartbeat": {
                 "id": "cwlsf-2739045784",
+                "custom": true,
                 "type": "aws:cloudwatch/logSubscriptionFilter:LogSubscriptionFilter",
                 "inputs": {
                     "destinationArn": "arn:aws:lambda:us-east-2:153052954103:function:pulumi-app-log-collector-172a843433e22751",
@@ -503,6 +521,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/eventRule:EventRule::heartbeat": {
                 "id": "heartbeat-b50e57c312324669",
+                "custom": true,
                 "type": "aws:cloudwatch/eventRule:EventRule",
                 "inputs": {
                     "scheduleExpression": "rate(5 minutes)"
@@ -523,6 +542,7 @@
             },
             "urn:pulumi:test2::todo::aws:cloudwatch/eventTarget:EventTarget::heartbeat": {
                 "id": "heartbeat-b50e57c312324669-heartbeat",
+                "custom": true,
                 "type": "aws:cloudwatch/eventTarget:EventTarget",
                 "inputs": {
                     "arn": "arn:aws:lambda:us-east-2:153052954103:function:heartbeat-08d01aa6def29b7a",
@@ -541,6 +561,7 @@
             },
             "urn:pulumi:test2::todo::aws:lambda/permission:Permission::heartbeat": {
                 "id": "heartbeat-f4fbc5a56b59f56f",
+                "custom": true,
                 "type": "aws:lambda/permission:Permission",
                 "inputs": {
                     "action": "lambda:invokeFunction",
