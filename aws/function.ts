@@ -7,10 +7,10 @@ import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
 
-// LoggedFunction is a wrapper over aws.serverless.Function which applies a single shared
+// Function is a wrapper over aws.serverless.Function which applies a single shared
 // log collected across all functions in the application, allowing all application logs
 // to be read from a single place.
-export class LoggedFunction extends pulumi.Resource {
+export class Function extends pulumi.Resource {
     public readonly func: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
     public readonly role: aws.iam.Role;
@@ -47,7 +47,7 @@ export class LoggedFunction extends pulumi.Resource {
         });
         this.adopt(subscription);
 
-        this.register("cloud:function:LoggedFunction", name, false, {
+        this.register("cloud:function:Function", name, false, {
             func: func,
         });
     }

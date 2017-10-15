@@ -215,8 +215,13 @@ async function computeContainerDefintions(containers: cloud.Containers, logGroup
     }));
 }
 
+interface TaskDefinition {
+    task: aws.ecs.TaskDefinition;
+    logGroup: aws.cloudwatch.LogGroup;
+}
+
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(name: string, containers: cloud.Containers): aws.ecs.TaskDefinition {
+function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {});
 
@@ -253,7 +258,10 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
         volume: volumes,
     });
 
-    return taskDefinition;
+    return {
+        task: taskDefinition,
+        logGroup: logGroup,
+    };
 }
 
 export class Service extends pulumi.Resource implements cloud.Service {
@@ -280,6 +288,8 @@ export class Service extends pulumi.Resource implements cloud.Service {
         this.name = name;
 
         const taskDefinition = createTaskDefinition(name, containers);
+        this.adopt(taskDefinition.task);
+        this.adopt(taskDefinition.logGroup);
 
         // Create load balancer listeners/targets for each exposed port.
         const loadBalancers = [];
@@ -306,7 +316,7 @@ export class Service extends pulumi.Resource implements cloud.Service {
         // Create the service.
         const service = new aws.ecs.Service(name, {
             desiredCount: replicas,
-            taskDefinition: taskDefinition.arn,
+            taskDefinition: taskDefinition.task.arn,
             cluster: ecsClusterARN,
             loadBalancers: loadBalancers,
             iamRole: getServiceLoadBalancerRole().arn,
@@ -352,7 +362,7 @@ export class Service extends pulumi.Resource implements cloud.Service {
             };
         };
 
-        this.register("pulumi:service:Service", name, false, {
+        this.register("cloud:service:Service", name, false, {
             containers: args.containers,
             replicas: args.replicas,
         });
@@ -381,7 +391,7 @@ export class Volume extends pulumi.Resource implements cloud.Volume {
         this.name = name;
         volumeNames.add(name);
 
-        this.register("cloud:service:Volume", name, false, {});
+        this.register("cloud:volume:Volume", name, false, {});
     }
 }
 
@@ -401,9 +411,12 @@ export class Task extends pulumi.Resource implements cloud.Task {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
-        this.taskDefinition = createTaskDefinition(name, { container: container });
-        const clusterARN = ecsClusterARN;
+        const taskDefinition: TaskDefinition = createTaskDefinition(name, { container: container });
+        this.adopt(taskDefinition.task);
+        this.adopt(taskDefinition.logGroup);
+        this.taskDefinition = taskDefinition.task;
 
+        const clusterARN = ecsClusterARN;
         this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = require("aws-sdk");
             const ecs = new awssdk.ECS();
@@ -420,7 +433,7 @@ export class Task extends pulumi.Resource implements cloud.Task {
             // Run the task
             return ecs.runTask({
                 cluster: clusterARN,
-                taskDefinition: this.taskDefinition.arn,
+                taskDefinition: taskDefinition.task.arn,
                 overrides: {
                     containerOverrides: [
                         {
@@ -432,7 +445,7 @@ export class Task extends pulumi.Resource implements cloud.Task {
             }).promise().then((data: any) => undefined);
         };
 
-        this.register("cloud:service:Task", name, false, {
+        this.register("cloud:task:Task", name, false, {
             container: container,
         });
     }

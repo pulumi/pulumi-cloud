@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as crypto from "crypto";
 import * as pulumi from "pulumi";
-import { LoggedFunction } from "./function";
+import { Function } from "./function";
 
 declare let JSON: any;
 declare let Buffer: any;
@@ -299,7 +299,7 @@ export class HttpEndpoint extends pulumi.Resource implements cloud.HttpEndpoint 
     private api: aws.apigateway.RestApi;
     private deployment: aws.apigateway.Deployment;
     private swaggerSpec: SwaggerSpec;
-    private lambdas: { [key: string]: LoggedFunction };
+    private lambdas: { [key: string]: Function };
     private bucket: aws.s3.Bucket;
 
     // Outside API (constructor and methods)
@@ -352,7 +352,7 @@ export class HttpEndpoint extends pulumi.Resource implements cloud.HttpEndpoint 
                     bucketName ? createPathSpecObject(arn, bucketName, name) : undefined) : undefined);
     }
 
-    private routeLambda(method: string, path: string, func: LoggedFunction) {
+    private routeLambda(method: string, path: string, func: Function) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
@@ -389,7 +389,7 @@ export class HttpEndpoint extends pulumi.Resource implements cloud.HttpEndpoint 
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
-        const lambda = new LoggedFunction(
+        const lambda = new Function(
             this.apiName + sha1hash(method + ":" + path),
             (ev: APIGatewayRequest, ctx, cb) => {
                 let body: any;

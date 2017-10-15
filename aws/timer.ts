@@ -3,7 +3,7 @@
 import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { LoggedFunction } from "./function";
+import { Function } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action): void {
     let rateMinutes = 0;
@@ -69,7 +69,7 @@ class Timer extends pulumi.Resource {
     private readonly name: string;
     private readonly scheduleExpression: string;
     private readonly handler: timer.Action;
-    private readonly func: LoggedFunction;
+    private readonly func: Function;
     private readonly rule: aws.cloudwatch.EventRule;
     private readonly target: aws.cloudwatch.EventTarget;
     private readonly permission: aws.lambda.Permission;
@@ -77,7 +77,7 @@ class Timer extends pulumi.Resource {
     constructor(name: string, scheduleExpression: string, handler: timer.Action) {
         super();
 
-        this.func = new LoggedFunction(
+        this.func = new Function(
             name,
             (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 handler().then(() => {
