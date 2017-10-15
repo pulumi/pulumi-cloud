@@ -41,7 +41,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect(200);
         });
 
@@ -51,7 +51,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect(200);
         });
 
@@ -61,7 +61,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/frob").expect(404);
         });
 
@@ -74,7 +74,7 @@ describe("HttpEndpoint", () => {
                 throw new Error("Should not have been called");
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect(200);
         });
 
@@ -87,7 +87,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect(200);
         });
 
@@ -98,7 +98,7 @@ describe("HttpEndpoint", () => {
                 next();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect(200);
         });
 
@@ -110,7 +110,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/goo?name=baz&color=purple").expect(200);
         });
 
@@ -121,7 +121,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/goo?name[]=baz&name[]=quux").expect(200);
         });
 
@@ -131,7 +131,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").expect("ok");
         });
 
@@ -142,7 +142,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).get("/").set({ customheader: "value" }).expect(200);
         });
     });
@@ -155,7 +155,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).post("/").send("body-content").expect(200);
         });
 
@@ -166,7 +166,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).post("/").send("body-content").expect(200);
         });
     });
@@ -179,7 +179,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).delete("/").expect(200);
         });
     });
@@ -192,7 +192,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).put("/").expect(200);
         });
 
@@ -203,7 +203,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish();
+            const address = await app.publish().url;
             await supertest(address).put("/").send("body-content").expect(200);
         });
     });
