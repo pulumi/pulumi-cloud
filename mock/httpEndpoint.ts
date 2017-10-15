@@ -11,8 +11,6 @@ import * as utils from "./utils";
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
-    public url?: pulumi.Computed<string>;
-
     public staticFile: (path: string, filePath: string, contentType?: string) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -21,7 +19,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public delete: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public options: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public all: (path: string, ...handlers: cloud.RouteHandler[]) => void;
-    public publish: () => pulumi.Computed<string>;
+    public publish: () => HttpDeployment;
 
     constructor(name: string) {
         utils.ensureUnique(usedNames, name, "HttpEndpoint");
@@ -32,7 +30,6 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         // Pass an always-true function as our options so that always convert the request body
         // into a buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
-        let server: http.Server | undefined = undefined;
 
         this.staticFile = (path, filePath) => {
             app.use(path, express.static(filePath));
@@ -98,11 +95,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             if (app === undefined) {
                 throw new Error("HttpAPI has already been published");
             }
-
-            server = app.listen(0);
-
-            this.url = Promise.resolve(`http://localhost:${server.address().port}`);
-            return this.url;
+            return new HttpDeployment(app);
         };
 
         function convertRequestHandler(handler: cloud.RouteHandler): express.RequestHandler {
@@ -144,7 +137,19 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         }
     }
 
-    public attachCustomDomain(domain: cloud.Domain): Promise<string | undefined> {
-        throw new Error("Method not implemented.");
+    public attachCustomDomain(domain: cloud.Domain): void {
+        throw new Error("Custom domain names not available for local emulation");
     }
 }
+
+export class HttpDeployment implements cloud.HttpDeployment {
+    public readonly url: pulumi.Computed<string>;
+    public readonly customDomainNames: pulumi.Computed<string>[];
+
+    constructor(app: express.Application) {
+        const server: http.Server = app.listen(0);
+        this.url = Promise.resolve(`http://localhost:${server.address().port}`);
+        this.customDomainNames = [];
+    }
+}
+

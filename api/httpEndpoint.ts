@@ -115,12 +115,6 @@ export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
  */
 export interface HttpEndpoint {
     /**
-     * The url that the HttpEndpoint is being served at. Set only after a
-     * succesful call to `publish`.
-     */
-    url?: pulumi.Computed<string>;
-
-    /**
      * staticFile serves a static file from within the source folder at the
      * requested path.
      *
@@ -183,29 +177,41 @@ export interface HttpEndpoint {
     all(path: string, ...handlers: RouteHandler[]): void;
 
     /**
+     * Attach a custom domain to this HttpEndpoint.
+     *
+     * Provide a domain name you own, along with SSL certificates from a
+     * certificate authority (e.g. LetsEncrypt).
+     *
+     * _Note_: It is strongly encouraged to store certificates in config
+     * variables and not in source code.
+     */
+    attachCustomDomain(domain: Domain): void;
+
+    /**
      * Publishes an HttpEndpoint to be internet accessible.
      *
      * This should be called after describing desired routes.
      *
-     * @returns A computed string representing the URL at which the HttpEndpoint
-     * is available to the internet.
+     * @returns An HttpDeployment object representing the live HttpEndpoint.
      */
-    publish(): pulumi.Computed<string>;
+    publish(): HttpDeployment;
+}
 
+/**
+ * HttpDeployment represents an HttpEndpoint that has been deployed and is
+ * available at a URL.
+ */
+export interface HttpDeployment {
     /**
-     * Attach a custom domain to this HttpEndpoint.
-     *
-     * Provide a domain name you own, along with SSL certificates from a
-     * certificate authority (e.g. LetsEncrypt). The return value is a domain
-     * name that you must map your custom domain to using a DNS A record.
-     *
-     * _Note_: It is strongly encouraged to store certificates in config
-     * variables and not in source code.
-     *
-     * @returns The domain name that you must map your custom domain to using a
-     * DNS A record.
+     * The URL at which the HttpDeployment is available to the Internet.
      */
-    attachCustomDomain(domain: Domain): pulumi.Computed<string>;
+    url: pulumi.Computed<string>;
+    /**
+     * An optional list of custom domain names, each corresponding to a
+     * previous call to attachCustomDomain on the HttpEndpoint.  Each name
+     * should be mapped using a DNS A record.
+     */
+    customDomainNames: pulumi.Computed<string>[];
 }
 
 /**
@@ -231,3 +237,4 @@ export interface Domain {
      */
     certificateChain: string;
 }
+

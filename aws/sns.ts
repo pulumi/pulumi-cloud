@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import { LoggedFunction } from "./function";
+import { Function } from "./function";
 
 interface SNSEvent {
     Records: SNSRecord[];
@@ -36,7 +36,7 @@ export interface SNSMessageAttribute {
 // createSubscription creates a subscription on an SNS topic, passing the full SNSItem to the handler.
 export function createSubscription(
     resName: string, topic: aws.sns.Topic, handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
-    const func = new LoggedFunction(
+    const func = new Function(
         resName,
         (ev: SNSEvent, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
             Promise.all(ev.Records.map(async (record: SNSRecord) => {

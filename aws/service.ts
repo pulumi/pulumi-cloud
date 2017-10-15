@@ -215,8 +215,13 @@ async function computeContainerDefintions(containers: cloud.Containers, logGroup
     }));
 }
 
+interface TaskDefinition {
+    task: aws.ecs.TaskDefinition;
+    logGroup: aws.cloudwatch.LogGroup;
+}
+
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(name: string, containers: cloud.Containers): aws.ecs.TaskDefinition {
+function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {});
 
@@ -253,12 +258,17 @@ function createTaskDefinition(name: string, containers: cloud.Containers): aws.e
         volume: volumes,
     });
 
-    return taskDefinition;
+    return {
+        task: taskDefinition,
+        logGroup: logGroup,
+    };
 }
 
-export class Service implements cloud.Service {
-    name: string;
-    exposedPorts: {
+export class Service extends pulumi.ComponentResource implements cloud.Service {
+    public readonly name: string;
+    public readonly containers: cloud.Containers;
+    public readonly replicas: number;
+    public readonly exposedPorts: {
         [name: string]: {
             [port: number]: {
                 host: aws.elasticloadbalancingv2.LoadBalancer,
@@ -267,88 +277,102 @@ export class Service implements cloud.Service {
         },
     };
 
-    getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
+    public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
         if (!ecsClusterARN) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
+
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
-        this.name = name;
 
-        const taskDefinition = createTaskDefinition(name, containers);
+        const exposedPorts = {};
+        super(
+            "cloud:service:Service",
+            name,
+            {
+                containers: containers,
+                replicas: replicas,
+            },
+            () => {
+                // Create the task definition, parented to this component.
+                const taskDefinition = createTaskDefinition(name, containers);
 
-        // Create load balancer listeners/targets for each exposed port.
-        const loadBalancers = [];
-        this.exposedPorts = {};
-        for (const containerName of Object.keys(containers)) {
-            const container = containers[containerName];
-            this.exposedPorts[containerName] = {};
-            if (container.ports) {
-                for (const portMapping of container.ports) {
-                    const info = newLoadBalancerTargetGroup(container, portMapping.port);
-                    this.exposedPorts[containerName][portMapping.port] = {
-                        host: info.loadBalancer,
-                        port: info.listenerPort,
-                    };
-                    loadBalancers.push({
-                        containerName: containerName,
-                        containerPort: portMapping.port,
-                        targetGroupArn: info.targetGroup.arn,
-                    });
+                // Create load balancer listeners/targets for each exposed port.
+                const loadBalancers = [];
+                for (const containerName of Object.keys(containers)) {
+                    const container = containers[containerName];
+                    this.exposedPorts[containerName] = {};
+                    if (container.ports) {
+                        for (const portMapping of container.ports) {
+                            const info = newLoadBalancerTargetGroup(container, portMapping.port);
+                            this.exposedPorts[containerName][portMapping.port] = {
+                                host: info.loadBalancer,
+                                port: info.listenerPort,
+                            };
+                            loadBalancers.push({
+                                containerName: containerName,
+                                containerPort: portMapping.port,
+                                targetGroupArn: info.targetGroup.arn,
+                            });
+                        }
+                    }
                 }
-            }
-        }
 
-        // Create the service.
-        const service = new aws.ecs.Service(name, {
-            desiredCount: replicas,
-            taskDefinition: taskDefinition.arn,
-            cluster: ecsClusterARN,
-            loadBalancers: loadBalancers,
-            iamRole: getServiceLoadBalancerRole().arn,
-        });
-        const serviceName = service.name;
+                // Create the service.
+                const service = new aws.ecs.Service(name, {
+                    desiredCount: replicas,
+                    taskDefinition: taskDefinition.task.arn,
+                    cluster: ecsClusterARN,
+                    loadBalancers: loadBalancers,
+                    iamRole: getServiceLoadBalancerRole().arn,
+                });
+            },
+        );
+
+        this.name = name;
+        this.exposedPorts = exposedPorts;
 
         // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
-        this.getEndpoint = async function (this: Service, containerName, port): Promise<cloud.Endpoint> {
-            if (!containerName) {
-                // If no container name provided, choose the first container
-                containerName = Object.keys(this.exposedPorts)[0];
+        this.getEndpoint =
+            async function (this: Service, containerName: string, port: number): Promise<cloud.Endpoint> {
                 if (!containerName) {
-                    throw new Error(
-                        `No containers available in this service`,
-                    );
+                    // If no container name provided, choose the first container
+                    containerName = Object.keys(this.exposedPorts)[0];
+                    if (!containerName) {
+                        throw new Error(
+                            `No containers available in this service`,
+                        );
+                    }
                 }
-            }
-            const containerPorts = this.exposedPorts[containerName] || {};
-            if (!port) {
-                // If no port provided, choose the first exposed port on the container.
-                port = +Object.keys(containerPorts)[0];
+                const containerPorts = this.exposedPorts[containerName] || {};
                 if (!port) {
+                    // If no port provided, choose the first exposed port on the container.
+                    port = +Object.keys(containerPorts)[0];
+                    if (!port) {
+                        throw new Error(
+                            `No ports available in service container ${containerName}`,
+                        );
+                    }
+                }
+                const info = containerPorts[port];
+                if (!info) {
                     throw new Error(
-                        `No ports available in service container ${containerName}`,
+                        `No exposed port for ${containerName} port ${port}`,
                     );
                 }
-            }
-            const info = containerPorts[port];
-            if (!info) {
-                throw new Error(
-                    `No exposed port for ${containerName} port ${port}`,
-                );
-            }
-            // TODO [pulumi/pulumi#331] When we capture promise values, they get
-            // exposed on the inside as the unwrapepd value inside the promise.
-            // This means we have to hack the types away. See
-            // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
-            const hostname = <string><any>info.host.dnsName;
-            return {
-                hostname: hostname,
-                port: info.port,
+                // TODO [pulumi/pulumi#331] When we capture promise values, they get
+                // exposed on the inside as the unwrapepd value inside the promise.
+                // This means we have to hack the types away. See
+                // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
+                const hostname = <string><any>info.host.dnsName;
+                return {
+                    hostname: hostname,
+                    port: info.port,
+                };
             };
-        };
     }
 
 }
@@ -363,12 +387,14 @@ const volumeNames = new Set<string>();
 // thoguh, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.
-export class Volume implements cloud.Volume {
-    name: string;
+export class Volume extends pulumi.ComponentResource implements cloud.Volume {
+    public readonly name: string;
+
     constructor(name: string) {
         if (volumeNames.has(name)) {
-            throw new Error("Must provide a unique volumen name");
+            throw new Error("Must provide a unique volume name");
         }
+        super("cloud:volume:Volume", name, {}, () => {/* no children */});
         this.name = name;
         volumeNames.add(name);
     }
@@ -379,18 +405,27 @@ export class Volume implements cloud.Volume {
  * A Task represents a container which can be [run] dynamically whenever (and
  * as many times as) needed.
  */
-export class Task implements cloud.Task {
-    taskDefinition: aws.ecs.TaskDefinition;
-    run: (options?: cloud.TaskRunOptions) => Promise<void>;
+export class Task extends pulumi.ComponentResource implements cloud.Task {
+    public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
         if (!ecsClusterARN) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
-        this.taskDefinition = createTaskDefinition(name, { container: container });
-        const clusterARN = ecsClusterARN;
+        let taskDefinition: aws.ecs.TaskDefinition;
+        super(
+            "cloud:task:Task",
+            name,
+            {
+                container: container,
+            },
+            () => {
+                taskDefinition = createTaskDefinition(name, { container: container }).task;
+            },
+        );
 
+        const clusterARN = ecsClusterARN;
         this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = require("aws-sdk");
             const ecs = new awssdk.ECS();
@@ -407,7 +442,7 @@ export class Task implements cloud.Task {
             // Run the task
             return ecs.runTask({
                 cluster: clusterARN,
-                taskDefinition: this.taskDefinition.arn,
+                taskDefinition: taskDefinition,
                 overrides: {
                     containerOverrides: [
                         {

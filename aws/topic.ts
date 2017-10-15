@@ -2,25 +2,34 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 import * as sns from "./sns";
 
-export class Topic<T> implements cloud.Topic<T> {
+export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     // Inside + Outside API
 
-    private name: string;
-    private topic: aws.sns.Topic;
+    private readonly name: string;
+    private readonly topic: aws.sns.Topic;
 
     // Inside API
 
-    public publish: (item: T) => Promise<void>;
+    public readonly publish: (item: T) => Promise<void>;
 
     // Outside API (constructor and methods)
 
     constructor(name: string) {
+        let topic: aws.sns.Topic | undefined;
+        super(
+            "cloud:topic:Topic",
+            name,
+            {},
+            () => {
+                topic = new aws.sns.Topic(name);
+            },
+        );
         this.name = name;
-        this.topic = new aws.sns.Topic(name, {});
-        // TODO[pulumi/pulumi#331]: bring this back once deadlock issues are resolved.
-        // this.subscriptions = [];
+        this.topic = topic!;
+
         this.publish = (item) => {
             const awssdk = require("aws-sdk");
             const snsconn = new awssdk.SNS();
