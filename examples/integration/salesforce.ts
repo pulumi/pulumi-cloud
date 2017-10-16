@@ -6,7 +6,6 @@ import { poll } from "./poll";
 
 // Email and Password for Salesforce account.  Password should be in the form:
 //    <password><security_token>
-// tslint:disable-next-line
 // See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
 let config = new pulumi.Config("salesforce");
 let salesforceEmail = config.require("email");
