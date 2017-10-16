@@ -5,15 +5,17 @@
                 "type": "node",
                 "request": "launch",
                 "name": "Launch Program",
-                "program": "${workspaceRoot}/examples/integration/node_modules/tslint/bin/tslint",
+                "program": "${workspaceRoot}/tslint_rules/node_modules/tslint/bin/tslint",
                 "args": [
-                    "-c",
-                    "${workspaceRoot}/examples/tslint.json",
+                    "--test",
+                    "test/rules",
+                    "--type-check",
                     "-p",
-                    "${workspaceRoot}/examples/integration/tsconfig.json",
+                    "noop",
                     "-r",
-                    "${workspaceRoot}/examples/integration/node_modules/@pulumi/tslint-rules"
-                ]
+                    "bin"
+                ],
+                "cwd": "${workspaceRoot}/tslint_rules"
             }
         ]
     }

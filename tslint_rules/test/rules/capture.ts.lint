@@ -1,0 +1,91 @@
+let a = 1;
+
+function disallow_outer_assignments() {
+    a = 2;
+    ~      [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    // Assignments to inner variables are fine.
+    let b = 1;
+    b = 2;
+}
+
+
+// allow top level assignments.
+let z = 1;
+z = 2;
+
+
+function disallow_postfix_assignments() {
+    a++;
+    ~      [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    // Assignments to inner variables are fine.
+    let b = 1;
+    b++;
+}
+
+
+function disallow_prefix_assignments() {
+    ++a;
+      ~      [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    // Assignments to inner variables are fine.
+    let b = 1;
+    ++b;
+}
+
+
+function allow_nested_assignments() {
+    let y = 1;
+
+    function inner() {
+        y = 2;
+    }
+}
+
+
+let m = 1;
+let n = "";
+
+function disallow_array_assignments() {
+    [m, n] = [1, ""];
+     ~          [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+        ~       [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+    [m = 1, n] = [1, ""];
+     ~          [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+            ~   [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    // Assignments to inner variables are fine.
+    let i = 1;
+    let j = "";
+
+    [i, j] = [1, ""];
+    [i = 1, j] = [1, ""];
+}
+
+
+function disallow_object_assignments() {
+    ({m, n} = {m: 1, n: ""});
+      ~          [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+         ~       [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+    ({m = 10, n} = {m: 1, n: ""});
+      ~          [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+              ~  [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    ({c: m, n} = {c: 1, n: ""});
+         ~     [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+            ~  [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+    ({c: m = 10, n} = {c: 1, n: ""});
+         ~          [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+                 ~  [Pulumi restriction: Writes cannot be made to top level objects from inside a functions.]
+
+    // Assignments to inner variables are fine.
+    let i = 1;
+    let j = "";
+
+    ({i, j} = {i: 1, j: ""});
+    ({i = 10, j} = {i: 1, j: ""});
+
+    ({c: i, j} = {c: 1, j: ""});
+    ({c: i = 10, j} = {c: 1, j: ""});
+}

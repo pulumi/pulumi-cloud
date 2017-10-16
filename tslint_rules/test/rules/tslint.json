@@ -1,0 +1,5 @@
+{
+    "rules": {
+        "pulumi-capture": true
+    }
+}

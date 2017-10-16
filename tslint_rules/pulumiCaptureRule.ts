@@ -38,12 +38,13 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
                 symbol.flags & ts.SymbolFlags.Variable) {
 
                 const declaration = symbol.valueDeclaration;
-                if (declaration &&
-                    isInTopLevel(declaration)) {
+                if (declaration && isInTopLevel(declaration)) {
+
+                    const reportNode = ts.isShorthandPropertyAssignment(node) ? node.name : node;
 
                     ctx.addFailureAtNode(
                         // tslint:disable-next-line:max-line-length
-                        node, "Pulumi restriction: Writes cannot be made to top level objects from inside a functions.");
+                        reportNode, "Pulumi restriction: Writes cannot be made to top level objects from inside a functions.");
                 }
             }
         }

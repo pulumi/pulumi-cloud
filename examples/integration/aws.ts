@@ -2,32 +2,21 @@
 
 import * as pulumi from "pulumi";
 
-let a = 4;
-function f1() {
-    a++;
-}
-
-let b = "foo";
-function f2() {
-    b = "bar";
-}
-
-function f3() {
-    [a, b] = [1, ""];
-    [a = 1, b] = [1, ""];
-}
-
-function f4() {
-    ({a, b} = {a: 1, b: ""});
-    ({c: a = 10, b} = {c: 1, b: ""});
-}
-
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html
 let config = new pulumi.Config("aws");
 let accessKeyID = config.require("access_key");
 let secretAccessKey = config.require("secret_access_key");
 let region = config.require("region");
+
+let m: number;
+let n: string;
+
+function disallow_object_assignments() {
+    ({m, n} = {m: 1, n: ""});
+    ({m = 10, n} = {m: 1, n: ""});
+    ({c: m, n} = {c: 1, n: ""});
+}
 
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
     let AWS = require("aws-sdk");
