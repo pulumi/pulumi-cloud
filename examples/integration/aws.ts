@@ -9,13 +9,6 @@ let accessKeyID = config.require("access_key");
 let secretAccessKey = config.require("secret_access_key");
 let region = config.require("region");
 
-let variable = 1;
-
-function someFunc() {
-    variable = 2;
-    variable++;
-}
-
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
     let AWS = require("aws-sdk");
     AWS.config = new AWS.Config({
