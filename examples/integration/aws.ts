@@ -9,15 +9,6 @@ let accessKeyID = config.require("access_key");
 let secretAccessKey = config.require("secret_access_key");
 let region = config.require("region");
 
-let m: number;
-let n: string;
-
-function disallow_object_assignments() {
-    ({m, n} = {m: 1, n: ""});
-    ({m = 10, n} = {m: 1, n: ""});
-    ({c: m, n} = {c: 1, n: ""});
-}
-
 export let sendEmail: (message: EmailMessage) => Promise<void> = async (message) => {
     let AWS = require("aws-sdk");
     AWS.config = new AWS.Config({
