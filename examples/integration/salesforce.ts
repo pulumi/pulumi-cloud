@@ -1,11 +1,12 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
 import * as cloud from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 import { poll } from "./poll";
 
 // Email and Password for Salesforce account.  Password should be in the form:
 //    <password><security_token>
+// tslint:disable-next-line
 // See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_username_password_oauth_flow.htm.
 let config = new pulumi.Config("salesforce");
 let salesforceEmail = config.require("email");
@@ -18,7 +19,7 @@ async function getAuthenticatedSalesforceConnection(): Promise<any> {
     let auth = await conn.login(salesforceEmail, salesforcePassword);
     console.log(`authed with Salesforce: ${JSON.stringify(auth, null, "")}`);
     return conn;
-};
+}
 
 // query returns a stream of all Salesforce records matching the SOQL query.
 // This is a deployment-time API.

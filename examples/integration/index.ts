@@ -48,11 +48,11 @@ export function exampleTwitter2() {
     // send an email.
     digest.subscribe("digest", async (dailyTweets) => {
         if (dailyTweets.length === 0) {
-            console.log("No new tweets...")
+            console.log("No new tweets...");
             return;
         }
 
-        console.log(`Received ${dailyTweets.length} new tweets.  Sending email...`)
+        console.log(`Received ${dailyTweets.length} new tweets.  Sending email...`);
 
         // Arbitrary code to compose email body - could use templating system or
         // any other programmatic way of constructing the text.

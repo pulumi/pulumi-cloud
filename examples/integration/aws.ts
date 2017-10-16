@@ -2,14 +2,14 @@
 
 import * as pulumi from "pulumi";
 
-let value = 4;
-function bar() {
-    value++;
-}
-// let foo = "foo";
+// let value = 4;
 // function bar() {
-//     foo = "bar";
+//     value++;
 // }
+// // let foo = "foo";
+// // function bar() {
+// //     foo = "bar";
+// // }
 
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html

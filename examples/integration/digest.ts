@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as utils from "./utils"
+import * as utils from "./utils";
 
 // Digest takes an Observable and produces another Observable
 // which batches the input into groups delimted by times
