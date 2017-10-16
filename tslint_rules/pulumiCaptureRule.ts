@@ -85,8 +85,9 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
                 checkForWriteOfTopLevelVariableFromInsideFunction(property);
             }
             else if (ts.isPropertyAssignment(property) &&
-                     ts.isIdentifier(property.name)) {
-                checkReference(property.name);
+                     ts.isIdentifier(property.name) &&
+                     property.initializer) {
+                checkReference(property.initializer);
             }
         }
     }
