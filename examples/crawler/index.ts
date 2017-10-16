@@ -1,5 +1,4 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
-/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import fetch, { Response } from "node-fetch";
@@ -20,7 +19,7 @@ frontEnd.post("/queue", async (req, res) => {
     res.status(200).json("success");
 });
 frontEnd.get("/documents/stats", async (_, res) => res.json({count: (await documents.scan()).length}));
-let publicURL = frontEnd.publish();
+let publicURL = frontEnd.publish().url;
 publicURL.then(url => console.log("Launched crawler front end @ " + url));
 
 // Processing of each newly discovered site

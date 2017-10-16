@@ -33,10 +33,6 @@ export let Table: TableConstructor; // tslint:disable-line
  */
 export interface Table {
     /**
-     * The computed name of the table.
-     */
-    tableName: pulumi.Computed<string>;
-    /**
      * The name of the primary key.
      */
     readonly primaryKey: string;

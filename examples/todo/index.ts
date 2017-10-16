@@ -1,5 +1,4 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
-/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
@@ -41,7 +40,7 @@ api.get("/todo", async (req, res) => {
 });
 
 // Publish
-api.publish().then((url: string | undefined) => {
+api.publish().url.then((url: string | undefined) => {
     if (url) {
         console.log(`Listening at: ${url}`);
     }

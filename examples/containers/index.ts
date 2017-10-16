@@ -1,5 +1,4 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
-/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import fetch from "node-fetch";
@@ -180,4 +179,4 @@ api.get("/custom", async (req, res) => {
         res.status(500).end(`Pulumi proxy service error: ${err}`);
     }
 });
-api.publish().then(url => console.log(`Serving at: ${url}`));
+api.publish().url.then(url => console.log(`Serving at: ${url}`));

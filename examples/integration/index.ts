@@ -1,6 +1,4 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
-/* tslint:disable */
-/* tslint:enable pulumi */
 
 import * as cloud from "@pulumi/cloud";
 import * as aws from "./aws";
@@ -155,5 +153,5 @@ export function exampleSendSESEmail() {
         }
     });
 
-    api.publish().then((url: string) => { console.log(`URL: ${url}`); });
+    api.publish().url.then((url: string) => { console.log(`URL: ${url}`); });
 }

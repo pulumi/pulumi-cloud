@@ -5,7 +5,7 @@
     "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "lint": "tslint -c ../../tslint.json -r ./node_modules/@pulumi/tslint-rules -p tsconfig.json --type-check"
+        "lint": "tslint -c ../tslint.json -p tsconfig.json --type-check -r ./node_modules/@pulumi/tslint-rules"
     },
     "devDependencies": {
         "@types/node": "^8.0.27",
