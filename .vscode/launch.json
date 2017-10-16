@@ -8,7 +8,7 @@
                 "program": "${workspaceRoot}/examples/integration/node_modules/tslint/bin/tslint",
                 "args": [
                     "-c",
-                    "${workspaceRoot}/tslint.json",
+                    "${workspaceRoot}/examples/tslint.json",
                     "-p",
                     "${workspaceRoot}/examples/integration/tsconfig.json",
                     "-r",

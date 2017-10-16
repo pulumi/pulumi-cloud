@@ -2,14 +2,25 @@
 
 import * as pulumi from "pulumi";
 
-// let value = 4;
-// function bar() {
-//     value++;
-// }
-// // let foo = "foo";
-// // function bar() {
-// //     foo = "bar";
-// // }
+let a = 4;
+function f1() {
+    a++;
+}
+
+let b = "foo";
+function f2() {
+    b = "bar";
+}
+
+function f3() {
+    [a, b] = [1, ""];
+    [a = 1, b] = [1, ""];
+}
+
+function f4() {
+    ({a, b} = {a: 1, b: ""});
+    ({c: a = 10, b} = {c: 1, b: ""});
+}
 
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html

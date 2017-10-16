@@ -16,53 +16,90 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
 
     // nested functions;
     function cb(node: ts.Node) {
-        switch (node.kind) {
-            case ts.SyntaxKind.BinaryExpression:
-                checkBinaryExpression(<ts.BinaryExpression>node);
-                break;
-            case ts.SyntaxKind.PostfixUnaryExpression:
-                checkUnaryExpression(<ts.PostfixUnaryExpression>node);
-                break;
-            case ts.SyntaxKind.PrefixUnaryExpression:
-                checkUnaryExpression(<ts.PrefixUnaryExpression>node);
-                break;
-            default:
-                break;
+        if (ts.isBinaryExpression(node)) {
+            checkBinaryExpression(node);
+        }
+        else if (ts.isPostfixUnaryExpression(node) ||
+                 ts.isPrefixUnaryExpression(node)) {
+            checkUnaryExpression(node);
         }
 
         ts.forEachChild(node, cb);
     }
 
-    function checkForWriteOfTopLevelVariableFromInsideFunction(node: ts.Node) {
+    function checkForWriteOfTopLevelVariableFromInsideFunction(
+            node: ts.Expression | ts.ShorthandPropertyAssignment) {
         if (!isInTopLevel(node)) {
-            const symbol = checker.getSymbolAtLocation(node);
+            const symbol = ts.isShorthandPropertyAssignment(node)
+                ? checker.getShorthandAssignmentValueSymbol(node)
+                : checker.getSymbolAtLocation(node);
+
             if (symbol &&
                 symbol.flags & ts.SymbolFlags.Variable) {
+
                 const declaration = symbol.valueDeclaration;
                 if (declaration &&
                     isInTopLevel(declaration)) {
+
                     ctx.addFailureAtNode(
-                        node, "Writes cannot be made to top level objects from inside a functions.");
+                        // tslint:disable-next-line:max-line-length
+                        node, "Pulumi restriction: Writes cannot be made to top level objects from inside a functions.");
                 }
             }
         }
     }
 
-    function checkBinaryExpression(node: ts.BinaryExpression) {
-        if (node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-            (node.left.kind === ts.SyntaxKind.ObjectLiteralExpression || node.left.kind === ts.SyntaxKind.ArrayLiteralExpression)) {
-
-            checkDestructuringAssignment(node.left);
+    function unwrapOuterExpressions(node: ts.Expression): ts.Expression {
+        while (node && (ts.isTypeAssertion(node) ||
+                        ts.isParenthesizedExpression(node))) {
+            node = node.expression;
         }
-        else if (isAssignmentOperator(node.operatorToken.kind)) {
-            checkForWriteOfTopLevelVariableFromInsideFunction(node.left);
+
+        return node;
+    }
+
+    function checkBinaryExpression(node: ts.BinaryExpression) {
+        if (isAssignmentOperator(node.operatorToken.kind)) {
+            checkReference(node.left);
+        }
+    }
+
+    function checkReference(node: ts.Expression) {
+        node = unwrapOuterExpressions(node);
+
+        if (ts.isObjectLiteralExpression(node)) {
+            checkObjectLiteralAssignment(node);
+        }
+        else if (ts.isArrayLiteralExpression(node)) {
+            checkArrayLiteralAssignment(node);
+        }
+        else {
+            checkForWriteOfTopLevelVariableFromInsideFunction(node);
+        }
+    }
+
+    function checkObjectLiteralAssignment(node: ts.ObjectLiteralExpression) {
+        for (const property of node.properties) {
+            if (ts.isShorthandPropertyAssignment(property)) {
+                checkForWriteOfTopLevelVariableFromInsideFunction(property);
+            }
+            else if (ts.isPropertyAssignment(property) &&
+                     ts.isIdentifier(property.name)) {
+                checkReference(property.name);
+            }
+        }
+    }
+
+    function checkArrayLiteralAssignment(node: ts.ArrayLiteralExpression) {
+        for (const element of node.elements) {
+            checkReference(element);
         }
     }
 
     function checkUnaryExpression(node: ts.PostfixUnaryExpression | ts.PrefixUnaryExpression) {
         if (node.operator === ts.SyntaxKind.PlusPlusToken ||
             node.operator === ts.SyntaxKind.MinusMinusToken) {
-            checkForWriteOfTopLevelVariableFromInsideFunction(node.operand);
+            checkReference(node.operand);
         }
     }
 
@@ -72,7 +109,7 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
 
     function isInTopLevel(node: ts.Node) {
         while (node.parent) {
-            if (isFunctionLikeDeclarationKind(node.parent.kind)) {
+            if (ts.isFunctionLike(node.parent)) {
                 return false;
             }
 
@@ -80,20 +117,5 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
         }
 
         return true;
-    }
-
-    function isFunctionLikeDeclarationKind(kind: ts.SyntaxKind): boolean {
-        switch (kind) {
-            case ts.SyntaxKind.FunctionDeclaration:
-            case ts.SyntaxKind.MethodDeclaration:
-            case ts.SyntaxKind.Constructor:
-            case ts.SyntaxKind.GetAccessor:
-            case ts.SyntaxKind.SetAccessor:
-            case ts.SyntaxKind.FunctionExpression:
-            case ts.SyntaxKind.ArrowFunction:
-                return true;
-            default:
-                return false;
-        }
     }
 }
