@@ -17,8 +17,6 @@ export function exampleTwitter1() {
     // Get a stream of all tweets matching this query, forever...
     let tweets = twitter.search("pulumi", "vscode");
 
-    console.log(true);
-
     // On each tweet, log it and send an email.
     tweets.subscribe("tweetlistener", async (tweet) => {
         await sendEmail({
