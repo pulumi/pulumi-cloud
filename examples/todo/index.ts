@@ -1,5 +1,4 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
-/* tslint:disable */
 
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";

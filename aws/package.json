@@ -3,7 +3,7 @@
     "version": "0.6.1",
     "scripts": {
         "build": "tsc && yarn run lint",
-        "lint": "tslint -c ../tslint.json '{,!(bin|doc|node_modules|vendor)/!(bin|node_modules)**/}!(*.d).ts'"
+        "lint": "tslint -c ../tslint.json -p tsconfig.json"
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
