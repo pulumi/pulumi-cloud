@@ -12,7 +12,7 @@ import (
 
 	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
@@ -29,11 +29,11 @@ func init() {
 }
 
 func getPulumiResources(t *testing.T, path string) (component.Components, tokens.QName) {
-	var checkpoint environment.Checkpoint
+	var checkpoint stack.Checkpoint
 	byts, err := ioutil.ReadFile(path)
 	assert.NoError(t, err)
 	json.Unmarshal(byts, &checkpoint)
-	target, snapshot := environment.DeserializeCheckpoint(&checkpoint)
+	target, snapshot := stack.DeserializeCheckpoint(&checkpoint)
 
 	resources := GetComponents(snapshot.Resources)
 	spew.Dump(resources)

@@ -14,7 +14,7 @@ import (
 	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
 	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
@@ -61,8 +61,8 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
-				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				_, snapshot := stack.DeserializeCheckpoint(&checkpoint)
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
 				urnPrefix := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo_")
 				var endpoint *component.Component
