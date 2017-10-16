@@ -182,6 +182,8 @@ export interface HttpEndpoint {
      * Provide a domain name you own, along with SSL certificates from a
      * certificate authority (e.g. LetsEncrypt).
      *
+     * Must be called prior to [publish]ing the API.
+     *
      * _Note_: It is strongly encouraged to store certificates in config
      * variables and not in source code.
      */
@@ -190,7 +192,8 @@ export interface HttpEndpoint {
     /**
      * Publishes an HttpEndpoint to be internet accessible.
      *
-     * This should be called after describing desired routes.
+     * This should be called after describing desired routes and domains.
+     * Throws an error if called multiple times on the same endpoint.
      *
      * @returns An HttpDeployment object representing the live HttpEndpoint.
      */

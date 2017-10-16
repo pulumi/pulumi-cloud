@@ -25,6 +25,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     private readonly staticFiles: StaticFile[];
     private readonly routes: Route[];
     private readonly customDomains: cloud.Domain[];
+    private isPublished: boolean;
 
     // Outside API (constructor and methods)
 
@@ -33,6 +34,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.staticFiles = [];
         this.routes = [];
         this.customDomains = [];
+        this.isPublished = false;
     }
 
     public staticFile(path: string, filePath: string, contentType?: string) {
@@ -78,21 +80,12 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 
     public publish(): cloud.HttpDeployment {
+        if (this.isPublished) {
+            throw new Error("This endpoint is already published and cannot be re-published.");
+        }
         // Create a unique name prefix that includes the name plus all the registered routes.
-        const name: string = `${this.name}_${this.createUniqueName()}`;
-        return new HttpDeployment(name, this.staticFiles, this.routes, this.customDomains);
-    }
-
-    /**
-     * createUniqueName will create a unique name for the given HttpEndpoint name, plus its routes, etc.
-     */
-    private createUniqueName(): string {
-        return sha1hash(JSON.stringify({
-            name: this.name,
-            staticFiles: this.staticFiles,
-            routes: this.routes,
-            customDomains: this.customDomains,
-        }));
+        this.isPublished = true;
+        return new HttpDeployment(this.name, this.staticFiles, this.routes, this.customDomains);
     }
 }
 
@@ -203,7 +196,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
     constructor(name: string, staticFiles: StaticFile[], routes: Route[], customDomains: cloud.Domain[]) {
         super(
-            "cloud:http:HttpDeployment",
+            "cloud:http:HttpEndpoint",
             name,
             {
                 staticFiles: staticFiles,

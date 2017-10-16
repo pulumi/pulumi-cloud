@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
 	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
@@ -64,15 +63,8 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				_, snapshot := stack.DeserializeCheckpoint(&checkpoint)
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-				urnPrefix := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo_")
-				var endpoint *component.Component
-				for urn, comp := range pulumiResources {
-					// See if this resource has the same URN prefix (it will have a unique hash suffix).
-					if strings.HasPrefix(string(urn), string(urnPrefix)) {
-						endpoint = comp
-						break
-					}
-				}
+				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
+				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
