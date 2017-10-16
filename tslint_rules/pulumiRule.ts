@@ -49,7 +49,12 @@ function walk(program: ts.Program, ctx: Lint.WalkContext<void>) {
     }
 
     function checkBinaryExpression(node: ts.BinaryExpression) {
-        if (isAssignmentOperator(node.operatorToken.kind)) {
+        if (node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+            (node.left.kind === ts.SyntaxKind.ObjectLiteralExpression || node.left.kind === ts.SyntaxKind.ArrayLiteralExpression)) {
+
+            checkDestructuringAssignment(node.left);
+        }
+        else if (isAssignmentOperator(node.operatorToken.kind)) {
             checkForWriteOfTopLevelVariableFromInsideFunction(node.left);
         }
     }
