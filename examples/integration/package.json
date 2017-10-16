@@ -5,7 +5,7 @@
     "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "lint": "tslint -c tslint.json -p tsconfig.json"
+        "lint": "tslint -c ../tslint.json -p tsconfig.json"
     },
     "devDependencies": {
         "@types/node": "^8.0.27",
