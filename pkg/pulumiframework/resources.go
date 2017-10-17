@@ -101,12 +101,10 @@ func GetComponents(source []*resource.State) component.Components {
 	return components
 }
 
-// OperationsProviderForComponent creates an OperationsProvider capable of answering
-// operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
-func OperationsProviderForComponent(
-	config map[tokens.ModuleMember]string,
-	component *component.Component) (component.OperationsProvider, error) {
-
+// This function grovels through the given configuration bag, extracts the bits necessary to create an AWS session
+// (currently just the AWS region to target), and creates and returns the session. If the bag does not contain the
+// necessary properties or if session creation fails, this function returns `nil, error`.
+func createSessionFromConfig(config map[tokens.ModuleMember]string) (*session.Session, error) {
 	awsRegion, ok := config[regionKey]
 	if !ok {
 		return nil, errors.New("no AWS region found")
@@ -114,13 +112,22 @@ func OperationsProviderForComponent(
 
 	awsConfig := aws.NewConfig()
 	awsConfig.Region = aws.String(awsRegion)
-	awsSession, err := session.NewSession(awsConfig)
+	return session.NewSession(awsConfig)
+}
+
+// OperationsProviderForComponent creates an OperationsProvider capable of answering
+// operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
+func OperationsProviderForComponent(
+	config map[tokens.ModuleMember]string,
+	component *component.Component) (component.OperationsProvider, error) {
+
+	sess, err := createSessionFromConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create AWS session")
 	}
 
 	prov := &componentOpsProvider{
-		awsConnection: newAWSConnection(awsSession),
+		awsConnection: newAWSConnection(sess),
 		component:     component,
 	}
 	return prov, nil
@@ -265,11 +272,20 @@ func (ops *componentOpsProvider) GetMetricStatistics(metric component.MetricRequ
 // OperationsProviderForComponents creates an OperationsProvider capable of answering
 // operational queries about a collection of Pulumi Framework Components based on the
 // underlying resources of the AWS  Pulumi Framework implementation.
-func OperationsProviderForComponents(sess *session.Session, components component.Components) component.OperationsProvider {
-	return &componentsOpsProvider{
+func OperationsProviderForComponents(
+	config map[tokens.ModuleMember]string,
+	components component.Components) (component.OperationsProvider, error) {
+
+	sess, err := createSessionFromConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create AWS session")
+	}
+
+	prov := &componentsOpsProvider{
 		awsConnection: newAWSConnection(sess),
 		components:    components,
 	}
+	return prov, nil
 }
 
 type componentsOpsProvider struct {
