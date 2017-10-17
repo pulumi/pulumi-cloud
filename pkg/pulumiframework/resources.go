@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/pkg/errors"
 
 	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi/pkg/resource"
@@ -102,11 +103,27 @@ func GetComponents(source []*resource.State) component.Components {
 
 // OperationsProviderForComponent creates an OperationsProvider capable of answering
 // operational queries based on the underlying resources of the AWS  Pulumi Framework implementation.
-func OperationsProviderForComponent(sess *session.Session, component *component.Component) component.OperationsProvider {
-	return &componentOpsProvider{
-		awsConnection: newAWSConnection(sess),
+func OperationsProviderForComponent(
+	config map[tokens.ModuleMember]string,
+	component *component.Component) (component.OperationsProvider, error) {
+
+	awsRegion, ok := config[regionKey]
+	if !ok {
+		return nil, errors.New("no AWS region found")
+	}
+
+	awsConfig := aws.NewConfig()
+	awsConfig.Region = aws.String(awsRegion)
+	awsSession, err := session.NewSession(awsConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create AWS session")
+	}
+
+	prov := &componentOpsProvider{
+		awsConnection: newAWSConnection(awsSession),
 		component:     component,
 	}
+	return prov, nil
 }
 
 type componentOpsProvider struct {
@@ -117,6 +134,9 @@ type componentOpsProvider struct {
 var _ component.OperationsProvider = (*componentOpsProvider)(nil)
 
 const (
+	// AWS config keys
+	regionKey      = "aws:config:region"
+
 	// AWS Resource Types
 	stageType      = "aws:apigateway/stage:Stage"
 	deploymentType = "aws:apigateway/deployment:Deployment"
