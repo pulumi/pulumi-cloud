@@ -161,12 +161,23 @@ interface ImageOptions {
     environment: { name: string; value: string; }[];
 }
 
+function ecsEnvironmentFromMap(environment: {[name: string]: string} | undefined): { name: string, value: string }[] {
+    const result: { name: string; value: string; }[] = [];
+    if (environment) {
+        for (const name of Object.keys(environment)) {
+            result.push({ name: name, value: environment[name] });
+        }
+    }
+    return result;
+}
+
 // computeImage turns the `image`, `function` or `build` setting on a
 // `cloud.Container` into a valid Docker image name which can be used in an ECS
 // TaskDefinition.
 async function computeImage(container: cloud.Container): Promise<ImageOptions> {
+    const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
     if (container.image) {
-        return { image: container.image, environment: [] };
+        return { image: container.image, environment: environment };
     } else if (container.build) {
         throw new Error("Not yet implemented.");
     } else if (container.function) {
@@ -174,12 +185,8 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return {
-            image: "lukehoban/nodejsrunner", environment: [{
-                name: "PULUMI_SRC",
-                value: jsSrcText,
-            }],
-        };
+        environment.push({ name: "PULUMI_SRC", value: jsSrcText });
+        return { image: "lukehoban/nodejsrunner", environment: environment };
     }
     throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
 }
@@ -426,16 +433,15 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         );
 
         const clusterARN = ecsClusterARN;
+        const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
         this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = require("aws-sdk");
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const environment: { name: string; value: string; }[] = [];
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    const envVal = options.environment[envName];
-                    environment.push({ name: envName, value: envVal });
+                    environment.push({ name: envName, value: options.environment[envName] });
                 }
             }
 
