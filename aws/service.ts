@@ -3,8 +3,10 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { ecsClusterARN, ecsClusterEfsMountPath, ecsClusterSubnets, ecsClusterVpcId } from "./config";
+import * as config from "./config";
 
+// ecsCluster is an automatically managed, lazily allocated ECS cluster if no predefined one is given.
+let ecsCluster: aws.ecs.Cluster | undefined;
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -112,15 +114,15 @@ interface ContainerPortLoadBalancer {
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
 function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
-    if (!ecsClusterVpcId) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
+    if (!config.ecsClusterVpcId) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:config.ecsClusterVpcId'");
     }
-    if (!ecsClusterSubnets) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
+    if (!config.ecsClusterSubnets) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:config.ecsClusterSubnets'");
     }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const subnets = ecsClusterSubnets.split(",");
+        const subnets = config.ecsClusterSubnets.split(",");
         const subnetmapping = subnets.map(s => ({ subnetId: s }));
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
@@ -134,7 +136,7 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
-        vpcId: ecsClusterVpcId,
+        vpcId: config.ecsClusterVpcId,
         deregistrationDelay: 30,
     });
     // Listen on a new port on the NLB and forward to the target.
@@ -238,9 +240,9 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         const container = containers[containerName];
         if (container.volumes) {
             for (const volumeMount of container.volumes) {
-                if (!ecsClusterEfsMountPath) {
+                if (!config.ecsClusterEfsMountPath) {
                     throw new Error(
-                        "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
+                        "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:config.ecsClusterEfsMountPath'",
                     );
                 }
                 const volume = volumeMount.sourceVolume;
@@ -250,7 +252,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                     // into the path, so that Volumes in this deployment
                     // don't accidentally overlap with Volumes from other
                     // deployments on the same cluster.
-                    hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
+                    hostPath: `${config.ecsClusterEfsMountPath}/${volume.name}`,
                     name: volume.name,
                 });
             }
@@ -289,10 +291,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
-        if (!ecsClusterARN) {
-            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
-        }
-
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
 
@@ -333,7 +331,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const service = new aws.ecs.Service(name, {
                     desiredCount: replicas,
                     taskDefinition: taskDefinition.task.arn,
-                    cluster: ecsClusterARN,
+                    cluster: getOrCreateECSCluster(),
                     loadBalancers: loadBalancers,
                     iamRole: getServiceLoadBalancerRole().arn,
                 });
@@ -418,10 +416,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
-        if (!ecsClusterARN) {
-            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
-        }
-
         let taskDefinition: aws.ecs.TaskDefinition;
         super(
             "cloud:task:Task",
@@ -434,7 +428,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             },
         );
 
-        const clusterARN = ecsClusterARN;
+        const clusterARN = getOrCreateECSCluster();
         const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
         this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = require("aws-sdk");
@@ -463,3 +457,230 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         };
     }
 }
+
+// getOrCreateECSCluster gets or creates an ECS cluster in which containers may be run.
+function getOrCreateECSCluster(): pulumi.Computed<string> {
+    // If there is a pre-defined ECS cluster, use it.
+    if (config.ecsClusterARN) {
+        return Promise.resolve(config.ecsClusterARN);
+    }
+    // Otherwise, lazily allocate an ECS cluster if needed, and return it.
+    if (!ecsCluster) {
+        // If automatic clusters are disabled, throw an error.
+        if (config.ecsAutoClusterDisable) {
+            throw new Error(
+                "Cannot create `Service`s or `Task`s because no ECS cluster ARN was provided, "+
+                "and auto-clusters have been disabled");
+        }
+        ecsCluster = createECSCluster();
+    }
+    return ecsCluster.name;
+}
+
+function createECSCluster(): aws.ecs.Cluster {
+    const prefix = "default-pulumi-cloud-ecs";
+
+    // First create an ECS cluster.
+    const cluster = new aws.ecs.Cluster(`${prefix}-cluster`);
+
+    // Next create all of the IAM/security resources.
+    const assumeInstanceRolePolicyDoc: aws.iam.PolicyDocument = {
+        Version: "2012-10-17",
+        Statement: [{
+            Action: [
+                "sts:AssumeRole",
+            ],
+            Effect: "Allow",
+            Principal: {
+                Service: [ "ec2.amazonaws.com" ],
+            },
+        }],
+    };
+    const instanceRolePolicyDoc: aws.iam.PolicyDocument = {
+        Version: "2012-10-17",
+        Statement: [{
+            Effect: "Allow",
+            Action: [
+                "apigateway:*",
+                "autoscaling:CompleteLifecycleAction",
+                "autoscaling:DescribeAutoScalingInstances",
+                "autoscaling:DescribeLifecycleHooks",
+                "autoscaling:SetInstanceHealth",
+                "ec2:DescribeInstances",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:BatchGetImage",
+                "ecr:GetAuthorizationToken",
+                "ecr:GetDownloadUrlForLayer",
+                "ecs:CreateCluster",
+                "ecs:DeregisterContainerInstance",
+                "ecs:DiscoverPollEndpoint",
+                "ecs:Poll",
+                "ecs:RegisterContainerInstance",
+                "ecs:RegisterTaskDefinition",
+                "ecs:RunTask",
+                "ecs:StartTelemetrySession",
+                "ecs:Submit*",
+                "events:*",
+                "iam:*",
+                "lambda:*",
+                "logs:*",
+                "logs:CreateLogStream",
+                "logs:DescribeLogStreams",
+                "logs:GetLogEvents",
+                "logs:PutLogEvents",
+                "s3:*",
+                "sns:*",
+            ],
+            Resource: "*",
+        }],
+    };
+    const instanceRole = new aws.iam.Role(`${prefix}-instance-role`, {
+        assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
+    });
+    const instanceRolePolicy = new aws.iam.RolePolicy(`${prefix}-instance-role-policy`, {
+        role: instanceRole.id,
+        policy: JSON.stringify(instanceRolePolicyDoc),
+    });
+    const instanceProfile = new aws.iam.InstanceProfile(`${prefix}-instance-profile`, {
+        // TODO[pulumi/pulumi-aws/issues#41]: "roles" is deprecated, but if we use "role" then we can't delete this.
+        roles: [ instanceRole ],
+    });
+
+    // Now create the EC2 infra and VMs that will back the ECS cluster.
+    const ALL = {
+        fromPort: 0,
+        toPort: 0,
+        protocol: "-1",  // all
+        cidrBlocks: [ "0.0.0.0/0" ],
+    };
+
+    function oneTcpPortFromAnywhere(port: number) {
+        return {
+            fromPort: port,
+            toPort: port,
+            protocol: "TCP",
+            cidrBlocks: [ "0.0.0.0/0" ],
+        };
+    }
+    const loadBalancerSecurityGroup = new aws.ec2.SecurityGroup(`${prefix}-load-balancer-security-group`, {
+        ingress: [
+            oneTcpPortFromAnywhere(80),  // HTTP
+            oneTcpPortFromAnywhere(443),  // HTTPS
+        ],
+        egress: [ ALL ],  // See TerraformEgressNote
+    });
+    const instanceSecurityGroup = new aws.ec2.SecurityGroup(`${prefix}-instance-security-group`, {
+        ingress: [
+            oneTcpPortFromAnywhere(22),  // SSH
+            // Expose ephemeral container ports to load balancer.
+            {
+                fromPort: 32768,
+                toPort: 65535,
+                protocol: "TCP",
+                securityGroups: [ loadBalancerSecurityGroup.id ],
+            },
+        ],
+        egress: [ ALL ],  // See TerraformEgressNote
+    });
+    const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(`${prefix}-instance-launch-configuration`, {
+        imageId: getEcsAmiId(),
+        instanceType: config.ecsAutoClusterInstanceType,
+        iamInstanceProfile: instanceProfile.id,
+        enableMonitoring: true,  // default is true
+        placementTenancy: "default",  // default is "default"
+        ebsBlockDevices: [
+            {
+                deviceName: "/dev/xvdb",
+                volumeSize: 5, // GB
+                volumeType: "gp2", // default is "standard"
+            },
+            {
+                deviceName: "/dev/xvdcz",
+                volumeSize: 50,
+                volumeType: "gp2",
+            },
+        ],
+        securityGroups: [ instanceSecurityGroup.id ],
+        userData: getInstanceUserData(cluster),
+    });
+
+    // Finally, create the ASG for the instances.
+    // TODO[pulumi/pulumi-aws#43]: this isn't reliable; if the AMI gets updated, this doesn't properly scale
+    //     down/up the service.  The alternative is to embed CloudFormation, which (sorry) I can't bring myself to do.
+    const asg = new aws.autoscaling.Group(`${prefix}-cluster-asg`, {
+        desiredCapacity: config.ecsAutoClusterDesiredCapacity,
+        minSize: config.ecsAutoClusterMinSize,
+        maxSize: config.ecsAutoClusterMaxSize,
+        launchConfiguration: instanceLaunchConfiguration.id,
+        defaultCooldown: 300,
+        healthCheckGracePeriod: 120,
+        healthCheckType: "EC2",
+        metricsGranularity: "1Minute",
+    });
+
+    return cluster;
+}
+
+// http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_agent_versions.html
+async function getEcsAmiId() {
+    const result: aws.GetAmiResult = await aws.getAmi({
+        filter: [
+            {
+                name: "name",
+                values: [ "amzn-ami-2017.03.g-amazon-ecs-optimized" ],
+            },
+            {
+                name: "owner-id",
+                values: [ "591542846629" ], // Amazon
+            },
+        ],
+        mostRecent: true,
+    });
+    return result.imageId;
+}
+
+// http://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-config-data
+// ours seems inspired by:
+// https://github.com/convox/rack/blob/023831d8/provider/aws/dist/rack.json#L1669
+// https://github.com/awslabs/amazon-ecs-amazon-efs/blob/d92791f3/amazon-efs-ecs.json#L655
+async function getInstanceUserData(cluster: aws.ecs.Cluster): Promise<string> {
+    return `#cloud-config
+    repo_upgrade_exclude:
+        - kernel*
+    packages:
+        - aws-cfn-bootstrap
+        - aws-cli
+    mounts:
+        - ['/dev/xvdb', 'none', 'swap', 'sw', '0', '0']
+    bootcmd:
+        - mkswap /dev/xvdb
+        - swapon /dev/xvdb
+        - echo ECS_CLUSTER='${await cluster.id}' >> /etc/ecs/ecs.config
+        - echo ECS_ENGINE_AUTH_TYPE=docker >> /etc/ecs/ecs.config
+    runcmd:
+        # Set and use variables in the same command, since it's not obvious if
+        # different commands will run in different shells.
+        - |
+            # Knock one letter off of availability zone to get region.
+            AWS_REGION=$(curl -s 169.254.169.254/2016-09-02/meta-data/placement/availability-zone | sed 's/.$//')
+            # cloud-init docs are unclear about whether $INSTANCE_ID is available in runcmd.
+            EC2_INSTANCE_ID=$(curl -s 169.254.169.254/2016-09-02/meta-data/instance-id)
+            # \$ below so we don't get Javascript interpolation.
+            # Line continuations are processed by Javascript before YAML or shell sees them.
+            CFN_STACK=$(aws ec2 describe-instances \
+                --instance-id "\${EC2_INSTANCE_ID}" \
+                --region "\${AWS_REGION}" \
+                --query "Reservations[0].Instances[0].Tags[?Key=='aws:cloudformation:stack-name'].Value" \
+                --output text)
+            CFN_RESOURCE=$(aws ec2 describe-instances \
+                --instance-id "\${EC2_INSTANCE_ID}" \
+                --region "\${AWS_REGION}" \
+                --query "Reservations[0].Instances[0].Tags[?Key=='aws:cloudformation:logical-id'].Value" \
+                --output text)
+            /opt/aws/bin/cfn-signal \
+                --region "\${AWS_REGION}" \
+                --stack "\${CFN_STACK}" \
+                --resource "\${CFN_RESOURCE}"
+    `;
+}
+
