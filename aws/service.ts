@@ -56,43 +56,46 @@ interface ECSContainerDefinition {
 let serviceLoadBalancerRole: aws.iam.Role | undefined;
 function getServiceLoadBalancerRole(): aws.iam.Role {
     if (!serviceLoadBalancerRole) {
-        const assumeRolePolicy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": "sts:AssumeRole",
-                    "Principal": {
-                        "Service": "ecs.amazonaws.com",
+        serviceLoadBalancerRole = pulumi.Resource.runInParentlessScope(() => {
+            const assumeRolePolicy = {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": "sts:AssumeRole",
+                        "Principal": {
+                            "Service": "ecs.amazonaws.com",
+                        },
+                        "Effect": "Allow",
+                        "Sid": "",
                     },
-                    "Effect": "Allow",
-                    "Sid": "",
-                },
-            ],
-        };
-        const policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                        "elasticloadbalancing:DeregisterTargets",
-                        "elasticloadbalancing:Describe*",
-                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                        "elasticloadbalancing:RegisterTargets",
-                        "ec2:Describe*",
-                        "ec2:AuthorizeSecurityGroupIngress",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*",
-                },
-            ],
-        };
-        serviceLoadBalancerRole = new aws.iam.Role("pulumi-s-lb-role", {
-            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-        });
-        const rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
-            role: serviceLoadBalancerRole.name,
-            policy: JSON.stringify(policy),
+                ],
+            };
+            const policy = {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": [
+                            "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                            "elasticloadbalancing:DeregisterTargets",
+                            "elasticloadbalancing:Describe*",
+                            "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                            "elasticloadbalancing:RegisterTargets",
+                            "ec2:Describe*",
+                            "ec2:AuthorizeSecurityGroupIngress",
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*",
+                    },
+                ],
+            };
+            const role = new aws.iam.Role("pulumi-s-lb-role", {
+                assumeRolePolicy: JSON.stringify(assumeRolePolicy),
+            });
+            const rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
+                role: role.name,
+                policy: JSON.stringify(policy),
+            });
+            return role;
         });
     }
     return serviceLoadBalancerRole;
@@ -123,11 +126,13 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
         const subnets = ecsClusterSubnets.split(",");
         const subnetmapping = subnets.map(s => ({ subnetId: s }));
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
-        loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
-            loadBalancerType: "network",
-            subnetMapping: subnetmapping,
-            internal: false,
-        });
+        loadBalancer = pulumi.Resource.runInParentlessScope(
+            () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
+                loadBalancerType: "network",
+                subnetMapping: subnetmapping,
+                internal: false,
+            }),
+        );
     }
     const targetListenerName = `pulumi-s-lb-${listenerIndex}`;
     // Create the target group for the new container/port pair.

@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as pulumi from "pulumi";
 
 const region = aws.config.requireRegion();
 
@@ -13,22 +14,25 @@ let logCollector: aws.serverless.Function | undefined;
 
 export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
-        // Lazily construct the application logCollector lambda
-        logCollector = new aws.serverless.Function(
-            logCollectorName,
-            { policies: [ aws.iam.AWSLambdaFullAccess ] },
-            (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
-                const zlib = require("zlib");
-                const payload = new Buffer(ev.awslogs.data, "base64");
-                zlib.gunzip(payload, (err: any, result: Buffer) => {
-                    if (err !== undefined && err !== null) {
-                        cb(err, null);
-                    } else {
-                        console.log(result.toString("utf8"));
-                        cb(null, {});
-                    }
-                });
-            },
+        // Lazily construct the application logCollector lambda; do it in a scope where we don't have a parent,
+        // so the logCollector doesn't get falsely attributed to the caller.
+        logCollector = pulumi.Resource.runInParentlessScope(() =>
+            new aws.serverless.Function(
+                logCollectorName,
+                { policies: [ aws.iam.AWSLambdaFullAccess ] },
+                (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+                    const zlib = require("zlib");
+                    const payload = new Buffer(ev.awslogs.data, "base64");
+                    zlib.gunzip(payload, (err: any, result: Buffer) => {
+                        if (err !== undefined && err !== null) {
+                            cb(err, null);
+                        } else {
+                            console.log(result.toString("utf8"));
+                            cb(null, {});
+                        }
+                    });
+                },
+            ),
         );
         const permission = new aws.lambda.Permission(logCollectorName, {
             action: "lambda:invokeFunction",
