@@ -164,11 +164,77 @@ interface ImageOptions {
 // computeImage turns the `image`, `function` or `build` setting on a
 // `cloud.Container` into a valid Docker image name which can be used in an ECS
 // TaskDefinition.
-async function computeImage(container: cloud.Container): Promise<ImageOptions> {
+async function computeImage(
+    container: cloud.Container,
+    repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
     if (container.image) {
         return { image: container.image, environment: [] };
     } else if (container.build) {
-        throw new Error("Not yet implemented.");
+        if (!repository) {
+            throw new Error("Expected a repository to be created for a `build` container definition");
+        }
+        const repositoryUrl = await repository.repositoryUrl;
+        const registryId = await repository.registryId;
+        let imageDigest: string | undefined = undefined;
+        if (registryId) {
+            const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+            /* tslint:disable-next-line */
+            const Docker = require("dockerode");
+            const docker = new Docker();
+            const buildContext = require("tar").create({ gzip: true, cwd: container.build }, ["."]);
+            const imageName = repositoryUrl;
+            const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+            const [username, password] = decodedCredentials.split(":");
+            if (!password || !username) {
+                throw new Error("Invalid credentials");
+            }
+            const registry = credentials.proxyEndpoint;
+            const authData = {
+                username: username,
+                password: password,
+                auth: "",
+                serveraddress: registry,
+            };
+            imageDigest = await new Promise<string>((resolve, reject) => {
+                docker.buildImage(buildContext, {t: imageName}, (err: any, output: any) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    output.pipe(process.stdout);
+                    output.on("end", () => {
+                        console.log(`Succesfully built image: ${imageName}`);
+                        const img = docker.getImage(imageName);
+                        img.push({registry: registry, authconfig: authData}, (err2: any, data: any) => {
+                            if (err2) {
+                                return reject(err2);
+                            }
+                            let digest: string | undefined = undefined;
+                            data.on("data", (buf: any) => {
+                                const str = buf.toString();
+                                const lines = str.split("\n");
+                                for (const line of lines) {
+                                    console.log(line);
+                                    if (line.length === 0) {
+                                        continue;
+                                    }
+                                    const pushStatus = JSON.parse(line);
+                                    if (pushStatus.aux && pushStatus.aux.Digest) {
+                                        digest = pushStatus.aux.Digest;
+                                    }
+                                }
+                            });
+                            data.on("end", () => {
+                                resolve(digest);
+                            });
+                        });
+                    });
+                });
+            });
+        }
+        return { image: repositoryUrl!, environment: [{
+            name: "IMAGE_DIGEST",
+            value: imageDigest!,
+        }]};
     } else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
@@ -187,12 +253,15 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
 // computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is
 // lifted over a promise for the LogGroup and container image name generation - so should not allocate any Pulumi
 // resources.
-async function computeContainerDefintions(containers: cloud.Containers, logGroup: aws.cloudwatch.LogGroup):
-    Promise<ECSContainerDefinition[]> {
+async function computeContainerDefintions(
+    containers: cloud.Containers,
+    logGroup: aws.cloudwatch.LogGroup,
+    repositories: Map<string, aws.ecr.Repository>): Promise<ECSContainerDefinition[]> {
     const logGroupId = await logGroup.id;
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
-        const { image, environment } = await computeImage(container);
+        const repository = repositories.get(containerName);
+        const { image, environment } = await computeImage(container, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
@@ -225,10 +294,12 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {});
 
-    // Find all referenced Volumes
+    // Find all referenced Volumes and any `build` containers
     const volumes: { hostPath?: string; name: string }[] = [];
+    const repositories = new Map<string, aws.ecr.Repository>();
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
+        // Collect referenced Volumes.
         if (container.volumes) {
             for (const volumeMount of container.volumes) {
                 if (!ecsClusterEfsMountPath) {
@@ -248,10 +319,15 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                 });
             }
         }
+        // Create registry for each `build` container.
+        if (container.build) {
+            const repo = new aws.ecr.Repository(`${name}_${containerName}`, {});
+            repositories.set(containerName, repo);
+        }
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, logGroup).then(JSON.stringify);
+    const containerDefintions = computeContainerDefintions(containers, logGroup, repositories).then(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefintions,
@@ -287,7 +363,14 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
 
-        const exposedPorts = {};
+        const exposedPorts: {
+            [name: string]: {
+                [port: number]: {
+                    host: aws.elasticloadbalancingv2.LoadBalancer,
+                    port: number,
+                },
+            },
+        } = {};
         super(
             "cloud:service:Service",
             name,
@@ -303,11 +386,11 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const loadBalancers = [];
                 for (const containerName of Object.keys(containers)) {
                     const container = containers[containerName];
-                    this.exposedPorts[containerName] = {};
+                    exposedPorts[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
                             const info = newLoadBalancerTargetGroup(container, portMapping.port);
-                            this.exposedPorts[containerName][portMapping.port] = {
+                            exposedPorts[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 port: info.listenerPort,
                             };

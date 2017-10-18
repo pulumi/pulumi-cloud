@@ -120,11 +120,23 @@ let helloTask = new cloud.Task("hello-world", {
     memory: 20,
 });
 
+let builtService = new cloud.Service("nginx2", {
+    containers: {
+        nginx: {
+            build: "./app",
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+    replicas: 2,
+});
+
 let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
+        nginx2: await builtService.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {
