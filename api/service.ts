@@ -23,6 +23,11 @@ export interface Container {
      */
     build?: string;
     /**
+     * Optional environment variables to set and make available to the container
+     * as it is running.
+     */
+    environment?: {[name: string]: string};
+    /**
      * The function code to use as the implementation of the contaner. Exactly
      * one of `image`, `build`, and `function` must be specified.
      */
@@ -141,7 +146,10 @@ export let Service: ServiceConstructor; // tslint:disable-line
  * Arguments to use for initializing a single run of the Task
  */
 export interface TaskRunOptions {
-    environment: { [name: string]: string};
+    /**
+     * Optional environment variables to override those set in the container definition.
+     */
+    environment?: {[name: string]: string};
 }
 
 /**

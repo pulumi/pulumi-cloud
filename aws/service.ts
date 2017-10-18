@@ -56,43 +56,46 @@ interface ECSContainerDefinition {
 let serviceLoadBalancerRole: aws.iam.Role | undefined;
 function getServiceLoadBalancerRole(): aws.iam.Role {
     if (!serviceLoadBalancerRole) {
-        const assumeRolePolicy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": "sts:AssumeRole",
-                    "Principal": {
-                        "Service": "ecs.amazonaws.com",
+        serviceLoadBalancerRole = pulumi.Resource.runInParentlessScope(() => {
+            const assumeRolePolicy = {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": "sts:AssumeRole",
+                        "Principal": {
+                            "Service": "ecs.amazonaws.com",
+                        },
+                        "Effect": "Allow",
+                        "Sid": "",
                     },
-                    "Effect": "Allow",
-                    "Sid": "",
-                },
-            ],
-        };
-        const policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                        "elasticloadbalancing:DeregisterTargets",
-                        "elasticloadbalancing:Describe*",
-                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                        "elasticloadbalancing:RegisterTargets",
-                        "ec2:Describe*",
-                        "ec2:AuthorizeSecurityGroupIngress",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*",
-                },
-            ],
-        };
-        serviceLoadBalancerRole = new aws.iam.Role("pulumi-s-lb-role", {
-            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-        });
-        const rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
-            role: serviceLoadBalancerRole.name,
-            policy: JSON.stringify(policy),
+                ],
+            };
+            const policy = {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": [
+                            "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                            "elasticloadbalancing:DeregisterTargets",
+                            "elasticloadbalancing:Describe*",
+                            "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                            "elasticloadbalancing:RegisterTargets",
+                            "ec2:Describe*",
+                            "ec2:AuthorizeSecurityGroupIngress",
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*",
+                    },
+                ],
+            };
+            const role = new aws.iam.Role("pulumi-s-lb-role", {
+                assumeRolePolicy: JSON.stringify(assumeRolePolicy),
+            });
+            const rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
+                role: role.name,
+                policy: JSON.stringify(policy),
+            });
+            return role;
         });
     }
     return serviceLoadBalancerRole;
@@ -123,11 +126,13 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
         const subnets = ecsClusterSubnets.split(",");
         const subnetmapping = subnets.map(s => ({ subnetId: s }));
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
-        loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
-            loadBalancerType: "network",
-            subnetMapping: subnetmapping,
-            internal: false,
-        });
+        loadBalancer = pulumi.Resource.runInParentlessScope(
+            () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
+                loadBalancerType: "network",
+                subnetMapping: subnetmapping,
+                internal: false,
+            }),
+        );
     }
     const targetListenerName = `pulumi-s-lb-${listenerIndex}`;
     // Create the target group for the new container/port pair.
@@ -161,14 +166,26 @@ interface ImageOptions {
     environment: { name: string; value: string; }[];
 }
 
+function ecsEnvironmentFromMap(environment: {[name: string]: string} | undefined): { name: string, value: string }[] {
+    const result: { name: string; value: string; }[] = [];
+    if (environment) {
+        for (const name of Object.keys(environment)) {
+            result.push({ name: name, value: environment[name] });
+        }
+    }
+    return result;
+}
+
 // computeImage turns the `image`, `function` or `build` setting on a
 // `cloud.Container` into a valid Docker image name which can be used in an ECS
 // TaskDefinition.
+
 async function computeImage(
     container: cloud.Container,
     repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
+    const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
     if (container.image) {
-        return { image: container.image, environment: [] };
+        return { image: container.image, environment: environment };
     } else if (container.build) {
         if (!repository) {
             throw new Error("Expected a repository to be created for a `build` container definition");
@@ -240,12 +257,8 @@ async function computeImage(
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return {
-            image: "lukehoban/nodejsrunner", environment: [{
-                name: "PULUMI_SRC",
-                value: jsSrcText,
-            }],
-        };
+        environment.push({ name: "PULUMI_SRC", value: jsSrcText });
+        return { image: "lukehoban/nodejsrunner", environment: environment };
     }
     throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
 }
@@ -292,7 +305,7 @@ interface TaskDefinition {
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
-    const logGroup = new aws.cloudwatch.LogGroup(name, {});
+    const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`);
 
     // Find all referenced Volumes and any `build` containers
     const volumes: { hostPath?: string; name: string }[] = [];
@@ -509,16 +522,15 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         );
 
         const clusterARN = ecsClusterARN;
+        const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
         this.run = function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = require("aws-sdk");
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const environment: { name: string; value: string; }[] = [];
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    const envVal = options.environment[envName];
-                    environment.push({ name: envName, value: envVal });
+                    environment.push({ name: envName, value: options.environment[envName] });
                 }
             }
 
