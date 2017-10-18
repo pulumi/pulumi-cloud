@@ -37,7 +37,7 @@ export class Function extends pulumi.ComponentResource {
 
                 // And then a log group and subscription filter for that lambda.
                 const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
-                    logGroup: new aws.cloudwatch.LogGroup(name, {
+                    logGroup: new aws.cloudwatch.LogGroup(`${name}-func-logs`, {
                         name: lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
                         retentionInDays: 1,
                     }),

@@ -230,7 +230,7 @@ interface TaskDefinition {
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
-    const logGroup = new aws.cloudwatch.LogGroup(name, {});
+    const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`);
 
     // Find all referenced Volumes
     const volumes: { hostPath?: string; name: string }[] = [];
