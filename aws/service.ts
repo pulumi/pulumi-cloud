@@ -271,18 +271,20 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     };
 }
 
+export type ServicePorts = {
+    [name: string]: {
+        [port: number]: {
+            host: aws.elasticloadbalancingv2.LoadBalancer,
+            port: number,
+        },
+    },
+};
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
-    public readonly exposedPorts: {
-        [name: string]: {
-            [port: number]: {
-                host: aws.elasticloadbalancingv2.LoadBalancer,
-                port: number,
-            },
-        },
-    };
+    public readonly exposedPorts: ServicePorts;
 
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -294,7 +296,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
 
-        const exposedPorts = {};
+        const exposedPorts: ServicePorts = {};
         super(
             "cloud:service:Service",
             name,
@@ -310,11 +312,11 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const loadBalancers = [];
                 for (const containerName of Object.keys(containers)) {
                     const container = containers[containerName];
-                    this.exposedPorts[containerName] = {};
+                    exposedPorts[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
                             const info = newLoadBalancerTargetGroup(container, portMapping.port);
-                            this.exposedPorts[containerName][portMapping.port] = {
+                            exposedPorts[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 port: info.listenerPort,
                             };
