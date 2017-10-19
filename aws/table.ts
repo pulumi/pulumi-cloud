@@ -67,6 +67,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             return db().get({
                 TableName: tableName,
                 Key: query,
+                ConsistentRead: true,
             }).promise().then((x: any) => x.Item);
         };
         this.insert = (item) => {
@@ -78,6 +79,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         this.scan = () => {
             return db().scan({
                 TableName: tableName,
+                ConsistentRead: true,
             }).promise().then((x: any) => x.Items);
         };
         this.update = (query: any, updates: any) => {
