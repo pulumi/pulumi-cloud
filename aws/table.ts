@@ -66,8 +66,8 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             },
         );
 
-        const db = (): _awsTypesOnly.DynamoDB.DocumentClient => {
-            const awssdk = require("aws-sdk");
+        const db = () => {
+            const awssdk: typeof _awsTypesOnly = require("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
         };
 
