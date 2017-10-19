@@ -8,9 +8,21 @@
   dependencies:
     aws-sdk "*"
 
-"@types/node@^8.0.26":
+"@types/dockerode@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@types/dockerode/-/dockerode-2.5.1.tgz#b24e6a5a54c409cb9c637d11e0e2febd7269605f"
+  dependencies:
+    "@types/node" "*"
+
+"@types/node@*", "@types/node@^8.0.26":
   version "8.0.28"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.28.tgz#86206716f8d9251cf41692e384264cbd7058ad60"
+
+"@types/tar@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@types/tar/-/tar-4.0.0.tgz#e3239d969eeb693a012200613860d0eb871c94f0"
+  dependencies:
+    "@types/node" "*"
 
 JSONStream@0.10.0:
   version "0.10.0"

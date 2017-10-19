@@ -17,6 +17,8 @@
     },
     "dependencies": {
         "@types/aws-sdk": "^2.7.0",
+        "@types/dockerode": "^2.5.1",
+        "@types/tar": "^4.0.0",
         "dockerode": "^2.5.2",
         "tar": "^4.0.1"
     }

@@ -1,8 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import fetch, { Response } from "node-fetch";
 import * as $ from "cheerio";
+import fetch, { Response } from "node-fetch";
 import { canonicalUrl, hostname} from "./support";
 
 // Pending sites to be processed
@@ -68,7 +68,7 @@ sites.subscribe("foreachurl", async (url) => {
     let anchors = $("a", html);
     for (let i = 0; i < anchors.length; i++) {
         let rawHref = anchors[i].attribs["href"];
-        if (!rawHref) continue;
+        if (!rawHref) { continue; }
         let href = canonicalUrl(rawHref, url);
         console.log(`${url}: Found href: ${rawHref}, canonicalized to ${href}`);
         let host = hostname(href);
@@ -100,7 +100,7 @@ cloud.timer.interval("cleanup", {minutes: 5}, async () => {
     let cleanupCount = 0;
     let alldocs = await documents.scan();
     console.log(`Cleanup: scan returned ${alldocs.length} documents.`);
-    for(let doc of alldocs) {
+    for (let doc of alldocs) {
         if (doc.crawlInProgress) {
             await sites.publish(doc.id);
             cleanupCount++;
