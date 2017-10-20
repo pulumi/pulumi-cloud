@@ -433,18 +433,19 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     };
 }
 
+interface ExposedPorts {
+    [name: string]: {
+        [port: number]: {
+            host: aws.elasticloadbalancingv2.LoadBalancer,
+            port: number,
+        },
+    };
+}
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
-    public readonly exposedPorts: {
-        [name: string]: {
-            [port: number]: {
-                host: aws.elasticloadbalancingv2.LoadBalancer,
-                port: number,
-            },
-        },
-    };
 
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -455,15 +456,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
+        const exposedPorts: ExposedPorts = {};
 
-        const exposedPorts: {
-            [name: string]: {
-                [port: number]: {
-                    host: aws.elasticloadbalancingv2.LoadBalancer,
-                    port: number,
-                },
-            },
-        } = {};
         super(
             "cloud:service:Service",
             name,
@@ -508,7 +502,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         );
 
         this.name = name;
-        this.exposedPorts = exposedPorts;
 
         // getEndpoint returns the host and port info for a given
         // containerName and exposed port.
@@ -516,14 +509,14 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             async function (this: Service, containerName: string, port: number): Promise<cloud.Endpoint> {
                 if (!containerName) {
                     // If no container name provided, choose the first container
-                    containerName = Object.keys(this.exposedPorts)[0];
+                    containerName = Object.keys(exposedPorts)[0];
                     if (!containerName) {
                         throw new Error(
                             `No containers available in this service`,
                         );
                     }
                 }
-                const containerPorts = this.exposedPorts[containerName] || {};
+                const containerPorts = exposedPorts[containerName] || {};
                 if (!port) {
                     // If no port provided, choose the first exposed port on the container.
                     port = +Object.keys(containerPorts)[0];
@@ -617,7 +610,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             // Run the task
             return ecs.runTask({
                 cluster: clusterARN,
-                taskDefinition: taskDefinition,
+                taskDefinition: taskDefinition.arn,
                 overrides: {
                     containerOverrides: [
                         {
