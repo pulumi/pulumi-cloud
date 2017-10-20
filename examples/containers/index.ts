@@ -59,12 +59,12 @@ class Cache {
     get: (key: string) => Promise<string>;
     set: (key: string, value: string) => Promise<void>;
 
-    constructor(name: string) {
+    constructor(name: string, memory: number = 128) {
         let redis = new cloud.Service(name, {
             containers: {
                 redis: {
                     image: "redis:alpine",
-                    memory: 128,
+                    memory: memory,
                     ports: [{ port: 6379 }],
                     command: ["redis-server", "--requirepass", redisPassword],
                 },
@@ -120,11 +120,23 @@ let helloTask = new cloud.Task("hello-world", {
     memory: 20,
 });
 
+let builtService = new cloud.Service("nginx2", {
+    containers: {
+        nginx: {
+            build: "./app",
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+    replicas: 2,
+});
+
 let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
+        nginx2: await builtService.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {
