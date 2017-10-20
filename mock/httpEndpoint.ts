@@ -19,7 +19,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public delete: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public options: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public all: (path: string, ...handlers: cloud.RouteHandler[]) => void;
-    public publish: () => HttpDeployment;
+    public publish: () => cloud.HttpDeployment;
 
     constructor(name: string) {
         utils.ensureUnique(usedNames, name, "HttpEndpoint");
@@ -142,7 +142,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 }
 
-export class HttpDeployment implements cloud.HttpDeployment {
+class HttpDeployment implements cloud.HttpDeployment {
     public readonly url: pulumi.Computed<string>;
     public readonly customDomainNames: pulumi.Computed<string>[];
 

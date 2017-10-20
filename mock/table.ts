@@ -7,8 +7,6 @@ import * as utils from "./utils";
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class Table implements cloud.Table {
-    public tableName: pulumi.Computed<string>;
-
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
     public scan: () => Promise<any[]>;
@@ -20,8 +18,6 @@ export class Table implements cloud.Table {
                 public readonly primaryKeyType: string = "string") {
 
         utils.ensureUnique(usedNames, name, "Table");
-
-        this.tableName = Promise.resolve(name);
 
         const database = Object.create(null);
         this.get = (query: any) => {
