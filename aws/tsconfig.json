@@ -25,7 +25,9 @@
         "topic.ts",
         "service.ts",
         "unhandledError.ts",
-        "config/index.ts"
+        "config/index.ts",
+        "infrastructure/aws.ts",
+        "infrastructure/network.ts"
     ]
 }
 

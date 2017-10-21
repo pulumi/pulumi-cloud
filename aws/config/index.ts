@@ -13,3 +13,6 @@ export let ecsClusterVpcId = config.get("ecsClusterVpcId");
 // Optional EFS mount path on the cluster hosts.  If not provided, `Volumes`
 // cannot be used in `Service`s and `Task`s.
 export let ecsClusterEfsMountPath = config.get("ecsClusterEfsMountPath");
+
+// Optionally create a VPC and run all compute inside it
+export let createVpc = config.getBoolean("createVpc") || false;

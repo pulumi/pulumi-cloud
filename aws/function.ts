@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { privateNetwork } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
@@ -24,15 +25,22 @@ export class Function extends pulumi.ComponentResource {
             },
             () => {
                 // First allocate a function.
-                const options = {
+                const options: aws.serverless.FunctionOptions = {
                     policies: [
                         aws.iam.AWSLambdaFullAccess,
                         aws.iam.AmazonEC2ContainerServiceFullAccess,
+                        aws.iam.AWSLambdaVPCAccessExecutionRole,
                     ],
                     deadLetterConfig: {
                         targetArn: getUnhandledErrorTopic().arn,
                     },
                 };
+                if (privateNetwork) {
+                    options.vpcConfig = {
+                        securityGroupIds: [privateNetwork.vpc.defaultSecurityGroupId],
+                        subnetIds: privateNetwork.subnets.map(s => s.id),
+                    };
+                }
                 lambda = new aws.serverless.Function(name, options, handler).lambda;
 
                 // And then a log group and subscription filter for that lambda.
