@@ -6,7 +6,7 @@ import * as Docker from "dockerode";
 import * as pulumi from "pulumi";
 import * as tar from "tar";
 import { ecsClusterARN, ecsClusterEfsMountPath } from "./config";
-import { privateNetwork } from "./infrastructure/network";
+import { network } from "./network";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -129,12 +129,12 @@ interface ContainerPortLoadBalancer {
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
 function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
-    if (!privateNetwork) {
+    if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
     }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const subnetmapping = privateNetwork.subnetIds.map(s => ({ subnetId: s }));
+        const subnetmapping = network.subnetIds.map(s => ({ subnetId: s }));
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
@@ -149,7 +149,7 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
-        vpcId: privateNetwork.vpcId,
+        vpcId: network.vpcId,
         deregistrationDelay: 30,
     });
     // Listen on a new port on the NLB and forward to the target.

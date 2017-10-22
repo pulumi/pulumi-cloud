@@ -3,8 +3,8 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
 import { functionMemorySize } from "./config";
-import { network, runLambdaInVPC } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
+import { network, runLambdaInVPC } from "./network";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
