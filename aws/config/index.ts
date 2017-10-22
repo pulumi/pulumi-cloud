@@ -4,6 +4,12 @@ import * as pulumi from "pulumi";
 
 const config = new pulumi.Config("cloud-aws:config");
 
+// Optionally override the Lambda function memory size for all functions.
+export let functionMemorySize = config.getNumber("functionMemorySize") || 128;
+if (functionMemorySize % 64 !== 0 || functionMemorySize < 128 || functionMemorySize > 1536) {
+    throw new Error("Lambda memory size in MiB must be a multiple of 64 between 128 and 1536.");
+}
+
 // Optional ECS cluster ARN, subnets and VPC.  If not provided, `Service`s and
 // `Task`s are not available for the target environment.
 export let ecsClusterARN = config.get("ecsClusterARN");
