@@ -28,7 +28,7 @@ export let usePrivateNetwork = config.getBoolean("usePrivateNetwork") || false;
 export let externalVpcId = config.get("externalVpcId");
 
 // If using existing VPC, must provide subnets ids for the VPC as a comma-seperated string
-const externalSubnetsString = config.get("externalsSubnets");
+const externalSubnetsString = config.get("externalSubnets");
 export let externalSubnets: string[] | undefined = undefined;
 if (externalSubnetsString) {
     externalSubnets = externalSubnetsString.split(",");
