@@ -37,8 +37,8 @@ export class Function extends pulumi.ComponentResource {
                 };
                 if (privateNetwork) {
                     options.vpcConfig = {
-                        securityGroupIds: [privateNetwork.vpc.defaultSecurityGroupId],
-                        subnetIds: privateNetwork.subnets.map(s => s.id),
+                        securityGroupIds: privateNetwork.securityGroupIds,
+                        subnetIds: privateNetwork.subnetIds,
                     };
                 }
                 lambda = new aws.serverless.Function(name, options, handler).lambda;
