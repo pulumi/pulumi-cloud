@@ -43,7 +43,8 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../../examples/countdown"),
 			Config: map[string]string{
-				"aws:config:region": region,
+				"aws:config:region":                  region,
+				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
