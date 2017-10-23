@@ -61,7 +61,10 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, snapshot := stack.DeserializeCheckpoint(&checkpoint)
+				_, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				if !assert.NotNil(t, err, "expected checkpoint deserialization to succeed") {
+					return
+				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
 				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
 				endpoint := pulumiResources[urn]

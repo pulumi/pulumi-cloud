@@ -33,8 +33,8 @@ func getPulumiResources(t *testing.T, path string) (component.Components, tokens
 	byts, err := ioutil.ReadFile(path)
 	assert.NoError(t, err)
 	json.Unmarshal(byts, &checkpoint)
-	target, snapshot := stack.DeserializeCheckpoint(&checkpoint)
-
+	target, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	assert.NoError(t, err)
 	resources := GetComponents(snapshot.Resources)
 	spew.Dump(resources)
 	return resources, target.Name
