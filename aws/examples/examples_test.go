@@ -62,7 +62,7 @@ func Test_Examples(t *testing.T) {
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				_, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.NotNil(t, err, "expected checkpoint deserialization to succeed") {
+				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
