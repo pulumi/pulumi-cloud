@@ -12,6 +12,7 @@ const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public staticFile: (path: string, filePath: string, contentType?: string) => void;
+    public staticDirectory: (path: string, filePath: string, contentType?: string) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -26,12 +27,14 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
         const app = express();
 
-        // Use 'raw' body parsing to convert populate any request body properly with a buffer.
-        // Pass an always-true function as our options so that always convert the request body
-        // into a buffer no matter what the content type.
+        // Use 'raw' body parsing to convert populate any request body properly with a buffer. Pass
+        // an always-true function as our options so that always convert the request body into a
+        // buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
 
-        this.staticFile = (path, filePath) => {
+        // Express supports serving up static file or directories the same way.  So we just assign
+        // the same implementation to both exported methods.
+        this.staticFile = this.staticDirectory = (path, filePath) => {
             app.use(path, express.static(filePath));
         };
 
