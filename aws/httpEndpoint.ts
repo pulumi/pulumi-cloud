@@ -120,7 +120,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             return;
         }
 
-        console.log("Registering static routes.");
         const method: string = swaggerMethod("GET");
 
         // Create a bucket to place all the static data under.
@@ -142,11 +141,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         // For each static file, just make a simple bucket object to hold it, and create a swagger
         // path that routes from the file path to the arn for the bucket object.
         for (const file of staticFiles) {
-            console.log(`Creating file route for '${file.filePath}' at '${file.path}'.`);
             const key = apiName + sha1hash(method + ":" + file.path);
             const role = createRole(key);
 
-            console.log(`Creating bucket object with key ${key} for '${file.filePath}'`);
             const obj = new aws.s3.BucketObject(key, {
                 bucket: bucket,
                 key: key,
@@ -161,16 +158,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         // Use greedy api-gateway path matching so that we can map a single api gateway route to all
         // the s3 bucket objects we create for the files in these directories.
         for (const directory of staticDirectories) {
-            console.log(`Creating directory route for '${directory.filePath}' at '${directory.path}'.`);
             const directoryKey = apiName + sha1hash(method + ":" + directory.path);
             const role = createRole(directoryKey);
 
             // Recursively walk the directory provided, creating bucket objects for all the files we
             // encounter.
             function walk(dir: string) {
-                console.log(`Walking: ${dir}`);
-
                 const children = fs.readdirSync(dir);
+
                 for (const childName of children) {
                     const childPath = path1.join(dir, childName);
                     const stats = fs.statSync(childPath);
@@ -181,7 +176,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     else if (stats.isFile()) {
                         const childRelativePath = childPath.substr(startDir.length);
                         const childUrn = directoryKey + "/" + childRelativePath;
-                        pulumi.log.info(`Creating bucket object with urn ${childUrn} for '${childPath}'`);
 
                         const obj = new aws.s3.BucketObject(childUrn, {
                             bucket: bucket,
@@ -225,7 +219,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
             const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
                 (pathParameter ? `/{${pathParameter}}` : ``)}`;
-            console.log(`'${file.path}' served at uri: ${uri}`);
 
             const result: SwaggerOperation = {
                 responses: {
