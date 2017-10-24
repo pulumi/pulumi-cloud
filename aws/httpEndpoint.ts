@@ -158,6 +158,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         for (const directory of staticDirectories) {
             console.log(`Creating directory route for '${directory.filePath}' at '${directory.path}'.`);
             const key = apiName + sha1hash(method + ":" + directory.path);
+            const role = createRole(key);
 
             function walk(dir: string) {
                 console.log(`Walking: ${dir}`);
@@ -174,11 +175,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         const childUrn = key + "/" + childRelativePath;
                         pulumi.log.info(`Creating bucket object with urn ${childUrn} for '${childPath}'`);
 
-                        const childKey = apiName + sha1hash(method + ":" + childUrn);
-                        const role = createRole(childKey);
+                        // const childKey = apiName + sha1hash(method + ":" + childUrn);
+                        // const childRole = createRole(childKey);
                         const obj = new aws.s3.BucketObject(childUrn, {
                             bucket: bucket,
-                            key: childKey,
+                            key: childUrn,
                             source: new pulumi.asset.FileAsset(childPath),
                             contentType: directory.contentType,
                         });
@@ -197,7 +198,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             walk(startDir);
 
             const dirPath = directory.path + "/{proxy+}";
-            const pathSpec = createDirectoryPathSpecObject(directory, key + "/{proxy}");
+            const pathSpec = createDirectoryPathSpecObject(directory, key /*+ "/{proxy}"*/, role);
             swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
         }
 
@@ -261,21 +262,74 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         }
 
         async function createDirectoryPathSpecObject(file: StaticFile,
-                                                     key: string): Promise<SwaggerOperation> {
+                                                     key: string,
+                                                     role: aws.iam.Role): Promise<SwaggerOperation> {
 
             const region = aws.config.requireRegion();
             const bucketName: string = await bucket.bucket || "computed(bucket.name)";
 
-            // const uri = "arn:aws:apigateway:" + region + ":s3:path/" + bucketName + "/" + key;
-            const uri = `http://s3-${region}.amazonaws.com/${bucketName}/${key}`;
+            const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+            const uri = "arn:aws:apigateway:" + region + ":s3:path/" + bucketName + "/" + key + "/{proxy}";
+
+
+            //            const uri = `http://s3-${region}.amazonaws.com/${bucketName}/${key}`;
             console.log(`'${file.path}' served at uri: ${uri}`);
 
+            // const result: SwaggerOperation = {
+            //     parameters: [{
+            //        name: "proxy",
+            //        in: "path",
+            //        required: true,
+            //        type: "string",
+            //     }],
+            //     responses: {
+            //         "200": {
+            //             description: "200 response",
+            //             schema: { type: "object" },
+            //             headers: {
+            //                 "Content-Type": { type: "string" },
+            //                 "content-type": { type: "string" },
+            //             },
+            //         },
+            //         "400": {
+            //             description: "400 response",
+            //         },
+            //         "500": {
+            //             description: "500 response",
+            //         },
+            //     },
+            //     "x-amazon-apigateway-integration": {
+            //         // credentials: roleARN,
+            //         requestParameters: {
+            //             ["integration.request.path.proxy"]: "method.request.path.proxy",
+            //         },
+            //         uri: uri,
+            //         passthroughBehavior: "when_no_match",
+            //         httpMethod: "ANY",
+            //         type: "http_proxy",
+            //         responses: {
+            //             "4\\d{2}": {
+            //                 statusCode: "400",
+            //             },
+            //             "default": {
+            //                 statusCode: "200",
+            //                 responseParameters: {
+            //                     "method.response.header.Content-Type": "integration.response.header.Content-Type",
+            //                     "method.response.header.content-type": "integration.response.header.content-type",
+            //                 },
+            //             },
+            //             "5\\d{2}": {
+            //                 statusCode: "500",
+            //             },
+            //         },
+            //     },
+            // };
             const result: SwaggerOperation = {
                 parameters: [{
-                   name: "proxy",
-                   in: "path",
-                   required: true,
-                   type: "string",
+                    name: "proxy",
+                    in: "path",
+                    required: true,
+                    type: "string",
                 }],
                 responses: {
                     "200": {
@@ -294,14 +348,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     },
                 },
                 "x-amazon-apigateway-integration": {
-                    // credentials: roleARN,
+                    credentials: roleARN,
                     requestParameters: {
-                        ["integration.request.path.proxy"]: "method.request.path.proxy",
+                        "integration.request.path.proxy": "method.request.path.proxy",
                     },
                     uri: uri,
                     passthroughBehavior: "when_no_match",
                     httpMethod: "ANY",
-                    type: "http_proxy",
+                    type: "aws",
                     responses: {
                         "4\\d{2}": {
                             statusCode: "400",
@@ -319,6 +373,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     },
                 },
             };
+
             return result;
         }
     }
