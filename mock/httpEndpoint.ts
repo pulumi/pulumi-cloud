@@ -31,8 +31,6 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         // buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
 
-        // Express supports serving up static file or directories the same way.  So we just assign
-        // the same implementation to both exported methods.
         this.static = (path, localPath) => {
             app.use(path, express.static(localPath));
         };
