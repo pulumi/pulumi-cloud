@@ -47,3 +47,9 @@ if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
         "when setting 'cloud-asws:config:externalVpcId'",
     );
 }
+
+// Optionally configure proeprties of the automatically provisioned ECS Cluster.
+export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");
+export let ecsAutoClusterDesiredCapacity = config.getNumber("ecsAutoClusterDesiredCapacity");
+export let ecsAutoClusterMinSize = config.getNumber("ecsAutoClusterMinSize");
+export let ecsAutoClusterMaxSize = config.getNumber("ecsAutoClusterMaxSize");

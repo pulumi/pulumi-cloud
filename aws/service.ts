@@ -5,8 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as Docker from "dockerode";
 import * as pulumi from "pulumi";
 import * as tar from "tar";
-import { ecsClusterARN, ecsClusterEfsMountPath } from "./config";
-import { network } from "./network";
+import { cluster, network } from "./network";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -134,13 +133,16 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const subnetmapping = network.subnetIds.map(s => ({ subnetId: s }));
+        const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
+        // Make it internal-only if private subnets are being used. TODO: should
+        // allow overriding this with container port specification.
+        const internal = network.privateSubnets;
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
                 subnetMapping: subnetmapping,
-                internal: false,
+                internal: internal,
             }),
         );
     }
@@ -386,6 +388,9 @@ interface TaskDefinition {
     logGroup: aws.cloudwatch.LogGroup;
 }
 
+// BUGBUG: DON'T HARDCODE THIS.
+const ecsClusterEfsMountPath = "/efs";
+
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
@@ -454,7 +459,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
-        if (!ecsClusterARN) {
+        if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
@@ -498,7 +503,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const service = new aws.ecs.Service(name, {
                     desiredCount: replicas,
                     taskDefinition: taskDefinition.task.arn,
-                    cluster: ecsClusterARN,
+                    cluster: cluster!.ecsClusterARN,
                     loadBalancers: loadBalancers,
                     iamRole: getServiceLoadBalancerRole().arn,
                 });
@@ -582,7 +587,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
-        if (!ecsClusterARN) {
+        if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
@@ -598,7 +603,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             },
         );
 
-        const clusterARN = ecsClusterARN;
+        const clusterARN = cluster.ecsClusterARN;
         const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
@@ -621,9 +626,13 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 return <string><any>taskDefinition.arn;
             }
 
+            function getClusterARN(): string {
+                return <string><any>clusterARN;
+            }
+
             // Run the task
             const request: _awsSdkTypesOnly.ECS.RunTaskRequest = {
-                cluster: clusterARN,
+                cluster: getClusterARN(),
                 taskDefinition: getTypeDefinitionARN(),
                 overrides: {
                     containerOverrides: [

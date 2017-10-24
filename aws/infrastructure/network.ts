@@ -12,9 +12,11 @@ export interface NetworkArgs {
 }
 
 export class Network {
-    public vpcId: pulumi.ComputedValue<string>;
-    public securityGroupIds: pulumi.ComputedValue<string>[];
-    public subnetIds: pulumi.ComputedValue<string>[];
+    public vpcId: pulumi.Computed<string>;
+    public privateSubnets: boolean;
+    public securityGroupIds: pulumi.Computed<string>[];
+    public subnetIds: pulumi.Computed<string>[];
+    public publicSubnetIds: pulumi.Computed<string>[];
     public internetGateway?: aws.ec2.InternetGateway;
     public natGateways?: aws.ec2.NatGateway[];
 
@@ -23,7 +25,7 @@ export class Network {
         if (numberOfAvailabilityZones < 1 || numberOfAvailabilityZones > 2) {
             throw new Error(`Unsupported number of availability zones for network: ${numberOfAvailabilityZones}`);
         }
-        const privateSubnets = args.privateSubnets || false;
+        this.privateSubnets = args.privateSubnets || false;
 
         const vpc = new aws.ec2.Vpc(`${name}-vpc`, {
             cidrBlock: "10.10.0.0/16",
@@ -52,6 +54,7 @@ export class Network {
 
         this.natGateways = [];
         this.subnetIds = [];
+        this.publicSubnetIds = [];
 
         for (let i = 0; i < numberOfAvailabilityZones; i++) {
 
@@ -60,7 +63,7 @@ export class Network {
                 vpcId: vpc.id,
                 availabilityZone: getAwsAz(i),
                 cidrBlock: `10.10.${i}.0/24`,         // IDEA: Consider larger default CIDR block sizing
-                mapPublicIpOnLaunch: !privateSubnets, // Only assign public IP if we are exposing public subnets
+                mapPublicIpOnLaunch: !this.privateSubnets, // Only assign public IP if we are exposing public subnets
             });
             this.subnetIds.push(subnet.id);
 
@@ -68,7 +71,7 @@ export class Network {
             // whether we are in a public or private subnet
             let subnetRouteTable: aws.ec2.RouteTable;
 
-            if (privateSubnets) {
+            if (this.privateSubnets) {
 
                 // We need a public subnet for the NAT Gateway
                 const natGatewayPublicSubnet = new aws.ec2.Subnet(`${name}-nat-subnet${i}`, {
@@ -77,6 +80,7 @@ export class Network {
                     cidrBlock: `10.10.${i+64}.0/24`, // Use top half of the subnet space
                     mapPublicIpOnLaunch: true,        // Always assign a public IP in NAT subnet
                 });
+                this.publicSubnetIds.push(natGatewayPublicSubnet.id);
 
                 // And we need to route traffic from that public subnet to the Internet Gateway
                 const natGatewayRoutes = new aws.ec2.RouteTableAssociation(`${name}-nat-publicRouteTable${i}`, {
@@ -107,9 +111,11 @@ export class Network {
 
                 // Route through the NAT gateway for the private subnet
                 subnetRouteTable = natRouteTable;
-            } else {
+            } else /* !privateSubnets */{
                 // Route directly to the Internet Gateway for the public subnet
                 subnetRouteTable = publicRouteTable;
+                // The subnet is public, so register it as our public subnet
+                this.publicSubnetIds.push(subnet.id);
             }
 
             const routTableAssociation = new aws.ec2.RouteTableAssociation(`${name}-subnet${i}RouteTable`, {
@@ -117,5 +123,6 @@ export class Network {
                 routeTableId: subnetRouteTable.id,
             });
         }
+
     }
 }
