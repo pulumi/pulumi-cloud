@@ -154,7 +154,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 contentType: file.contentType,
             });
 
-            const pathSpec = createPathSpecObject(file, key, role, /*isProxy*/ false);
+            const pathSpec = createPathSpecObject(file, key, role);
             swagger.paths[file.path] = { [method]: pathSpec };
         }
 
@@ -212,7 +212,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             // Take whatever path the client wants to host this folder at, and add the
             // greedy matching predicate to the end.
             const dirPath = directory.path + "/{proxy+}";
-            const pathSpec = createPathSpecObject(directory, directoryKey + "/{proxy}", role, /*isProxy*/ true);
+            const pathSpec = createPathSpecObject(directory, directoryKey, role, "proxy");
             swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
         }
 
@@ -223,13 +223,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         async function createPathSpecObject(file: StaticFile,
                                             key: string,
                                             role: aws.iam.Role,
-                                            isProxy: boolean): Promise<SwaggerOperation> {
+                                            pathParameter?: string): Promise<SwaggerOperation> {
 
             const region = aws.config.requireRegion();
             const bucketName: string = await bucket.bucket || "computed(bucket.name)";
             const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
 
-            const uri = "arn:aws:apigateway:" + region + ":s3:path/" + bucketName + "/" + key;
+            const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
+                (pathParameter ? `/{${pathParameter}}` : ``)}`;
             console.log(`'${file.path}' served at uri: ${uri}`);
 
             const result: SwaggerOperation = {
@@ -273,18 +274,16 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 },
             };
 
-            // If this is a proxy, then we have to add a little more information so that the greedy
-            // matching parameter is detected and mapped properly to the s3 bucket uri template.
-            if (isProxy) {
+            if (pathParameter) {
                 result.parameters = [{
-                    name: "proxy",
+                    name: pathParameter,
                     in: "path",
                     required: true,
                     type: "string",
                 }];
 
                 result["x-amazon-apigateway-integration"].requestParameters = {
-                    "integration.request.path.proxy": "method.request.path.proxy",
+                    [`integration.request.path.${pathParameter}`]: `method.request.path.${pathParameter}`,
                 };
             }
 
