@@ -130,6 +130,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
         // For each static file, just make a simple bucket object to hold it, and create a swagger
         // path that routes from the file path to the arn for the bucket object.
+        //
+        // For static directories, use greedy api-gateway path matching so that we can map a single
+        // api gateway route to all the s3 bucket objects we create for the files in these
+        // directories.
         for (const route of staticRoutes) {
             const stat = fs.statSync(route.localPath);
             if (stat.isFile()) {
@@ -173,8 +177,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             swagger.paths[route.path] = { [method]: pathSpec };
         }
 
-        // Use greedy api-gateway path matching so that we can map a single api gateway route to all
-        // the s3 bucket objects we create for the files in these directories.
         function processDirectory(directory: StaticRoute) {
             const directoryKey = apiName + sha1hash(method + ":" + directory.path);
             const role = createRole(directoryKey);
@@ -353,77 +355,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 }
 
-async function createPathSpecObject(
-        bucket: aws.s3.Bucket,
-        key: string,
-        role: aws.iam.Role,
-        pathParameter?: string): Promise<SwaggerOperation> {
-
-    const region = aws.config.requireRegion();
-    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
-    const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-
-    const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
-        (pathParameter ? `/{${pathParameter}}` : ``)}`;
-
-    const result: SwaggerOperation = {
-        responses: {
-            "200": {
-                description: "200 response",
-                schema: { type: "object" },
-                headers: {
-                    "Content-Type": { type: "string" },
-                    "content-type": { type: "string" },
-                },
-            },
-            "400": {
-                description: "400 response",
-            },
-            "500": {
-                description: "500 response",
-            },
-        },
-        "x-amazon-apigateway-integration": {
-            credentials: roleARN,
-            uri: uri,
-            passthroughBehavior: "when_no_match",
-            httpMethod: "GET",
-            type: "aws",
-            responses: {
-                "4\\d{2}": {
-                    statusCode: "400",
-                },
-                "default": {
-                    statusCode: "200",
-                    responseParameters: {
-                        "method.response.header.Content-Type": "integration.response.header.Content-Type",
-                        "method.response.header.content-type": "integration.response.header.content-type",
-                    },
-                },
-                "5\\d{2}": {
-                    statusCode: "500",
-                },
-            },
-        },
-    };
-
-    if (pathParameter) {
-        result.parameters = [{
-            name: pathParameter,
-            in: "path",
-            required: true,
-            type: "string",
-        }];
-
-        result["x-amazon-apigateway-integration"].requestParameters = {
-            [`integration.request.path.${pathParameter}`]: `method.request.path.${pathParameter}`,
-        };
-    }
-
-    return result;
-}
-
-
 // sha1hash returns a partial SHA1 hash of the input string.
 function sha1hash(s: string): string {
     const shasum: crypto.Hash = crypto.createHash("sha1");
@@ -524,6 +455,76 @@ async function createPathSpecLambda(lambda: aws.lambda.Function): Promise<Swagge
             type: "aws_proxy",
         },
     };
+}
+
+async function createPathSpecObject(
+        bucket: aws.s3.Bucket,
+        key: string,
+        role: aws.iam.Role,
+        pathParameter?: string): Promise<SwaggerOperation> {
+
+    const region = aws.config.requireRegion();
+    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
+    const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+
+    const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
+        (pathParameter ? `/{${pathParameter}}` : ``)}`;
+
+    const result: SwaggerOperation = {
+        responses: {
+            "200": {
+                description: "200 response",
+                schema: { type: "object" },
+                headers: {
+                    "Content-Type": { type: "string" },
+                    "content-type": { type: "string" },
+                },
+            },
+            "400": {
+                description: "400 response",
+            },
+            "500": {
+                description: "500 response",
+            },
+        },
+        "x-amazon-apigateway-integration": {
+            credentials: roleARN,
+            uri: uri,
+            passthroughBehavior: "when_no_match",
+            httpMethod: "GET",
+            type: "aws",
+            responses: {
+                "4\\d{2}": {
+                    statusCode: "400",
+                },
+                "default": {
+                    statusCode: "200",
+                    responseParameters: {
+                        "method.response.header.Content-Type": "integration.response.header.Content-Type",
+                        "method.response.header.content-type": "integration.response.header.content-type",
+                    },
+                },
+                "5\\d{2}": {
+                    statusCode: "500",
+                },
+            },
+        },
+    };
+
+    if (pathParameter) {
+        result.parameters = [{
+            name: pathParameter,
+            in: "path",
+            required: true,
+            type: "string",
+        }];
+
+        result["x-amazon-apigateway-integration"].requestParameters = {
+            [`integration.request.path.${pathParameter}`]: `method.request.path.${pathParameter}`,
+        };
+    }
+
+    return result;
 }
 
 function swaggerMethod(method: string): string {
