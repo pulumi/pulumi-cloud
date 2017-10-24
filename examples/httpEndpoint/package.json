@@ -1,5 +1,5 @@
 {
-    "name": "timer",
+    "name": "httpEndpointExample",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
