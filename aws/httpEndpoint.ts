@@ -151,14 +151,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 contentType: file.contentType,
             });
 
-            const pathSpec = createFilePathSpecObject(file, key, role);
+            const pathSpec = createPathSpecObject(file, key, role, false);
             swagger.paths[file.path] = { [method]: pathSpec };
         }
 
         for (const directory of staticDirectories) {
             console.log(`Creating directory route for '${directory.filePath}' at '${directory.path}'.`);
-            const key = apiName + sha1hash(method + ":" + directory.path);
-            const role = createRole(key);
+            const directoryKey = apiName + sha1hash(method + ":" + directory.path);
+            const role = createRole(directoryKey);
 
             function walk(dir: string) {
                 console.log(`Walking: ${dir}`);
@@ -172,7 +172,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     }
                     else if (stats.isFile()) {
                         const childRelativePath = childPath.substr(startDir.length);
-                        const childUrn = key + "/" + childRelativePath;
+                        const childUrn = directoryKey + "/" + childRelativePath;
                         pulumi.log.info(`Creating bucket object with urn ${childUrn} for '${childPath}'`);
 
                         // const childKey = apiName + sha1hash(method + ":" + childUrn);
@@ -198,7 +198,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             walk(startDir);
 
             const dirPath = directory.path + "/{proxy+}";
-            const pathSpec = createDirectoryPathSpecObject(directory, key /*+ "/{proxy}"*/, role);
+            const pathSpec = createPathSpecObject(directory, directoryKey + "/{proxy}", role, true);
             swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
         }
 
@@ -206,9 +206,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
         // local functions
 
-        async function createFilePathSpecObject(file: StaticFile,
-                                                key: string,
-                                                role: aws.iam.Role): Promise<SwaggerOperation> {
+        async function createPathSpecObject(file: StaticFile,
+                                            key: string,
+                                            role: aws.iam.Role,
+                                            isProxy: boolean): Promise<SwaggerOperation> {
 
             const region = aws.config.requireRegion();
             const bucketName: string = await bucket.bucket || "computed(bucket.name)";
@@ -258,124 +259,79 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 },
             };
 
-            return result;
-        }
-
-        async function createDirectoryPathSpecObject(file: StaticFile,
-                                                     key: string,
-                                                     role: aws.iam.Role): Promise<SwaggerOperation> {
-
-            const region = aws.config.requireRegion();
-            const bucketName: string = await bucket.bucket || "computed(bucket.name)";
-
-            const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-            const uri = "arn:aws:apigateway:" + region + ":s3:path/" + bucketName + "/" + key + "/{proxy}";
-
-
-            //            const uri = `http://s3-${region}.amazonaws.com/${bucketName}/${key}`;
-            console.log(`'${file.path}' served at uri: ${uri}`);
-
-            // const result: SwaggerOperation = {
-            //     parameters: [{
-            //        name: "proxy",
-            //        in: "path",
-            //        required: true,
-            //        type: "string",
-            //     }],
-            //     responses: {
-            //         "200": {
-            //             description: "200 response",
-            //             schema: { type: "object" },
-            //             headers: {
-            //                 "Content-Type": { type: "string" },
-            //                 "content-type": { type: "string" },
-            //             },
-            //         },
-            //         "400": {
-            //             description: "400 response",
-            //         },
-            //         "500": {
-            //             description: "500 response",
-            //         },
-            //     },
-            //     "x-amazon-apigateway-integration": {
-            //         // credentials: roleARN,
-            //         requestParameters: {
-            //             ["integration.request.path.proxy"]: "method.request.path.proxy",
-            //         },
-            //         uri: uri,
-            //         passthroughBehavior: "when_no_match",
-            //         httpMethod: "ANY",
-            //         type: "http_proxy",
-            //         responses: {
-            //             "4\\d{2}": {
-            //                 statusCode: "400",
-            //             },
-            //             "default": {
-            //                 statusCode: "200",
-            //                 responseParameters: {
-            //                     "method.response.header.Content-Type": "integration.response.header.Content-Type",
-            //                     "method.response.header.content-type": "integration.response.header.content-type",
-            //                 },
-            //             },
-            //             "5\\d{2}": {
-            //                 statusCode: "500",
-            //             },
-            //         },
-            //     },
-            // };
-            const result: SwaggerOperation = {
-                parameters: [{
+            if (isProxy) {
+                result.parameters = [{
                     name: "proxy",
                     in: "path",
                     required: true,
                     type: "string",
-                }],
-                responses: {
-                    "200": {
-                        description: "200 response",
-                        schema: { type: "object" },
-                        headers: {
-                            "Content-Type": { type: "string" },
-                            "content-type": { type: "string" },
-                        },
-                    },
-                    "400": {
-                        description: "400 response",
-                    },
-                    "500": {
-                        description: "500 response",
-                    },
-                },
-                "x-amazon-apigateway-integration": {
-                    credentials: roleARN,
-                    requestParameters: {
-                        "integration.request.path.proxy": "method.request.path.proxy",
-                    },
-                    uri: uri,
-                    passthroughBehavior: "when_no_match",
-                    httpMethod: "ANY",
-                    type: "aws",
-                    responses: {
-                        "4\\d{2}": {
-                            statusCode: "400",
-                        },
-                        "default": {
-                            statusCode: "200",
-                            responseParameters: {
-                                "method.response.header.Content-Type": "integration.response.header.Content-Type",
-                                "method.response.header.content-type": "integration.response.header.content-type",
-                            },
-                        },
-                        "5\\d{2}": {
-                            statusCode: "500",
-                        },
-                    },
-                },
-            };
+                }];
+
+                result["x-amazon-apigateway-integration"].requestParameters = {
+                    "integration.request.path.proxy": "method.request.path.proxy",
+                };
+            }
 
             return result;
         }
+        // async function createDirectoryPathSpecObject(file: StaticFile,
+        //                                              key: string,
+        //                                              role: aws.iam.Role): Promise<SwaggerOperation> {
+
+        //     const region = aws.config.requireRegion();
+        //     const bucketName: string = await bucket.bucket || "computed(bucket.name)";
+
+        //     const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+        //     const uri = "arn:aws:apigateway:" + region + ":s3:path/" + bucketName + "/" + key;
+
+        //     console.log(`'${file.path}' served at uri: ${uri}`);
+
+        //     const result: SwaggerOperation = {
+        //         responses: {
+        //             "200": {
+        //                 description: "200 response",
+        //                 schema: { type: "object" },
+        //                 headers: {
+        //                     "Content-Type": { type: "string" },
+        //                     "content-type": { type: "string" },
+        //                 },
+        //             },
+        //             "400": {
+        //                 description: "400 response",
+        //             },
+        //             "500": {
+        //                 description: "500 response",
+        //             },
+        //         },
+        //         "x-amazon-apigateway-integration": {
+        //             credentials: roleARN,
+        //             requestParameters: {
+        //                 "integration.request.path.proxy": "method.request.path.proxy",
+        //             },
+        //             uri: uri,
+        //             passthroughBehavior: "when_no_match",
+        //             httpMethod: "ANY",
+        //             type: "aws",
+        //             responses: {
+        //                 "4\\d{2}": {
+        //                     statusCode: "400",
+        //                 },
+        //                 "default": {
+        //                     statusCode: "200",
+        //                     responseParameters: {
+        //                         "method.response.header.Content-Type": "integration.response.header.Content-Type",
+        //                         "method.response.header.content-type": "integration.response.header.content-type",
+        //                     },
+        //                 },
+        //                 "5\\d{2}": {
+        //                     statusCode: "500",
+        //                 },
+        //             },
+        //         },
+        //     };
+
+        //     return result;
+        // }
     }
 
     private static registerRoutes(apiName: string, routes: Route[], swagger: SwaggerSpec): {[key: string]: Function} {
