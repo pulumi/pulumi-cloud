@@ -158,14 +158,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             swagger.paths[file.path] = { [method]: pathSpec };
         }
 
-        // Static directories are more complex.  There is a limit to the amount of api gateway paths
-        // you create.  In order to not hit that limit, we instead use the 'greedy match' facility
-        // of api-gateway to create a single gateway path that will capture the path the user
-        // provides, and then map it to an s3 bucket path.
-        //
-        // i.e. we create a path like /folder/{proxy+}   Then, if a user hits /folder/a/b/c.tx we
-        // will capture the "a/b/c.txt" portion and rewrite it to our bucket prefix to map to the
-        // right bucket object.
+        // Use greedy api-gateway path matching so that we can map a single api gateway route to all
+        // the s3 bucket objects we create for the files in these directories.
         for (const directory of staticDirectories) {
             console.log(`Creating directory route for '${directory.filePath}' at '${directory.path}'.`);
             const directoryKey = apiName + sha1hash(method + ":" + directory.path);
