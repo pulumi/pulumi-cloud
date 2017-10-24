@@ -464,8 +464,8 @@ async function createPathSpecObject(
         pathParameter?: string): Promise<SwaggerOperation> {
 
     const region = aws.config.requireRegion();
-    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
     const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
 
     const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
         (pathParameter ? `/{${pathParameter}}` : ``)}`;
