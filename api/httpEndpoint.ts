@@ -115,23 +115,16 @@ export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
  */
 export interface HttpEndpoint {
     /**
-     * staticFile serves a static file from within the source folder at the requested path.
+     * static serves a file or directory from within the source folder at the requested path.
      *
      * @param path The route path at which to serve the file.
-     * @param filePath The local file path relative to the Pulumi program folder.
-     * @param contentType The `content-type` to serve the file as.
+     * @param localPath The local path.  If not absolute, it is considered relative to the Pulumi
+     *                  program folder.
+     * @param contentType The `content-type` to serve the file as.  Only valid when localPath points
+     *                    to a file.  If localPath points to a directory, the content types for all
+     *                    files will be inferred.
      */
-    staticFile(path: string, filePath: string, contentType?: string): void;
-
-    /**
-     * staticDirectory serves all the files in a directory from within the source folder at the
-     * requested path.
-     *
-     * @param path The route path at which to serve the directory.
-     * @param filePath The local directory path relative to the Pulumi program folder.
-     * @param contentType The `content-type` to serve all the files in the directory as.
-     */
-    staticDirectory(path: string, filePath: string, contentType?: string): void;
+    static(path: string, localPath: string, contentType?: string): void;
 
     /**
      * Routes any requests with given HTTP method on the given path to the

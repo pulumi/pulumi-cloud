@@ -11,8 +11,7 @@ import * as utils from "./utils";
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
-    public staticFile: (path: string, filePath: string, contentType?: string) => void;
-    public staticDirectory: (path: string, filePath: string, contentType?: string) => void;
+    public static: (path: string, localPath: string, contentType?: string) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -34,8 +33,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
         // Express supports serving up static file or directories the same way.  So we just assign
         // the same implementation to both exported methods.
-        this.staticFile = this.staticDirectory = (path, filePath) => {
-            app.use(path, express.static(filePath));
+        this.static = (path, localPath) => {
+            app.use(path, express.static(localPath));
         };
 
         this.route = (method, path, ...handlers) => {

@@ -4,7 +4,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
 
 const endpoint = new cloud.HttpEndpoint("endpoint1");
-endpoint.staticFile("/test.json", "package.json", "text/plain");
-endpoint.staticDirectory("/folder", "outer", "text/plain");
+endpoint.static("/test.json", "package.json", "text/plain");
+endpoint.static("/folder", "outer");
 
 endpoint.publish();

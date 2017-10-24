@@ -4,14 +4,15 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as crypto from "crypto";
 import * as fs from "fs";
+import * as mmmagic from "mmmagic";
 import * as path1 from "path";
 import * as pulumi from "pulumi";
 import { Function } from "./function";
 
-// StaticFile is a registered static file route, backed by an S3 bucket.
-export interface StaticFile {
+// StaticRoute is a registered static file route, backed by an S3 bucket.
+export interface StaticRoute {
     path: string;
-    filePath: string;
+    localPath: string;
     contentType?: string;
 }
 
@@ -24,8 +25,7 @@ export interface Route {
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     private readonly name: string;
-    private readonly staticFiles: StaticFile[];
-    private readonly staticDirectories: StaticFile[];
+    private readonly staticRoutes: StaticRoute[];
     private readonly routes: Route[];
     private readonly customDomains: cloud.Domain[];
     private isPublished: boolean;
@@ -34,25 +34,17 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
     constructor(name: string) {
         this.name = name;
-        this.staticFiles = [];
-        this.staticDirectories = [];
+        this.staticRoutes = [];
         this.routes = [];
         this.customDomains = [];
         this.isPublished = false;
     }
 
-    public staticFile(path: string, filePath: string, contentType?: string) {
+    public static(path: string, localPath: string, contentType?: string) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
-        this.staticFiles.push({ path: path, filePath: filePath, contentType: contentType });
-    }
-
-    public staticDirectory(path: string, filePath: string, contentType?: string) {
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        this.staticDirectories.push({ path: path, filePath: filePath, contentType: contentType });
+        this.staticRoutes.push({ path, localPath, contentType });
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
@@ -96,14 +88,13 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         }
         // Create a unique name prefix that includes the name plus all the registered routes.
         this.isPublished = true;
-        return new HttpDeployment(this.name, this.staticFiles, this.staticDirectories, this.routes, this.customDomains);
+        return new HttpDeployment(this.name, this.staticRoutes, this.routes, this.customDomains);
     }
 }
 
 // HttpDeployment actually performs a deployment of a set of HTTP API Gateway resources.
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
-    public readonly staticFiles: StaticFile[];
-    public readonly staticDirectories: StaticFile[];
+    public readonly staticRoutes: StaticRoute[];
     public readonly customDomains: cloud.Domain[];
 
     public /*out*/ readonly url: pulumi.Computed<string>; // the URL for this deployment.
@@ -111,12 +102,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
     private static registerStaticRoutes(
             apiName: string,
-            staticFiles: StaticFile[],
-            staticDirectories: StaticFile[],
+            staticRoutes: StaticRoute[],
             swagger: SwaggerSpec) {
 
         // If there are no stati files or directories, then we can bail out early.
-        if (staticFiles.length === 0 && staticDirectories.length === 0) {
+        if (staticRoutes.length === 0) {
             return;
         }
 
@@ -140,24 +130,52 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
         // For each static file, just make a simple bucket object to hold it, and create a swagger
         // path that routes from the file path to the arn for the bucket object.
-        for (const file of staticFiles) {
-            const key = apiName + sha1hash(method + ":" + file.path);
-            const role = createRole(key);
+        for (const route of staticRoutes) {
+            const stat = fs.statSync(route.localPath);
+            if (stat.isFile()) {
+                processFile(route);
+            }
+            else if (stat.isDirectory()) {
+                processDirectory(route);
+            }
+        }
 
+        async function determineContentTypeAsync(path: string): Promise<string> {
+            return new Promise<string>((resolve, reject) => {
+                const magic = new mmmagic.Magic(mmmagic.MAGIC_MIME_TYPE);
+                magic.detectFile(path, (err, result) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(result);
+                    }
+                });
+            });
+        }
+
+        async function createBucketObjectAsync(key: string, localPath: string, contentType?: string) {
             const obj = new aws.s3.BucketObject(key, {
                 bucket: bucket,
                 key: key,
-                source: new pulumi.asset.FileAsset(file.filePath),
-                contentType: file.contentType,
+                source: new pulumi.asset.FileAsset(localPath),
+                contentType: contentType || await determineContentTypeAsync(localPath),
             });
+        }
 
-            const pathSpec = this.createPathSpecObject(bucket, file, key, role);
-            swagger.paths[file.path] = { [method]: pathSpec };
+        function processFile(route: StaticRoute) {
+            const key = apiName + sha1hash(method + ":" + route.path);
+            const role = createRole(key);
+
+            createBucketObjectAsync(key, route.localPath, route.contentType);
+
+            const pathSpec = createPathSpecObject(bucket, key, role);
+            swagger.paths[route.path] = { [method]: pathSpec };
         }
 
         // Use greedy api-gateway path matching so that we can map a single api gateway route to all
         // the s3 bucket objects we create for the files in these directories.
-        for (const directory of staticDirectories) {
+        function processDirectory(directory: StaticRoute) {
             const directoryKey = apiName + sha1hash(method + ":" + directory.path);
             const role = createRole(directoryKey);
 
@@ -177,19 +195,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         const childRelativePath = childPath.substr(startDir.length);
                         const childUrn = directoryKey + "/" + childRelativePath;
 
-                        const obj = new aws.s3.BucketObject(childUrn, {
-                            bucket: bucket,
-                            key: childUrn,
-                            source: new pulumi.asset.FileAsset(childPath),
-                            contentType: directory.contentType,
-                        });
+                        createBucketObjectAsync(childUrn, childPath);
                     }
                 }
             }
 
-            let startDir = directory.filePath.startsWith("/")
-                ? directory.filePath
-                : path1.join(process.cwd(), directory.filePath);
+            let startDir = directory.localPath.startsWith("/")
+                ? directory.localPath
+                : path1.join(process.cwd(), directory.localPath);
 
             if (!startDir.endsWith(path1.sep)) {
                 startDir = path1.join(startDir, path1.sep);
@@ -200,81 +213,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             // Take whatever path the client wants to host this folder at, and add the
             // greedy matching predicate to the end.
             const dirPath = directory.path + "/{proxy+}";
-            const pathSpec = this.createPathSpecObject(
-                bucket, directory, directoryKey, role, "proxy");
+            const pathSpec = createPathSpecObject(bucket, directoryKey, role, "proxy");
             swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
         }
-    }
-
-    private static async createPathSpecObject(
-            bucket: aws.s3.Bucket,
-            file: StaticFile,
-            key: string,
-            role: aws.iam.Role,
-            pathParameter?: string): Promise<SwaggerOperation> {
-
-        const region = aws.config.requireRegion();
-        const bucketName: string = await bucket.bucket || "computed(bucket.name)";
-        const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-
-        const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
-            (pathParameter ? `/{${pathParameter}}` : ``)}`;
-
-        const result: SwaggerOperation = {
-            responses: {
-                "200": {
-                    description: "200 response",
-                    schema: { type: "object" },
-                    headers: {
-                        "Content-Type": { type: "string" },
-                        "content-type": { type: "string" },
-                    },
-                },
-                "400": {
-                    description: "400 response",
-                },
-                "500": {
-                    description: "500 response",
-                },
-            },
-            "x-amazon-apigateway-integration": {
-                credentials: roleARN,
-                uri: uri,
-                passthroughBehavior: "when_no_match",
-                httpMethod: "GET",
-                type: "aws",
-                responses: {
-                    "4\\d{2}": {
-                        statusCode: "400",
-                    },
-                    "default": {
-                        statusCode: "200",
-                        responseParameters: {
-                            "method.response.header.Content-Type": "integration.response.header.Content-Type",
-                            "method.response.header.content-type": "integration.response.header.content-type",
-                        },
-                    },
-                    "5\\d{2}": {
-                        statusCode: "500",
-                    },
-                },
-            },
-        };
-
-        if (pathParameter) {
-            result.parameters = [{
-                name: pathParameter,
-                in: "path",
-                required: true,
-                type: "string",
-            }];
-
-            result["x-amazon-apigateway-integration"].requestParameters = {
-                [`integration.request.path.${pathParameter}`]: `method.request.path.${pathParameter}`,
-            };
-        }
-
-        return result;
     }
 
     private static registerRoutes(apiName: string, routes: Route[], swagger: SwaggerSpec): {[key: string]: Function} {
@@ -340,23 +281,21 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 
     constructor(name: string,
-                staticFiles: StaticFile[],
-                staticDirectories: StaticFile[],
+                staticRoutes: StaticRoute[],
                 routes: Route[],
                 customDomains: cloud.Domain[]) {
         super(
             "cloud:http:HttpEndpoint",
             name,
             {
-                staticFiles: staticFiles,
-                staticDirectories: staticDirectories,
+                staticRoutes: staticRoutes,
                 routes: routes,
                 customDomains: customDomains,
             },
             () => {
                 // Create a SwaggerSpec and then expand out all of the static files and routes.
                 const swagger: SwaggerSpec = createBaseSpec(name);
-                HttpDeployment.registerStaticRoutes(name, staticFiles, staticDirectories, swagger);
+                HttpDeployment.registerStaticRoutes(name, staticRoutes, swagger);
                 const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(name, routes, swagger);
 
                 // Now stringify the resulting swagger specification and create the various API Gateway objects.
@@ -413,6 +352,77 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         );
     }
 }
+
+async function createPathSpecObject(
+        bucket: aws.s3.Bucket,
+        key: string,
+        role: aws.iam.Role,
+        pathParameter?: string): Promise<SwaggerOperation> {
+
+    const region = aws.config.requireRegion();
+    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
+    const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+
+    const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
+        (pathParameter ? `/{${pathParameter}}` : ``)}`;
+
+    const result: SwaggerOperation = {
+        responses: {
+            "200": {
+                description: "200 response",
+                schema: { type: "object" },
+                headers: {
+                    "Content-Type": { type: "string" },
+                    "content-type": { type: "string" },
+                },
+            },
+            "400": {
+                description: "400 response",
+            },
+            "500": {
+                description: "500 response",
+            },
+        },
+        "x-amazon-apigateway-integration": {
+            credentials: roleARN,
+            uri: uri,
+            passthroughBehavior: "when_no_match",
+            httpMethod: "GET",
+            type: "aws",
+            responses: {
+                "4\\d{2}": {
+                    statusCode: "400",
+                },
+                "default": {
+                    statusCode: "200",
+                    responseParameters: {
+                        "method.response.header.Content-Type": "integration.response.header.Content-Type",
+                        "method.response.header.content-type": "integration.response.header.content-type",
+                    },
+                },
+                "5\\d{2}": {
+                    statusCode: "500",
+                },
+            },
+        },
+    };
+
+    if (pathParameter) {
+        result.parameters = [{
+            name: pathParameter,
+            in: "path",
+            required: true,
+            type: "string",
+        }];
+
+        result["x-amazon-apigateway-integration"].requestParameters = {
+            [`integration.request.path.${pathParameter}`]: `method.request.path.${pathParameter}`,
+        };
+    }
+
+    return result;
+}
+
 
 // sha1hash returns a partial SHA1 hash of the input string.
 function sha1hash(s: string): string {
