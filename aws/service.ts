@@ -44,7 +44,7 @@ interface ECSContainerDefinition {
     dockerLabels?: { [label: string]: string };
     dockerSecurityOptions?: string[];
     entryPoint?: string[];
-    environment?: { name: string; value: string; }[];
+    environment?: ImageEnvironment;
     essential?: boolean;
     extraHosts?: { hostname: string; ipAddress: string }[];
     hostname?: string;
@@ -176,11 +176,19 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
 
 interface ImageOptions {
     image: string;
-    environment: { name: string; value: string; }[];
+    environment: ImageEnvironment;
 }
 
-function ecsEnvironmentFromMap(environment: {[name: string]: string} | undefined): { name: string, value: string }[] {
-    const result: { name: string; value: string; }[] = [];
+type ImageEnvironment = ImageEnvironmentEntry[];
+
+interface ImageEnvironmentEntry {
+    name: string;
+    value: pulumi.ComputedValue<string>;
+}
+
+function ecsEnvironmentFromMap(
+        environment: {[name: string]: pulumi.ComputedValue<string>} | undefined): ImageEnvironment {
+    const result: ImageEnvironment = [];
     if (environment) {
         for (const name of Object.keys(environment)) {
             result.push({ name: name, value: environment[name] });
@@ -322,7 +330,7 @@ async function computeImage(
     container: cloud.Container,
     repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
 
-    const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
+    const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
     if (container.image) {
         return { image: container.image, environment: environment };
     } else if (container.build) {
@@ -602,7 +610,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         );
 
         const clusterARN = ecsClusterARN;
-        const environment: { name: string, value: string }[] = ecsEnvironmentFromMap(container.environment);
+        const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
             const ecs = new awssdk.ECS();
@@ -615,6 +623,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
 
             function getTypeDefinitionARN(): string {
+                // BUGBUG[pulumi/pulumi#459]:
+                //
                 // Hack: Because of our outside/inside system for pulumi, typeDefinition.arg is seen as a
                 // Computed<string> on the outside, but a string on the inside. Of course, there's no
                 // way to make TypeScript aware of that.  So we just fool the typesystem with these
@@ -622,6 +632,13 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 //
                 // see: https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955
                 return <string><any>taskDefinition.arn;
+            }
+
+            // Ensure all environment entries are accessible.  These can contain promises, so we'll need to await.
+            const env: {name: string; value: string}[] = [];
+            for (const entry of environment) {
+                // TODO[pulumi/pulumi#459]: we will eventually need to reenable the await, rather than casting.
+                env.push({ name: entry.name, value: <string><any>/*await*/entry.value });
             }
 
             // Run the task
@@ -632,7 +649,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     containerOverrides: [
                         {
                             name: "container",
-                            environment: environment,
+                            environment: env,
                         },
                     ],
                 },
