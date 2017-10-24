@@ -115,6 +115,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             staticDirectories: StaticFile[],
             swagger: SwaggerSpec) {
 
+        // If there are no stati files or directories, then we can bail out early.
         if (staticFiles.length === 0 && staticDirectories.length === 0) {
             return;
         }
@@ -122,8 +123,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         console.log("Registering static routes.");
         const method: string = swaggerMethod("GET");
 
+        // Create a bucket to place all the static data under.
         const bucket = new aws.s3.Bucket(safeS3BucketName(apiName));
-        // pulumi.log.info(`Created bucket arn=${bucket.arn} for static routes.`);
 
         function createRole(key: string) {
             // Create a role and attach it so that this route can access the AWS bucket.
@@ -138,6 +139,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             return role;
         }
 
+        // For each static file, just make a simple bucket object to hold it, and create a swagger
+        // path that routes from the file path to the arn for the bucket object.
         for (const file of staticFiles) {
             console.log(`Creating file route for '${file.filePath}' at '${file.path}'.`);
             const key = apiName + sha1hash(method + ":" + file.path);
@@ -151,15 +154,25 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 contentType: file.contentType,
             });
 
-            const pathSpec = createPathSpecObject(file, key, role, false);
+            const pathSpec = createPathSpecObject(file, key, role, /*isProxy*/ false);
             swagger.paths[file.path] = { [method]: pathSpec };
         }
 
+        // Static directories are more complex.  There is a limit to the amount of api gateway paths
+        // you create.  In order to not hit that limit, we instead use the 'greedy match' facility
+        // of api-gateway to create a single gateway path that will capture the path the user
+        // provides, and then map it to an s3 bucket path.
+        //
+        // i.e. we create a path like /folder/{proxy+}   Then, if a user hits /folder/a/b/c.tx we
+        // will capture the "a/b/c.txt" portion and rewrite it to our bucket prefix to map to the
+        // right bucket object.
         for (const directory of staticDirectories) {
             console.log(`Creating directory route for '${directory.filePath}' at '${directory.path}'.`);
             const directoryKey = apiName + sha1hash(method + ":" + directory.path);
             const role = createRole(directoryKey);
 
+            // Recursively walk the directory provided, creating bucket objects for all the files we
+            // encounter.
             function walk(dir: string) {
                 console.log(`Walking: ${dir}`);
 
@@ -167,6 +180,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 for (const childName of children) {
                     const childPath = path1.join(dir, childName);
                     const stats = fs.statSync(childPath);
+
                     if (stats.isDirectory()) {
                         walk(childPath);
                     }
@@ -195,8 +209,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
             walk(startDir);
 
+            // Take whatever path the client wants to host this folder at, and add the
+            // greedy matching predicate to the end.
             const dirPath = directory.path + "/{proxy+}";
-            const pathSpec = createPathSpecObject(directory, directoryKey + "/{proxy}", role, true);
+            const pathSpec = createPathSpecObject(directory, directoryKey + "/{proxy}", role, /*isProxy*/ true);
             swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
         }
 
@@ -257,6 +273,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 },
             };
 
+            // If this is a proxy, then we have to add a little more information so that the greedy
+            // matching parameter is detected and mapped properly to the s3 bucket uri template.
             if (isProxy) {
                 result.parameters = [{
                     name: "proxy",
