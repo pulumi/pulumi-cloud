@@ -61,7 +61,7 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
