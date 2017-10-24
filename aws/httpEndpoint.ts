@@ -105,7 +105,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             staticRoutes: StaticRoute[],
             swagger: SwaggerSpec) {
 
-        // If there are no stati files or directories, then we can bail out early.
+        // If there are no static files or directories, then we can bail out early.
         if (staticRoutes.length === 0) {
             return;
         }
