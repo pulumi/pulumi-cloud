@@ -211,7 +211,7 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     // authorizationToken from ECR, and extracting the username password pair
     // after base64-decoding the token.  See:
     // http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-    const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+    const credentials: any = undefined; // = await aws.ecr.getCredentials({ registryId: registryId });
     const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
     const [username, password] = decodedCredentials.split(":");
     if (!password || !username) {
