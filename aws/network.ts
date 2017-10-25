@@ -45,10 +45,16 @@ if (!network ) {
     // create a new Cluster.
     cluster = new Cluster(`lukecluster`, {
         network: network,
+        addEFS: true,
+        instanceType: config.ecsAutoClusterInstanceType,
+        minSize: config.ecsAutoClusterMinSize,
+        maxSize: config.ecsAutoClusterMaxSize,
+        publicKey: config.ecsAutoClusterPublicKey,
     });
 } else {
     // Else we have an externally provided cluster and can use that.
     cluster = {
         ecsClusterARN: Promise.resolve(config.ecsClusterARN),
+        efsMountPath: config.ecsClusterEfsMountPath,
     };
 }

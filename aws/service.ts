@@ -388,9 +388,6 @@ interface TaskDefinition {
     logGroup: aws.cloudwatch.LogGroup;
 }
 
-// BUGBUG: DON'T HARDCODE THIS.
-const ecsClusterEfsMountPath = "/efs";
-
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
     // Create a single log group for all logging associated with the Service
@@ -404,9 +401,9 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         // Collect referenced Volumes.
         if (container.volumes) {
             for (const volumeMount of container.volumes) {
-                if (!ecsClusterEfsMountPath) {
+                if (!cluster || !cluster.efsMountPath) {
                     throw new Error(
-                        "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
+                        "Cannot use 'Volume'.  Configured cluster does not support EFS.",
                     );
                 }
                 const volume = volumeMount.sourceVolume;
@@ -416,7 +413,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                     // into the path, so that Volumes in this deployment
                     // don't accidentally overlap with Volumes from other
                     // deployments on the same cluster.
-                    hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
+                    hostPath: `${cluster.efsMountPath}/${volume.name}`,
                     name: volume.name,
                 });
             }

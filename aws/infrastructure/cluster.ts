@@ -8,6 +8,9 @@ import { Network } from "./network";
 
 import * as config from "../config";
 
+// The default path to use for mounting EFS inside ECS container instances.
+const efsMountPath = "/mnt/efs";
+
 /**
  * Arguments bag for creating infrastrcture for a new Cluster.
  */
@@ -16,6 +19,10 @@ export interface ClusterArgs {
      * The network in which to create this cluster.
      */
     network: Network;
+    /**
+     * Whether to create an EFS File System to manage volumes across the cluster.
+     */
+    addEFS: boolean;
     /**
      * The EC2 instance type to use for the Cluster.  Defaults to `t2-micro`.
      */
@@ -36,9 +43,24 @@ export interface ClusterArgs {
     publicKey?: string;
 }
 
+/**
+ * A Cluster is a general purpose ECS cluster configured to run in a provided
+ * Network.
+ */
 export class Cluster {
+    /**
+     * The ECS Cluster ARN.
+     */
     public ecsClusterARN: pulumi.Computed<string>;
-    public autoScalingGroupStack?: aws.cloudformation.Stack;
+    /**
+     * The auto-scaling group that ECS Service's should add to their
+     * `dependsOn`.
+     */
+    public autoScalingGroupStack?: pulumi.Resource;
+    /**
+     * The EFS host mount path if EFS is enabled on this Cluster.
+     */
+    public efsMountPath?: string;
 
     constructor(name: string, args: ClusterArgs) {
 
@@ -113,6 +135,33 @@ export class Cluster {
             roles: [ instanceRole ],
         });
 
+        // If requested, add EFS file system and mount targets in each subnet.
+        let filesystem: aws.efs.FileSystem | undefined;
+        if (args.addEFS) {
+            filesystem = new aws.efs.FileSystem(`${name}-filesystem`);
+            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-filesystem-securitygroup`, {
+                vpcId: args.network.vpcId,
+                ingress: [
+                    {
+                        securityGroups: args.network.securityGroupIds,
+                        protocol: "tcp",
+                        fromPort: 2049,
+                        toPort: 2049,
+                        // cidrBlocks: [ aws.ec2.getVpc({ id: args.network.vpcId }).then(vpc => vpc.cidrBlock) ],
+                    },
+                ],
+            });
+            for (let i = 0; i <  args.network.subnetIds.length; i++) {
+                const subnetId = args.network.subnetIds[i];
+                const mountTarget = new aws.efs.MountTarget(`${name}-mounttarget-${i}`, {
+                    fileSystemId: filesystem.id,
+                    subnetId: subnetId,
+                    securityGroups: [ efsSecurityGroup.id ],
+                });
+            }
+            this.efsMountPath = efsMountPath;
+        }
+
         // Now create the EC2 infra and VMs that will back the ECS cluster.
         const ALL = {
             fromPort: 0,
@@ -143,7 +192,7 @@ export class Cluster {
         });
         let keyName: pulumi.Computed<string> | undefined;
         if (args.publicKey) {
-            const key = new aws.ec2.KeyPair(`{name}-keypair`, {
+            const key = new aws.ec2.KeyPair(`${name}-keypair`, {
                 publicKey: args.publicKey,
             });
             keyName = key.keyName;
@@ -168,7 +217,7 @@ export class Cluster {
                 },
             ],
             securityGroups: [ instanceSecurityGroup.id ],
-            userData: getInstanceUserData(cluster),
+            userData: getInstanceUserData(cluster, filesystem, this.efsMountPath),
         });
 
         const dependsOn: pulumi.Resource[] = [];
@@ -219,13 +268,47 @@ async function getEcsAmiId() {
 // ours seems inspired by:
 // https://github.com/convox/rack/blob/023831d8/provider/aws/dist/rack.json#L1669
 // https://github.com/awslabs/amazon-ecs-amazon-efs/blob/d92791f3/amazon-efs-ecs.json#L655
-async function getInstanceUserData(cluster: aws.ecs.Cluster) {
+async function getInstanceUserData(
+    cluster: aws.ecs.Cluster,
+    fileSystem: aws.efs.FileSystem | undefined,
+    mountPath: string | undefined) {
+
+    let fileSystemRuncmdBlock = "";
+    if (fileSystem && mountPath) {
+        // tslint:disable max-line-length
+        fileSystemRuncmdBlock = `
+            # Create EFS mount path
+            mkdir ${mountPath}
+            chown ec2-user:ec2-user ${mountPath}
+            # Create environment variables
+            EFS_FILE_SYSTEM_ID=${await fileSystem.id}
+            DIR_SRC=$AWS_AVAILABILITY_ZONE.$EFS_FILE_SYSTEM_ID.efs.$AWS_REGION.amazonaws.com
+            DIR_TGT=${mountPath}
+            # Write out metadata
+            touch /home/ec2-user/echo.res
+            echo $EFS_FILE_SYSTEM_ID >> /home/ec2-user/echo.res
+            echo $AWS_AVAILABILITY_ZONE >> /home/ec2-user/echo.res
+            echo $AWS_REGION >> /home/ec2-user/echo.res
+            echo $DIR_SRC >> /home/ec2-user/echo.res
+            echo $DIR_TGT >> /home/ec2-user/echo.res
+            # Update /etc/fstab with the new NFS mount
+            cp -p /etc/fstab /etc/fstab.back-$(date +%F)
+            echo -e \"$DIR_SRC:/ $DIR_TGT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0\" | tee -a /etc/fstab
+            mount -a -t nfs4 >> /home/ec2-user/echo.res
+            # Restart Docker
+            docker ps
+            service docker stop
+            service docker start
+        `;
+    }
+
     return `#cloud-config
     repo_upgrade_exclude:
         - kernel*
     packages:
         - aws-cfn-bootstrap
         - aws-cli
+        - nfs-utils
     mounts:
         - ['/dev/xvdb', 'none', 'swap', 'sw', '0', '0']
     bootcmd:
@@ -238,7 +321,11 @@ async function getInstanceUserData(cluster: aws.ecs.Cluster) {
         # different commands will run in different shells.
         - |
             # Knock one letter off of availability zone to get region.
-            AWS_REGION=$(curl -s 169.254.169.254/2016-09-02/meta-data/placement/availability-zone | sed 's/.$//')
+            AWS_AVAILABILITY_ZONE=$(curl -s 169.254.169.254/2016-09-02/meta-data/placement/availability-zone)
+            AWS_REGION=$(echo $AWS_AVAILABILITY_ZONE | sed 's/.$//')
+
+            ${fileSystemRuncmdBlock}
+
             # cloud-init docs are unclear about whether $INSTANCE_ID is available in runcmd.
             EC2_INSTANCE_ID=$(curl -s 169.254.169.254/2016-09-02/meta-data/instance-id)
             # \$ below so we don't get Javascript interpolation.
