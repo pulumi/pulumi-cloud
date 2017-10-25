@@ -6,7 +6,7 @@ import { authMiddleware } from "./middleware";
 let todos = new cloud.Table("todo");
 let api = new cloud.HttpEndpoint("todo");
 
-// Index handler
+// Serve all files in the assets folder under /
 api.static("/", "assets");
 
 // GET/POST todo handlers

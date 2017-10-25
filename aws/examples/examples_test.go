@@ -29,26 +29,26 @@ func Test_Examples(t *testing.T) {
 		return
 	}
 	examples := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(cwd, "../../examples/crawler"),
-			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
-		{
-			Dir: path.Join(cwd, "../../examples/countdown"),
-			Config: map[string]string{
-				"aws:config:region": region,
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-			},
-		},
+		// {
+		// 	Dir: path.Join(cwd, "../../examples/crawler"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region":     region,
+		// 		"cloud:config:provider": "aws",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(cwd, "../../examples/countdown"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region": region,
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 	},
+		// },
 		{
 			Dir: path.Join(cwd, "../../examples/todo"),
 
@@ -80,6 +80,15 @@ func Test_Examples(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+
+				// Validate the GET /index.html endpoint
+				resp, err = http.Get(baseURL + "/index.html")
+				assert.NoError(t, err, "expected to be able to GET /index.html")
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html", contentType)
+				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
@@ -116,19 +125,19 @@ func Test_Examples(t *testing.T) {
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
 			},
 		},
-		{
-			Dir: path.Join(cwd, "../../examples/timers"),
-			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
-				"timers:config:message": "Hello, Pulumi Timers!",
-			},
-			Dependencies: []string{
-				"pulumi",
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
+		// {
+		// 	Dir: path.Join(cwd, "../../examples/timers"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region":     region,
+		// 		"cloud:config:provider": "aws",
+		// 		"timers:config:message": "Hello, Pulumi Timers!",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"pulumi",
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// },
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {

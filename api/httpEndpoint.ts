@@ -91,6 +91,19 @@ export interface HttpEndpointConstructor {
 
 export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
 
+export interface ServeStaticOptions {
+    /**
+     * The `content-type` to serve the file as.  Only valid when localPath points to a file.  If
+     * localPath points to a directory, the content types for all files will be inferred.
+     */
+    contentType?: string;
+    /**
+     * By default HttpEndpoint.static will also serve 'index.html' in response to a request on a
+     * directory. To disable this set false or to supply a new index pass a string.
+     */
+    index?: boolean | string;
+}
+
 /**
  * HttpEndpoint publishes an internet-facing HTTP API, for serving web
  * applications or REST APIs.
@@ -120,11 +133,9 @@ export interface HttpEndpoint {
      * @param path The route path at which to serve the file.
      * @param localPath The local path.  If not absolute, it is considered relative to the Pulumi
      *                  program folder.
-     * @param contentType The `content-type` to serve the file as.  Only valid when localPath points
-     *                    to a file.  If localPath points to a directory, the content types for all
-     *                    files will be inferred.
+     * @param options Optional options that can be provided to customize the serving behavior.
      */
-    static(path: string, localPath: string, contentType?: string): void;
+    static(path: string, localPath: string, options?: ServeStaticOptions): void;
 
     /**
      * Routes any requests with given HTTP method on the given path to the

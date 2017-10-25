@@ -13,7 +13,7 @@ import { Function } from "./function";
 export interface StaticRoute {
     path: string;
     localPath: string;
-    contentType?: string;
+    options: cloud.ServeStaticOptions;
 }
 
 // Route is a registered dynamic route, backed by a serverless Lambda.
@@ -40,11 +40,11 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.isPublished = false;
     }
 
-    public static(path: string, localPath: string, contentType?: string) {
+    public static(path: string, localPath: string, options?: cloud.ServeStaticOptions) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
-        this.staticRoutes.push({ path, localPath, contentType });
+        this.staticRoutes.push({ path, localPath, options: options || {} });
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
@@ -171,15 +171,36 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             const key = apiName + sha1hash(method + ":" + route.path);
             const role = createRole(key);
 
-            createBucketObject(key, route.localPath, route.contentType);
+            createBucketObject(key, route.localPath, route.options.contentType);
 
             const pathSpec = createPathSpecObject(bucket, key, role);
             swagger.paths[route.path] = { [method]: pathSpec };
         }
 
         function processDirectory(directory: StaticRoute) {
-            const directoryKey = apiName + sha1hash(method + ":" + directory.path);
+            const directoryServerPath = directory.path.endsWith("/")
+                ? directory.path
+                : directory.path + "/";
+
+            const directoryKey = apiName + sha1hash(method + ":" + directoryServerPath);
             const role = createRole(directoryKey);
+
+            let startDir = directory.localPath.startsWith("/")
+                ? directory.localPath
+                : path1.join(process.cwd(), directory.localPath);
+
+            if (!startDir.endsWith(path1.sep)) {
+                startDir = path1.join(startDir, path1.sep);
+            }
+
+            const options = directory.options;
+            const indexFile = options && options.index === false
+                ? undefined
+                : options === undefined || options.index === undefined || typeof options.index !== "string"
+                    ? "index.html"
+                    : options.index;
+
+            const indexPath = indexFile === undefined ? undefined : path1.join(startDir, indexFile);
 
             // Recursively walk the directory provided, creating bucket objects for all the files we
             // encounter.
@@ -198,25 +219,23 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         const childUrn = directoryKey + "/" + childRelativePath;
 
                         createBucketObject(childUrn, childPath);
+
+                        if (childPath === indexPath) {
+                            const indexPathSpec = createPathSpecObject(bucket, childUrn, role);
+                            swagger.paths[directoryServerPath] = { [method]: indexPathSpec };
+                        }
                     }
                 }
-            }
-
-            let startDir = directory.localPath.startsWith("/")
-                ? directory.localPath
-                : path1.join(process.cwd(), directory.localPath);
-
-            if (!startDir.endsWith(path1.sep)) {
-                startDir = path1.join(startDir, path1.sep);
             }
 
             walk(startDir);
 
             // Take whatever path the client wants to host this folder at, and add the
             // greedy matching predicate to the end.
-            const dirPath = directory.path + "/{proxy+}";
+
+            const swaggerPath = directoryServerPath + "{proxy+}";
             const pathSpec = createPathSpecObject(bucket, directoryKey, role, "proxy");
-            swagger.paths[dirPath] = { [swaggerMethod("any")]: pathSpec };
+            swagger.paths[swaggerPath] = { [swaggerMethod("any")]: pathSpec };
         }
     }
 
