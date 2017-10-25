@@ -556,13 +556,16 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     }
                 }
 
+                // Only provide a role if the service is attached to a load balancer.
+                const iamRole = loadBalancers.length ? getServiceLoadBalancerRole().arn : undefined;
+
                 // Create the service.
                 const service = new aws.ecs.Service(name, {
                     desiredCount: replicas,
                     taskDefinition: taskDefinition.task.arn,
                     cluster: cluster!.ecsClusterARN,
                     loadBalancers: loadBalancers,
-                    iamRole: getServiceLoadBalancerRole().arn,
+                    iamRole: iamRole,
                 });
             },
         );
