@@ -12,11 +12,11 @@ export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 // VPC.
 export let network: Network | undefined;
 
-if (config.usePrivateNetwork && !config.externalVpcId) {
+if (!config.externalVpcId) {
     // Create a new VPC for this private network
     network = new Network(`lukenet`, {
         numberOfAvailabilityZones: 1,
-        privateSubnets: true,
+        privateSubnets: config.usePrivateNetwork,
     });
 } else if (config.externalVpcId && config.externalSubnets && config.externalSecurityGroups) {
     // Use an exsting VPC for this private network
@@ -28,8 +28,7 @@ if (config.usePrivateNetwork && !config.externalVpcId) {
         securityGroupIds: config.externalSecurityGroups.map(s => Promise.resolve(s)),
     };
 } else {
-    // Else, we don't use a private network
-    network = undefined;
+    throw new Error("If providing 'externalVpcId', must also provide 'externalSubnets' and 'externalSecurityGroups'");
 }
 
 // The cluster to use for container compute or undefined if containers are

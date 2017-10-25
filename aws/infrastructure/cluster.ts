@@ -135,40 +135,16 @@ export class Cluster {
             roles: [ instanceRole ],
         });
 
-        // If requested, add EFS file system and mount targets in each subnet.
-        let filesystem: aws.efs.FileSystem | undefined;
-        if (args.addEFS) {
-            filesystem = new aws.efs.FileSystem(`${name}-filesystem`);
-            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-filesystem-securitygroup`, {
-                vpcId: args.network.vpcId,
-                ingress: [
-                    {
-                        securityGroups: args.network.securityGroupIds,
-                        protocol: "tcp",
-                        fromPort: 2049,
-                        toPort: 2049,
-                        // cidrBlocks: [ aws.ec2.getVpc({ id: args.network.vpcId }).then(vpc => vpc.cidrBlock) ],
-                    },
-                ],
-            });
-            for (let i = 0; i <  args.network.subnetIds.length; i++) {
-                const subnetId = args.network.subnetIds[i];
-                const mountTarget = new aws.efs.MountTarget(`${name}-mounttarget-${i}`, {
-                    fileSystemId: filesystem.id,
-                    subnetId: subnetId,
-                    securityGroups: [ efsSecurityGroup.id ],
-                });
-            }
-            this.efsMountPath = efsMountPath;
-        }
-
-        // Now create the EC2 infra and VMs that will back the ECS cluster.
+        // Create the EC2 instance security group
         const ALL = {
             fromPort: 0,
             toPort: 0,
             protocol: "-1",  // all
             cidrBlocks: [ "0.0.0.0/0" ],
         };
+        // IDEA: Can we re-use the network's default security group instead of creating a specific
+        // new security group in the Cluster layer?  This may allow us to share a single Security Group
+        // across both instance and Lambda compute.
         const instanceSecurityGroup = new aws.ec2.SecurityGroup(`${name}-instance-security-group`, {
             vpcId: args.network.vpcId,
             ingress: [
@@ -190,6 +166,35 @@ export class Cluster {
             ],
             egress: [ ALL ],  // See TerraformEgressNote
         });
+
+        // If requested, add EFS file system and mount targets in each subnet.
+        let filesystem: aws.efs.FileSystem | undefined;
+        if (args.addEFS) {
+            filesystem = new aws.efs.FileSystem(`${name}-filesystem`);
+            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-filesystem-securitygroup`, {
+                vpcId: args.network.vpcId,
+                ingress: [
+                    // Allow NFS traffic from the instance security group
+                    {
+                        securityGroups: [ instanceSecurityGroup.id ],
+                        protocol: "TCP",
+                        fromPort: 2049,
+                        toPort: 2049,
+                    },
+                ],
+            });
+            for (let i = 0; i <  args.network.subnetIds.length; i++) {
+                const subnetId = args.network.subnetIds[i];
+                const mountTarget = new aws.efs.MountTarget(`${name}-mounttarget-${i}`, {
+                    fileSystemId: filesystem.id,
+                    subnetId: subnetId,
+                    securityGroups: [ efsSecurityGroup.id ],
+                });
+            }
+            this.efsMountPath = efsMountPath;
+        }
+
+        // If requested, add a new EC2 KeyPair for SSH access to the instances.
         let keyName: pulumi.Computed<string> | undefined;
         if (args.publicKey) {
             const key = new aws.ec2.KeyPair(`${name}-keypair`, {
@@ -197,6 +202,8 @@ export class Cluster {
             });
             keyName = key.keyName;
         }
+
+        // Specify the intance configuration for the cluster.
         const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(`${name}-instance-launch-configuration`, {
             imageId: getEcsAmiId(),
             instanceType: args.instanceType || "t2.micro",
@@ -220,6 +227,7 @@ export class Cluster {
             userData: getInstanceUserData(cluster, filesystem, this.efsMountPath),
         });
 
+        // Finally, create the AutoScaling Group.
         const dependsOn: pulumi.Resource[] = [];
         if (args.network.internetGateway) {
             dependsOn.push(args.network.internetGateway);
@@ -229,7 +237,6 @@ export class Cluster {
                 dependsOn.push(natGateway);
             }
         }
-
         this.autoScalingGroupStack = new aws.cloudformation.Stack(
             "autoScalingGroupStack",
             {
@@ -284,17 +291,10 @@ async function getInstanceUserData(
             EFS_FILE_SYSTEM_ID=${await fileSystem.id}
             DIR_SRC=$AWS_AVAILABILITY_ZONE.$EFS_FILE_SYSTEM_ID.efs.$AWS_REGION.amazonaws.com
             DIR_TGT=${mountPath}
-            # Write out metadata
-            touch /home/ec2-user/echo.res
-            echo $EFS_FILE_SYSTEM_ID >> /home/ec2-user/echo.res
-            echo $AWS_AVAILABILITY_ZONE >> /home/ec2-user/echo.res
-            echo $AWS_REGION >> /home/ec2-user/echo.res
-            echo $DIR_SRC >> /home/ec2-user/echo.res
-            echo $DIR_TGT >> /home/ec2-user/echo.res
             # Update /etc/fstab with the new NFS mount
             cp -p /etc/fstab /etc/fstab.back-$(date +%F)
             echo -e \"$DIR_SRC:/ $DIR_TGT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0\" | tee -a /etc/fstab
-            mount -a -t nfs4 >> /home/ec2-user/echo.res
+            mount -a -t nfs4
             # Restart Docker
             docker ps
             service docker stop
