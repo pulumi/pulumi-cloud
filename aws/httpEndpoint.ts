@@ -158,12 +158,12 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             });
         }
 
-        async function createBucketObjectAsync(key: string, localPath: string, contentType?: string) {
+        function createBucketObject(key: string, localPath: string, contentType?: string) {
             const obj = new aws.s3.BucketObject(key, {
                 bucket: bucket,
                 key: key,
                 source: new pulumi.asset.FileAsset(localPath),
-                contentType: contentType || await determineContentTypeAsync(localPath),
+                contentType: contentType || determineContentTypeAsync(localPath),
             });
         }
 
@@ -171,7 +171,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             const key = apiName + sha1hash(method + ":" + route.path);
             const role = createRole(key);
 
-            createBucketObjectAsync(key, route.localPath, route.contentType);
+            createBucketObject(key, route.localPath, route.contentType);
 
             const pathSpec = createPathSpecObject(bucket, key, role);
             swagger.paths[route.path] = { [method]: pathSpec };
@@ -197,7 +197,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         const childRelativePath = childPath.substr(startDir.length);
                         const childUrn = directoryKey + "/" + childRelativePath;
 
-                        createBucketObjectAsync(childUrn, childPath);
+                        createBucketObject(childUrn, childPath);
                     }
                 }
             }
