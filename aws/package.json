@@ -7,6 +7,7 @@
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
+        "@types/mmmagic": "^0.4.29",
         "tslint": "^5.7.0",
         "typescript": "^2.5.2"
     },
@@ -20,6 +21,7 @@
         "@types/dockerode": "^2.5.1",
         "@types/tar": "^4.0.0",
         "dockerode": "^2.5.2",
+        "mmmagic": "^0.4.5",
         "tar": "^4.0.1"
     }
 }
