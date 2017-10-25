@@ -194,11 +194,16 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             }
 
             const options = directory.options;
+
+            // If the user has supplied 'false' for options.index, then no speciam index file served
+            // at the root. Otherwise if they've supplied an actual filename to serve as the index
+            // file then use what they've provided.  Otherwise attempt to serve "index.html" at the
+            // root (if it exists).
             const indexFile = options && options.index === false
                 ? undefined
-                : options === undefined || options.index === undefined || typeof options.index !== "string"
-                    ? "index.html"
-                    : options.index;
+                : options !== undefined && typeof options.index === "string"
+                    ? options.index
+                    : "index.html";
 
             const indexPath = indexFile === undefined ? undefined : path1.join(startDir, indexFile);
 
@@ -221,6 +226,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         createBucketObject(childUrn, childPath);
 
                         if (childPath === indexPath) {
+                            // We hit the file that we also want to serve as the index file. Create
+                            // a specific swagger path from the server root path to it.
                             const indexPathSpec = createPathSpecObject(bucket, childUrn, role);
                             swagger.paths[directoryServerPath] = { [method]: indexPathSpec };
                         }
