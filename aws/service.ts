@@ -370,11 +370,15 @@ async function computeContainerDefintions(
             memoryReservation: container.memoryReservation,
             portMappings: portMappings,
             environment: environment,
+            mountPoints: (container.volumes || []).map(v => ({
+                containerPath: v.containerPath,
+                sourceVolume: v.sourceVolume.name,
+            })),
             logConfiguration: {
                 logDriver: "awslogs",
                 options: {
                     "awslogs-group": logGroupId!,
-                    "awslogs-region": "us-east-1",
+                    "awslogs-region": aws.config.requireRegion(),
                     "awslogs-stream-prefix": containerName,
                 },
             },
@@ -457,7 +461,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
     constructor(name: string, args: cloud.ServiceArguments) {
         if (!cluster) {
-            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
+                " or 'cloud-aws:config:ecsAutoCluster'");
         }
 
         const containers = args.containers;

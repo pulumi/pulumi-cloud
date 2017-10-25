@@ -4,6 +4,9 @@ import * as pulumi from "pulumi";
 
 const config = new pulumi.Config("cloud-aws:config");
 
+// TODO[pulumi/pulumi-cloud#134]: We need to clean up the set of options available on `cloud-aws`
+// and potentially reduce the dimentionality of the available configuration space.
+
 // Optionally override the Lambda function memory size for all functions.
 export let functionMemorySize = config.getNumber("functionMemorySize") || 128;
 if (functionMemorySize % 64 !== 0 || functionMemorySize < 128 || functionMemorySize > 1536) {
@@ -48,9 +51,9 @@ if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
     );
 }
 
-// Optionally configure proeprties of the automatically provisioned ECS Cluster.
+// Optionally configure whether to automatically provision an ECS Cluster, and if so, parameters for that cluster.
+export let ecsAutoCluster = config.getBoolean("ecsAutoCluster") || false;
 export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");
-export let ecsAutoClusterDesiredCapacity = config.getNumber("ecsAutoClusterDesiredCapacity");
 export let ecsAutoClusterMinSize = config.getNumber("ecsAutoClusterMinSize");
 export let ecsAutoClusterMaxSize = config.getNumber("ecsAutoClusterMaxSize");
 export let ecsAutoClusterPublicKey = config.get("ecsAutoClusterPublicKey");

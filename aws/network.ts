@@ -12,13 +12,16 @@ export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 // VPC.
 export let network: Network | undefined;
 
-if (!config.externalVpcId) {
-    // Create a new VPC for this private network
+if (config.usePrivateNetwork || config.ecsAutoCluster) {
+    // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned
     network = new Network(`lukenet`, {
         numberOfAvailabilityZones: 1,
         privateSubnets: config.usePrivateNetwork,
     });
-} else if (config.externalVpcId && config.externalSubnets && config.externalSecurityGroups) {
+} else if (config.externalVpcId) {
+    if (!config.externalSubnets || !config.externalSecurityGroups) {
+        throw new Error("If providing 'externalVpcId', must provide 'externalSubnets' and 'externalSecurityGroups'");
+    }
     // Use an exsting VPC for this private network
     network = {
         vpcId: Promise.resolve(config.externalVpcId),
@@ -28,32 +31,32 @@ if (!config.externalVpcId) {
         securityGroupIds: config.externalSecurityGroups.map(s => Promise.resolve(s)),
     };
 } else {
-    throw new Error("If providing 'externalVpcId', must also provide 'externalSubnets' and 'externalSecurityGroups'");
+    // Else, we do not need to create a network.
+    network = undefined;
 }
 
 // The cluster to use for container compute or undefined if containers are
 // unsupported.
 export let cluster: Cluster | undefined;
 
-if (!network ) {
-    // If we did not get or create a network, then we cannot provide a Cluster
-    // for container-based compute.
-    cluster = undefined;
-} else if (!config.ecsClusterARN) {
-    // Else if we have a network, but not an externally provided ClusterARN,
-    // create a new Cluster.
+if (config.ecsAutoCluster) {
+    // If we are asked to provision a cluster, then we will have created a network
+    // above - create a cluster in that network.
     cluster = new Cluster(`lukecluster`, {
-        network: network,
+        network: network!,
         addEFS: true,
         instanceType: config.ecsAutoClusterInstanceType,
         minSize: config.ecsAutoClusterMinSize,
         maxSize: config.ecsAutoClusterMaxSize,
         publicKey: config.ecsAutoClusterPublicKey,
     });
-} else {
-    // Else we have an externally provided cluster and can use that.
+} else if (config.ecsClusterARN) {
+    // Else if we have an externally provided cluster and can use that.
     cluster = {
         ecsClusterARN: Promise.resolve(config.ecsClusterARN),
         efsMountPath: config.ecsClusterEfsMountPath,
     };
+} else {
+    // Else, we do not need to create a cluster.
+    cluster = undefined;
 }
