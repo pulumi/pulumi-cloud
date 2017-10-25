@@ -4,6 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as Docker from "dockerode";
 import * as pulumi from "pulumi";
+import * as stream from "stream";
 import * as tar from "tar";
 import { ecsClusterARN, ecsClusterEfsMountPath, ecsClusterSubnets, ecsClusterVpcId } from "./config";
 
@@ -124,6 +125,37 @@ interface ContainerPortLoadBalancer {
     listenerPort: number;
 }
 
+function newEcsClusterSubnetMapping(): Promise<{ subnetId: string }>[] {
+    if (!ecsClusterSubnets) {
+        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
+    }
+
+    // If a string, simply split and map them.
+    if (typeof ecsClusterSubnets === "string") {
+        return ecsClusterSubnets.split(",").map(sub => Promise.resolve({subnetId: sub}));
+    }
+
+    // Otherwise, it's an array of ComputedValue<string>s; turn them into the required structure.
+    const results: Promise<{ subnetId: string }>[] = [];
+    for (const sub of ecsClusterSubnets) {
+        if (typeof sub === "string") {
+            results.push(Promise.resolve({subnetId: sub}));
+        }
+        else if (sub instanceof Promise) {
+            results.push((sub as Promise<string | undefined>).then((s: string | undefined) => {
+                if (!s) {
+                    throw new Error(`Undefined subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
+                }
+                return {subnetId: s};
+            }));
+        }
+        else {
+            throw new Error(`Unrecognized subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
+        }
+    }
+    return results;
+}
+
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
@@ -131,18 +163,13 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
     if (!ecsClusterVpcId) {
         throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
     }
-    if (!ecsClusterSubnets) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
-    }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const subnets = ecsClusterSubnets.split(",");
-        const subnetmapping = subnets.map(s => ({ subnetId: s }));
         const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
-                subnetMapping: subnetmapping,
+                subnetMapping: newEcsClusterSubnetMapping(),
                 internal: false,
             }),
         );
@@ -233,29 +260,27 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         serveraddress: registry,
     };
 
-    // Note: We use callbacks instead of promises because we need to handle
-    // streams for the outputs of the Docker operations, which do not compose
-    // well with Promises.
+    // Note: We use callbacks instead of promises because we need to handle streams for the outputs of the Docker
+    // operations, which do not compose well with Promises.
     const imageDigest = await new Promise<string>((resolve, reject) => {
-        // Build the Docker image, using the `imageName` of the remote
-        // repository as the tag name.
-        console.log(`Building image at '${buildPath}'`);
+        // Build the Docker image, using the `imageName` of the remote repository as the tag name.
+        console.log(`Building container image at '${buildPath}'`);
         docker.buildImage(buildContext, {t: imageName}, (err, output) => {
             try {
                 if (err) {
-                    return reject(err);
+                    return reject(`error building container image at '${buildPath}': ${err}`);
                 }
                 output.on("data", (buf: Buffer) => {
                     try {
                         const items = parseDockerEngineUpdatesFromBuffer(buf);
                         for (const item of items) {
                             if (item.stream) {
-                                // These messages represent direct output of the
-                                // operation.
+                                // These messages represent direct output of the operation.
                                 process.stdout.write(item.stream);
                             }
                         }
-                    } catch (dataerr) {
+                    }
+                    catch (dataerr) {
                         reject(dataerr);
                     }
                 });
@@ -266,7 +291,7 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
                         img.push({registry: registry, authconfig: authData}, (err2: any, data: any) => {
                             try {
                                 if (err2) {
-                                    return reject(err2);
+                                    return reject(`error pushing container image '${imageName}': ${err2}`);
                                 }
                                 let digest: string | undefined = undefined;
                                 data.on("data", (buf: Buffer) => {
@@ -288,18 +313,23 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
                                 });
                                 data.on("end", () => {
                                     console.log(`Pushed image: ${imageName}`);
-                                    console.log(` with digest: ${digest}`);
+                                    if (digest) {
+                                        console.log(`    with digest: ${digest}`);
+                                    }
                                     resolve(digest);
                                 });
-                            } catch (pusherr) {
+                            }
+                            catch (pusherr) {
                                 reject(pusherr);
                             }
                         });
-                    } catch (builddoneerr) {
+                    }
+                    catch (builddoneerr) {
                         reject(builddoneerr);
                     }
                 });
-            } catch (builderr) {
+            }
+            catch (builderr) {
                 reject(builderr);
             }
         });
@@ -333,7 +363,8 @@ async function computeImage(
     const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
     if (container.image) {
         return { image: container.image, environment: environment };
-    } else if (container.build) {
+    }
+    else if (container.build) {
         if (!repository) {
             throw new Error("Expected a repository to be created for a `build` container definition");
         }
@@ -347,7 +378,8 @@ async function computeImage(
             name: "IMAGE_DIGEST",
             value: imageDigest!,
         }]};
-    } else if (container.function) {
+    }
+    else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
@@ -355,6 +387,7 @@ async function computeImage(
         environment.push({ name: "PULUMI_SRC", value: jsSrcText });
         return { image: "lukehoban/nodejsrunner", environment: environment };
     }
+
     throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
 }
 
@@ -429,7 +462,9 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         }
         // Create registry for each `build` container.
         if (container.build) {
-            const repo = new aws.ecr.Repository(`${name}_${containerName}`, {});
+            // ECR repositories must be lower case.
+            const repoName = `${name}_${containerName}`.toLowerCase();
+            const repo = new aws.ecr.Repository(repoName, {});
             repositories.set(containerName, repo);
         }
     }
@@ -641,9 +676,21 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 env.push({ name: entry.name, value: <string><any>/*await*/entry.value });
             }
 
+            // Make sure the ARN is a string.
+            let cluster: aws.ARN | undefined;
+            if (clusterARN instanceof Promise) {
+                cluster = await clusterARN;
+            }
+            else if (typeof clusterARN === "string") {
+                cluster = clusterARN;
+            }
+            if (!cluster) {
+                throw new Error(`Invalid cluster ARN: ${clusterARN}`);
+            }
+
             // Run the task
             const request: _awsSdkTypesOnly.ECS.RunTaskRequest = {
-                cluster: clusterARN,
+                cluster: cluster,
                 taskDefinition: getTypeDefinitionARN(),
                 overrides: {
                     containerOverrides: [

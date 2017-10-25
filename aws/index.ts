@@ -12,8 +12,9 @@ export * from "./table";
 export * from "./topic";
 export * from "./service";
 export { onError } from "./unhandledError";
+import * as config from "./config";
 import * as timer from "./timer";
-export { timer };
+export { config, timer };
 
 // Code purely for enforcement that our module properly exports the same surface area as the API. We
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
