@@ -331,10 +331,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     body: createSwaggerString(swagger),
                 });
 
-                const deployment = new aws.apigateway.Deployment(name, {
+                const bodyHash = createSwaggerHash(swagger);
+                const deployment = new aws.apigateway.Deployment(`${name}_${bodyHash}`, {
                     restApi: api,
                     stageName: "",
-                    description: "Deployment of version " + name,
+                    description: "Deployment of version " + `${name}_${bodyHash}`,
                 });
 
                 const stage = new aws.apigateway.Stage(name, {
@@ -397,8 +398,8 @@ interface SwaggerSpec {
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
-// createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus an
-// ordinary JSON.stringify because the spec contains computed values.
+// createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
+// an ordinary JSON.stringify because the spec contains computed values.
 async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
     const paths: {[path: string]: {[method: string]: SwaggerOperation} } = {};
     for (const path of Object.keys(spec.paths)) {
@@ -415,6 +416,29 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
         paths: paths,
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
     });
+}
+
+// createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
+// Note: we need this hash up front when creating deployments/stages (as those must be recreated) if
+// any spec routes change.  However, parts of the spec are promises, which we can't observe when
+// creating those resources.  This means we'll only recreate those resources if the routes change.
+// We will not recreate them if only the promise parts of them change.
+function createSwaggerHash(spec: SwaggerSpec): string {
+    const paths: { [path: string]: {[method: string]: string} } = {};
+    for (const path of Object.keys(spec.paths)) {
+        paths[path] = {};
+        for (const method of Object.keys(spec.paths[path])) {
+            paths[path][method] = "";
+        }
+    }
+
+    // After all values have settled, we can produce the resulting string.
+    return sha1hash(JSON.stringify({
+        swagger: spec.swagger,
+        info: spec.info,
+        paths: paths,
+        "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+    }));
 }
 
 interface SwaggerInfo {
