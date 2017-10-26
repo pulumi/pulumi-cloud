@@ -63,7 +63,6 @@ export class Cluster {
     public efsMountPath?: string;
 
     constructor(name: string, args: ClusterArgs) {
-
         if (!args.network) {
             throw new Error("Expected a valid Network to use for creating Cluster");
         }

@@ -47,7 +47,7 @@ export function getCluster(): Cluster | undefined {
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new Cluster("pulumi-autocluster", {
-                network: network!,
+                network: getNetwork()!,
                 addEFS: true,
                 instanceType: config.ecsAutoClusterInstanceType,
                 minSize: config.ecsAutoClusterMinSize,
