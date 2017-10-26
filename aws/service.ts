@@ -232,8 +232,10 @@ interface CommandResult {
     stdout?: string;
 }
 
-// Runs a CLI command in a child process, piping output to provided stdout and stderr, and returning a promise
-// for the exit code.
+// Runs a CLI command in a child process, returning a promise for the process's exit.
+// Both stdout and stderr are redirected to process.stdout and process.stder by default.
+// If the [returnStdout] argument is `true`, stdout is not redirected and is instead returned with the promise.
+// If the [stdin] argument is defined, it's contents are piped into stdin for the child process.
 async function runCLICommand(
     cmd: string,
     args: string[],
@@ -242,7 +244,7 @@ async function runCLICommand(
     stdin?: string): Promise<CommandResult> {
     return new Promise<CommandResult>((resolve, reject) => {
         const p = child_process.spawn(cmd, args, {cwd: cwd});
-        let result = "";
+        let result: string | undefined;
         if (returnStdout) {
             // We store the results from stdout in memory and will return them as a string.
             const chunks: Buffer[] = [];
@@ -299,13 +301,13 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     const registry = credentials.proxyEndpoint;
 
     // Invoke Docker CLI commands to build and push
-    const loginResult = await runCLICommand("docker", ["login", "-u", username, "-p", password, registry], buildPath);
-    if (loginResult.code) {
-        throw new Error(`Failed to login to Docker registry ${registry}`);
-    }
     const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
+    }
+    const loginResult = await runCLICommand("docker", ["login", "-u", username, "-p", password, registry], buildPath);
+    if (loginResult.code) {
+        throw new Error(`Failed to login to Docker registry ${registry}`);
     }
     const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
     if (pushResult.code) {
@@ -316,7 +318,6 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         throw new Error(`No digest available for image ${imageName}`);
     }
     const digest = inspectResult.stdout.trim();
-    console.log(`Digest: ${digest}`);
     return digest;
 }
 
