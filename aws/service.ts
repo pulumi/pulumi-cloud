@@ -8,7 +8,7 @@ import * as stream from "stream";
 import * as tar from "tar";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
-import { getCluster, getNetwork } from "./network";
+import { computePolicies, getCluster, getNetwork } from "./shared";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -462,10 +462,7 @@ function getTaskRole(): aws.iam.Role {
         });
         // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
-        const policies = [
-            aws.iam.AWSLambdaFullAccess,
-            aws.iam.AmazonEC2ContainerServiceFullAccess,
-        ];
+        const policies = computePolicies;
         for (let i = 0; i < policies.length; i++) {
             const _ = new aws.iam.RolePolicyAttachment(`pulumi-task-iampolicy-${i}`, {
                 role: taskRole,
