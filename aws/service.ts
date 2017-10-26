@@ -238,8 +238,8 @@ async function runCLICommand(
     cmd: string,
     args: string[],
     cwd: string,
-    stdin?: string,
-    returnStdout?: boolean): Promise<CommandResult> {
+    returnStdout?: boolean,
+    stdin?: string): Promise<CommandResult> {
     return new Promise<CommandResult>((resolve, reject) => {
         const p = child_process.spawn(cmd, args, {cwd: cwd});
         let result = "";
@@ -298,12 +298,11 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     }
     const registry = credentials.proxyEndpoint;
 
-    const loginResult = await runCLICommand("docker", ["login", "-u", username, "--password-stdin", registry],
-        buildPath, password);
+    // Invoke Docker CLI commands to build and push
+    const loginResult = await runCLICommand("docker", ["login", "-u", username, "-p", password, registry], buildPath);
     if (loginResult.code) {
         throw new Error(`Failed to login to Docker registry ${registry}`);
     }
-    // console.log(`docker login exited with code: ${loginResult.code}`);
     const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
@@ -312,12 +311,12 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     if (pushResult.code) {
         throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
     }
-    const inspectResult = await runCLICommand("docker", ["inspect", "-f", "'{{.Id}}'", imageName], buildPath,
-        undefined, true);
+    const inspectResult = await runCLICommand("docker", ["inspect", "-f", "{{.Id}}", imageName], buildPath, true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}`);
     }
     const digest = inspectResult.stdout.trim();
+    console.log(`Digest: ${digest}`);
     return digest;
 }
 
