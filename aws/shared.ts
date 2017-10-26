@@ -1,11 +1,21 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as aws from "@pulumi/aws";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 
 // Whether or not we should run lamabda-based compute in the private network
 export let runLambdaInVPC: boolean = config.usePrivateNetwork;
+
+// The IAM Role Policies to apply to compute for both Lambda and ECS
+const defaultComputePolicies = [
+    aws.iam.AWSLambdaFullAccess,                 // Provides wide access to "serverless" services (Dynamo, S3, etc.)
+    aws.iam.AmazonEC2ContainerServiceFullAccess, // Required for lambda compute to be able to discover ECS endpoints
+];
+export let computePolicies: aws.ARN[] = config.computeIAMRolePolicyARNs
+    ? config.computeIAMRolePolicyARNs.split(",")
+    : defaultComputePolicies;
 
 // The network to use for container (and possibly lambda) compute or undefined if containers are unsupported and
 // lambdas are being run outsie a VPC.
