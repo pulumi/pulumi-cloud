@@ -249,7 +249,7 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     }
 
     // The build context is a tar of the buildPath
-    const buildContext = tar.create({ gzip: true, cwd: buildPath }, ["."]);
+    const buildContext = tar.create({ gzip: false, cwd: buildPath }, ["."]);
 
     // Construct Docker registry auth data by getting the short-lived
     // authorizationToken from ECR, and extracting the username password pair
