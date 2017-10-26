@@ -23,7 +23,7 @@ let mongodb = new cloud.Service("mymongodb", {
         mongodb: {
             image: "mongo",
             memory: 128,
-            ports: [{ port: 27017 }],
+            ports: [{ port: 27017, external: true }],
             volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
         },
     },

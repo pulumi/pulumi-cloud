@@ -114,9 +114,18 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
+// TODO[pulumi/pulumi-cloud#135] To support multi-AZ, we may need a configu variable that
+// forces this setting to `1` - or perhaps automatically do that is we see the network is
+// configured for multiple AZs.
 const MAX_LISTENERS_PER_NLB = 50;
-let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let listenerIndex = 0;
+// We may allocate both internal-facing and internet-facing load balancers, and we may want to
+// combine multiple listeners on a single load balancer. So we track the currently allocated
+// load balancers to use for both internal and external load balancing, and the index of the next
+// slot to use within that load balancers listeners.
+let internalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let internalListenerIndex = 0;
+let externalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let externalListenerIndex = 0;
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -127,17 +136,29 @@ interface ContainerPortLoadBalancer {
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
+function newLoadBalancerTargetGroup(port: number, external?: boolean): ContainerPortLoadBalancer {
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
+    }
+    let listenerIndex: number;
+    let internal: boolean;
+    let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+    if (network.privateSubnets && !external) {
+        // We are creating an internal load balancer
+        internal = true;
+        listenerIndex = internalListenerIndex++;
+        loadBalancer = internalLoadBalancer;
+    } else {
+        // We are creating an Internet-facing load balancer
+        internal = false;
+        listenerIndex = externalListenerIndex++;
+        loadBalancer = externalLoadBalancer;
     }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
         const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
-        // Make it internal-only if private subnets are being used. TODO: should
-        // allow overriding this with container port specification.
-        const internal = network.privateSubnets;
-        const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
+        // Make it internal-only if private subnets are being used.
+        const lbname = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
@@ -145,8 +166,14 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
                 internal: internal,
             }),
         );
+        // Store the new load balancer in the corresponding slot
+        if (internal) {
+            internalLoadBalancer = loadBalancer;
+        } else {
+            externalLoadBalancer = loadBalancer;
+        }
     }
-    const targetListenerName = `pulumi-s-lb-${listenerIndex}`;
+    const targetListenerName = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
     // Create the target group for the new container/port pair.
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
@@ -165,7 +192,6 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
             targetGroupArn: target.arn,
         }],
     });
-    listenerIndex++;
     return {
         loadBalancer: loadBalancer!,
         targetGroup: target,
@@ -487,7 +513,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     exposedPorts[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
-                            const info = newLoadBalancerTargetGroup(container, portMapping.port);
+                            const info = newLoadBalancerTargetGroup(portMapping.port, portMapping.external);
                             exposedPorts[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 port: info.listenerPort,
