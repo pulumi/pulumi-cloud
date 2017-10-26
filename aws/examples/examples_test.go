@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/src-d/go-git.v4"
 
 	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
 	"github.com/pulumi/pulumi/pkg/resource"
@@ -76,7 +78,10 @@ func Test_Examples(t *testing.T) {
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+				if !assert.NoError(t, err, "expected checkpoint deserialization to succeed") {
+					return
+				}
+				if !assert.NotNil(t, err, "expected snapshot resources to be non-nil") {
 					return
 				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
@@ -147,6 +152,69 @@ func Test_Examples(t *testing.T) {
 		example := ex
 		t.Run(example.Dir, func(t *testing.T) {
 			integration.ProgramTest(t, example)
+		})
+	}
+}
+
+type stressTest struct {
+	Repo       string
+	Dockerfile string
+	Service    string
+	Ports      string
+}
+
+func Test_Stress(t *testing.T) {
+	if testing.Short() {
+		return // skip if short testing is requested
+	}
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
+		return
+	}
+	fmt.Printf("AWS Region: %v\n", region)
+
+	// Generate a bunch of tests by cloning some public Dockerfiles and building them.
+	tests := []stressTest{
+		{
+			Repo:       "https://github.com/docker-library/python",
+			Dockerfile: "2.7/wheezy/",
+			Service:    "python27",
+		},
+		{
+			Repo:       "https://github.com/docker-library/cassandra",
+			Dockerfile: "3.11/",
+			Service:    "cassandra",
+			Ports:      "7000,7001,7199,9042,9160",
+		},
+	}
+	for _, test := range tests {
+		// First, git clone the repo into a temp location.
+		repoDir, err := ioutil.TempDir("", "docker-stress")
+		assert.NoError(t, err)
+		repo, err := git.NewFilesystemRepository(repoDir)
+		assert.NoError(t, err)
+		err = repo.Clone(&git.CloneOptions{URL: test.Repo})
+		assert.NoError(t, err)
+
+		// And now generate an integration test that will build the Docker and push the image.
+		cwd, err := os.Getwd()
+		assert.NoError(t, err)
+		integration.ProgramTest(t, integration.ProgramTestOptions{
+			Dir: path.Join(cwd, "container_stress"),
+			Config: map[string]string{
+				"aws:config:region":                  region,
+				"cloud:config:provider":              "aws",
+				"cloud-aws:config:ecsAutoCluster":    "true",
+				"container-stress:config:dockerfile": filepath.Join(repoDir, test.Dockerfile),
+				"container-stress:config:service":    test.Service,
+				"container-stress:config:ports":      test.Ports,
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+				"pulumi",
+			},
 		})
 	}
 }

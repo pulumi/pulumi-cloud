@@ -22,7 +22,7 @@ mock:
 .PHONY: test
 test:
 	@echo "\033[0;32mTEST:\033[0m"
-	go test ./pkg/...
+	go test ./pkg/... -timeout 30m
 
 .PHONY: publish
 publish:

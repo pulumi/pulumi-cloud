@@ -1,0 +1,3 @@
+name: container_stress
+runtime: nodejs
+description: A stressful container scenario, purely for testing purposes.

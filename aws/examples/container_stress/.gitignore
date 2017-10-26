@@ -1,0 +1,6 @@
+/.pulumi/
+/bin/
+/docker-library/
+/node_modules/
+yarn.lock
+
