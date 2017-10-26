@@ -6,7 +6,7 @@ import * as Docker from "dockerode";
 import * as pulumi from "pulumi";
 import * as stream from "stream";
 import * as tar from "tar";
-import { ecsClusterARN, ecsClusterEfsMountPath, ecsClusterSubnets, ecsClusterVpcId } from "./config";
+import { cluster, network } from "./network";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -115,9 +115,18 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
+// TODO[pulumi/pulumi-cloud#135] To support multi-AZ, we may need a configu variable that
+// forces this setting to `1` - or perhaps automatically do that is we see the network is
+// configured for multiple AZs.
 const MAX_LISTENERS_PER_NLB = 50;
-let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let listenerIndex = 0;
+// We may allocate both internal-facing and internet-facing load balancers, and we may want to
+// combine multiple listeners on a single load balancer. So we track the currently allocated
+// load balancers to use for both internal and external load balancing, and the index of the next
+// slot to use within that load balancers listeners.
+let internalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let internalListenerIndex = 0;
+let externalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let externalListenerIndex = 0;
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -125,61 +134,52 @@ interface ContainerPortLoadBalancer {
     listenerPort: number;
 }
 
-function newEcsClusterSubnetMapping(): Promise<{ subnetId: string }>[] {
-    if (!ecsClusterSubnets) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
-    }
-
-    // If a string, simply split and map them.
-    if (typeof ecsClusterSubnets === "string") {
-        return ecsClusterSubnets.split(",").map(sub => Promise.resolve({subnetId: sub}));
-    }
-
-    // Otherwise, it's an array of ComputedValue<string>s; turn them into the required structure.
-    const results: Promise<{ subnetId: string }>[] = [];
-    for (const sub of ecsClusterSubnets) {
-        if (typeof sub === "string") {
-            results.push(Promise.resolve({subnetId: sub}));
-        }
-        else if (sub instanceof Promise) {
-            results.push((sub as Promise<string | undefined>).then((s: string | undefined) => {
-                if (!s) {
-                    throw new Error(`Undefined subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
-                }
-                return {subnetId: s};
-            }));
-        }
-        else {
-            throw new Error(`Unrecognized subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
-        }
-    }
-    return results;
-}
-
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(container: cloud.Container, port: number): ContainerPortLoadBalancer {
-    if (!ecsClusterVpcId) {
-        throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterVpcId'");
+function newLoadBalancerTargetGroup(port: number, external?: boolean): ContainerPortLoadBalancer {
+    if (!network) {
+        throw new Error("Cannot create 'Service'. No VPC configured.");
+    }
+    let listenerIndex: number;
+    let internal: boolean;
+    let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+    if (network.privateSubnets && !external) {
+        // We are creating an internal load balancer
+        internal = true;
+        listenerIndex = internalListenerIndex++;
+        loadBalancer = internalLoadBalancer;
+    } else {
+        // We are creating an Internet-facing load balancer
+        internal = false;
+        listenerIndex = externalListenerIndex++;
+        loadBalancer = externalLoadBalancer;
     }
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const lbname = `pulumi-s-lb-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
+        const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
+        // Make it internal-only if private subnets are being used.
+        const lbname = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
-                subnetMapping: newEcsClusterSubnetMapping(),
-                internal: false,
+                subnetMapping: subnetmapping,
+                internal: internal,
             }),
         );
+        // Store the new load balancer in the corresponding slot
+        if (internal) {
+            internalLoadBalancer = loadBalancer;
+        } else {
+            externalLoadBalancer = loadBalancer;
+        }
     }
-    const targetListenerName = `pulumi-s-lb-${listenerIndex}`;
+    const targetListenerName = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
     // Create the target group for the new container/port pair.
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
-        vpcId: ecsClusterVpcId,
+        vpcId: network.vpcId,
         deregistrationDelay: 30,
     });
     // Listen on a new port on the NLB and forward to the target.
@@ -193,7 +193,6 @@ function newLoadBalancerTargetGroup(container: cloud.Container, port: number): C
             targetGroupArn: target.arn,
         }],
     });
-    listenerIndex++;
     return {
         loadBalancer: loadBalancer!,
         targetGroup: target,
@@ -412,11 +411,15 @@ async function computeContainerDefintions(
             memoryReservation: container.memoryReservation,
             portMappings: portMappings,
             environment: environment,
+            mountPoints: (container.volumes || []).map(v => ({
+                containerPath: v.containerPath,
+                sourceVolume: v.sourceVolume.name,
+            })),
             logConfiguration: {
                 logDriver: "awslogs",
                 options: {
                     "awslogs-group": logGroupId!,
-                    "awslogs-region": "us-east-1",
+                    "awslogs-region": aws.config.requireRegion(),
                     "awslogs-stream-prefix": containerName,
                 },
             },
@@ -443,9 +446,9 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         // Collect referenced Volumes.
         if (container.volumes) {
             for (const volumeMount of container.volumes) {
-                if (!ecsClusterEfsMountPath) {
+                if (!cluster || !cluster.efsMountPath) {
                     throw new Error(
-                        "Cannot use 'Volume'.  Missing cluster config 'cloud-aws:config:ecsClusterEfsMountPath'",
+                        "Cannot use 'Volume'.  Configured cluster does not support EFS.",
                     );
                 }
                 const volume = volumeMount.sourceVolume;
@@ -455,7 +458,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                     // into the path, so that Volumes in this deployment
                     // don't accidentally overlap with Volumes from other
                     // deployments on the same cluster.
-                    hostPath: `${ecsClusterEfsMountPath}/${volume.name}`,
+                    hostPath: `${cluster.efsMountPath}/${volume.name}`,
                     name: volume.name,
                 });
             }
@@ -500,8 +503,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
-        if (!ecsClusterARN) {
-            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+        if (!cluster) {
+            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
+                " or 'cloud-aws:config:ecsAutoCluster'");
         }
 
         const containers = args.containers;
@@ -526,7 +530,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     exposedPorts[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
-                            const info = newLoadBalancerTargetGroup(container, portMapping.port);
+                            const info = newLoadBalancerTargetGroup(portMapping.port, portMapping.external);
                             exposedPorts[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 port: info.listenerPort,
@@ -544,7 +548,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const service = new aws.ecs.Service(name, {
                     desiredCount: replicas,
                     taskDefinition: taskDefinition.task.arn,
-                    cluster: ecsClusterARN,
+                    cluster: cluster!.ecsClusterARN,
                     loadBalancers: loadBalancers,
                     iamRole: getServiceLoadBalancerRole().arn,
                 });
@@ -619,7 +623,6 @@ export class Volume extends pulumi.ComponentResource implements cloud.Volume {
     }
 }
 
-
 /**
  * A Task represents a container which can be [run] dynamically whenever (and
  * as many times as) needed.
@@ -628,7 +631,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
-        if (!ecsClusterARN) {
+        if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
 
@@ -644,8 +647,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             },
         );
 
-        const clusterARN = ecsClusterARN;
+        const clusterARN = cluster.ecsClusterARN;
         const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
+
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
             const ecs = new awssdk.ECS();
@@ -669,6 +673,10 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 return <string><any>taskDefinition.arn;
             }
 
+            function getClusterARN(): string {
+                return <string><any>clusterARN;
+            }
+
             // Ensure all environment entries are accessible.  These can contain promises, so we'll need to await.
             const env: {name: string; value: string}[] = [];
             for (const entry of environment) {
@@ -676,21 +684,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 env.push({ name: entry.name, value: <string><any>/*await*/entry.value });
             }
 
-            // Make sure the ARN is a string.
-            let cluster: aws.ARN | undefined;
-            if (clusterARN instanceof Promise) {
-                cluster = await clusterARN;
-            }
-            else if (typeof clusterARN === "string") {
-                cluster = clusterARN;
-            }
-            if (!cluster) {
-                throw new Error(`Invalid cluster ARN: ${clusterARN}`);
-            }
-
             // Run the task
             const request: _awsSdkTypesOnly.ECS.RunTaskRequest = {
-                cluster: cluster,
+                cluster: getClusterARN(),
                 taskDefinition: getTypeDefinitionARN(),
                 overrides: {
                     containerOverrides: [

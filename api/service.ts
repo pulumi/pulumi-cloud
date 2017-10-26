@@ -49,11 +49,12 @@ export interface Container {
      */
     memoryReservation?: number;
     /**
-     * An array of ports to publish from the container.  Ports are exposed using the TCP protocol.  Maps to the Docker
-     * `--publish` option - see
+     * An array of ports to publish from the container.  Ports are exposed using the TCP protocol.  If the [external]
+     * flag is true, the port will be exposed to the Internet even if the service is running in a private network.
+     * Maps to the Docker `--publish` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    ports?: {port: number}[];
+    ports?: {port: number, external?: boolean}[];
     /**
      * An array of volume mounts, indicating a volume to mount and a path within
      * the container at which to moung the volume.  Maps to the Docker

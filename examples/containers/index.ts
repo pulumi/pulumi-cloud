@@ -23,7 +23,7 @@ let mongodb = new cloud.Service("mymongodb", {
         mongodb: {
             image: "mongo",
             memory: 128,
-            ports: [{ port: 27017 }],
+            ports: [{ port: 27017, external: true }],
             volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
         },
     },
@@ -72,7 +72,7 @@ class Cache {
         });
         this.get = (key: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${endpoint}`);
+                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -92,7 +92,7 @@ class Cache {
         };
         this.set = (key: string, value: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${endpoint}`);
+                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -150,7 +150,7 @@ api.get("/", async (req, res) => {
             return;
         }
         let endpoint = await nginx.getEndpoint("nginx", 80);
-        console.log("got host and port:" + endpoint);
+        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());
@@ -179,7 +179,7 @@ api.get("/run", async (req, res) => {
 api.get("/custom", async (req, res) => {
     try {
         let endpoint = await customWebServer.getEndpoint();
-        console.log("got host and port:" + endpoint);
+        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());

@@ -2,7 +2,9 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { functionMemorySize } from "./config";
 import { getLogCollector } from "./logCollector";
+import { network, runLambdaInVPC } from "./network";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -24,7 +26,7 @@ export class Function extends pulumi.ComponentResource {
             },
             () => {
                 // First allocate a function.
-                const options = {
+                const options: aws.serverless.FunctionOptions = {
                     policies: [
                         aws.iam.AWSLambdaFullAccess,
                         aws.iam.AmazonEC2ContainerServiceFullAccess,
@@ -32,7 +34,19 @@ export class Function extends pulumi.ComponentResource {
                     deadLetterConfig: {
                         targetArn: getUnhandledErrorTopic().arn,
                     },
+                    memorySize: functionMemorySize,
                 };
+                if (runLambdaInVPC) {
+                    // TODO[terraform-providers/terraform-provider-aws#1507]:
+                    // Updates which cause existing Lambdas to need to add VPC
+                    // access will currently fail due to an issue in the
+                    // Terraform provider.
+                    options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+                    options.vpcConfig = {
+                        securityGroupIds: network!.securityGroupIds,
+                        subnetIds: network!.subnetIds,
+                    };
+                }
                 lambda = new aws.serverless.Function(name, options, handler).lambda;
 
                 // And then a log group and subscription filter for that lambda.
