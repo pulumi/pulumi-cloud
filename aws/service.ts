@@ -438,6 +438,44 @@ async function computeContainerDefintions(
     }));
 }
 
+// The ECS Task assume role policy for Task Roles
+const taskRolePolicy = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+            },
+            "Effect": "Allow",
+            "Sid": "",
+        },
+    ],
+};
+
+// Lazily initialize the role to use for ECS Tasks
+let taskRole: aws.iam.Role | undefined;
+function getTaskRole(): aws.iam.Role {
+    if (!taskRole) {
+        taskRole = new aws.iam.Role(`pulumi-task-role`, {
+            assumeRolePolicy: JSON.stringify(taskRolePolicy),
+        });
+        // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
+        // We need to audit these permissions and potentially provide ways for users to directly configure these.
+        const policies = [
+            aws.iam.AWSLambdaFullAccess,
+            aws.iam.AmazonEC2ContainerServiceFullAccess,
+        ];
+        for (let i = 0; i < policies.length; i++) {
+            const _ = new aws.iam.RolePolicyAttachment(`pulumi-task-iampolicy-${i}`, {
+                role: taskRole,
+                policyArn: policies[i],
+            });
+        }
+    }
+    return taskRole!;
+}
+
 interface TaskDefinition {
     task: aws.ecs.TaskDefinition;
     logGroup: aws.cloudwatch.LogGroup;
@@ -489,6 +527,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         family: name,
         containerDefinitions: containerDefintions,
         volume: volumes,
+        taskRoleArn: getTaskRole().arn,
     });
 
     return {
