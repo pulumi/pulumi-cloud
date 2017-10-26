@@ -97,10 +97,21 @@ func Test_Examples(t *testing.T) {
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
+				// Validate the GET /index.html endpoint
+				resp, err = http.Get(baseURL + "/index.html")
+				assert.NoError(t, err, "expected to be able to GET /index.html")
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html", contentType)
+				bytes, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+
 				// Validate the GET /favico.ico endpoint
 				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
 				assert.Equal(t, int64(1150), resp.ContentLength)
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "image/x-icon", contentType)
 				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
 
 				// Validate the POST /todo/{id} endpoint

@@ -6,12 +6,13 @@ import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
 import * as pulumi from "pulumi";
+import * as serveStatic from "serve-static";
 import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
-    public static: (path: string, localPath: string, contentType?: string) => void;
+    public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -31,8 +32,11 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         // buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
 
-        this.static = (path, localPath) => {
-            app.use(path, express.static(localPath));
+        this.static = (path, localPath, options) => {
+            const expressOptions: serveStatic.ServeStaticOptions | undefined = options
+                ? { index: options.index }
+                : undefined;
+            app.use(path, express.static(localPath, expressOptions));
         };
 
         this.route = (method, path, ...handlers) => {

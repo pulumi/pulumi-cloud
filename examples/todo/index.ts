@@ -6,9 +6,9 @@ import { authMiddleware } from "./middleware";
 let todos = new cloud.Table("todo");
 let api = new cloud.HttpEndpoint("todo");
 
-// Index handler
-api.static("/", "index.html", "text/html");
-api.static("/favicon.ico", "favicon.ico", "image/x-icon");
+// Serve all files in the 'www' folder under '/'
+// 'index.html' will be automatically served as '/' as well as '/index.html'.
+api.static("/", "www");
 
 // GET/POST todo handlers
 api.get("/todo/{id}", authMiddleware, async (req, res) => {
