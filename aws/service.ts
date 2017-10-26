@@ -2,10 +2,9 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
-import * as Docker from "dockerode";
+import * as child_process from "child_process";
 import * as pulumi from "pulumi";
 import * as stream from "stream";
-import * as tar from "tar";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 import { getCluster, getNetwork } from "./network";
@@ -16,11 +15,6 @@ import { getCluster, getNetwork } from "./network";
 // note that this imported variable should only be used in 'type' (and not value) positions.  The ts
 // compiler will then elide this actual declaration when compiling.
 import _awsSdkTypesOnly = require("aws-sdk");
-
-// A shared Docker engine client.  Currently always connects to the default
-// `/var/run/docker.sock`.  We could in the future parameterize this with config
-// to connect to a remote Docker engine.
-const docker = new Docker();
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -233,6 +227,50 @@ function ecsEnvironmentFromMap(
     return result;
 }
 
+interface CommandResult {
+    code: number;
+    stdout?: string;
+}
+
+// Runs a CLI command in a child process, piping output to provided stdout and stderr, and returning a promise
+// for the exit code.
+async function runCLICommand(
+    cmd: string,
+    args: string[],
+    cwd: string,
+    stdin?: string,
+    returnStdout?: boolean): Promise<CommandResult> {
+    return new Promise<CommandResult>((resolve, reject) => {
+        const p = child_process.spawn(cmd, args, {cwd: cwd});
+        let result = "";
+        if (returnStdout) {
+            // We store the results from stdout in memory and will return them as a string.
+            const chunks: Buffer[] = [];
+            p.stdout.on("data", (chunk: Buffer) => {
+                chunks.push(chunk);
+            });
+            p.stdout.on("end", () => {
+                result = Buffer.concat(chunks).toString();
+            });
+        } else {
+            p.stdout.pipe(process.stdout);
+        }
+        p.stderr.pipe(process.stderr);
+        p.on("error", (err) => {
+            reject(err);
+        });
+        p.on("exit", (code) => {
+            resolve({
+                code: code,
+                stdout: result,
+            });
+        });
+        if (stdin) {
+            p.stdin.end(stdin);
+        }
+    });
+}
+
 // buildAndPushImage will build and push the Dockerfile and context from
 // [buildPath] into the requested ECR [repository].  It returns the digest
 // of the built image.
@@ -248,9 +286,6 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         return undefined;
     }
 
-    // The build context is a tar of the buildPath
-    const buildContext = tar.create({ gzip: false, cwd: buildPath }, ["."]);
-
     // Construct Docker registry auth data by getting the short-lived
     // authorizationToken from ECR, and extracting the username password pair
     // after base64-decoding the token.  See:
@@ -262,88 +297,28 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         throw new Error("Invalid credentials");
     }
     const registry = credentials.proxyEndpoint;
-    const authData = {
-        username: username,
-        password: password,
-        auth: "",
-        serveraddress: registry,
-    };
 
-    // Note: We use callbacks instead of promises because we need to handle streams for the outputs of the Docker
-    // operations, which do not compose well with Promises.
-    const imageDigest = await new Promise<string>((resolve, reject) => {
-        // Build the Docker image, using the `imageName` of the remote repository as the tag name.
-        console.log(`Building container image at '${buildPath}'`);
-        docker.buildImage(buildContext, {t: imageName}, (err, output) => {
-            try {
-                if (err) {
-                    return reject(`error building container image at '${buildPath}': ${err}`);
-                }
-                output.on("data", (buf: Buffer) => {
-                    try {
-                        const items = parseDockerEngineUpdatesFromBuffer(buf);
-                        for (const item of items) {
-                            if (item.stream) {
-                                // These messages represent direct output of the operation.
-                                process.stdout.write(item.stream);
-                            }
-                        }
-                    }
-                    catch (dataerr) {
-                        reject(dataerr);
-                    }
-                });
-                output.on("end", () => {
-                    try {
-                        console.log(`Pushing image: ${imageName}`);
-                        const img = docker.getImage(imageName);
-                        img.push({registry: registry, authconfig: authData}, (err2: any, data: any) => {
-                            try {
-                                if (err2) {
-                                    return reject(`error pushing container image '${imageName}': ${err2}`);
-                                }
-                                let digest: string | undefined = undefined;
-                                data.on("data", (buf: Buffer) => {
-                                    try {
-                                        const items = parseDockerEngineUpdatesFromBuffer(buf);
-                                        // We do not report status on Docker push because it
-                                        // expects to be rendered using a dynamically updated
-                                        // display of per-layer status. We could consider
-                                        // integrating this display or just shelling out to the
-                                        // Docker CLI directly.
-                                        for (const item of items) {
-                                            if (item.aux && item.aux.Digest) {
-                                                digest = item.aux.Digest;
-                                            }
-                                        }
-                                    } catch (dataerr) {
-                                        reject(dataerr);
-                                    }
-                                });
-                                data.on("end", () => {
-                                    console.log(`Pushed image: ${imageName}`);
-                                    if (digest) {
-                                        console.log(`    with digest: ${digest}`);
-                                    }
-                                    resolve(digest);
-                                });
-                            }
-                            catch (pusherr) {
-                                reject(pusherr);
-                            }
-                        });
-                    }
-                    catch (builddoneerr) {
-                        reject(builddoneerr);
-                    }
-                });
-            }
-            catch (builderr) {
-                reject(builderr);
-            }
-        });
-    });
-    return imageDigest;
+    const loginResult = await runCLICommand("docker", ["login", "-u", username, "--password-stdin", registry],
+        buildPath, password);
+    if (loginResult.code) {
+        throw new Error(`Failed to login to Docker registry ${registry}`);
+    }
+    // console.log(`docker login exited with code: ${loginResult.code}`);
+    const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
+    if (buildResult.code) {
+        throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
+    }
+    const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
+    if (pushResult.code) {
+        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+    }
+    const inspectResult = await runCLICommand("docker", ["inspect", "-f", "'{{.Id}}'", imageName], buildPath,
+        undefined, true);
+    if (inspectResult.code || !inspectResult.stdout) {
+        throw new Error(`No digest available for image ${imageName}`);
+    }
+    const digest = inspectResult.stdout.trim();
+    return digest;
 }
 
 // parseDockerEngineUpdatesFromBuffer extracts messages from the Docker engine
