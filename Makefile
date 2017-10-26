@@ -1,15 +1,21 @@
+SHELL=/bin/bash
+.SHELLFLAGS=-ec
 PROCCNT=$(shell nproc --all)
+ECHO=echo -e
+
+.PHONY: default
+default: all
 
 .PHONY: all
 all: api aws examples mock test
 
 .PHONY: api
 api:
-	$(MAKE) -C ./api all
+	$(MAKE) -C ./api $(MAKECMDGOALS)
 
 .PHONY: aws
 aws:
-	$(MAKE) -C ./aws all
+	$(MAKE) -C ./aws $(MAKECMDGOALS)
 
 .PHONY: examples
 examples:
@@ -17,16 +23,16 @@ examples:
 
 .PHONY: mock
 mock:
-	$(MAKE) -C ./mock all
+	$(MAKE) -C ./mock $(MAKECMDGOALS)
 
 .PHONY: test
 test:
-	@echo "\033[0;32mTEST:\033[0m"
+	@$(ECHO) "\033[0;32mTEST:\033[0m"
 	go test ./pkg/...
 
 .PHONY: publish
 publish:
-	@echo "\033[0;32mPublishing current release:\033[0m"
+	@$(ECHO) "\033[0;32mPublishing current release:\033[0m"
 	./scripts/publish.sh
 
 # The travis_* targets are entrypoints for CI.
