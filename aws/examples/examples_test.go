@@ -101,7 +101,9 @@ func Test_Examples(t *testing.T) {
 				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
 				assert.Equal(t, int64(1150), resp.ContentLength)
-				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "image/x-icon", contentType)
+				t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
 
 				// Validate the POST /todo/{id} endpoint
 				resp, err = http.Post(baseURL+"/todo/abc",
