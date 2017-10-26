@@ -6,8 +6,8 @@ import { authMiddleware } from "./middleware";
 let todos = new cloud.Table("todo");
 let api = new cloud.HttpEndpoint("todo");
 
-// Serve all files in the assets folder under /
-// 'index.html' will be automatically served under / as well as /index.html.
+// Serve all files in the 'www' folder under '/'
+// 'index.html' will be automatically served as '/' as well as '/index.html'.
 api.static("/", "www");
 
 // GET/POST todo handlers
