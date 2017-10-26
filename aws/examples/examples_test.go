@@ -28,7 +28,7 @@ func Test_Examples(t *testing.T) {
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
-	examples := []integration.LumiProgramTestOptions{
+	examples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "../../examples/crawler"),
 			Config: map[string]string{
@@ -72,7 +72,10 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, snapshot := stack.DeserializeCheckpoint(&checkpoint)
+				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+					return
+				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
 				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
 				endpoint := pulumiResources[urn]
@@ -140,7 +143,7 @@ func Test_Examples(t *testing.T) {
 	for _, ex := range examples {
 		example := ex
 		t.Run(example.Dir, func(t *testing.T) {
-			integration.LumiProgramTest(t, example)
+			integration.ProgramTest(t, example)
 		})
 	}
 }

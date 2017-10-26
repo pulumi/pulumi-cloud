@@ -7,8 +7,8 @@ let todos = new cloud.Table("todo");
 let api = new cloud.HttpEndpoint("todo");
 
 // Index handler
-api.staticFile("/", "index.html", "text/html");
-api.staticFile("/favicon.ico", "favicon.ico", "image/x-icon");
+api.static("/", "index.html", "text/html");
+api.static("/favicon.ico", "favicon.ico", "image/x-icon");
 
 // GET/POST todo handlers
 api.get("/todo/{id}", authMiddleware, async (req, res) => {

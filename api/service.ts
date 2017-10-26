@@ -1,5 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "pulumi";
+
 /**
  * A collection of Containers
  */
@@ -26,7 +28,7 @@ export interface Container {
      * Optional environment variables to set and make available to the container
      * as it is running.
      */
-    environment?: {[name: string]: string};
+    environment?: {[name: string]: pulumi.ComputedValue<string>};
     /**
      * The function code to use as the implementation of the contaner. Exactly
      * one of `image`, `build`, and `function` must be specified.
@@ -150,7 +152,7 @@ export interface TaskRunOptions {
     /**
      * Optional environment variables to override those set in the container definition.
      */
-    environment?: {[name: string]: string};
+    environment?: {[name: string]: pulumi.ComputedValue<string>};
 }
 
 /**
