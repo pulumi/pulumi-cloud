@@ -3,8 +3,9 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
 import { functionMemorySize } from "./config";
+import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
-import { network, runLambdaInVPC } from "./network";
+import { getNetwork, runLambdaInVPC } from "./network";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -37,6 +38,7 @@ export class Function extends pulumi.ComponentResource {
                     memorySize: functionMemorySize,
                 };
                 if (runLambdaInVPC) {
+                    const network: Network | undefined = getNetwork();
                     // TODO[terraform-providers/terraform-provider-aws#1507]:
                     // Updates which cause existing Lambdas to need to add VPC
                     // access will currently fail due to an issue in the

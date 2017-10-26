@@ -6,7 +6,9 @@ import * as Docker from "dockerode";
 import * as pulumi from "pulumi";
 import * as stream from "stream";
 import * as tar from "tar";
-import { cluster, network } from "./network";
+import { Cluster } from "./infrastructure/cluster";
+import { Network } from "./infrastructure/network";
+import { getCluster, getNetwork } from "./network";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -119,6 +121,7 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
 // forces this setting to `1` - or perhaps automatically do that is we see the network is
 // configured for multiple AZs.
 const MAX_LISTENERS_PER_NLB = 50;
+
 // We may allocate both internal-facing and internet-facing load balancers, and we may want to
 // combine multiple listeners on a single load balancer. So we track the currently allocated
 // load balancers to use for both internal and external load balancing, and the index of the next
@@ -138,9 +141,11 @@ interface ContainerPortLoadBalancer {
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
 function newLoadBalancerTargetGroup(port: number, external?: boolean): ContainerPortLoadBalancer {
+    const network: Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
     }
+
     let listenerIndex: number;
     let internal: boolean;
     let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
@@ -155,6 +160,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
         listenerIndex = externalListenerIndex++;
         loadBalancer = externalLoadBalancer;
     }
+
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
         const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
@@ -167,6 +173,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
                 internal: internal,
             }),
         );
+
         // Store the new load balancer in the corresponding slot
         if (internal) {
             internalLoadBalancer = loadBalancer;
@@ -174,14 +181,16 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
             externalLoadBalancer = loadBalancer;
         }
     }
-    const targetListenerName = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
+
     // Create the target group for the new container/port pair.
+    const targetListenerName = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
         vpcId: network.vpcId,
         deregistrationDelay: 30,
     });
+
     // Listen on a new port on the NLB and forward to the target.
     const listenerPort = 34567 + listenerIndex % MAX_LISTENERS_PER_NLB;
     const listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
@@ -193,6 +202,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
             targetGroupArn: target.arn,
         }],
     });
+
     return {
         loadBalancer: loadBalancer!,
         targetGroup: target,
@@ -238,7 +248,7 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         return undefined;
     }
 
-    // The build context is a tgz of the buildPath
+    // The build context is a tar of the buildPath
     const buildContext = tar.create({ gzip: true, cwd: buildPath }, ["."]);
 
     // Construct Docker registry auth data by getting the short-lived
@@ -445,6 +455,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
         const container = containers[containerName];
         // Collect referenced Volumes.
         if (container.volumes) {
+            const cluster: Cluster | undefined = getCluster();
             for (const volumeMount of container.volumes) {
                 if (!cluster || !cluster.efsMountPath) {
                     throw new Error(
@@ -503,6 +514,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments) {
+        const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
                 " or 'cloud-aws:config:ecsAutoCluster'");
@@ -631,6 +643,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container) {
+        const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
