@@ -43,8 +43,11 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../../examples/countdown"),
 			Config: map[string]string{
-				"aws:config:region":                  region,
-				"cloud-aws:config:usePrivateNetwork": "true",
+				"aws:config:region": region,
+				// TODO[pulumi/pulumi-cloud#138]: Would love to use this example to test private networking for
+				// lambdas, but we are blocked on doing this in CI due to the inability to automatically delete
+				// the VPC used for hosting Lambda within a day of running a Lambda in it.
+				// "cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",

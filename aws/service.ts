@@ -134,37 +134,6 @@ interface ContainerPortLoadBalancer {
     listenerPort: number;
 }
 
-// function newEcsClusterSubnetMapping(): Promise<{ subnetId: string }>[] {
-//     if (!ecsClusterSubnets) {
-//         throw new Error("Cannot create 'Service'. Missing cluster config 'cloud-aws:config:ecsClusterSubnets'");
-//     }
-
-//     // If a string, simply split and map them.
-//     if (typeof ecsClusterSubnets === "string") {
-//         return ecsClusterSubnets.split(",").map(sub => Promise.resolve({subnetId: sub}));
-//     }
-
-//     // Otherwise, it's an array of ComputedValue<string>s; turn them into the required structure.
-//     const results: Promise<{ subnetId: string }>[] = [];
-//     for (const sub of ecsClusterSubnets) {
-//         if (typeof sub === "string") {
-//             results.push(Promise.resolve({subnetId: sub}));
-//         }
-//         else if (sub instanceof Promise) {
-//             results.push((sub as Promise<string | undefined>).then((s: string | undefined) => {
-//                 if (!s) {
-//                     throw new Error(`Undefined subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
-//                 }
-//                 return {subnetId: s};
-//             }));
-//         }
-//         else {
-//             throw new Error(`Unrecognized subnet in 'cloud-aws:config:ecsClusterSubnets': ${sub}`);
-//         }
-//     }
-//     return results;
-// }
-
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be
 // attached to a Service container and port pair. Allocates a new NLB is needed
 // (currently 50 ports can be exposed on a single NLB).
@@ -653,7 +622,6 @@ export class Volume extends pulumi.ComponentResource implements cloud.Volume {
         volumeNames.add(name);
     }
 }
-
 
 /**
  * A Task represents a container which can be [run] dynamically whenever (and
