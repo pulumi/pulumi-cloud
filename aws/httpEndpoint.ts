@@ -394,7 +394,7 @@ function sha1hash(s: string): string {
 interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: Promise<SwaggerOperation>; }; };
+    paths: { [path: string]: { [method: string]: SwaggerOperationAsync; }; };
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
@@ -405,7 +405,7 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
     for (const path of Object.keys(spec.paths)) {
         paths[path] = {};
         for (const method of Object.keys(spec.paths[path])) {
-            paths[path][method] = await spec.paths[path][method];
+            paths[path][method] = await resolveOperationPromises(spec.paths[path][method]);
         }
     }
 
@@ -416,6 +416,27 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
         paths: paths,
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
     });
+
+    // local functions
+    async function resolveOperationPromises(op: SwaggerOperationAsync): Promise<SwaggerOperation> {
+        return {
+            parameters: op.parameters,
+            responses: op.responses,
+            "x-amazon-apigateway-integration": await resolveIntegrationPromises(op["x-amazon-apigateway-integration"]),
+        };
+    }
+
+    async function resolveIntegrationPromises(op: ApigatewayIntegrationAsync): Promise<ApigatewayIntegration> {
+        return {
+            requestParameters: op.requestParameters,
+            passthroughBehavior: op.passthroughBehavior,
+            httpMethod: op.httpMethod,
+            type: op.type,
+            responses: op.responses,
+            uri: await op.uri,
+            credentials: await op.credentials,
+        };
+    }
 }
 
 // createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
@@ -424,20 +445,16 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
 // creating those resources.  This means we'll only recreate those resources if the routes change.
 // We will not recreate them if only the promise parts of them change.
 function createSwaggerHash(spec: SwaggerSpec): string {
-    const paths: { [path: string]: {[method: string]: string} } = {};
-    for (const path of Object.keys(spec.paths)) {
-        paths[path] = {};
-        for (const method of Object.keys(spec.paths[path])) {
-            paths[path][method] = "";
+    return sha1hash(JSON.stringify(spec, (key, value) => {
+        // http://www.ecma-international.org/ecma-262/6.0/#sec-promise.resolve
+        // > The resolve function returns either a new promise resolved with the passed argument, or
+        //   the argument itself if the argument is a promise produced by this constructor.
+        if (Promise.resolve(value) === value) {
+            return `computed(${key})`;
         }
-    }
-
-    // After all values have settled, we can produce the resulting string.
-    return sha1hash(JSON.stringify({
-        swagger: spec.swagger,
-        info: spec.info,
-        paths: paths,
-        "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+        else {
+            return value;
+        }
     }));
 }
 
@@ -446,18 +463,34 @@ interface SwaggerInfo {
     version: string;
 }
 
+interface ApigatewayIntegrationBase {
+    requestParameters?: any;
+    passthroughBehavior?: string;
+    httpMethod: string;
+    type: string;
+    responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
+}
+
+interface ApigatewayIntegration extends ApigatewayIntegrationBase {
+    uri: string;
+    credentials?: string;
+}
+
+interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
+    uri: Promise<string>;
+    credentials?: Promise<string>;
+}
+
+interface SwaggerOperationAsync {
+    parameters?: any[];
+    responses?: { [code: string]: SwaggerResponse };
+    "x-amazon-apigateway-integration": ApigatewayIntegrationAsync;
+}
+
 interface SwaggerOperation {
     parameters?: any[];
     responses?: { [code: string]: SwaggerResponse };
-    "x-amazon-apigateway-integration": {
-        requestParameters?: any;
-        uri: string;
-        passthroughBehavior?: string;
-        httpMethod: string;
-        type: string;
-        credentials?: string;
-        responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
-    };
+    "x-amazon-apigateway-integration": ApigatewayIntegration;
 }
 
 interface SwaggerResponse {
@@ -494,12 +527,17 @@ function createBaseSpec(apiName: string): SwaggerSpec {
     };
 }
 
-async function createPathSpecLambda(lambda: aws.lambda.Function): Promise<SwaggerOperation> {
+function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
     const region = aws.config.requireRegion();
-    const lambdaARN: aws.ARN = await lambda.arn || "computed(lambda.arn)";
+
+    async function computeUri() {
+        const lambdaARN: aws.ARN = await lambda.arn || "computed(lambda.arn)";
+        return "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations";
+    }
+
     return {
         "x-amazon-apigateway-integration": {
-            uri: "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations",
+            uri: computeUri(),
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
@@ -507,20 +545,29 @@ async function createPathSpecLambda(lambda: aws.lambda.Function): Promise<Swagge
     };
 }
 
-async function createPathSpecObject(
+function createPathSpecObject(
         bucket: aws.s3.Bucket,
         key: string,
         role: aws.iam.Role,
-        pathParameter?: string): Promise<SwaggerOperation> {
+        pathParameter?: string): SwaggerOperationAsync {
 
     const region = aws.config.requireRegion();
-    const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-    const bucketName: string = await bucket.bucket || "computed(bucket.name)";
 
-    const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
-        (pathParameter ? `/{${pathParameter}}` : ``)}`;
+    async function computeCredentials() {
+        const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
+        return roleARN;
+    }
 
-    const result: SwaggerOperation = {
+    async function computeUri() {
+        const bucketName: string = await bucket.bucket || "computed(bucket.name)";
+
+        const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
+            (pathParameter ? `/{${pathParameter}}` : ``)}`;
+
+        return uri;
+    }
+
+    const result: SwaggerOperationAsync = {
         responses: {
             "200": {
                 description: "200 response",
@@ -538,8 +585,8 @@ async function createPathSpecObject(
             },
         },
         "x-amazon-apigateway-integration": {
-            credentials: roleARN,
-            uri: uri,
+            credentials: computeCredentials(),
+            uri: computeUri(),
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",
