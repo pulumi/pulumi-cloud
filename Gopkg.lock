@@ -43,12 +43,6 @@
   revision = "0b12d6b5"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -63,8 +57,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/pulumi/pulumi"
-  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/stack","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
-  revision = "44d95666e75bcce02707132519338cb363cc1a78"
+  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/stack","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
+  revision = "e25a5f91ef9902ad34b6cb9ad88296c1a7459e75"
 
 [[projects]]
   branch = "master"
