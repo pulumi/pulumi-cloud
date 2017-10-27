@@ -156,11 +156,18 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
         loadBalancer = externalLoadBalancer;
     }
 
+    const prefixLength =
+        32 /* max load balancer name */
+        - 16 /* random hex added to ID */
+        - 4 /* room for up to 9999 load balancers */
+        - 2 /* '-i' or '-e' */;
+
     if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
         const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
         // Make it internal-only if private subnets are being used.
-        const lbname = `${commonPrefix}-s-lb-${internal ? "i" : "e"}-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
+        const lbNumber = listenerIndex / MAX_LISTENERS_PER_NLB + 1;
+        const lbname = `${commonPrefix.substring(0, prefixLength)}-${internal ? "i" : "e"}${lbNumber}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
@@ -178,7 +185,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
     }
 
     // Create the target group for the new container/port pair.
-    const targetListenerName = `${commonPrefix}-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
+    const targetListenerName = `${commonPrefix.substring(0, prefixLength)}-${internal ? "i" : "e"}${listenerIndex}`;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
