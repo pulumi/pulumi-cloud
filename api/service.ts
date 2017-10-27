@@ -34,10 +34,11 @@ export interface Container {
     image?: string;
     /**
      * A path to a folder within the current program directory where a Docker
-     * build should be run to construct the image for this Container. Exactly
-     * one of `image`, `build`, and `function` must be specified.
+     * build should be run to construct the image for this Container and any
+     * arguments that should be passed to the build. Exactly one of `image`,
+     * `build`, and `function` must be specified.
      */
-    build?: string;
+    build?: {path: string; args: {[name: string]: string}};
     /**
      * Optional environment variables to set and make available to the container
      * as it is running.
