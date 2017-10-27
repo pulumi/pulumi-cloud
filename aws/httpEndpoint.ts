@@ -335,7 +335,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 const deployment = new aws.apigateway.Deployment(`${name}_${bodyHash}`, {
                     restApi: api,
                     stageName: "",
-                    description: "Deployment of version " + `${name}_${bodyHash}`,
+                    description: `Deployment of version ${name}_${bodyHash}`,
                 });
 
                 const stage = new aws.apigateway.Stage(name, {
