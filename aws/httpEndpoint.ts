@@ -8,6 +8,7 @@ import * as mmmagic from "mmmagic";
 import * as path1 from "path";
 import * as pulumi from "pulumi";
 import { Function } from "./function";
+import { sha1hash } from "./utils";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
 export interface StaticRoute {
@@ -379,15 +380,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             },
         );
     }
-}
-
-// sha1hash returns a partial SHA1 hash of the input string.
-function sha1hash(s: string): string {
-    const shasum: crypto.Hash = crypto.createHash("sha1");
-    shasum.update(s);
-    // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
-    //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
-    return shasum.digest("hex").substring(0, 8);
 }
 
 interface SwaggerSpec {
