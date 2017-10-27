@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { commonPrefix } from "./shared";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -16,7 +17,7 @@ const region = aws.config.requireRegion();
 // is wired up as a listener on the cloud watch logs for all users functions
 // created and managed by the Pulumi framework.
 
-const logCollectorName = "pulumi-app-log-collector";
+const logCollectorName = `${commonPrefix}-log-collector`;
 let logCollector: aws.serverless.Function | undefined;
 
 export function getLogCollector(): aws.lambda.Function {

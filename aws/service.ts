@@ -7,7 +7,7 @@ import * as pulumi from "pulumi";
 import * as stream from "stream";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
-import { computePolicies, getCluster, getNetwork } from "./shared";
+import { commonPrefix, computePolicies, getCluster, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
@@ -99,10 +99,10 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
                     },
                 ],
             };
-            const role = new aws.iam.Role("pulumi-s-lb-role", {
+            const role = new aws.iam.Role(`${commonPrefix}-s-lb-role`, {
                 assumeRolePolicy: JSON.stringify(assumeRolePolicy),
             });
-            const rolePolicy = new aws.iam.RolePolicy("pulumi-s-lb-role", {
+            const rolePolicy = new aws.iam.RolePolicy(`${commonPrefix}-s-lb-role`, {
                 role: role.name,
                 policy: JSON.stringify(policy),
             });
@@ -160,7 +160,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
         // Create a new Load Balancer every 50 requests for a new TargetGroup.
         const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
         // Make it internal-only if private subnets are being used.
-        const lbname = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
+        const lbname = `${commonPrefix}-s-lb-${internal ? "i" : "e"}-${listenerIndex / MAX_LISTENERS_PER_NLB + 1}`;
         loadBalancer = pulumi.Resource.runInParentlessScope(
             () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
                 loadBalancerType: "network",
@@ -178,7 +178,7 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
     }
 
     // Create the target group for the new container/port pair.
-    const targetListenerName = `pulumi-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
+    const targetListenerName = `${commonPrefix}-s-lb-${internal ? "i" : "e"}-${listenerIndex}`;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: port,
         protocol: "TCP",
@@ -358,7 +358,7 @@ function getOrCreateRepository(container: cloud.Container): aws.ecr.Repository {
     // IDEA: eventually, it would be nice to permit "image" to specify a friendly name.
     const hash = sha1hash(container.build);
     if (!repositories.has(hash)) {
-        repositories.set(hash, new aws.ecr.Repository(`pulumi-container-${hash}`.toLowerCase()));
+        repositories.set(hash, new aws.ecr.Repository(`${commonPrefix}-container-${hash}`.toLowerCase()));
     }
     return repositories.get(hash)!;
 }
@@ -478,14 +478,14 @@ const taskRolePolicy = {
 let taskRole: aws.iam.Role | undefined;
 function getTaskRole(): aws.iam.Role {
     if (!taskRole) {
-        taskRole = new aws.iam.Role(`pulumi-task-role`, {
+        taskRole = new aws.iam.Role(`${commonPrefix}-task-role`, {
             assumeRolePolicy: JSON.stringify(taskRolePolicy),
         });
         // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
         const policies = computePolicies;
         for (let i = 0; i < policies.length; i++) {
-            const _ = new aws.iam.RolePolicyAttachment(`pulumi-task-iampolicy-${i}`, {
+            const _ = new aws.iam.RolePolicyAttachment(`${commonPrefix}-task-iampolicy-${i}`, {
                 role: taskRole,
                 policyArn: policies[i],
             });
