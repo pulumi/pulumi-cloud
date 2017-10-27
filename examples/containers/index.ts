@@ -123,7 +123,7 @@ let helloTask = new cloud.Task("hello-world", {
 let builtService = new cloud.Service("nginx2", {
     containers: {
         nginx: {
-            build: "./app",
+            build: {path: "./app"},
             memory: 128,
             ports: [{ port: 80 }],
         },
