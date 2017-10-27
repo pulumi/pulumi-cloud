@@ -152,6 +152,31 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 		},
+		{
+			Dir: path.Join(cwd, "../../examples/httpEndpoint"),
+
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				testURLGet(t, checkpoint, "test1.txt", "You got test1")
+			},
+			// EditDirs: []integration.EditDir{
+			// 	// Validate that if we change an httpendpoint url that updating works and that we
+			// 	// can retrieve the new content and the new endpoint.
+			// 	integration.EditDir{
+			// 		Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
+			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+			// 			testURLGet(t, checkpoint, "test2.txt", "You got test2")
+			// 		},
+			// 	},
+			// },
+		},
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {
@@ -160,4 +185,29 @@ func Test_Examples(t *testing.T) {
 			integration.ProgramTest(t, example)
 		})
 	}
+}
+
+func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
+	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+		return
+	}
+	pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "pulumi:framework:Endpoint", "test")
+	endpoint := pulumiResources[urn]
+	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
+		return
+	}
+	baseURL := endpoint.Properties["url"].StringValue()
+	assert.NotEmpty(t, baseURL, "expected an `test` endpoint")
+
+	// Validate the GET /test1.txt endpoint
+	resp, err := http.Get(baseURL + path)
+	assert.NoError(t, err, "expected to be able to GET /"+path)
+	contentType := resp.Header.Get("Content-Type")
+	assert.Equal(t, "text/html", contentType)
+	bytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
+	assert.Equal(t, contents, string(bytes))
 }
