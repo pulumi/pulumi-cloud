@@ -1,18 +1,7 @@
 {
+    "extends": "../../../tsconfig.json",
     "compilerOptions": {
-        "outDir": "bin",
-        "target": "es6",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "declaration": true,
-        "sourceMap": true,
-        "stripInternal": true,
-        "experimentalDecorators": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitAny": true,
-        "noImplicitReturns": true,
-        "forceConsistentCasingInFileNames": true,
-        "strictNullChecks": true
+        "outDir": "bin"
     },
     "files": [
         "table.ts"
