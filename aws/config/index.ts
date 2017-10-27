@@ -14,6 +14,11 @@ if (functionMemorySize % 64 !== 0 || functionMemorySize < 128 || functionMemoryS
     throw new Error("Lambda memory size in MiB must be a multiple of 64 between 128 and 1536.");
 }
 
+// Set the IAM role policies to apply to compute (both Lambda and ECS) within this Pulumi program.
+// The default is:
+// "arn:aws:iam::aws:policy/AWSLambdaFullAccess,arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess".
+export let computeIAMRolePolicyARNs = config.get("computeIAMRolePolicyARNs");
+
 // Optional ECS cluster ARN, subnets and VPC.  If not provided, `Service`s and
 // `Task`s are not available for the target environment.
 export let ecsClusterARN: string | pulumi.ComputedValue<string> = config.get("ecsClusterARN");
