@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
+import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
 import * as stream from "stream";
@@ -112,15 +113,13 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
-// TODO[pulumi/pulumi-cloud#135] To support multi-AZ, we may need a configu variable that
-// forces this setting to `1` - or perhaps automatically do that is we see the network is
-// configured for multiple AZs.
+// TODO[pulumi/pulumi-cloud#135] To support multi-AZ, we may need a configu variable that forces this setting to `1` -
+// or perhaps automatically do that is we see the network is configured for multiple AZs.
 const MAX_LISTENERS_PER_NLB = 50;
 
-// We may allocate both internal-facing and internet-facing load balancers, and we may want to
-// combine multiple listeners on a single load balancer. So we track the currently allocated
-// load balancers to use for both internal and external load balancing, and the index of the next
-// slot to use within that load balancers listeners.
+// We may allocate both internal-facing and internet-facing load balancers, and we may want to combine multiple
+// listeners on a single load balancer. So we track the currently allocated load balancers to use for both internal and
+// external load balancing, and the index of the next slot to use within that load balancers listeners.
 let internalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
 let internalListenerIndex = 0;
 let externalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
@@ -132,9 +131,8 @@ interface ContainerPortLoadBalancer {
     listenerPort: number;
 }
 
-// createLoadBalancer allocates a new Load Balancer TargetGroup that can be
-// attached to a Service container and port pair. Allocates a new NLB is needed
-// (currently 50 ports can be exposed on a single NLB).
+// createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
+// pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
 function newLoadBalancerTargetGroup(port: number, external?: boolean): ContainerPortLoadBalancer {
     const network: Network | undefined = getNetwork();
     if (!network) {
@@ -283,29 +281,15 @@ async function runCLICommand(
 
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
-async function buildAndPushImage(buildPath: string, repository: aws.ecr.Repository): Promise<string | undefined> {
-    const imageName = await repository.repositoryUrl;
-    const registryId = await repository.registryId;
-    if (!imageName || !registryId) {
-        // These may be undefined during a `preview` operation - if so, skip the
-        // build and push. TODO: Should the Docker build-and-push be a Resource
-        // which can move this code inside a Create or Update operation?
-        return undefined;
-    }
-
-    // Construct Docker registry auth data by getting the short-lived
-    // authorizationToken from ECR, and extracting the username password pair
-    // after base64-decoding the token.  See:
-    // http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-    const credentials = await aws.ecr.getCredentials({ registryId: registryId });
-    const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-    const [username, password] = decodedCredentials.split(":");
-    if (!password || !username) {
-        throw new Error("Invalid credentials");
-    }
-    const registry = credentials.proxyEndpoint;
+async function buildAndPushImage(imageName: string, container: cloud.Container): Promise<string | undefined> {
+    // Create a repository regardless of whether we will push to it, so that previews look right.
+    const repository: aws.ecr.Repository = getOrCreateRepository(imageName);
 
     // Invoke Docker CLI commands to build and push
+    const buildPath: string | undefined = container.build;
+    if (!buildPath) {
+        throw new Error(`Cannot build a container with an empty build specification`);
+    }
     const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
@@ -316,17 +300,42 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
         console.log(`Skipping image publish during preview: ${imageName}`);
     }
     else {
+        // First, login to the repository.  Construct Docker registry auth data by getting the short-lived
+        // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
+        // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+        const registryId = await repository.registryId;
+        if (!registryId) {
+            throw new Error("Expected registry ID to be defined during push");
+        }
+        const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+        const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+        const [username, password] = decodedCredentials.split(":");
+        if (!password || !username) {
+            throw new Error("Invalid credentials");
+        }
+        const registry = credentials.proxyEndpoint;
         const loginResult = await runCLICommand(
             "docker", ["login", "-u", username, "-p", password, registry], buildPath);
         if (loginResult.code) {
             throw new Error(`Failed to login to Docker registry ${registry}`);
         }
-        const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
+
+        // Tag and push the image to the remote repository.
+        const repositoryUrl = await repository.repositoryUrl;
+        if (!repositoryUrl) {
+            throw new Error("Expected repository URL to be defined during push");
+        }
+        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl], buildPath);
+        if (tagResult.code) {
+            throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
+        }
+        const pushResult = await runCLICommand("docker", ["push", repositoryUrl], buildPath);
         if (pushResult.code) {
             throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
         }
     }
 
+    // Finally, inspect the image so we can return the SHA digest.
     const inspectResult = await runCLICommand("docker", ["inspect", "-f", "{{.Id}}", imageName], buildPath, true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}`);
@@ -353,21 +362,33 @@ function parseDockerEngineUpdatesFromBuffer(buffer: Buffer): any[] {
 // repositories contains a cache of already created ECR repositories.
 const repositories = new Map<string, aws.ecr.Repository>();
 
-// getOrCreateRepository uses a combination of the container's name and container specification to normalize them
-// and generate an ECR repository to hold built images.  Notably, this leads to better caching in the event that
-// multiple container specifications exist that build the same location on disk.
-function getOrCreateRepository(container: cloud.Container): aws.ecr.Repository {
-    if (!container.build) {
-        throw new Error("Cannot create a container registry for a non-buildable container");
+// getImageName generates an image name from a container definition.  It uses a combination of the container's name and
+// container specification to normalize the names of resulting repositories.  Notably, this leads to better caching in
+// the event that multiple container specifications exist that build the same location on disk.
+function getImageName(container: cloud.Container): string {
+    if (container.image) {
+        // In the event of an image, just use it.
+        return container.image;
     }
+    else if (container.build) {
+        // Produce a hash of the build context and use that for the image name.
+        return `${commonPrefix}-container-${sha1hash(container.build)}`;
+    }
+    else if (container.function) {
+        // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
+        return "lukehoban/nodejsrunner";
+    }
+    else {
+        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
+    }
+}
 
-    // Produce a hash of the build context and use that for the repository name.
-    // IDEA: eventually, it would be nice to permit "image" to specify a friendly name.
-    const hash = sha1hash(container.build);
-    if (!repositories.has(hash)) {
-        repositories.set(hash, new aws.ecr.Repository(`${commonPrefix}-container-${hash}`.toLowerCase()));
+// getOrCreateRepository lazily allocates a unique repository per image name.
+function getOrCreateRepository(imageName: string): aws.ecr.Repository {
+    if (!repositories.has(imageName)) {
+        repositories.set(imageName, new aws.ecr.Repository(imageName.toLowerCase()));
     }
-    return repositories.get(hash)!;
+    return repositories.get(imageName)!;
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
@@ -375,71 +396,60 @@ const buildImageCache = new Map<string, Promise<string | undefined>>();
 
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(
-    container: cloud.Container, repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
-
-    const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
-    if (container.image) {
-        return { image: container.image, environment: environment };
-    }
-    else if (container.build) {
-        if (!repository) {
-            throw new Error("Expected a repository to be created for a `build` container definition");
-        }
-
-        // Create a repository URL for the image and see if we've already built and pushed an image.
-        const imageName: string | undefined = await repository.repositoryUrl;
+async function computeImage(container: cloud.Container): Promise<ImageOptions> {
+    const image: string = getImageName(container);
+    const env: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
+    if (container.build) {
+        // This is a container to build; produce a name, either user-specified or auto-computed.
         console.log(`Building container image at '${container.build}'`);
 
+        // See if we've already built this.
         let imageDigest: string | undefined;
-        if (imageName && buildImageCache.has(imageName)) {
+        if (image && buildImageCache.has(image)) {
             // We got a cache hit, simply reuse the existing digest.
-            imageDigest = await buildImageCache.get(imageName);
-            console.log(`    already built: ${imageName} (${imageDigest})`);
+            imageDigest = await buildImageCache.get(image);
+            console.log(`    already built: ${image} (${imageDigest})`);
         }
         else {
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(container.build, repository);
-            if (imageName) {
-                buildImageCache.set(imageName, imageDigestAsync);
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(image, container);
+            if (image) {
+                buildImageCache.set(image, imageDigestAsync);
             }
             imageDigest = await imageDigestAsync;
-            console.log(`    build complete: ${imageName} (${imageDigest})`);
+            console.log(`    build complete: ${image} (${imageDigest})`);
         }
 
-        return {
-            image: imageName!,
-            environment: [{
-                name: "IMAGE_DIGEST",
-                value: await imageDigest!,
-            }],
-        };
+        env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
+        return { image: image, environment: env };
+    }
+    else if (container.image) {
+        assert(!container.build);
+        return { image: container.image, environment: env };
     }
     else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        environment.push({ name: "PULUMI_SRC", value: jsSrcText });
-        return { image: "lukehoban/nodejsrunner", environment: environment };
+        env.push({ name: "PULUMI_SRC", value: jsSrcText });
+        return { image: image, environment: env };
     }
-
-    throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
+    else {
+        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
+    }
 }
 
 // computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is lifted over
 // a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
-async function computeContainerDefintions(
-    containers: cloud.Containers,
-    logGroup: aws.cloudwatch.LogGroup,
-    repos: Map<string, aws.ecr.Repository>): Promise<ECSContainerDefinition[]> {
+async function computeContainerDefintions(containers: cloud.Containers,
+                                          logGroup: aws.cloudwatch.LogGroup): Promise<ECSContainerDefinition[]> {
     const logGroupId = await logGroup.id;
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
-        const repository = repos.get(containerName);
-        const { image, environment } = await computeImage(container, repository);
+        const { image, environment } = await computeImage(container);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
@@ -527,16 +537,10 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                 });
             }
         }
-
-        // Create registry for each `build` container.
-        if (container.build) {
-            // ECR repositories must be lower case.
-            repos.set(containerName, getOrCreateRepository(container));
-        }
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, logGroup, repos).then(JSON.stringify);
+    const containerDefintions = computeContainerDefintions(containers, logGroup).then(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefintions,
@@ -745,8 +749,7 @@ export class HostPathVolume implements cloud.HostPathVolume {
 }
 
 /**
- * A Task represents a container which can be [run] dynamically whenever (and
- * as many times as) needed.
+ * A Task represents a container which can be [run] dynamically whenever (and as many times as) needed.
  */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
