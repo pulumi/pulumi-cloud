@@ -8,6 +8,7 @@ import * as stream from "stream";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 import { computePolicies, getCluster, getNetwork } from "./shared";
+import { sha1hash } from "./utils";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
 // from other libraries.  However, we don't want to actually import those libraries, causing those
@@ -273,12 +274,9 @@ async function runCLICommand(
     });
 }
 
-// buildAndPushImage will build and push the Dockerfile and context from
-// [buildPath] into the requested ECR [repository].  It returns the digest
-// of the built image.
-async function buildAndPushImage(buildPath: string, repository: aws.ecr.Repository):
-    Promise<string | undefined> {
-
+// buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
+// [repository].  It returns the digest of the built image.
+async function buildAndPushImage(buildPath: string, repository: aws.ecr.Repository): Promise<string | undefined> {
     const imageName = await repository.repositoryUrl;
     const registryId = await repository.registryId;
     if (!imageName || !registryId) {
@@ -305,20 +303,28 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
-    const loginResult = await runCLICommand("docker", ["login", "-u", username, "-p", password, registry], buildPath);
-    if (loginResult.code) {
-        throw new Error(`Failed to login to Docker registry ${registry}`);
+
+    // Skip the publication of the image if we're only planning.
+    if (pulumi.runtime.options.dryRun) {
+        console.log(`Skipping image publish during preview: ${imageName}`);
     }
-    const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
-    if (pushResult.code) {
-        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+    else {
+        const loginResult = await runCLICommand(
+            "docker", ["login", "-u", username, "-p", password, registry], buildPath);
+        if (loginResult.code) {
+            throw new Error(`Failed to login to Docker registry ${registry}`);
+        }
+        const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
+        if (pushResult.code) {
+            throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+        }
     }
+
     const inspectResult = await runCLICommand("docker", ["inspect", "-f", "{{.Id}}", imageName], buildPath, true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}`);
     }
-    const digest = inspectResult.stdout.trim();
-    return digest;
+    return inspectResult.stdout.trim();
 }
 
 // parseDockerEngineUpdatesFromBuffer extracts messages from the Docker engine
@@ -337,12 +343,33 @@ function parseDockerEngineUpdatesFromBuffer(buffer: Buffer): any[] {
     return results;
 }
 
-// computeImage turns the `image`, `function` or `build` setting on a
-// `cloud.Container` into a valid Docker image name which can be used in an ECS
-// TaskDefinition.
+// repositories contains a cache of already created ECR repositories.
+const repositories = new Map<string, aws.ecr.Repository>();
+
+// getOrCreateRepository uses a combination of the container's name and container specification to normalize them
+// and generate an ECR repository to hold built images.  Notably, this leads to better caching in the event that
+// multiple container specifications exist that build the same location on disk.
+function getOrCreateRepository(container: cloud.Container): aws.ecr.Repository {
+    if (!container.build) {
+        throw new Error("Cannot create a container registry for a non-buildable container");
+    }
+
+    // Produce a hash of the build context and use that for the repository name.
+    // IDEA: eventually, it would be nice to permit "image" to specify a friendly name.
+    const hash = sha1hash(container.build);
+    if (!repositories.has(hash)) {
+        repositories.set(hash, new aws.ecr.Repository(`pulumi-container-${hash}`.toLowerCase()));
+    }
+    return repositories.get(hash)!;
+}
+
+// buildImageCache remembers the digests for all past built images, keyed by image name.
+const buildImageCache = new Map<string, Promise<string | undefined>>();
+
+// computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
+// name which can be used in an ECS TaskDefinition.
 async function computeImage(
-    container: cloud.Container,
-    repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
+    container: cloud.Container, repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
 
     const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
     if (container.image) {
@@ -352,16 +379,36 @@ async function computeImage(
         if (!repository) {
             throw new Error("Expected a repository to be created for a `build` container definition");
         }
-        // Build and push the local build context to the ECR repository, wait
-        // for that to complete, then return the image name pointing to the ECT
-        // repository along with an environment variable for the image digest to
-        // ensure the TaskDefinition get's replaced IFF the built image changes.
-        const imageName = await repository.repositoryUrl;
-        const imageDigest = await buildAndPushImage(container.build, repository);
-        return { image: imageName!, environment: [{
-            name: "IMAGE_DIGEST",
-            value: imageDigest!,
-        }]};
+
+        // Create a repository URL for the image and see if we've already built and pushed an image.
+        const imageName: string | undefined = await repository.repositoryUrl;
+        console.log(`Building container image at '${container.build}'`);
+
+        let imageDigest: string | undefined;
+        if (imageName && buildImageCache.has(imageName)) {
+            // We got a cache hit, simply reuse the existing digest.
+            imageDigest = await buildImageCache.get(imageName);
+            console.log(`    already built: ${imageName} (${imageDigest})`);
+        }
+        else {
+            // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
+            // then return the image name pointing to the ECT repository along with an environment variable for the
+            // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(container.build, repository);
+            if (imageName) {
+                buildImageCache.set(imageName, imageDigestAsync);
+            }
+            imageDigest = await imageDigestAsync;
+            console.log(`    build complete: ${imageName} (${imageDigest})`);
+        }
+
+        return {
+            image: imageName!,
+            environment: [{
+                name: "IMAGE_DIGEST",
+                value: await imageDigest!,
+            }],
+        };
     }
     else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
@@ -375,17 +422,16 @@ async function computeImage(
     throw new Error("Invalid container definition - exactly one of `image`, `build`, and `function` must be provided.");
 }
 
-// computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is
-// lifted over a promise for the LogGroup and container image name generation - so should not allocate any Pulumi
-// resources.
+// computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is lifted over
+// a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
 async function computeContainerDefintions(
     containers: cloud.Containers,
     logGroup: aws.cloudwatch.LogGroup,
-    repositories: Map<string, aws.ecr.Repository>): Promise<ECSContainerDefinition[]> {
+    repos: Map<string, aws.ecr.Repository>): Promise<ECSContainerDefinition[]> {
     const logGroupId = await logGroup.id;
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
-        const repository = repositories.get(containerName);
+        const repository = repos.get(containerName);
         const { image, environment } = await computeImage(container, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
@@ -458,11 +504,12 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`);
 
-    // Find all referenced Volumes and any `build` containers
+    // Find all referenced Volumes and any `build` containers.
     const volumes: { hostPath?: string; name: string }[] = [];
-    const repositories = new Map<string, aws.ecr.Repository>();
+    const repos = new Map<string, aws.ecr.Repository>();
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
+
         // Collect referenced Volumes.
         if (container.volumes) {
             const cluster: Cluster | undefined = getCluster();
@@ -484,17 +531,16 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
                 });
             }
         }
+
         // Create registry for each `build` container.
         if (container.build) {
             // ECR repositories must be lower case.
-            const repoName = `${name}_${containerName}`.toLowerCase();
-            const repo = new aws.ecr.Repository(repoName, {});
-            repositories.set(containerName, repo);
+            repos.set(containerName, getOrCreateRepository(container));
         }
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, logGroup, repositories).then(JSON.stringify);
+    const containerDefintions = computeContainerDefintions(containers, logGroup, repos).then(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefintions,
