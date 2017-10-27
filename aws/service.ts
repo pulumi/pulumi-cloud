@@ -303,20 +303,28 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
-    const loginResult = await runCLICommand("docker", ["login", "-u", username, "-p", password, registry], buildPath);
-    if (loginResult.code) {
-        throw new Error(`Failed to login to Docker registry ${registry}`);
+
+    // Skip the publication of the image if we're only planning.
+    if (pulumi.runtime.options.dryRun) {
+        console.log(`Skipping image publish during preview: ${imageName}`);
     }
-    const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
-    if (pushResult.code) {
-        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+    else {
+        const loginResult = await runCLICommand(
+            "docker", ["login", "-u", username, "-p", password, registry], buildPath);
+        if (loginResult.code) {
+            throw new Error(`Failed to login to Docker registry ${registry}`);
+        }
+        const pushResult = await runCLICommand("docker", ["push", imageName], buildPath);
+        if (pushResult.code) {
+            throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+        }
     }
+
     const inspectResult = await runCLICommand("docker", ["inspect", "-f", "{{.Id}}", imageName], buildPath, true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}`);
     }
-    const digest = inspectResult.stdout.trim();
-    return digest;
+    return inspectResult.stdout.trim();
 }
 
 // parseDockerEngineUpdatesFromBuffer extracts messages from the Docker engine
@@ -380,20 +388,18 @@ async function computeImage(
         if (imageName && buildImageCache.has(imageName)) {
             // We got a cache hit, simply reuse the existing digest.
             imageDigest = await buildImageCache.get(imageName);
-            console.log(`    reusing existing image: ${imageName}`);
-            if (imageDigest) {
-                console.log(`    with digest: ${imageDigest}`);
-            }
+            console.log(`    already built: ${imageName} (${imageDigest})`);
         }
         else {
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            let imageDigestAsync: Promise<string | undefined> = buildAndPushImage(container.build, repository);
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(container.build, repository);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigestAsync);
             }
             imageDigest = await imageDigestAsync;
+            console.log(`    build complete: ${imageName} (${imageDigest})`);
         }
 
         return {
