@@ -165,16 +165,16 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				testURLGet(t, checkpoint, "test1.txt", "You got test1")
 			},
-			EditDirs: []integration.EditDir{
-				// Validate that if we change an httpendpoint url that updating works and that we
-				// can retrieve the new content and the new endpoint.
-				integration.EditDir{
-					Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
-					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-						testURLGet(t, checkpoint, "test2.txt", "You got test2")
-					},
-				},
-			},
+			// EditDirs: []integration.EditDir{
+			// 	// Validate that if we change an httpendpoint url that updating works and that we
+			// 	// can retrieve the new content and the new endpoint.
+			// 	integration.EditDir{
+			// 		Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
+			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+			// 			testURLGet(t, checkpoint, "test2.txt", "You got test2")
+			// 		},
+			// 	},
+			// },
 		},
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
