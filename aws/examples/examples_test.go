@@ -112,7 +112,7 @@ func Test_Examples(t *testing.T) {
 				assert.Equal(t, int64(1150), resp.ContentLength)
 				contentType = resp.Header.Get("Content-Type")
 				assert.Equal(t, "image/x-icon", contentType)
-				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
+				t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
 
 				// Validate the POST /todo/{id} endpoint
 				resp, err = http.Post(baseURL+"/todo/abc",

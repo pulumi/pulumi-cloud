@@ -4,8 +4,8 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as crypto from "crypto";
 import * as fs from "fs";
-import * as mmmagic from "mmmagic";
-import * as path1 from "path";
+import * as mime from "mime";
+import * as fspath from "path";
 import * as pulumi from "pulumi";
 import { Function } from "./function";
 import { sha1hash } from "./utils";
@@ -145,26 +145,12 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             }
         }
 
-        async function determineContentTypeAsync(path: string): Promise<string> {
-            return new Promise<string>((resolve, reject) => {
-                const magic = new mmmagic.Magic(mmmagic.MAGIC_MIME_TYPE);
-                magic.detectFile(path, (err, result) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(result);
-                    }
-                });
-            });
-        }
-
         function createBucketObject(key: string, localPath: string, contentType?: string) {
             const obj = new aws.s3.BucketObject(key, {
                 bucket: bucket,
                 key: key,
                 source: new pulumi.asset.FileAsset(localPath),
-                contentType: contentType || determineContentTypeAsync(localPath),
+                contentType: contentType || mime.getType(localPath) || undefined,
             });
         }
 
@@ -188,10 +174,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
             let startDir = directory.localPath.startsWith("/")
                 ? directory.localPath
-                : path1.join(process.cwd(), directory.localPath);
+                : fspath.join(process.cwd(), directory.localPath);
 
-            if (!startDir.endsWith(path1.sep)) {
-                startDir = path1.join(startDir, path1.sep);
+            if (!startDir.endsWith(fspath.sep)) {
+                startDir = fspath.join(startDir, fspath.sep);
             }
 
             const options = directory.options;
@@ -206,7 +192,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     ? options.index
                     : "index.html";
 
-            const indexPath = indexFile === undefined ? undefined : path1.join(startDir, indexFile);
+            const indexPath = indexFile === undefined ? undefined : fspath.join(startDir, indexFile);
 
             // Recursively walk the directory provided, creating bucket objects for all the files we
             // encounter.
@@ -214,7 +200,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 const children = fs.readdirSync(dir);
 
                 for (const childName of children) {
-                    const childPath = path1.join(dir, childName);
+                    const childPath = fspath.join(dir, childName);
                     const stats = fs.statSync(childPath);
 
                     if (stats.isDirectory()) {

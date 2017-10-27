@@ -6,9 +6,9 @@
         "lint": "tslint -c ../tslint.json -p tsconfig.json"
     },
     "devDependencies": {
-        "@types/node": "^8.0.26",
-        "@types/mmmagic": "^0.4.29",
         "@types/aws-sdk": "^2.7.0",
+        "@types/node": "^8.0.26",
+        "@types/mime": "^2.0.0",
         "tslint": "^5.7.0",
         "typescript": "^2.5.2"
     },
@@ -18,6 +18,6 @@
         "pulumi": "*"
     },
     "dependencies": {
-        "mmmagic": "^0.4.5"
+        "mime": "^2.0.3"
     }
 }
