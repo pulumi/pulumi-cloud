@@ -9,6 +9,20 @@ export interface Containers {
     [name: string]: Container;
 }
 
+export type HostOperatingSystem = "linux" | "windows";
+
+/**
+ * HostProperties describes the kind of host where a service or task can run.
+ */
+export interface HostProperties {
+    /**
+     * The operating system of the host.
+     *
+     * Default is "linux".
+     */
+    os?: HostOperatingSystem;
+}
+
 /**
  * Container specifies the metadata for a component of a Service.
  */
@@ -112,6 +126,10 @@ export interface ServiceArguments {
      * as part of the running service.  Defaults to `1`.
      */
     replicas?: number;
+    /**
+     * The properties of the host where this service can run.
+     */
+    host?: HostProperties;
 }
 
 export interface Endpoint {
@@ -153,6 +171,10 @@ export interface TaskRunOptions {
      * Optional environment variables to override those set in the container definition.
      */
     environment?: {[name: string]: pulumi.ComputedValue<string>};
+    /**
+     * The properties of the host where this task can run.
+     */
+    host?: HostProperties;
 }
 
 /**

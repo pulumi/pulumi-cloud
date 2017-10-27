@@ -554,6 +554,15 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     };
 }
 
+function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
+    const os = (host && host.os) || "linux";
+
+    return [{
+        type: "memberOf",
+        expression: `attribute:ecs.os-type == ${os}`,
+    }];
+}
+
 interface ExposedPorts {
     [name: string]: {
         [port: number]: {
@@ -623,6 +632,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     cluster: cluster!.ecsClusterARN,
                     loadBalancers: loadBalancers,
                     iamRole: iamRole,
+                    placementConstraints: placementConstraintsForHost(args.host),
                 });
             },
         );
@@ -761,6 +771,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const request: _awsSdkTypesOnly.ECS.RunTaskRequest = {
                 cluster: getClusterARN(),
                 taskDefinition: getTypeDefinitionARN(),
+                placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
                     containerOverrides: [
                         {
