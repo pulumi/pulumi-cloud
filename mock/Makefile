@@ -1,6 +1,3 @@
-PROCCNT=$(shell nproc --all)
-TESTPARALLELISM=10
-
 .PHONY: default
 default: banner dependencies lint build install integration
 

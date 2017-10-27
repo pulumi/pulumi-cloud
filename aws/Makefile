@@ -1,4 +1,3 @@
-PROCCNT=$(shell nproc --all)
 TESTPARALLELISM=10
 
 .PHONY: default
