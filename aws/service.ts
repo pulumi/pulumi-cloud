@@ -284,8 +284,7 @@ async function runCLICommand(
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(
-    buildPath: string,
-    buildArgs: {[name: string]: string},
+    buildConfig: cloud.BuildConfiguration,
     repository: aws.ecr.Repository): Promise<string | undefined> {
 
     const imageName = await repository.repositoryUrl;
@@ -310,11 +309,19 @@ async function buildAndPushImage(
     const registry = credentials.proxyEndpoint;
 
     const buildCommandArgs = ["build", "-t", imageName];
-    for (const name of Object.keys(buildArgs)) {
-        buildCommandArgs.push("--build-arg");
-        buildCommandArgs.push(`${name}=${buildArgs[name]}`);
+    if (buildConfig.args) {
+        for (const name of Object.keys(buildConfig.args)) {
+            buildCommandArgs.push("--build-arg");
+            buildCommandArgs.push(`${name}=${buildConfig.args[name]}`);
+        }
+    }
+    if (buildConfig.dockerfile) {
+        buildCommandArgs.push("-f");
+        buildCommandArgs.push(`${buildConfig.dockerfile}`);
     }
     buildCommandArgs.push(".");
+
+    const buildPath = buildConfig.context;
 
     // Invoke Docker CLI commands to build and push
     const buildResult = await runCLICommand("docker", buildCommandArgs, buildPath);
@@ -374,7 +381,7 @@ function getOrCreateRepository(container: cloud.Container): aws.ecr.Repository {
 
     // Produce a hash of the build context and use that for the repository name.
     // IDEA: eventually, it would be nice to permit "image" to specify a friendly name.
-    const hash = sha1hash(container.build.path);
+    const hash = sha1hash(container.build.context);
     if (!repositories.has(hash)) {
         repositories.set(hash, new aws.ecr.Repository(`${commonPrefix}-container-${hash}`.toLowerCase()));
     }
@@ -400,7 +407,7 @@ async function computeImage(
 
         // Create a repository URL for the image and see if we've already built and pushed an image.
         const imageName: string | undefined = await repository.repositoryUrl;
-        console.log(`Building container image at '${container.build.path}'`);
+        console.log(`Building container image at '${container.build.context}'`);
 
         let imageDigest: string | undefined;
         if (imageName && buildImageCache.has(imageName)) {
@@ -412,8 +419,7 @@ async function computeImage(
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(
-                container.build.path, container.build.args || {}, repository);
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(container.build, repository);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigestAsync);
             }
