@@ -164,7 +164,7 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				testURLGet(t, checkpoint, "test1.txt", "you got test1")
+				testURLGet(t, checkpoint, "test1.txt", "You got test1")
 			},
 			EditDirs: []integration.EditDir{
 				// Validate that if we change an httpendpoint url that updating works and that we
@@ -172,7 +172,7 @@ func Test_Examples(t *testing.T) {
 				integration.EditDir{
 					Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
 					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-						testURLGet(t, checkpoint, "test2.txt", "you got test2")
+						testURLGet(t, checkpoint, "test2.txt", "You got test2")
 					},
 				},
 			},
