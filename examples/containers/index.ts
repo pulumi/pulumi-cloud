@@ -17,7 +17,7 @@ let nginx = new cloud.Service("nginx", {
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
-let dataVolume = new cloud.Volume("mymongodb-data");
+let dataVolume = new cloud.SharedVolume("mymongodb-data");
 let mongodb = new cloud.Service("mymongodb", {
     containers: {
         mongodb: {

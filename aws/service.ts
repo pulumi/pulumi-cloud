@@ -451,7 +451,7 @@ async function computeContainerDefintions(
             environment: environment,
             mountPoints: (container.volumes || []).map(v => ({
                 containerPath: v.containerPath,
-                sourceVolume: v.sourceVolume.name,
+                sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
             })),
             logConfiguration: {
                 logDriver: "awslogs",
@@ -519,22 +519,11 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
 
         // Collect referenced Volumes.
         if (container.volumes) {
-            const cluster: Cluster | undefined = getCluster();
             for (const volumeMount of container.volumes) {
-                if (!cluster || !cluster.efsMountPath) {
-                    throw new Error(
-                        "Cannot use 'Volume'.  Configured cluster does not support EFS.",
-                    );
-                }
                 const volume = volumeMount.sourceVolume;
                 volumes.push({
-                    // TODO: [pulumi/pulumi##381] We should most likely be
-                    // including a unique identifier for this deployment
-                    // into the path, so that Volumes in this deployment
-                    // don't accidentally overlap with Volumes from other
-                    // deployments on the same cluster.
-                    hostPath: `${cluster.efsMountPath}/${volume.name}`,
-                    name: volume.name,
+                    hostPath: (volume as Volume).getHostPath(),
+                    name: (volume as Volume).getVolumeName(),
                 });
             }
         }
@@ -691,15 +680,21 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
 const volumeNames = new Set<string>();
 
+export interface Volume extends cloud.Volume {
+    getVolumeName(): any;
+    getHostPath(): any;
+}
+
 // _Note_: In the current EFS-backed model, a Volume is purely virtual - it
 // doesn't actually manage any underlying resource.  It is used just to provide
 // a handle to a folder on the EFS share which can be mounted by conatainer(s).
-// On platforms like ACI, we may be able to acrtually provision a unique File
+// On platforms like ACI, we may be able to actually provision a unique File
 // Share per Volume to keep these independently managable.  For now, on AWS
-// thoguh, we rely on this File Share having been set up as part of the ECS
+// though, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.
-export class Volume extends pulumi.ComponentResource implements cloud.Volume {
+export class SharedVolume extends pulumi.ComponentResource implements Volume, cloud.SharedVolume {
+    public readonly kind: cloud.VolumeKind;
     public readonly name: string;
 
     constructor(name: string) {
@@ -707,8 +702,45 @@ export class Volume extends pulumi.ComponentResource implements cloud.Volume {
             throw new Error("Must provide a unique volume name");
         }
         super("cloud:volume:Volume", name, {}, () => {/* no children */});
+        this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
+    }
+
+    getVolumeName() {
+        // Ensure this is unique to avoid conflicts both in EFS and in the
+        // TaskDefinition we pass to ECS.
+        return sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${this.kind}:${this.name}`);
+    }
+
+    getHostPath() {
+        const cluster: Cluster | undefined = getCluster();
+        if (!cluster || !cluster.efsMountPath) {
+            throw new Error(
+                "Cannot use 'Volume'.  Configured cluster does not support EFS.",
+            );
+        }
+        // Include the unique `getVolumeName` in the EFS host path to ensure this doesn't
+        // clash with other deployments.
+        return `${cluster.efsMountPath}/${this.name}_${this.getVolumeName()}`;
+    }
+}
+
+export class HostPathVolume implements cloud.HostPathVolume {
+    public readonly kind: cloud.VolumeKind;
+    public readonly path: string;
+
+    constructor(path: string) {
+        this.kind = "HostPathVolume";
+        this.path = path;
+    }
+
+    getVolumeName() {
+        return sha1hash(`${this.kind}:${this.path}`);
+    }
+
+    getHostPath() {
+        return this.path;
     }
 }
 

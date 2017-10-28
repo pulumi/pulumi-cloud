@@ -75,7 +75,7 @@ export interface Container {
      * `--volume` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    volumes?: {containerPath: string; sourceVolume: Volume}[];
+    volumes?: ContainerVolumeMount[];
     /**
      * The command line that is passed to the container. This parameter maps to
      * `Cmd` in the [Create a
@@ -89,28 +89,62 @@ export interface Container {
     command?: string[];
 }
 
+export interface ContainerVolumeMount {
+    containerPath: string;
+    sourceVolume: Volume;
+}
+
+export type VolumeKind = "SharedVolume" | "HostPathVolume";
+
+export interface Volume {
+    kind: VolumeKind;
+}
+
 /**
  * A shared volume that can be mounted into one or more containers.
  */
-export interface Volume {
+export interface SharedVolume extends Volume {
     /*
      * The unique name of the volume.
      */
     name: string;
 }
 
-export interface VolumeConstructor {
+export interface SharedVolumeConstructor {
     /**
      * Construct a new Volume with the given unique name.
      */
-    new (name: string): Volume;
+    new (name: string): SharedVolume;
 
     // TODO[pulumi/pulumi-cloud#84] - Likely important features:
     // backupToBucket(bucket: Bucket): Promise<void>
     // restoreFromBucket(bucket: Bucket): Promise<void>
 }
 
-export let Volume: VolumeConstructor; // tslint:disable-line
+export let SharedVolume: SharedVolumeConstructor; // tslint:disable-line
+
+/**
+ * A volume mounted from a path on the host machine.
+ *
+ * _Note_: This is an emphemeral volume which will not persist across container restarts or
+ * across different hosts.  This is not something that most containers will need, but it offers
+ * a powerful escape hatch for some applications.
+ */
+export interface HostPathVolume extends Volume {
+    /*
+     * The unique name of the volume.
+     */
+    path: string;
+}
+
+export interface HostPathVolumeConstructor {
+    /**
+     * Construct a new Volume with the given unique name.
+     */
+    new (path: string): HostPathVolume;
+}
+
+export let HostPathVolume: HostPathVolumeConstructor; // tslint:disable-line
 
 /**
  * The arguments to construct a Service object.
