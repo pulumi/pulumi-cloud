@@ -308,6 +308,7 @@ async function buildAndPushImage(
     }
     const registry = credentials.proxyEndpoint;
 
+    const buildPath = buildConfig.context;
     const buildCommandArgs = ["build", "-t", imageName];
     if (buildConfig.args) {
         for (const name of Object.keys(buildConfig.args)) {
@@ -319,12 +320,10 @@ async function buildAndPushImage(
         buildCommandArgs.push("-f");
         buildCommandArgs.push(`${buildConfig.dockerfile}`);
     }
-    buildCommandArgs.push(".");
-
-    const buildPath = buildConfig.context;
+    buildCommandArgs.push(buildPath);
 
     // Invoke Docker CLI commands to build and push
-    const buildResult = await runCLICommand("docker", buildCommandArgs, buildPath);
+    const buildResult = await runCLICommand("docker", buildCommandArgs, ".");
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
