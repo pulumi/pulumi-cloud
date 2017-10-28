@@ -18,9 +18,18 @@ export class Task implements cloud.Task {
     }
 }
 
-export class Volume implements cloud.Volume {
+export class SharedVolume implements cloud.SharedVolume {
+    kind: cloud.VolumeKind;
     name: string;
     constructor(name: string) {
-        throw new Error(`Volume not yet supported in mock implementation.`);
+        throw new Error(`SharedVolume not yet supported in mock implementation.`);
+    }
+}
+
+export class HostPathVolume implements cloud.HostPathVolume {
+    kind: cloud.VolumeKind;
+    path: string;
+    constructor(path: string) {
+        throw new Error(`HostPathVolume not yet supported in mock implementation.`);
     }
 }
