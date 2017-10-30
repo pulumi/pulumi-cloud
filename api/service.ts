@@ -28,26 +28,28 @@ export interface HostProperties {
  */
 export interface Container {
     /**
-     * The image to use for the container. Exactly one of `image`, `build`, and
-     * `function` must be specified.
+     * The image to use for the container.  If `image` is specified, but not `build`, the image will be
+     * pulled from the Docker Hub.  If `image` *and* `build` are specified, the `image` controls the
+     * resulting image tag for the build image that gets pushed.
      */
     image?: string;
     /**
-     * A path to a folder within the current program directory where a Docker
-     * build should be run to construct the image for this Container. Exactly
-     * one of `image`, `build`, and `function` must be specified.
+     * A path to a folder within the current program directory where a Docker build should be run to
+     * construct the image for this Container.  If `image` is also specified, the built container will
+     * be tagged with that name, but otherwise will get an auto-generated image name.
      */
     build?: string;
+    /**
+     * The function code to use as the implementation of the contaner.  If `function` is specified,
+     * neither `image` nor `build` are legal.
+     */
+    function?: () => void;
+
     /**
      * Optional environment variables to set and make available to the container
      * as it is running.
      */
     environment?: {[name: string]: pulumi.ComputedValue<string>};
-    /**
-     * The function code to use as the implementation of the contaner. Exactly
-     * one of `image`, `build`, and `function` must be specified.
-     */
-    function?: () => void;
     /**
      * The maximum amount of memory the container will be allowed to use. Maps to the Docker
      * `--memory` option - see

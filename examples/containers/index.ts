@@ -192,3 +192,15 @@ api.get("/custom", async (req, res) => {
     }
 });
 api.publish().url.then(url => console.log(`Serving at: ${url}`));
+
+let builtNamedService = new cloud.Service("nginx3", {
+    containers: {
+        nginx: {
+            build: "./app",
+            image: "pulumi/nginx",
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+    replicas: 2,
+});
