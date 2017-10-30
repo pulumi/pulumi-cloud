@@ -6,12 +6,13 @@ import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as http from "http";
 import * as pulumi from "pulumi";
+import * as serveStatic from "serve-static";
 import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
-    public staticFile: (path: string, filePath: string, contentType?: string) => void;
+    public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -19,20 +20,23 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public delete: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public options: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public all: (path: string, ...handlers: cloud.RouteHandler[]) => void;
-    public publish: () => HttpDeployment;
+    public publish: () => cloud.HttpDeployment;
 
     constructor(name: string) {
         utils.ensureUnique(usedNames, name, "HttpEndpoint");
 
         const app = express();
 
-        // Use 'raw' body parsing to convert populate any request body properly with a buffer.
-        // Pass an always-true function as our options so that always convert the request body
-        // into a buffer no matter what the content type.
+        // Use 'raw' body parsing to convert populate any request body properly with a buffer. Pass
+        // an always-true function as our options so that always convert the request body into a
+        // buffer no matter what the content type.
         app.use(bodyParser.raw({ type: () => true }));
 
-        this.staticFile = (path, filePath) => {
-            app.use(path, express.static(filePath));
+        this.static = (path, localPath, options) => {
+            const expressOptions: serveStatic.ServeStaticOptions | undefined = options
+                ? { index: options.index }
+                : undefined;
+            app.use(path, express.static(localPath, expressOptions));
         };
 
         this.route = (method, path, ...handlers) => {
@@ -142,7 +146,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 }
 
-export class HttpDeployment implements cloud.HttpDeployment {
+class HttpDeployment implements cloud.HttpDeployment {
     public readonly url: pulumi.Computed<string>;
     public readonly customDomainNames: pulumi.Computed<string>[];
 

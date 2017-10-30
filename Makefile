@@ -1,5 +1,3 @@
-PROCCNT=$(shell nproc --all)
-
 .PHONY: all
 all: tslint_rules api aws examples mock test
 

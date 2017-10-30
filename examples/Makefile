@@ -1,5 +1,3 @@
-PROCCNT=$(shell nproc --all)
-
 .PHONY: all
 all: crawler integration todo
 

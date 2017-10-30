@@ -17,13 +17,13 @@ let nginx = new cloud.Service("nginx", {
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
-let dataVolume = new cloud.Volume("mymongodb-data");
+let dataVolume = new cloud.SharedVolume("mymongodb-data");
 let mongodb = new cloud.Service("mymongodb", {
     containers: {
         mongodb: {
             image: "mongo",
             memory: 128,
-            ports: [{ port: 27017 }],
+            ports: [{ port: 27017, external: true }],
             volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
         },
     },
@@ -59,12 +59,12 @@ class Cache {
     get: (key: string) => Promise<string>;
     set: (key: string, value: string) => Promise<void>;
 
-    constructor(name: string) {
+    constructor(name: string, memory: number = 128) {
         let redis = new cloud.Service(name, {
             containers: {
                 redis: {
                     image: "redis:alpine",
-                    memory: 128,
+                    memory: memory,
                     ports: [{ port: 6379 }],
                     command: ["redis-server", "--requirepass", redisPassword],
                 },
@@ -72,7 +72,7 @@ class Cache {
         });
         this.get = (key: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${endpoint}`);
+                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -92,7 +92,7 @@ class Cache {
         };
         this.set = (key: string, value: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${endpoint}`);
+                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -120,11 +120,23 @@ let helloTask = new cloud.Task("hello-world", {
     memory: 20,
 });
 
+let builtService = new cloud.Service("nginx2", {
+    containers: {
+        nginx: {
+            build: "./app",
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+    replicas: 2,
+});
+
 let api = new cloud.HttpEndpoint("myendpoint");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
+        nginx2: await builtService.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {
@@ -138,7 +150,7 @@ api.get("/", async (req, res) => {
             return;
         }
         let endpoint = await nginx.getEndpoint("nginx", 80);
-        console.log("got host and port:" + endpoint);
+        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());
@@ -167,7 +179,7 @@ api.get("/run", async (req, res) => {
 api.get("/custom", async (req, res) => {
     try {
         let endpoint = await customWebServer.getEndpoint();
-        console.log("got host and port:" + endpoint);
+        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());

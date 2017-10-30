@@ -11,10 +11,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
 	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
@@ -29,7 +28,7 @@ func Test_Examples(t *testing.T) {
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
-	examples := []integration.LumiProgramTestOptions{
+	examples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "../../examples/crawler"),
 			Config: map[string]string{
@@ -45,6 +44,20 @@ func Test_Examples(t *testing.T) {
 			Dir: path.Join(cwd, "../../examples/countdown"),
 			Config: map[string]string{
 				"aws:config:region": region,
+				// TODO[pulumi/pulumi-cloud#138]: Would love to use this example to test private networking for
+				// lambdas, but we are blocked on doing this in CI due to the inability to automatically delete
+				// the VPC used for hosting Lambda within a day of running a Lambda in it.
+				// "cloud-aws:config:usePrivateNetwork": "true",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+			},
+		},
+		{
+			Dir: path.Join(cwd, "../../examples/containers"),
+			Config: map[string]string{
+				"aws:config:region":               region,
+				"cloud-aws:config:ecsAutoCluster": "true",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
@@ -61,18 +74,14 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint environment.Checkpoint) {
-				_, snapshot := environment.DeserializeCheckpoint(&checkpoint)
-				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-				urnPrefix := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo_")
-				var endpoint *component.Component
-				for urn, comp := range pulumiResources {
-					// See if this resource has the same URN prefix (it will have a unique hash suffix).
-					if strings.HasPrefix(string(urn), string(urnPrefix)) {
-						endpoint = comp
-						break
-					}
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+					return
 				}
+				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
+				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
@@ -88,11 +97,22 @@ func Test_Examples(t *testing.T) {
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
+				// Validate the GET /index.html endpoint
+				resp, err = http.Get(baseURL + "/index.html")
+				assert.NoError(t, err, "expected to be able to GET /index.html")
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html", contentType)
+				bytes, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+
 				// Validate the GET /favico.ico endpoint
 				resp, err = http.Get(baseURL + "/favicon.ico")
 				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
 				assert.Equal(t, int64(1150), resp.ContentLength)
-				t.Logf("GET %v [%v]: ...", baseURL+"/favicon.ico", resp.StatusCode)
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "image/x-icon", contentType)
+				t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
 
 				// Validate the POST /todo/{id} endpoint
 				resp, err = http.Post(baseURL+"/todo/abc",
@@ -132,12 +152,62 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 		},
+		{
+			Dir: path.Join(cwd, "../../examples/httpEndpoint"),
+
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				testURLGet(t, checkpoint, "test1.txt", "You got test1")
+			},
+			// EditDirs: []integration.EditDir{
+			// 	// Validate that if we change an httpendpoint url that updating works and that we
+			// 	// can retrieve the new content and the new endpoint.
+			// 	integration.EditDir{
+			// 		Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
+			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+			// 			testURLGet(t, checkpoint, "test2.txt", "You got test2")
+			// 		},
+			// 	},
+			// },
+		},
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {
 		example := ex
 		t.Run(example.Dir, func(t *testing.T) {
-			integration.LumiProgramTest(t, example)
+			integration.ProgramTest(t, example)
 		})
 	}
+}
+
+func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
+	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+		return
+	}
+	pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "pulumi:framework:Endpoint", "test")
+	endpoint := pulumiResources[urn]
+	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
+		return
+	}
+	baseURL := endpoint.Properties["url"].StringValue()
+	assert.NotEmpty(t, baseURL, "expected an `test` endpoint")
+
+	// Validate the GET /test1.txt endpoint
+	resp, err := http.Get(baseURL + path)
+	assert.NoError(t, err, "expected to be able to GET /"+path)
+	contentType := resp.Header.Get("Content-Type")
+	assert.Equal(t, "text/html", contentType)
+	bytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
+	assert.Equal(t, contents, string(bytes))
 }

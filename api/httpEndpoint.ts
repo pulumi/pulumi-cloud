@@ -91,6 +91,19 @@ export interface HttpEndpointConstructor {
 
 export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
 
+export interface ServeStaticOptions {
+    /**
+     * The `content-type` to serve the file as.  Only valid when localPath points to a file.  If
+     * localPath points to a directory, the content types for all files will be inferred.
+     */
+    contentType?: string;
+    /**
+     * By default HttpEndpoint.static will also serve 'index.html' in response to a request on a
+     * directory. To disable this set false or to supply a new index pass a string.
+     */
+    index?: boolean | string;
+}
+
 /**
  * HttpEndpoint publishes an internet-facing HTTP API, for serving web
  * applications or REST APIs.
@@ -115,15 +128,14 @@ export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
  */
 export interface HttpEndpoint {
     /**
-     * staticFile serves a static file from within the source folder at the
-     * requested path.
+     * static serves a file or directory from within the source folder at the requested path.
      *
      * @param path The route path at which to serve the file.
-     * @param filePath The local file path relative to the Pulumi program
-     * folder.
-     * @param contentType The `content-type` to serve the file as.
+     * @param localPath The local path.  If not absolute, it is considered relative to the Pulumi
+     *                  program folder.
+     * @param options Optional options that can be provided to customize the serving behavior.
      */
-    staticFile(path: string, filePath: string, contentType?: string): void;
+    static(path: string, localPath: string, options?: ServeStaticOptions): void;
 
     /**
      * Routes any requests with given HTTP method on the given path to the
@@ -182,6 +194,8 @@ export interface HttpEndpoint {
      * Provide a domain name you own, along with SSL certificates from a
      * certificate authority (e.g. LetsEncrypt).
      *
+     * Must be called prior to [publish]ing the API.
+     *
      * _Note_: It is strongly encouraged to store certificates in config
      * variables and not in source code.
      */
@@ -190,7 +204,8 @@ export interface HttpEndpoint {
     /**
      * Publishes an HttpEndpoint to be internet accessible.
      *
-     * This should be called after describing desired routes.
+     * This should be called after describing desired routes and domains.
+     * Throws an error if called multiple times on the same endpoint.
      *
      * @returns An HttpDeployment object representing the live HttpEndpoint.
      */

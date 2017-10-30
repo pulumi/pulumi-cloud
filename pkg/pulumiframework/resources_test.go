@@ -12,7 +12,7 @@ import (
 
 	"github.com/pulumi/pulumi-cloud/pkg/component"
 	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/environment"
+	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
@@ -29,15 +29,15 @@ func init() {
 }
 
 func getPulumiResources(t *testing.T, path string) (component.Components, tokens.QName) {
-	var checkpoint environment.Checkpoint
+	var checkpoint stack.Checkpoint
 	byts, err := ioutil.ReadFile(path)
 	assert.NoError(t, err)
 	json.Unmarshal(byts, &checkpoint)
-	target, snapshot := environment.DeserializeCheckpoint(&checkpoint)
-
+	name, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	assert.NoError(t, err)
 	resources := GetComponents(snapshot.Resources)
 	spew.Dump(resources)
-	return resources, target.Name
+	return resources, name
 }
 
 func TestTodo(t *testing.T) {
@@ -62,7 +62,7 @@ func TestTodo(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 1, len(endpoint.Properties))
-	assert.Equal(t, "https://qafoio2d46.execute-api.us-east-2.amazonaws.com/stage/", endpoint.Properties[resource.PropertyKey("url")].StringValue())
+	assert.Equal(t, "https://a3g797nzxd.execute-api.us-east-2.amazonaws.com/stage/", endpoint.Properties[resource.PropertyKey("url")].StringValue())
 	assert.Equal(t, 3, len(endpoint.Resources))
 	assert.Equal(t, pulumiEndpointType, endpoint.Type)
 }
@@ -71,7 +71,7 @@ func TestCrawler(t *testing.T) {
 	components, targetName := getPulumiResources(t, "testdata/crawler.json")
 	assert.Equal(t, 4, len(components))
 
-	rawURN := resource.NewURN(targetName, "todo", "aws:sns/topic:Topic", "countDown")
+	rawURN := resource.NewURN(targetName, "countdown", "aws:sns/topic:Topic", "countDown")
 
 	countDownArn := newPulumiFrameworkURN(rawURN, tokens.Type(pulumiTopicType), tokens.QName("countDown"))
 	countDown, ok := components[countDownArn]
