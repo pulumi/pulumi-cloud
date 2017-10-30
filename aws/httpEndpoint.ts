@@ -336,6 +336,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 for (const path of Object.keys(swagger.paths)) {
                     for (let method of Object.keys(swagger.paths[path])) {
                         const lambda = lambdas[method + ":" + path];
+
                         if (lambda !== undefined) {
                             if (method === "x-amazon-apigateway-any-method") {
                                 method = "*";
