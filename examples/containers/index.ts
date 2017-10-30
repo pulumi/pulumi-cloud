@@ -123,12 +123,34 @@ let helloTask = new cloud.Task("hello-world", {
 let builtService = new cloud.Service("nginx2", {
     containers: {
         nginx: {
-            build: "./app",
+            build: {context: "./app"},
             memory: 128,
             ports: [{ port: 80 }],
         },
     },
     replicas: 2,
+});
+
+let builtService2 = new cloud.Service("nginx3", {
+    containers: {
+        nginx: {
+            build: {context: "./app", dockerfile: "./app/Dockerfile2"},
+            memory: 128,
+            ports: [{ port: 80 }],
+        }
+    },
+    replicas: 1,
+});
+
+let builtService3 = new cloud.Service("nginx4", {
+    containers: {
+        nginx: {
+            build: {context: "./app", dockerfile: "./app/Dockerfile3", args: { content: "./content3" } },
+            memory: 128,
+            ports: [{ port: 80 }],
+        }
+    },
+    replicas: 1,
 });
 
 let api = new cloud.HttpEndpoint("myendpoint");
@@ -137,6 +159,8 @@ api.get("/test", async (req, res) => {
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
         nginx2: await builtService.getEndpoint(),
+        nginx3: await builtService2.getEndpoint(),
+        nginx4: await builtService3.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {

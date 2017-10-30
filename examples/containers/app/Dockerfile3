@@ -1,0 +1,3 @@
+FROM nginx
+ARG CONTENT
+COPY $CONTENT /usr/share/nginx/html

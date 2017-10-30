@@ -283,7 +283,10 @@ async function runCLICommand(
 
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
-async function buildAndPushImage(buildPath: string, repository: aws.ecr.Repository): Promise<string | undefined> {
+async function buildAndPushImage(
+    buildConfig: cloud.BuildConfiguration,
+    repository: aws.ecr.Repository): Promise<string | undefined> {
+
     const imageName = await repository.repositoryUrl;
     const registryId = await repository.registryId;
     if (!imageName || !registryId) {
@@ -305,8 +308,22 @@ async function buildAndPushImage(buildPath: string, repository: aws.ecr.Reposito
     }
     const registry = credentials.proxyEndpoint;
 
+    const buildPath = buildConfig.context;
+    const buildCommandArgs = ["build", "-t", imageName];
+    if (buildConfig.args) {
+        for (const name of Object.keys(buildConfig.args)) {
+            buildCommandArgs.push("--build-arg");
+            buildCommandArgs.push(`${name}=${buildConfig.args[name]}`);
+        }
+    }
+    if (buildConfig.dockerfile) {
+        buildCommandArgs.push("-f");
+        buildCommandArgs.push(`${buildConfig.dockerfile}`);
+    }
+    buildCommandArgs.push(buildPath);
+
     // Invoke Docker CLI commands to build and push
-    const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
+    const buildResult = await runCLICommand("docker", buildCommandArgs, ".");
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
@@ -363,7 +380,7 @@ function getOrCreateRepository(container: cloud.Container): aws.ecr.Repository {
 
     // Produce a hash of the build context and use that for the repository name.
     // IDEA: eventually, it would be nice to permit "image" to specify a friendly name.
-    const hash = sha1hash(container.build);
+    const hash = sha1hash(container.build.context);
     if (!repositories.has(hash)) {
         repositories.set(hash, new aws.ecr.Repository(`${commonPrefix}-container-${hash}`.toLowerCase()));
     }
@@ -389,7 +406,7 @@ async function computeImage(
 
         // Create a repository URL for the image and see if we've already built and pushed an image.
         const imageName: string | undefined = await repository.repositoryUrl;
-        console.log(`Building container image at '${container.build}'`);
+        console.log(`Building container image at '${container.build.context}'`);
 
         let imageDigest: string | undefined;
         if (imageName && buildImageCache.has(imageName)) {

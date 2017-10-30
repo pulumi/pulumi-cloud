@@ -23,6 +23,22 @@ export interface HostProperties {
     os?: HostOperatingSystem;
 }
 
+export interface BuildConfiguration {
+    /**
+     * A path to a folder under the current program directory. If `dockerfile` is not specified, this folder
+     * must contain a Dockerfile.
+     */
+    context: string;
+    /**
+     * Optional path to an alternate Dockerfile under the current program directory.
+     */
+    dockerfile?: string;
+    /**
+     * Any arguments that should be passed to the build.
+     */
+    args?: {[name: string]: string};
+}
+
 /**
  * Container specifies the metadata for a component of a Service.
  */
@@ -34,10 +50,11 @@ export interface Container {
     image?: string;
     /**
      * A path to a folder within the current program directory where a Docker
-     * build should be run to construct the image for this Container. Exactly
-     * one of `image`, `build`, and `function` must be specified.
+     * build should be run to construct the image for this Container and any
+     * arguments that should be passed to the build. Exactly one of `image`,
+     * `build`, and `function` must be specified.
      */
-    build?: string;
+    build?: BuildConfiguration;
     /**
      * Optional environment variables to set and make available to the container
      * as it is running.
