@@ -4,7 +4,7 @@ TESTPARALLELISM=10
 default: banner dependencies lint build install
 
 .PHONY: all
-all: default examples
+all: default examples performance
 
 .PHONY: banner
 banner:
@@ -39,3 +39,8 @@ examples:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
 	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
 
+
+.PHONY: performance
+performance:
+	@echo "\033[0;32mTEST PERFORMANCE:\033[0m"
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/performance
