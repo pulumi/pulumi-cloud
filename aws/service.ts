@@ -43,7 +43,7 @@ interface ECSContainerDefinition {
     dockerLabels?: { [label: string]: string };
     dockerSecurityOptions?: string[];
     entryPoint?: string[];
-    environment?: ImageEnvironment;
+    environment?: ECSContainerEnvironment;
     essential?: boolean;
     extraHosts?: { hostname: string; ipAddress: string }[];
     hostname?: string;
@@ -62,6 +62,13 @@ interface ECSContainerDefinition {
     user?: string;
     volumesFrom?: { sourceContainer?: string; readOnly?: boolean }[];
     workingDirectory?: string;
+}
+
+type ECSContainerEnvironment = ECSContainerEnvironmentEntry[];
+
+interface ECSContainerEnvironmentEntry {
+    name: string;
+    value: string;
 }
 
 // The shared Load Balancer management role used across all Services.
@@ -212,22 +219,18 @@ function newLoadBalancerTargetGroup(port: number, external?: boolean): Container
 
 interface ImageOptions {
     image: string;
-    environment: ImageEnvironment;
+    environment: ECSContainerEnvironment;
 }
 
-type ImageEnvironment = ImageEnvironmentEntry[];
-
-interface ImageEnvironmentEntry {
-    name: string;
-    value: pulumi.ComputedValue<string>;
-}
-
-function ecsEnvironmentFromMap(
-        environment: {[name: string]: pulumi.ComputedValue<string>} | undefined): ImageEnvironment {
-    const result: ImageEnvironment = [];
+async function ecsEnvironmentFromMap(
+        environment: {[name: string]: pulumi.ComputedValue<string>} | undefined): Promise<ECSContainerEnvironment> {
+    const result: ECSContainerEnvironment = [];
     if (environment) {
         for (const name of Object.keys(environment)) {
-            result.push({ name: name, value: environment[name] });
+            let env: string | undefined = await environment[name];
+            if (env) {
+                result.push({ name: name, value: env });
+            }
         }
     }
     return result;
@@ -397,37 +400,37 @@ const buildImageCache = new Map<string, Promise<string | undefined>>();
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
 async function computeImage(container: cloud.Container): Promise<ImageOptions> {
-    const image: string = getImageName(container);
-    const env: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
+    const imageName: string = getImageName(container);
+    const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
         console.log(`Building container image at '${container.build}'`);
 
         // See if we've already built this.
         let imageDigest: string | undefined;
-        if (image && buildImageCache.has(image)) {
+        if (imageName && buildImageCache.has(imageName)) {
             // We got a cache hit, simply reuse the existing digest.
-            imageDigest = await buildImageCache.get(image);
-            console.log(`    already built: ${image} (${imageDigest})`);
+            imageDigest = await buildImageCache.get(imageName);
+            console.log(`    already built: ${imageName} (${imageDigest})`);
         }
         else {
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(image, container);
-            if (image) {
-                buildImageCache.set(image, imageDigestAsync);
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(imageName, container);
+            if (imageName) {
+                buildImageCache.set(imageName, imageDigestAsync);
             }
             imageDigest = await imageDigestAsync;
-            console.log(`    build complete: ${image} (${imageDigest})`);
+            console.log(`    build complete: ${imageName} (${imageDigest})`);
         }
 
         env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
-        return { image: image, environment: env };
+        return { image: imageName, environment: env };
     }
     else if (container.image) {
         assert(!container.build);
-        return { image: container.image, environment: env };
+        return { image: imageName, environment: env };
     }
     else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
@@ -435,7 +438,7 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
         env.push({ name: "PULUMI_SRC", value: jsSrcText });
-        return { image: image, environment: env };
+        return { image: imageName, environment: env };
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -773,16 +776,18 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         );
 
         const clusterARN = cluster.ecsClusterARN;
-        const environment: ImageEnvironment = ecsEnvironmentFromMap(container.environment);
-
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
+            const environment: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    environment.push({ name: envName, value: options.environment[envName] });
+                    let envVal: string | undefined = await options.environment[envName];
+                    if (envVal) {
+                        environment.push({ name: envName, value: envVal });
+                    }
                 }
             }
 
