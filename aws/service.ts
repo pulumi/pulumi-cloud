@@ -284,7 +284,8 @@ async function runCLICommand(
 
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
-async function buildAndPushImage(imageName: string, container: cloud.Container): Promise<string | undefined> {
+async function buildAndPushImage(imageName: string, container: cloud.Container,
+                                 repository: aws.ecr.Repository): Promise<string | undefined> {
     // Invoke Docker CLI commands to build and push
     const buildPath: string | undefined = container.build;
     if (!buildPath) {
@@ -300,9 +301,6 @@ async function buildAndPushImage(imageName: string, container: cloud.Container):
         console.log(`Skipping image publish during preview: ${imageName}`);
     }
     else {
-        // Get the container repository; this will have been pre-allocated for us.
-        const repository: aws.ecr.Repository = getRepository(imageName);
-
         // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
         // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
         // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
@@ -386,20 +384,14 @@ function getImageName(container: cloud.Container): string {
     }
 }
 
-// getRepository returns the ECR repository for this image, or throws if one is missing.
-function getRepository(imageName: string): aws.ecr.Repository {
-    const repo: aws.ecr.Repository | undefined = repositories.get(imageName);
-    if (!repo) {
-        throw new Error(`Missing expected container registry for image '${imageName}'`);
+// getOrCreateRepository returns the ECR repository for this image, lazily allocating if necessary.
+function getOrCreateRepository(imageName: string): aws.ecr.Repository {
+    let repository: aws.ecr.Repository | undefined = repositories.get(imageName);
+    if (!repository) {
+        repository = pulumi.Resource.runInParentlessScope(() => new aws.ecr.Repository(imageName.toLowerCase()));
+        repositories.set(imageName, repository);
     }
-    return repo;
-}
-
-// ensureRepository lazily allocates a unique repository per image name.
-function ensureRepository(imageName: string): void {
-    if (!repositories.has(imageName)) {
-        repositories.set(imageName, new aws.ecr.Repository(imageName.toLowerCase()));
-    }
+    return repository;
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
@@ -407,12 +399,15 @@ const buildImageCache = new Map<string, Promise<string | undefined>>();
 
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(container: cloud.Container): Promise<ImageOptions> {
-    const imageName: string = getImageName(container);
+async function computeImage(imageName: string, container: cloud.Container,
+                            repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
     const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
         console.log(`Building container image at '${container.build}'`);
+        if (!repository) {
+            throw new Error("Expected a container repository for build image");
+        }
 
         // See if we've already built this.
         let imageDigest: string | undefined;
@@ -425,7 +420,7 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(imageName, container);
+            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(imageName, container, repository!);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigestAsync);
             }
@@ -457,10 +452,18 @@ async function computeImage(container: cloud.Container): Promise<ImageOptions> {
 // a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
 async function computeContainerDefintions(containers: cloud.Containers,
                                           logGroup: aws.cloudwatch.LogGroup): Promise<ECSContainerDefinition[]> {
-    const logGroupId = await logGroup.id;
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
-        const { image, environment } = await computeImage(container);
+        const imageName: string = getImageName(container);
+        let repository: aws.ecr.Repository | undefined;
+        if (container.build) {
+            // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
+            // The reason is subtle; however, if we do not, we end up with a circular reference between the
+            // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
+            // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
+            repository = getOrCreateRepository(imageName);
+        }
+        const { image, environment } = await computeImage(imageName, container, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
@@ -477,18 +480,12 @@ async function computeContainerDefintions(containers: cloud.Containers,
             logConfiguration: {
                 logDriver: "awslogs",
                 options: {
-                    "awslogs-group": logGroupId!,
+                    "awslogs-group": (await logGroup.id)!,
                     "awslogs-region": aws.config.requireRegion(),
                     "awslogs-stream-prefix": containerName,
                 },
             },
         };
-
-        // Ensure there is a registry for each 'build' container.
-        if (container.build) {
-            ensureRepository(image);
-        }
-
         return containerDefinition;
     }));
 }
