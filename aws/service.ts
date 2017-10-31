@@ -227,7 +227,7 @@ async function ecsEnvironmentFromMap(
     const result: ECSContainerEnvironment = [];
     if (environment) {
         for (const name of Object.keys(environment)) {
-            let env: string | undefined = await environment[name];
+            const env: string | undefined = await environment[name];
             if (env) {
                 result.push({ name: name, value: env });
             }
@@ -285,9 +285,6 @@ async function runCLICommand(
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(imageName: string, container: cloud.Container): Promise<string | undefined> {
-    // Create a repository regardless of whether we will push to it, so that previews look right.
-    const repository: aws.ecr.Repository = getOrCreateRepository(imageName);
-
     // Invoke Docker CLI commands to build and push
     const buildPath: string | undefined = container.build;
     if (!buildPath) {
@@ -303,7 +300,10 @@ async function buildAndPushImage(imageName: string, container: cloud.Container):
         console.log(`Skipping image publish during preview: ${imageName}`);
     }
     else {
-        // First, login to the repository.  Construct Docker registry auth data by getting the short-lived
+        // Get the container repository; this will have been pre-allocated for us.
+        const repository: aws.ecr.Repository = getRepository(imageName);
+
+        // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
         // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
         // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
         const registryId = await repository.registryId;
@@ -386,12 +386,20 @@ function getImageName(container: cloud.Container): string {
     }
 }
 
-// getOrCreateRepository lazily allocates a unique repository per image name.
-function getOrCreateRepository(imageName: string): aws.ecr.Repository {
+// getRepository returns the ECR repository for this image, or throws if one is missing.
+function getRepository(imageName: string): aws.ecr.Repository {
+    const repo: aws.ecr.Repository | undefined = repositories.get(imageName);
+    if (!repo) {
+        throw new Error(`Missing expected container registry for image '${imageName}'`);
+    }
+    return repo;
+}
+
+// ensureRepository lazily allocates a unique repository per image name.
+function ensureRepository(imageName: string): void {
     if (!repositories.has(imageName)) {
         repositories.set(imageName, new aws.ecr.Repository(imageName.toLowerCase()));
     }
-    return repositories.get(imageName)!;
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
@@ -475,6 +483,12 @@ async function computeContainerDefintions(containers: cloud.Containers,
                 },
             },
         };
+
+        // Ensure there is a registry for each 'build' container.
+        if (container.build) {
+            ensureRepository(image);
+        }
+
         return containerDefinition;
     }));
 }
@@ -784,7 +798,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const environment: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    let envVal: string | undefined = await options.environment[envName];
+                    const envVal: string | undefined = await options.environment[envName];
                     if (envVal) {
                         environment.push({ name: envName, value: envVal });
                     }
