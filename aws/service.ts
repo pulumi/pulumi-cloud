@@ -429,7 +429,7 @@ async function computeImage(imageName: string, container: cloud.Container,
         }
 
         env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
-        return { image: imageName, environment: env };
+        return { image: (await repository.repositoryUrl)!, environment: env };
     }
     else if (container.image) {
         assert(!container.build);
