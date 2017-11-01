@@ -1,0 +1,17 @@
+{
+    "name": "@pulumi/tslint-rules",
+    "version": "0.6.1",
+    "scripts": {
+        "build": "tsc && yarn run lint",
+        "lint": "tslint -c ../tslint.json -p tsconfig.json",
+        "lint:test": "tslint --test test/rules -r bin --type-check -p test/rules/tsconfig.json"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.26",
+        "tslint": "^5.7.0",
+        "typescript": "^2.5.2"
+    },
+    "peerDependencies": {
+        "pulumi": "*"
+    }
+}

@@ -1,5 +1,5 @@
 .PHONY: default
-default: banner dependencies build install
+default: banner dependencies build lint install
 
 .PHONY: all
 all: default
@@ -18,8 +18,14 @@ dependencies:
 .PHONY: build
 build:
 	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link pulumi @pulumi/cloud # ensure we link dependencies.
+	yarn link pulumi @pulumi/cloud @pulumi/tslint-rules # ensure we link dependencies.
 	yarn run build # compile the LumiPack
+
+
+.PHONY: lint
+lint:
+	@echo "\033[0;32mLINT:\033[0m"
+	yarn run lint
 
 
 .PHONY: install

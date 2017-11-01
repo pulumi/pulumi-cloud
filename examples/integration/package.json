@@ -5,11 +5,11 @@
     "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "lint": "tslint -c ../tslint.json -p tsconfig.json"
+        "lint": "tslint -c ../tslint.json -p tsconfig.json --type-check -r ./node_modules/@pulumi/tslint-rules"
     },
     "devDependencies": {
         "@types/node": "^8.0.27",
-        "typescript": "^2.1.4",
+        "typescript": "^2.5.3",
         "tslint": "^5.7.0"
     },
     "peerDependencies": {

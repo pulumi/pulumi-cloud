@@ -1,6 +1,10 @@
 {
     "extends": "../tslint.json",
     "rules": {
+        "pulumi-capture": true,
+        "max-line-length": [
+            true
+        ],
         "prefer-const": false
     }
 }

@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
-import * as utils from "./utils"
+import * as utils from "./utils";
 
 // Account API Key and desired Mailgun Domain to use for sending emails.  See
 // https://app.mailgun.com/app/domains and https://app.mailgun.com/app/account/security.
