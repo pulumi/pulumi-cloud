@@ -270,7 +270,7 @@ async function runCLICommand(
         p.on("error", (err) => {
             reject(err);
         });
-        p.on("exit", (code) => {
+        p.on("close", (code) => {
             resolve({
                 code: code,
                 stdout: result,
@@ -337,9 +337,14 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
     }
 
     // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["inspect", "-f", "{{.Id}}", imageName], buildPath, true);
+    const inspectResult = await runCLICommand(
+        "docker",
+        ["image", "inspect", "-f", "{{.Id}}", imageName],
+        buildPath,
+        true,
+    );
     if (inspectResult.code || !inspectResult.stdout) {
-        throw new Error(`No digest available for image ${imageName}`);
+        throw new Error(`No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
     }
     return inspectResult.stdout.trim();
 }
@@ -429,7 +434,7 @@ async function computeImage(imageName: string, container: cloud.Container,
         }
 
         env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
-        return { image: imageName, environment: env };
+        return { image: (await repository.repositoryUrl)!, environment: env };
     }
     else if (container.image) {
         assert(!container.build);
