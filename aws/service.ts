@@ -344,7 +344,7 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         true,
     );
     if (inspectResult.code || !inspectResult.stdout) {
-        throw new Error(`No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+        throw new Error(`No digest available for image ${imageName}`);
     }
     return inspectResult.stdout.trim();
 }
