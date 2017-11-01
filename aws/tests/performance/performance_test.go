@@ -52,10 +52,17 @@ func Test_Performance(t *testing.T) {
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET /perf endpoint
-				resp, err := http.Get(baseURL + "/performance")
+				//values url.Values := {}
+
+				dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
+				dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
+
+				resp, err := http.Get(baseURL + "/performance?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
 				assert.NoError(t, err, "expected to be able to GET /performance")
+
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/json", contentType)
+
 				bytes, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v/%v]: %v", baseURL+"/performance", resp.StatusCode, contentType, string(bytes))

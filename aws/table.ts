@@ -20,6 +20,8 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     }
 }
 
+const consistentRead = true;
+
 export class Table extends pulumi.ComponentResource implements cloud.Table {
     // Inside + Outside API
 
@@ -85,7 +87,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             const result = await db().get({
                 TableName: getTableName(),
                 Key: query,
-                ConsistentRead: true,
+                ConsistentRead: consistentRead,
             }).promise();
 
             return result.Item;
@@ -99,7 +101,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         this.scan = async () => {
             const result = await db().scan({
                 TableName: getTableName(),
-                ConsistentRead: true,
+                ConsistentRead: consistentRead,
             }).promise();
 
             return <any[]>result.Items;
