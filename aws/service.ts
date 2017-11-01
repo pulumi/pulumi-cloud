@@ -270,7 +270,7 @@ async function runCLICommand(
         p.on("error", (err) => {
             reject(err);
         });
-        p.on("exit", (code) => {
+        p.on("close", (code) => {
             resolve({
                 code: code,
                 stdout: result,
