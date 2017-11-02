@@ -598,6 +598,13 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
     public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
+    // Expose the task role we create to clients (who will cast through <any>)
+    // so they can attach their own policies.
+    // TODO[pulumi/pulumi-cloud#145]: Find a better way to expose this functionality.
+    static getTaskRole(): aws.iam.Role {
+        return getTaskRole();
+    }
+
     constructor(name: string, args: cloud.ServiceArguments) {
         const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
@@ -772,6 +779,11 @@ export class HostPathVolume implements cloud.HostPathVolume {
  */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
+
+    // See comment for Service.getTaskRole.
+    static getTaskRole(): aws.iam.Role {
+        return getTaskRole();
+    }
 
     constructor(name: string, container: cloud.Container) {
         const cluster: Cluster | undefined = getCluster();
