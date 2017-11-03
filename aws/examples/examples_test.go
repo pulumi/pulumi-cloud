@@ -79,7 +79,7 @@ func Test_Examples(t *testing.T) {
 
 				// Validate the GET /test endpoint
 				{
-					resp, err := http.Get(baseURL + "/test")
+					resp, err := http.Get(baseURL + "test")
 					assert.NoError(t, err, "expected to be able to GET /test")
 					assert.Equal(t, 200, resp.StatusCode, "expected 200")
 					contentType := resp.Header.Get("Content-Type")
@@ -89,7 +89,7 @@ func Test_Examples(t *testing.T) {
 					var endpoints map[string]map[string]interface{}
 					err = json.Unmarshal(bytes, &endpoints)
 					assert.NoError(t, err)
-					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"/test", resp.StatusCode, contentType, bytes, endpoints)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"test", resp.StatusCode, contentType, string(bytes), endpoints)
 				}
 
 				// Validate the GET / endpoint
@@ -101,12 +101,12 @@ func Test_Examples(t *testing.T) {
 					assert.Equal(t, "application/json", contentType)
 					bytes, err := ioutil.ReadAll(resp.Body)
 					assert.NoError(t, err)
-					t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, bytes)
+					t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 				}
 
 				// Validate the GET /run endpoint
 				{
-					resp, err := http.Get(baseURL + "/run")
+					resp, err := http.Get(baseURL + "run")
 					assert.NoError(t, err, "expected to be able to GET /run")
 					assert.Equal(t, 200, resp.StatusCode, "expected 200")
 					contentType := resp.Header.Get("Content-Type")
@@ -119,12 +119,12 @@ func Test_Examples(t *testing.T) {
 					success, ok := data["success"]
 					assert.Equal(t, true, ok)
 					assert.Equal(t, true, success)
-					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"/run", resp.StatusCode, contentType, bytes, data)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"run", resp.StatusCode, contentType, string(bytes), data)
 				}
 
 				// Validate the GET /custom endpoint
 				{
-					resp, err := http.Get(baseURL + "/custom")
+					resp, err := http.Get(baseURL + "custom")
 					assert.NoError(t, err, "expected to be able to GET /custom")
 					assert.Equal(t, 200, resp.StatusCode, "expected 200")
 					contentType := resp.Header.Get("Content-Type")
@@ -132,7 +132,7 @@ func Test_Examples(t *testing.T) {
 					bytes, err := ioutil.ReadAll(resp.Body)
 					assert.NoError(t, err)
 					assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
-					t.Logf("GET %v [%v/%v]: %v", baseURL+"/custom", resp.StatusCode, contentType, bytes)
+					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
 
 			},
