@@ -26,6 +26,12 @@ export class Table implements cloud.Table {
                 return Promise.reject(new Error("PrimaryKey not provided"));
             }
 
+            for (const key of Object.keys(query)) {
+                if (key !== primaryKey) {
+                    return Promise.reject(new Error("Query does not match schema: " + key));
+                }
+            }
+
             const result = database[pk];
             return Promise.resolve(result);
         };
