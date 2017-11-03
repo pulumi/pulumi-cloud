@@ -1,11 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
-
-const config = new pulumi.Config("cloud:config");
-if (config.get("provider")) {
-    pulumi.runtime.setConfig("cloud:config:provider", "mock");
-}
+pulumi.runtime.setConfig("cloud:config:provider", "mock");
 
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
@@ -57,7 +53,7 @@ describe("Table", () => {
         it("should-throw-if-query-does-not-match-schema", async () => {
             const table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
-            assert.equal((await table.get({[table.primaryKey]: "val", value: 2})).value, 1);
+            await assert.throwsAsync(async () => await table.get({[table.primaryKey]: "val", value: 2}));
         });
 
         it("should-see-second insert", async () => {
