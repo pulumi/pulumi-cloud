@@ -29,21 +29,21 @@ namespace tableTests {
         assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
     }
 
-//         it("should-see-second insert", async () => {
-//             const table = new cloud.Table("table" + uniqueId++);
-//             await table.insert({[table.primaryKey]: "val", value: 1});
-//             await table.insert({[table.primaryKey]: "val", value: 2});
-//             assert.equal((await table.get({[table.primaryKey]: "val", value: 3})).value, 2);
-//         });
+    const table5 = new cloud.Table("tab" + uniqueId++);
+    export async function testShouldSeeSecondInsert() {
+        await table5.insert({[table5.primaryKey]: "val", value: 1});
+        await table5.insert({[table5.primaryKey]: "val", value: 2});
+        assert.equal((await table5.get({[table5.primaryKey]: "val" })).value, 2);
+    }
 
-//         it("should-not-see-deleted-value", async () => {
-//             const table = new cloud.Table("table" + uniqueId++);
-//             await table.insert({[table.primaryKey]: "val", value: 1});
-//             await table.delete({[table.primaryKey]: "val" });
+    const table6 = new cloud.Table("tab" + uniqueId++);
+    export async function testShouldNotSeeDeletedValue() {
+        await table6.insert({[table6.primaryKey]: "val", value: 1});
+        await table6.delete({[table6.primaryKey]: "val" });
 
-//             const val = await table.get({[table.primaryKey]: "val"});
-//             assert.strictEqual(val, undefined);
-//         });
+        const val = await table6.get({[table6.primaryKey]: "val"});
+        assert.strictEqual(val, undefined);
+    }
 
 //         it("should-not-see-inserts-to-other-table", async () => {
 //             const table1 = new cloud.Table("table" + uniqueId++);
