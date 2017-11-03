@@ -582,12 +582,14 @@ function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
     }];
 }
 
+interface ExposedPort {
+    host: aws.elasticloadbalancingv2.LoadBalancer;
+    port: number;
+}
+
 interface ExposedPorts {
     [name: string]: {
-        [port: number]: {
-            host: aws.elasticloadbalancingv2.LoadBalancer,
-            port: number,
-        },
+        [port: number]: ExposedPort;
     };
 }
 
@@ -596,12 +598,15 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
 
-    public getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
+    public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
+
+    private readonly ports: ExposedPorts;
+    private readonly getPortInfo: (containerName?: string, containerPort?: number) => ExposedPort;
 
     // Expose the task role we create to clients (who will cast through <any>)
     // so they can attach their own policies.
     // TODO[pulumi/pulumi-cloud#145]: Find a better way to expose this functionality.
-    static getTaskRole(): aws.iam.Role {
+    public static getTaskRole(): aws.iam.Role {
         return getTaskRole();
     }
 
@@ -614,7 +619,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
-        const exposedPorts: ExposedPorts = {};
+        const ports: ExposedPorts = {};
 
         super(
             "cloud:service:Service",
@@ -631,11 +636,11 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 const loadBalancers = [];
                 for (const containerName of Object.keys(containers)) {
                     const container = containers[containerName];
-                    exposedPorts[containerName] = {};
+                    ports[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
                             const info = newLoadBalancerTargetGroup(portMapping.port, portMapping.external);
-                            exposedPorts[containerName][portMapping.port] = {
+                            ports[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 port: info.listenerPort,
                             };
@@ -664,48 +669,56 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         );
 
         this.name = name;
+        this.ports = ports;
 
-        // getEndpoint returns the host and port info for a given
-        // containerName and exposed port.
+        // getEndpoint returns the host and port info for a given containerName and exposed port.
         this.getEndpoint =
             async function (this: Service, containerName: string, port: number): Promise<cloud.Endpoint> {
-                if (!containerName) {
-                    // If no container name provided, choose the first container
-                    containerName = Object.keys(exposedPorts)[0];
-                    if (!containerName) {
-                        throw new Error(
-                            `No containers available in this service`,
-                        );
-                    }
-                }
-                const containerPorts = exposedPorts[containerName] || {};
-                if (!port) {
-                    // If no port provided, choose the first exposed port on the container.
-                    port = +Object.keys(containerPorts)[0];
-                    if (!port) {
-                        throw new Error(
-                            `No ports available in service container ${containerName}`,
-                        );
-                    }
-                }
-                const info = containerPorts[port];
-                if (!info) {
-                    throw new Error(
-                        `No exposed port for ${containerName} port ${port}`,
-                    );
-                }
                 // TODO [pulumi/pulumi#331] When we capture promise values, they get
                 // exposed on the inside as the unwrapepd value inside the promise.
                 // This means we have to hack the types away. See
                 // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
+                const info = this.getPortInfo(containerName, port);
                 const hostname = <string><any>info.host.dnsName;
                 return {
                     hostname: hostname,
                     port: info.port,
                 };
             };
+
+        // getPortInfo returns the exposed port information for the given containerName and containerPort pair.  If
+        // containerName is empty, we choose the first container; if containerPort is empty, we choose the first port.
+        this.getPortInfo =
+            function(this: Service, containerName?: string, containerPort?: number): ExposedPort {
+                if (!containerName) {
+                    // If no container name provided, choose the first container
+                    containerName = Object.keys(this.ports)[0];
+                    if (!containerName) {
+                        throw new Error(`No containers available in this service`);
+                    }
+                }
+                const containerPorts = this.ports[containerName] || {};
+                if (!containerPort) {
+                    // If no port provided, choose the first exposed port on the container.
+                    containerPort = +Object.keys(containerPorts)[0];
+                    if (!containerPort) {
+                        throw new Error(`No ports available in service container ${containerName}`);
+                    }
+                }
+                const info = containerPorts[containerPort];
+                if (!info) {
+                    throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
+                }
+                return info;
+            };
     }
 
+    // Expose the load balancer for this service endpoint for clients to use.
+    // TODO[pulumi/pulumi-cloud#145]: Find a better way to expose this functionality.
+    public getLoadBalancer(containerName?: string, containerPort?: number): aws.elasticloadbalancingv2.LoadBalancer {
+        const info = this.getPortInfo(containerName, containerPort);
+        return info.host;
+    }
 }
 
 const volumeNames = new Set<string>();
