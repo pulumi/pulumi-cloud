@@ -601,7 +601,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     // Expose the task role we create to clients (who will cast through <any>)
     // so they can attach their own policies.
     // TODO[pulumi/pulumi-cloud#145]: Find a better way to expose this functionality.
-    static getTaskRole(): aws.iam.Role {
+    public static getTaskRole(): aws.iam.Role {
         return getTaskRole();
     }
 
@@ -781,7 +781,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     // See comment for Service.getTaskRole.
-    static getTaskRole(): aws.iam.Role {
+    public static getTaskRole(): aws.iam.Role {
         return getTaskRole();
     }
 
