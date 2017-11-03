@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -61,6 +62,79 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+					return
+				}
+				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				urn := resource.NewURN(checkpoint.Target, "containers", "pulumi:framework:Endpoint", "containers")
+				endpoint := pulumiResources[urn]
+				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
+					return
+				}
+				baseURL := endpoint.Properties["url"].StringValue()
+				assert.NotEmpty(t, baseURL, "expected a `containers` endpoint")
+
+				// Validate the GET /test endpoint
+				{
+					resp, err := http.Get(baseURL + "/test")
+					assert.NoError(t, err, "expected to be able to GET /test")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					var endpoints map[string]map[string]interface{}
+					err = json.Unmarshal(bytes, &endpoints)
+					assert.NoError(t, err)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"/test", resp.StatusCode, contentType, bytes, endpoints)
+				}
+
+				// Validate the GET / endpoint
+				{
+					resp, err := http.Get(baseURL)
+					assert.NoError(t, err, "expected to be able to GET /")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, bytes)
+				}
+
+				// Validate the GET /run endpoint
+				{
+					resp, err := http.Get(baseURL + "/run")
+					assert.NoError(t, err, "expected to be able to GET /run")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					var data map[string]bool
+					err = json.Unmarshal(bytes, &data)
+					assert.NoError(t, err)
+					success, ok := data["success"]
+					assert.Equal(t, true, ok)
+					assert.Equal(t, true, success)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"/run", resp.StatusCode, contentType, bytes, data)
+				}
+
+				// Validate the GET /custom endpoint
+				{
+					resp, err := http.Get(baseURL + "/custom")
+					assert.NoError(t, err, "expected to be able to GET /custom")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
+					t.Logf("GET %v [%v/%v]: %v", baseURL+"/custom", resp.StatusCode, contentType, bytes)
+				}
+
 			},
 		},
 		{

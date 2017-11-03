@@ -131,7 +131,7 @@ let builtService = new cloud.Service("nginx2", {
     replicas: 2,
 });
 
-let api = new cloud.HttpEndpoint("myendpoint");
+let api = new cloud.HttpEndpoint("containers");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
