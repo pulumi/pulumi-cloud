@@ -143,13 +143,13 @@ let externalNetListenerIndex = 0;
 
 // loadBalancerPrefixLength is a prefix length to avoid generating names that are too long.
 const loadBalancerPrefixLength =
-    32 /* max load balancer name */
+    32   /* max load balancer name */
     - 16 /* random hex added to ID */
-    - 4 /* room for up to 9999 load balancers */
-    - 2 /* '-i' or '-e' */;
+    - 4  /* room for up to 9999 load balancers */
+    - 2  /* '-i' or '-e' */;
 
-function getOrCreateLoadBalancer(
-    network: Network, internal: boolean, application: boolean): {
+function allocateListener(
+    cluster: Cluster, network: Network, internal: boolean, application: boolean): {
         loadBalancer: aws.elasticloadbalancingv2.LoadBalancer, listenerIndex: number, listenerPort: number} {
     // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
     const maxListeners: number = getMaxListenersPerLb(network);
@@ -176,6 +176,7 @@ function getOrCreateLoadBalancer(
             loadBalancerType: application ? "application" : "network",
             subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
             internal: internal,
+            securityGroups: cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
         }),
     );
 
@@ -205,7 +206,7 @@ interface ContainerPortLoadBalancer {
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
+function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
     const network: Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
@@ -244,7 +245,7 @@ function newLoadBalancerTargetGroup(portMapping: cloud.ContainerPort): Container
 
     // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
     const { loadBalancer, listenerIndex, listenerPort } =
-        getOrCreateLoadBalancer(network, internal, useAppLoadBalancer);
+        allocateListener(cluster, network, internal, useAppLoadBalancer);
 
     // Create the target group for the new container/port pair.
     const targetListenerName =
@@ -697,7 +698,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     ports[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
-                            const info = newLoadBalancerTargetGroup(portMapping);
+                            const info = newLoadBalancerTargetGroup(cluster, portMapping);
                             ports[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 hostPort: info.listenerPort,

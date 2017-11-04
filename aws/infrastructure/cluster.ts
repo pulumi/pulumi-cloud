@@ -51,16 +51,20 @@ export class Cluster {
     /**
      * The ECS Cluster ARN.
      */
-    public ecsClusterARN: pulumi.Computed<string>;
+    public readonly ecsClusterARN: pulumi.Computed<string>;
+    /**
+     * The ECS Cluster's Security Group ID.
+     */
+    public readonly securityGroupId?: pulumi.Computed<string>;
     /**
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
      */
-    public autoScalingGroupStack?: pulumi.Resource;
+    public readonly autoScalingGroupStack?: pulumi.Resource;
     /**
      * The EFS host mount path if EFS is enabled on this Cluster.
      */
-    public efsMountPath?: string;
+    public readonly efsMountPath?: string;
 
     constructor(name: string, args: ClusterArgs) {
         if (!args.network) {
@@ -165,6 +169,7 @@ export class Cluster {
             ],
             egress: [ ALL ],  // See TerraformEgressNote
         });
+        this.securityGroupId = instanceSecurityGroup.id;
 
         // If requested, add EFS file system and mount targets in each subnet.
         let filesystem: aws.efs.FileSystem | undefined;
