@@ -6,6 +6,7 @@ import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
 import * as stream from "stream";
+import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 import { commonPrefix, computePolicies, getCluster, getNetwork } from "./shared";
@@ -120,17 +121,81 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
-// TODO[pulumi/pulumi-cloud#135] To support multi-AZ, we may need a configu variable that forces this setting to `1` -
-// or perhaps automatically do that is we see the network is configured for multiple AZs.
-const MAX_LISTENERS_PER_NLB = 50;
+function getMaxListenersPerLb(network: Network): number {
+    // If we are single-AZ, we can share load balancers, and cut down on costs.  Otherwise, we cannot.
+    if (network.numberOfAvailabilityZones === 1) {
+        return 50;
+    }
+    return 1;
+}
 
 // We may allocate both internal-facing and internet-facing load balancers, and we may want to combine multiple
 // listeners on a single load balancer. So we track the currently allocated load balancers to use for both internal and
 // external load balancing, and the index of the next slot to use within that load balancers listeners.
-let internalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let internalListenerIndex = 0;
-let externalLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let externalListenerIndex = 0;
+let internalAppLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let internalAppListenerIndex = 0;
+let externalAppLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let externalAppListenerIndex = 0;
+let internalNetLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let internalNetListenerIndex = 0;
+let externalNetLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
+let externalNetListenerIndex = 0;
+
+// loadBalancerPrefixLength is a prefix length to avoid generating names that are too long.
+const loadBalancerPrefixLength =
+    32 /* max load balancer name */
+    - 16 /* random hex added to ID */
+    - 4 /* room for up to 9999 load balancers */
+    - 2 /* '-i' or '-e' */;
+
+function getOrCreateLoadBalancer(
+    network: Network, internal: boolean, application: boolean): {
+        loadBalancer: aws.elasticloadbalancingv2.LoadBalancer, listenerIndex: number, listenerPort: number} {
+    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
+    const maxListeners: number = getMaxListenersPerLb(network);
+    const listenerIndex: number = internal ?
+        (application ? internalAppListenerIndex++ : internalNetListenerIndex++) :
+        (application ? externalAppListenerIndex++ : externalNetListenerIndex++);
+    const listenerPort = 34567 + listenerIndex % maxListeners;
+    if (listenerIndex % maxListeners !== 0) {
+        // Reuse an existing load balancer.
+        return {
+            loadBalancer: internal ?
+                (application ? internalAppLoadBalancer! : internalNetLoadBalancer!) :
+                (application ? externalAppLoadBalancer! : externalNetLoadBalancer!),
+            listenerIndex: listenerIndex,
+            listenerPort: listenerPort,
+        };
+    }
+
+    // Otherwise, if we've exhausted the cache, allocate a new LB.
+    const lbNumber = listenerIndex / maxListeners + 1;
+    const lbName = `${commonPrefix.substring(0, loadBalancerPrefixLength)}-${internal ? "i" : "e"}${lbNumber}`;
+    const loadBalancer = pulumi.Resource.runInParentlessScope(
+        () => new aws.elasticloadbalancingv2.LoadBalancer(lbName, {
+            loadBalancerType: application ? "application" : "network",
+            subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
+            internal: internal,
+        }),
+    );
+
+    // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.
+    if (internal) {
+        if (application) {
+            internalAppLoadBalancer = loadBalancer;
+        } else {
+            internalNetLoadBalancer = loadBalancer;
+        }
+    } else {
+        if (application) {
+            externalAppLoadBalancer = loadBalancer;
+        } else {
+            externalNetLoadBalancer = loadBalancer;
+        }
+    }
+
+    return { loadBalancer: loadBalancer, listenerIndex: listenerIndex, listenerPort: listenerPort };
+}
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -140,78 +205,74 @@ interface ContainerPortLoadBalancer {
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(port: number, external?: boolean): ContainerPortLoadBalancer {
+function newLoadBalancerTargetGroup(portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
     const network: Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
     }
 
-    let listenerIndex: number;
-    let internal: boolean;
-    let loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-    if (network.privateSubnets && !external) {
-        // We are creating an internal load balancer
-        internal = true;
-        listenerIndex = internalListenerIndex++;
-        loadBalancer = internalLoadBalancer;
-    } else {
-        // We are creating an Internet-facing load balancer
-        internal = false;
-        listenerIndex = externalListenerIndex++;
-        loadBalancer = externalLoadBalancer;
+    // Create an internal load balancer if requested.
+    const internal: boolean = (network.privateSubnets && !portMapping.external);
+
+    // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
+    // Also ensure that we have an SSL certificate for termination at the LB, if that was requested.
+    let protocol: string;
+    let useAppLoadBalancer: boolean;
+    let useCertificateARN: string | undefined;
+    switch (portMapping.protocol) {
+        case "https":
+            protocol = "HTTPS";
+            useAppLoadBalancer = true;
+            useCertificateARN = config.acmCertificateARN;
+            if (!useCertificateARN) {
+                throw new Error("Cannot create Service for HTTPS trafic. No ACM certificate ARN configured.");
+            }
+            break;
+        case "http":
+            protocol = "HTTP";
+            useAppLoadBalancer = true;
+            break;
+        case "tcp":
+            protocol = "TCP";
+            useAppLoadBalancer = false;
+            break;
+        case "udp":
+            throw new Error("UDP protocol unsupported for Services");
+        default:
+            throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
 
-    const prefixLength =
-        32 /* max load balancer name */
-        - 16 /* random hex added to ID */
-        - 4 /* room for up to 9999 load balancers */
-        - 2 /* '-i' or '-e' */;
-
-    if (listenerIndex % MAX_LISTENERS_PER_NLB === 0) {
-        // Create a new Load Balancer every 50 requests for a new TargetGroup.
-        const subnetmapping = network.publicSubnetIds.map(s => ({ subnetId: s }));
-        // Make it internal-only if private subnets are being used.
-        const lbNumber = listenerIndex / MAX_LISTENERS_PER_NLB + 1;
-        const lbname = `${commonPrefix.substring(0, prefixLength)}-${internal ? "i" : "e"}${lbNumber}`;
-        loadBalancer = pulumi.Resource.runInParentlessScope(
-            () => new aws.elasticloadbalancingv2.LoadBalancer(lbname, {
-                loadBalancerType: "network",
-                subnetMapping: subnetmapping,
-                internal: internal,
-            }),
-        );
-
-        // Store the new load balancer in the corresponding slot
-        if (internal) {
-            internalLoadBalancer = loadBalancer;
-        } else {
-            externalLoadBalancer = loadBalancer;
-        }
-    }
+    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
+    const { loadBalancer, listenerIndex, listenerPort } =
+        getOrCreateLoadBalancer(network, internal, useAppLoadBalancer);
 
     // Create the target group for the new container/port pair.
-    const targetListenerName = `${commonPrefix.substring(0, prefixLength)}-${internal ? "i" : "e"}${listenerIndex}`;
+    const targetListenerName =
+        `${commonPrefix.substring(0, loadBalancerPrefixLength)}-${internal ? "i" : "e"}${listenerIndex}`;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
-        port: port,
-        protocol: "TCP",
+        port: portMapping.port,
+        protocol: protocol,
         vpcId: network.vpcId,
         deregistrationDelay: 30,
     });
 
     // Listen on a new port on the NLB and forward to the target.
-    const listenerPort = 34567 + listenerIndex % MAX_LISTENERS_PER_NLB;
     const listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
         loadBalancerArn: loadBalancer!.arn,
-        protocol: "TCP",
+        protocol: protocol,
+        certificateArn: useCertificateARN,
         port: listenerPort,
         defaultActions: [{
             type: "forward",
             targetGroupArn: target.arn,
         }],
+        // If SSL is used, we automatically insert the recommended ELB security policy from
+        // http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html.
+        sslPolicy: useCertificateARN ? "ELBSecurityPolicy-2016-08" : undefined,
     });
 
     return {
-        loadBalancer: loadBalancer!,
+        loadBalancer: loadBalancer,
         targetGroup: target,
         listenerPort: listenerPort,
     };
@@ -582,15 +643,15 @@ function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
     }];
 }
 
-interface ExposedPort {
-    host: aws.elasticloadbalancingv2.LoadBalancer;
-    port: number;
-}
-
 interface ExposedPorts {
     [name: string]: {
         [port: number]: ExposedPort;
     };
+}
+
+export interface ExposedPort {
+    host: aws.elasticloadbalancingv2.LoadBalancer;
+    hostPort: number;
 }
 
 export class Service extends pulumi.ComponentResource implements cloud.Service {
@@ -599,9 +660,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly replicas: number;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
-
-    private readonly ports: ExposedPorts;
-    private readonly getPortInfo: (containerName?: string, containerPort?: number) => ExposedPort;
 
     // Expose the task role we create to clients (who will cast through <any>)
     // so they can attach their own policies.
@@ -639,10 +697,10 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     ports[containerName] = {};
                     if (container.ports) {
                         for (const portMapping of container.ports) {
-                            const info = newLoadBalancerTargetGroup(portMapping.port, portMapping.external);
+                            const info = newLoadBalancerTargetGroup(portMapping);
                             ports[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
-                                port: info.listenerPort,
+                                hostPort: info.listenerPort,
                             };
                             loadBalancers.push({
                                 containerName: containerName,
@@ -669,35 +727,19 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         );
 
         this.name = name;
-        this.ports = ports;
 
         // getEndpoint returns the host and port info for a given containerName and exposed port.
         this.getEndpoint =
-            async function (this: Service, containerName: string, port: number): Promise<cloud.Endpoint> {
-                // TODO [pulumi/pulumi#331] When we capture promise values, they get
-                // exposed on the inside as the unwrapepd value inside the promise.
-                // This means we have to hack the types away. See
-                // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
-                const info = this.getPortInfo(containerName, port);
-                const hostname = <string><any>info.host.dnsName;
-                return {
-                    hostname: hostname,
-                    port: info.port,
-                };
-            };
-
-        // getPortInfo returns the exposed port information for the given containerName and containerPort pair.  If
-        // containerName is empty, we choose the first container; if containerPort is empty, we choose the first port.
-        this.getPortInfo =
-            function(this: Service, containerName?: string, containerPort?: number): ExposedPort {
+            async function (this: Service, containerName: string, containerPort: number): Promise<cloud.Endpoint> {
                 if (!containerName) {
                     // If no container name provided, choose the first container
-                    containerName = Object.keys(this.ports)[0];
+                    containerName = Object.keys(ports)[0];
                     if (!containerName) {
                         throw new Error(`No containers available in this service`);
                     }
                 }
-                const containerPorts = this.ports[containerName] || {};
+
+                const containerPorts = ports[containerName] || {};
                 if (!containerPort) {
                     // If no port provided, choose the first exposed port on the container.
                     containerPort = +Object.keys(containerPorts)[0];
@@ -705,19 +747,21 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                         throw new Error(`No ports available in service container ${containerName}`);
                     }
                 }
+
                 const info = containerPorts[containerPort];
                 if (!info) {
                     throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
                 }
-                return info;
-            };
-    }
 
-    // Expose the load balancer for this service endpoint for clients to use.
-    // TODO[pulumi/pulumi-cloud#145]: Find a better way to expose this functionality.
-    public getLoadBalancer(containerName?: string, containerPort?: number): aws.elasticloadbalancingv2.LoadBalancer {
-        const info = this.getPortInfo(containerName, containerPort);
-        return info.host;
+                // TODO [pulumi/pulumi#331] When we capture promise values, they get exposed on the inside as the
+                // unwrapped value inside the promise.  This means we have to hack the types away. See
+                // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
+                const hostname = <string><any>info.host.dnsName;
+                return {
+                    hostname: hostname,
+                    port: info.hostPort,
+                };
+            };
     }
 }
 

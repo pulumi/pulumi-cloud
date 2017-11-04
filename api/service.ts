@@ -70,7 +70,7 @@ export interface Container {
      * Maps to the Docker `--publish` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    ports?: {port: number, external?: boolean}[];
+    ports?: ContainerPort[];
     /**
      * An array of volume mounts, indicating a volume to mount and a path within
      * the container at which to moung the volume.  Maps to the Docker
@@ -90,6 +90,14 @@ export interface Container {
      */
     command?: string[];
 }
+
+export interface ContainerPort {
+    port: number;
+    external?: boolean;
+    protocol?: ContainerProtocol;
+}
+
+export type ContainerProtocol = "tcp" | "udp" | "http" | "https";
 
 export interface ContainerVolumeMount {
     containerPath: string;

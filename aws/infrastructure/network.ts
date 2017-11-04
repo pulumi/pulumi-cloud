@@ -7,23 +7,28 @@ import { externalSecurityGroups, externalSubnets, externalVpcId, usePrivateNetwo
 import { getAwsAz } from "./aws";
 
 export interface NetworkArgs {
-    numberOfAvailabilityZones: number;
-    privateSubnets: boolean;
+    numberOfAvailabilityZones?: number;
+    privateSubnets?: boolean;
 }
 
 export class Network {
-    public vpcId: pulumi.Computed<string>;
-    public privateSubnets: boolean;
-    public securityGroupIds: pulumi.Computed<string>[];
-    public subnetIds: pulumi.Computed<string>[];
-    public publicSubnetIds: pulumi.Computed<string>[];
-    public internetGateway?: aws.ec2.InternetGateway;
-    public natGateways?: aws.ec2.NatGateway[];
+    public readonly numberOfAvailabilityZones: number;
+    public readonly vpcId: pulumi.Computed<string>;
+    public readonly privateSubnets: boolean;
+    public readonly securityGroupIds: pulumi.Computed<string>[];
+    public readonly subnetIds: pulumi.Computed<string>[];
+    public readonly publicSubnetIds: pulumi.Computed<string>[];
+    public readonly internetGateway?: aws.ec2.InternetGateway;
+    public readonly natGateways?: aws.ec2.NatGateway[];
 
     constructor(name: string, args: NetworkArgs) {
-        const numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
-        if (numberOfAvailabilityZones < 1 || numberOfAvailabilityZones > 2) {
-            throw new Error(`Unsupported number of availability zones for network: ${numberOfAvailabilityZones}`);
+        // IDEA: default to the number of availability zones in this region, rather than 2.  To do this requires
+        // invoking the provider, which requires that we "go async" at a very inopportune time here.  When
+        // pulumi/pulumi#331 lands, this will be much easier to do, and we can improve this situation.
+        this.numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
+        if (this.numberOfAvailabilityZones < 1 || this.numberOfAvailabilityZones > 2) {
+            throw new Error(
+                `Unsupported number of availability zones for network: ${this.numberOfAvailabilityZones}`);
         }
         this.privateSubnets = args.privateSubnets || false;
 
@@ -56,8 +61,7 @@ export class Network {
         this.subnetIds = [];
         this.publicSubnetIds = [];
 
-        for (let i = 0; i < numberOfAvailabilityZones; i++) {
-
+        for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
             // Create the subnet for this AZ - either - either public or private
             const subnet = new aws.ec2.Subnet(`${name}-subnet${i}`, {
                 vpcId: vpc.id,
@@ -72,7 +76,6 @@ export class Network {
             let subnetRouteTable: aws.ec2.RouteTable;
 
             if (this.privateSubnets) {
-
                 // We need a public subnet for the NAT Gateway
                 const natGatewayPublicSubnet = new aws.ec2.Subnet(`${name}-nat-subnet${i}`, {
                     vpcId: vpc.id,
@@ -96,7 +99,6 @@ export class Network {
                     subnetId: natGatewayPublicSubnet.id,
                     allocationId: eip.id,
                 });
-
                 this.natGateways.push(natGateway);
 
                 const natRouteTable = new aws.ec2.RouteTable(`${name}-nat-privateRouteTable${i}`, {
@@ -123,6 +125,5 @@ export class Network {
                 routeTableId: subnetRouteTable.id,
             });
         }
-
     }
 }
