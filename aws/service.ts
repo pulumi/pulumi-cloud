@@ -146,12 +146,17 @@ const loadBalancerPrefixLength =
     32   /* max load balancer name */
     - 16 /* random hex added to ID */
     - 4  /* room for up to 9999 load balancers */
-    - 2  /* '-i' or '-e' */;
+    - 3  /* for -[a|n][i|e], where a = application, n = network; i = internal, e = external */;
+
+function getLoadBalancerPrefix(internal: boolean, application: boolean): string {
+    return commonPrefix.substring(0, loadBalancerPrefixLength) + "-" +
+        (application ? "a" : "n") + (internal ? "i" : "e");
+}
 
 function allocateListener(
     cluster: Cluster, network: Network, internal: boolean, application: boolean): {
         loadBalancer: aws.elasticloadbalancingv2.LoadBalancer, listenerIndex: number, listenerPort: number} {
-    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
+    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every getMaxListeners.
     const maxListeners: number = getMaxListenersPerLb(network);
     const listenerIndex: number = internal ?
         (application ? internalAppListenerIndex++ : internalNetListenerIndex++) :
@@ -168,15 +173,17 @@ function allocateListener(
         };
     }
 
-    // Otherwise, if we've exhausted the cache, allocate a new LB.
+    // Otherwise, if we've exhausted the cache, allocate a new LB with a sufficiently unique name.
     const lbNumber = listenerIndex / maxListeners + 1;
-    const lbName = `${commonPrefix.substring(0, loadBalancerPrefixLength)}-${internal ? "i" : "e"}${lbNumber}`;
+    const lbName = getLoadBalancerPrefix(internal, application) + lbNumber;
     const loadBalancer = pulumi.Resource.runInParentlessScope(
         () => new aws.elasticloadbalancingv2.LoadBalancer(lbName, {
             loadBalancerType: application ? "application" : "network",
             subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
             internal: internal,
-            securityGroups: cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
+            // If this is an application LB, we need to associate it with the ECS cluster's security group, so
+            // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
+            securityGroups: application && cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
         }),
     );
 
@@ -233,12 +240,13 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
             protocol = "HTTP";
             useAppLoadBalancer = true;
             break;
+        case "udp":
+            throw new Error("UDP protocol unsupported for Services");
         case "tcp":
+        case undefined:
             protocol = "TCP";
             useAppLoadBalancer = false;
             break;
-        case "udp":
-            throw new Error("UDP protocol unsupported for Services");
         default:
             throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
@@ -248,8 +256,7 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
         allocateListener(cluster, network, internal, useAppLoadBalancer);
 
     // Create the target group for the new container/port pair.
-    const targetListenerName =
-        `${commonPrefix.substring(0, loadBalancerPrefixLength)}-${internal ? "i" : "e"}${listenerIndex}`;
+    const targetListenerName = getLoadBalancerPrefix(internal, useAppLoadBalancer) + listenerIndex;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: portMapping.port,
         protocol: protocol,
