@@ -242,7 +242,7 @@ export class Cluster {
             }
         }
         this.autoScalingGroupStack = new aws.cloudformation.Stack(
-            "autoScalingGroupStack",
+            `${name}-asg-stack`,
             {
                 templateBody: getCloudFormationAsgTemplate(
                     args.minSize || 2,
