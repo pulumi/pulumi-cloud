@@ -120,6 +120,7 @@ let helloTask = new cloud.Task("hello-world", {
     memory: 20,
 });
 
+// build an anonymous image:
 let builtService = new cloud.Service("nginx2", {
     containers: {
         nginx: {
@@ -131,12 +132,53 @@ let builtService = new cloud.Service("nginx2", {
     replicas: 2,
 });
 
+// build and name the resulting image:
+let builtNamedService = new cloud.Service("pulumiNginx", {
+    containers: {
+        nginx: {
+            build: "./app",
+            image: "pulumi/nginx",
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+    replicas: 2,
+});
+
+// use a pre-built nginx image, and expose it via a TCP network load balancer (the default).
+let nginxOverNetLB = new cloud.Service("nginxOverNetLB", {
+    containers: {
+        nginx: {
+            image: "nginx",
+            memory: 128,
+            ports: [{ port: 80, protocol: "tcp" }],
+        },
+    },
+    replicas: 2,
+});
+
+// use a pre-built nginx image, and expose it externally via an HTTP application load balancer.
+let nginxOverAppLB = new cloud.Service("nginxOverAppLB", {
+    containers: {
+        nginx: {
+            image: "nginx",
+            memory: 128,
+            ports: [{ port: 80, external: true, protocol: "http" }],
+        },
+    },
+    replicas: 2,
+});
+
+// expose some APIs meant for testing purposes.
 let api = new cloud.HttpEndpoint("containers");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
         nginx2: await builtService.getEndpoint(),
+        pulumiNginx: await builtNamedService.getEndpoint(),
+        nginxOverNetLB: await nginxOverNetLB.getEndpoint(),
+        nginxOverAppLB: await nginxOverAppLB.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {
@@ -192,15 +234,3 @@ api.get("/custom", async (req, res) => {
     }
 });
 api.publish().url.then(url => console.log(`Serving at: ${url}`));
-
-let builtNamedService = new cloud.Service("nginx3", {
-    containers: {
-        nginx: {
-            build: "./app",
-            image: "pulumi/nginx",
-            memory: 128,
-            ports: [{ port: 80 }],
-        },
-    },
-    replicas: 2,
-});
