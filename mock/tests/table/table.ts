@@ -50,17 +50,17 @@ describe("Table", () => {
             assert.equal((await table.get({[table.primaryKey]: "val"})).value, 1);
         });
 
-        it("should-not-be-affected-by-query-data", async () => {
+        it("should-throw-if-query-does-not-match-schema", async () => {
             const table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
-            assert.equal((await table.get({[table.primaryKey]: "val", value: 2})).value, 1);
+            await assert.throwsAsync(async () => await table.get({[table.primaryKey]: "val", value: 2}));
         });
 
         it("should-see-second insert", async () => {
             const table = new cloud.Table("table" + uniqueId++);
             await table.insert({[table.primaryKey]: "val", value: 1});
             await table.insert({[table.primaryKey]: "val", value: 2});
-            assert.equal((await table.get({[table.primaryKey]: "val", value: 3})).value, 2);
+            assert.equal((await table.get({[table.primaryKey]: "val" })).value, 2);
         });
 
         it("should-not-see-deleted-value", async () => {
