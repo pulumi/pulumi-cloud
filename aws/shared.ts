@@ -31,7 +31,6 @@ export function getNetwork(): Network | undefined {
         if (config.usePrivateNetwork || config.ecsAutoCluster) {
             // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
             network = new Network(commonPrefix, {
-                numberOfAvailabilityZones: 1,
                 privateSubnets: config.usePrivateNetwork,
             });
         } else if (config.externalVpcId) {
@@ -41,6 +40,7 @@ export function getNetwork(): Network | undefined {
             }
             // Use an exsting VPC for this private network
             network = {
+                numberOfAvailabilityZones: config.externalSubnets.length,
                 vpcId: Promise.resolve(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets.map(s => Promise.resolve(s)),
