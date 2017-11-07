@@ -47,4 +47,4 @@ performance:
 .PHONY: unittests
 unittests:
 	@echo "\033[0;32mUNIT TESTS:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/unit/table
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/unit
