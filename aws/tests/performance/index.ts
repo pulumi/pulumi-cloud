@@ -74,23 +74,31 @@ async function testTablePerformance(record: boolean) {
 
 async function testTableScanPerformance(record: boolean) {
     await recordAndReportTime(record, "table-scan", async() => {
-        await table.scan();
+        for (let i = 0; i < 20; i++) {
+            await table.scan();
+        }
     });
 }
 
 async function testTableInsertPerformance(record: boolean) {
     await recordAndReportTime(record, "table-insert", async() => {
-        await table.insert({id: "0", value: 0});
+        for (let i = 0; i < 20; i++) {
+            await table.insert({id: "" + i, value: i});
+        }
     });
 }
 
 async function testTableGetPerformance(record: boolean) {
     await recordAndReportTime(record, "table-get-existing", async() => {
-        await table.get({id: "0"});
+        for (let i = 0; i < 20; i++) {
+            await table.get({id: "" + i});
+        }
     });
 
     await recordAndReportTime(record, "table-get-missing", async() => {
-        await table.get({id: "-1"});
+        for (let i = 0; i < 20; i++) {
+            await table.get({id: "-1"});
+        }
     });
 }
 
