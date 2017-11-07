@@ -1,11 +1,13 @@
 package examples
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -57,15 +59,49 @@ func Test_Performance(t *testing.T) {
 				dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
 				dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
 
-				resp, err := http.Get(baseURL + "/performance?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
-				assert.NoError(t, err, "expected to be able to GET /performance")
+				resp, err := http.Get(baseURL + "/start-performance-tests?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
+				assert.NoError(t, err, "expected to be able to GET /start-performance-tests")
 
 				contentType := resp.Header.Get("Content-Type")
-				assert.Equal(t, "text/json", contentType)
+				assert.Equal(t, "text/html", contentType)
 
-				bytes, err := ioutil.ReadAll(resp.Body)
+				_, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				t.Logf("GET %v [%v/%v]: %v", baseURL+"/performance", resp.StatusCode, contentType, string(bytes))
+				assert.Equal(t, 200, resp.StatusCode)
+
+				start := time.Now()
+				for true {
+					elapsed := time.Now().Sub(start)
+
+					// lambdas can ony run up to 5 minutes.  So if we go to 6, then there's no point
+					// continuing.
+					if elapsed.Minutes() >= 6 {
+						assert.Fail(t, "Performance tests did not finish")
+						break
+					}
+
+					resp, err := http.Get(baseURL + "/check-performance-tests")
+					assert.NoError(t, err, "expected to be able to GET /check-performance-tests")
+
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					assert.Equal(t, 200, resp.StatusCode)
+					t.Logf("GET %v [%v/%v]: %v", baseURL+"/check-performance-tests", resp.StatusCode, contentType, string(bytes))
+
+					var v struct {
+						Status string `json:"status"`
+					}
+					err = json.Unmarshal(bytes, &v)
+					assert.NoError(t, err)
+					if v.Status == "complete" {
+						break
+					}
+
+					time.Sleep(5 * time.Second)
+				}
 			},
 		},
 	}
