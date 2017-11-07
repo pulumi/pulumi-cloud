@@ -131,7 +131,7 @@ async function runAllTests(): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
-    passed = await runTests("tableTests", tableTests, result) && passed;
+    passed = await runTests("tableTests.basicTests", tableTests.basicTests, result) && passed;
     passed = await runTests("tableTests.updateTests", tableTests.updateTests, result) && passed;
     passed = await runTests("tableTests.scanTests", tableTests.scanTests, result) && passed;
 
