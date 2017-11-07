@@ -208,6 +208,7 @@ function allocateListener(
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
     targetGroup: aws.elasticloadbalancingv2.TargetGroup;
+    protocol: cloud.ContainerProtocol;
     listenerPort: number;
 }
 
@@ -221,13 +222,14 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
 
     // Create an internal load balancer if requested.
     const internal: boolean = (network.privateSubnets && !portMapping.external);
+    const portMappingProtocol: cloud.ContainerProtocol = portMapping.protocol || "tcp";
 
     // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
     // Also ensure that we have an SSL certificate for termination at the LB, if that was requested.
     let protocol: string;
     let useAppLoadBalancer: boolean;
     let useCertificateARN: string | undefined;
-    switch (portMapping.protocol) {
+    switch (portMappingProtocol) {
         case "https":
             protocol = "HTTPS";
             useAppLoadBalancer = true;
@@ -243,7 +245,6 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
         case "udp":
             throw new Error("UDP protocol unsupported for Services");
         case "tcp":
-        case undefined:
             protocol = "TCP";
             useAppLoadBalancer = false;
             break;
@@ -282,6 +283,7 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
     return {
         loadBalancer: loadBalancer,
         targetGroup: target,
+        protocol: portMappingProtocol,
         listenerPort: listenerPort,
     };
 }
@@ -471,11 +473,61 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
 // buildImageCache remembers the digests for all past built images, keyed by image name.
 const buildImageCache = new Map<string, Promise<string | undefined>>();
 
+// makeServiceEnvName turns a service name into something suitable for an environment variable.
+function makeServiceEnvName(service: string): string {
+    return service.toUpperCase().replace(/-/g, "_");
+}
+
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(imageName: string, container: cloud.Container,
+async function computeImage(imageName: string, container: cloud.Container, ports: ExposedPorts | undefined,
                             repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
-    const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
+    // Start with a copy from the container specification.
+    const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
+        <any>Object.assign({}, container.environment || {});
+
+    // Now add entries for service discovery amongst containers exposing endpoints.
+    if (ports) {
+        for (const service of Object.keys(ports)) {
+            let firstPort = true;
+            const serviceEnv = makeServiceEnvName(service);
+            for (const port of Object.keys(ports[service])) {
+                const info = ports[service][parseInt(port, 10)];
+                const hostname = info.host.dnsName;
+                const hostport = info.hostPort.toString();
+                const hostproto = info.hostProtocol;
+                // Populate Kubernetes and Docker links compatible environment variables.  These take the form:
+                //
+                //     Kubernetes:
+                //         {SVCNAME}_SERVICE_HOST=10.0.0.11 (or DNS name)
+                //         {SVCNAME}_SERVICE_PORT=6379
+                //     Docker links:
+                //         {SVCNAME}_PORT=tcp://10.0.0.11:6379 (or DNS address)
+                //         {SVCNAME}_PORT_6379_TCP=tcp://10.0.0.11:6379 (or DNS address)
+                //         {SVCNAME}_PORT_6379_TCP_PROTO=tcp
+                //         {SVCNAME}_PORT_6379_TCP_PORT=6379
+                //         {SVCNAME}_PORT_6379_TCP_ADDR=10.0.0.11 (or DNS name)
+                //
+                // See https://kubernetes.io/docs/concepts/services-networking/service/#discovering-services and
+                // https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/ for more info.
+                if (firstPort) {
+                    preEnv[`${serviceEnv}_SERVICE_HOST`] = hostname;
+                    preEnv[`${serviceEnv}_SERVICE_PORT`] = hostport;
+                }
+                firstPort = false;
+
+                preEnv[`${serviceEnv}_PORT`] = `${hostproto}://${hostname}:${hostport}`;
+                preEnv[`${serviceEnv}_PORT_${port}_TCP`] = `${hostproto}://${hostname}:${hostport}`;
+                preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
+                preEnv[`${serviceEnv}_PORT_${port}_TCP_PORT`] = hostport;
+                preEnv[`${serviceEnv}_PORT_${port}_TCP_ADDR`] = hostname;
+            }
+        }
+    }
+
+    // Now wait for any environment entries to settle before proceeding.
+    const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(preEnv);
+
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
         console.log(`Building container image at '${container.build}'`);
@@ -524,7 +576,7 @@ async function computeImage(imageName: string, container: cloud.Container,
 
 // computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is lifted over
 // a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
-async function computeContainerDefintions(containers: cloud.Containers,
+async function computeContainerDefintions(containers: cloud.Containers, ports: ExposedPorts | undefined,
                                           logGroup: aws.cloudwatch.LogGroup): Promise<ECSContainerDefinition[]> {
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
@@ -537,7 +589,7 @@ async function computeContainerDefintions(containers: cloud.Containers,
             // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
             repository = getOrCreateRepository(imageName);
         }
-        const { image, environment } = await computeImage(imageName, container, repository);
+        const { image, environment } = await computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
@@ -605,7 +657,7 @@ interface TaskDefinition {
 }
 
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(name: string, containers: cloud.Containers): TaskDefinition {
+function createTaskDefinition(name: string, containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`);
 
@@ -628,7 +680,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers): TaskD
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, logGroup).then(JSON.stringify);
+    const containerDefintions = computeContainerDefintions(containers, ports, logGroup).then(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefintions,
@@ -657,9 +709,10 @@ interface ExposedPorts {
     };
 }
 
-export interface ExposedPort {
+interface ExposedPort {
     host: aws.elasticloadbalancingv2.LoadBalancer;
     hostPort: number;
+    hostProtocol: cloud.ContainerProtocol;
 }
 
 export class Service extends pulumi.ComponentResource implements cloud.Service {
@@ -695,9 +748,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 replicas: replicas,
             },
             () => {
-                // Create the task definition, parented to this component.
-                const taskDefinition = createTaskDefinition(name, containers);
-
                 // Create load balancer listeners/targets for each exposed port.
                 const loadBalancers = [];
                 for (const containerName of Object.keys(containers)) {
@@ -709,6 +759,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                             ports[containerName][portMapping.port] = {
                                 host: info.loadBalancer,
                                 hostPort: info.listenerPort,
+                                hostProtocol: info.protocol,
                             };
                             loadBalancers.push({
                                 containerName: containerName,
@@ -721,6 +772,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
                 // Only provide a role if the service is attached to a load balancer.
                 const iamRole = loadBalancers.length ? getServiceLoadBalancerRole().arn : undefined;
+
+                // Create the task definition, parented to this component.
+                const taskDefinition = createTaskDefinition(name, containers, ports);
 
                 // Create the service.
                 const service = new aws.ecs.Service(name, {
