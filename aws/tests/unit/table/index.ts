@@ -1,14 +1,19 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import * as harnessMod from "@pulumi/cloud-aws-unittests-harness";
 import * as assert from "assert";
+
+function getHarness(): typeof harnessMod {
+    return require("@pulumi/cloud-aws-unittests-harness");
+}
 
 let uniqueId = 0;
 
 namespace basicApiTests {
     const table1 = new cloud.Table("tab" + uniqueId++);
     export async function testShouldThrowWithNoPrimaryKey() {
-        await assertThrowsAsync(async () => await table1.get({}));
+        await getHarness().assertThrowsAsync(async () => await table1.get({}));
     }
 
     const table2 = new cloud.Table("tab" + uniqueId++);
@@ -27,7 +32,7 @@ namespace basicApiTests {
     export async function testShouldThrowIfQueryDoesNotMatchSchema() {
         await table4.insert({[table4.primaryKey]: "val", value: 1});
 
-        assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
+        await getHarness().assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
     }
 
     const table5 = new cloud.Table("tab" + uniqueId++);
@@ -109,71 +114,31 @@ namespace updateProgramTests {
     }
 }
 
-const endpoint = new cloud.HttpEndpoint("unittests");
-
-endpoint.get("/unittests", async (req, res) => {
-    try {
-        const [passed, json] = await runAllTests();
-        if (passed) {
-            res.json(json);
-        }
-        else {
-            res.status(500).json(json);
-        }
-    } catch (err) {
-        res.status(500).json(errorJSON(err));
-    }
-});
-
-const deployment = endpoint.publish();
-deployment.url.then(u => console.log("Serving at: " + u));
-
 function errorJSON(err: any) {
     const result: any = Object.create(null);
     Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
     return result;
 }
 
-async function runAllTests(): Promise<[boolean, any]> {
-    let passed = true;
-    const result: any = Object.create(null);
+const endpoint = new cloud.HttpEndpoint("unittests");
 
-    passed = await runTests("tableTests.basicApiTests", basicApiTests, result) && passed;
-    passed = await runTests("tableTests.updateApiTests", updateApiTests, result) && passed;
-    passed = await runTests("tableTests.scanApiTests", scanApiTests, result) && passed;
-    passed = await runTests("tableTests.updateProgramTests", updateProgramTests, result) && passed;
-
-    return [passed, result];
-}
-
-async function runTests(moduleName: string, module: any, result: any) {
-    let passed = true;
-    for (const name of Object.keys(module)) {
-        if (!name.startsWith("test")) {
-            continue;
-        }
-
-        const fullName = `${moduleName}.${name}`;
-        try {
-            await module[name]();
-            result[fullName] = "passed";
-        }
-        catch (err) {
-            passed = false;
-            result[fullName] = errorJSON(err);
-        }
-    }
-
-    return passed;
-}
-
-async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
+endpoint.get("/unittests", async (req, res) => {
     try {
-        await body();
-    }
-    catch (err) {
-        return;
-    }
+        res.json({ success: true, harness: getHarness(), foo: 2 });
+    } catch (err) {
 
-    throw new Error("Expected error to be thrown");
-}
+        res.status(500).json(errorJSON(err));
+    }
+    //     await harness.runUnitTests(res, {
+    //         ["tableTests.basicApiTests"]: basicApiTests,
+    //         ["tableTests.updateApiTests"]: updateApiTests,
+    //         ["tableTests.scanApiTests"]: scanApiTests,
+    //         ["tableTests.updateProgramTests"]: updateProgramTests,
+    //     });
+    // } catch (err) {
+    //     res.status(500).json(errorJSON(err));
+    // }
+});
+
+const deployment = endpoint.publish();
+deployment.url.then(u => console.log("Serving at: " + u));
