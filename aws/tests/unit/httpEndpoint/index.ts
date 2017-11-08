@@ -2,100 +2,67 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
+import * as supertest from "supertest";
 
 let uniqueId = 0;
+namespace getApiTests {
+    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint1.get("/", async (req, res) => {
+        res.json({ success: true });
+    });
+    const deployment1 = endpoint1.publish();
 
-namespace basicApiTests {
-    const table1 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldThrowWithNoPrimaryKey() {
-        await assertThrowsAsync(async () => await table1.get({}));
+    export async function testGetOfExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/").expect(200, { success: true });
     }
 
-    const table2 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldReturnUndefinedWithPrimaryKeyNotPresent() {
-        const val = await table2.get({[table2.primaryKey]: "val"});
-        assert.strictEqual(val, undefined);
+    export async function testGetOfNonExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/unavailable").expect(403);
     }
 
-    const table3 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldFindInsertedValue() {
-        await table3.insert({[table3.primaryKey]: "val", value: 1});
-        assert.equal((await table3.get({[table3.primaryKey]: "val"})).value, 1);
-    }
 
-    const table4 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldThrowIfQueryDoesNotMatchSchema() {
-        await table4.insert({[table4.primaryKey]: "val", value: 1});
+    const endpoint2 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint2.get("/", async (req, res) => {
+        try {
+            const result = Object.create(null);
+            for (const param of Object.keys(req.query)) {
+                result[param] = req.query[param];
+            }
 
-        assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
-    }
-
-    const table5 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldSeeSecondInsert() {
-        await table5.insert({[table5.primaryKey]: "val", value: 1});
-        await table5.insert({[table5.primaryKey]: "val", value: 2});
-        assert.equal((await table5.get({[table5.primaryKey]: "val" })).value, 2);
-    }
-
-    const table6 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldNotSeeDeletedValue() {
-        await table6.insert({[table6.primaryKey]: "val", value: 1});
-        await table6.delete({[table6.primaryKey]: "val" });
-
-        const val = await table6.get({[table6.primaryKey]: "val"});
-        assert.strictEqual(val, undefined);
-    }
-
-    const table7 = new cloud.Table("tab" + uniqueId++);
-    const table8 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldNotSeeInsertsToOtherTable() {
-        await table7.insert({[table7.primaryKey]: "val", value: 1});
-
-        const val = await table8.get({[table8.primaryKey]: "val"});
-        assert.strictEqual(val, undefined);
+            res.json(result);
+        } catch (err) {
+            res.json(errorJSON(err));
+        }
+    });
+    const deployment2 = endpoint2.publish();
+    export async function testGetWithQuery() {
+        const address = await deployment2.url;
+        await supertest(address).get("stage/")
+                                .query({ param1: 0, param2: 1 })
+                                .expect(200, { param1: "0", param2: "1" });
     }
 }
 
-namespace updateApiTests {
-    const table1 = new cloud.Table("tab" + uniqueId++);
-    export async function testShouldOnlyUpdateProvidedKeys() {
-        await table1.insert({[table1.primaryKey]: "val", value1: 1, value2: "2"});
-        await table1.update({[table1.primaryKey]: "val" }, {value1: 3});
 
-        assert.equal((await table1.get({[table1.primaryKey]: "val"})).value1, 3);
-        assert.equal((await table1.get({[table1.primaryKey]: "val"})).value2, "2");
-    }
-}
+namespace postApiTests {
+    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint1.post("/", async (req, res) => {
+        res.json(JSON.parse(req.body.toString()));
+    });
+    const deployment1 = endpoint1.publish();
 
-namespace scanApiTests {
-    const table1 = new cloud.Table("tab" + uniqueId++);
-    export async function testScanReturnsAllValues() {
-        await table1.insert({[table1.primaryKey]: "val1", value1: 1, value2: "1"});
-        await table1.insert({[table1.primaryKey]: "val2", value1: 2, value2: "2"});
-
-        const values = await table1.scan();
-        assert.equal(values.length, 2);
-
-        const value1 = values.find(v => v[table1.primaryKey] === "val1");
-        const value2 = values.find(v => v[table1.primaryKey] === "val2");
-
-        assert.notEqual(value1, value2);
-        assert.equal(value1.value1, 1);
-        assert.equal(value2.value1, 2);
+    export async function testPostOfExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).post("stage/")
+                                .send({ param1: "0", param2: "1" })
+                                .expect(200, { param1: "0", param2: "1" });
     }
 
-    const table2 = new cloud.Table("tab" + uniqueId++);
-    export async function testScanDoesNotReturnDeletedValues() {
-        await table2.insert({[table2.primaryKey]: "val1", value1: 1, value2: "1"});
-        await table2.insert({[table2.primaryKey]: "val2", value1: 2, value2: "2"});
-        await table2.delete({[table2.primaryKey]: "val1"});
-
-        const values = await table2.scan();
-        assert.equal(values.length, 1);
-
-        const value = values[0];
-
-        assert.equal(value.value1, 2);
+    export async function testPostOfNonExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).post("stage/unavailable").expect(403);
     }
 }
 
@@ -138,10 +105,9 @@ async function runAllTests(): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
-    passed = await runTests("tableTests.basicApiTests", basicApiTests, result) && passed;
-    passed = await runTests("tableTests.updateApiTests", updateApiTests, result) && passed;
-    passed = await runTests("tableTests.scanApiTests", scanApiTests, result) && passed;
-    passed = await runTests("tableTests.updateProgramTests", updateProgramTests, result) && passed;
+    passed = await runTests("httpEndpointTests.getApiTests", getApiTests, result) && passed;
+    passed = await runTests("httpEndpointTests.postApiTests", postApiTests, result) && passed;
+    passed = await runTests("httpEndpointTests.updateProgramTests", updateProgramTests, result) && passed;
 
     return [passed, result];
 }
