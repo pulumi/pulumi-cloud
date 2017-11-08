@@ -14,15 +14,14 @@ before_install:
 install:
     # Clone the Pulumi repo and use its script to fetch the latest installation packages.
     - git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home
-    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh pulumi master /opt/pulumi
-    - ${GOPATH}/src/github.com/pulumi/home/scripts/install.sh pulumi-aws master /opt/pulumi
+    - ${GOPATH}/src/github.com/pulumi/home/scripts/install-locked.sh /opt/pulumi pulumi pulumi-aws
     - dep ensure
     - pushd api && dep ensure && popd
     - pushd aws && dep ensure && popd
     - pushd mock && dep ensure && popd
 before_script:
     - export PULUMI=/opt/pulumi
-    - export PATH=$PULUMI/bin:$PULUMI/sdk/nodejs:$PULUMI/packs/aws:$PATH
+    - export PATH=$PULUMI/bin:$PATH
 script:
     - make travis_${TRAVIS_EVENT_TYPE}
 notifications:
