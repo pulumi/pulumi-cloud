@@ -95,11 +95,11 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.options = (path, ...handlers) => this.route("options", path, ...handlers);
         this.all = (path, ...handlers) => this.route("all", path, ...handlers);
 
-        this.publish = () =>  {
+        this.publish = (port?: number) =>  {
             if (app === undefined) {
                 throw new Error("HttpAPI has already been published");
             }
-            return new HttpDeployment(app);
+            return new HttpDeployment(app, port);
         };
 
         function convertRequestHandler(handler: cloud.RouteHandler): express.RequestHandler {
@@ -150,8 +150,8 @@ class HttpDeployment implements cloud.HttpDeployment {
     public readonly url: pulumi.Computed<string>;
     public readonly customDomainNames: pulumi.Computed<string>[];
 
-    constructor(app: express.Application) {
-        const server: http.Server = app.listen(0);
+    constructor(app: express.Application, port?: number) {
+        const server: http.Server = app.listen(port || 0);
         this.url = Promise.resolve(`http://localhost:${server.address().port}`);
         this.customDomainNames = [];
     }

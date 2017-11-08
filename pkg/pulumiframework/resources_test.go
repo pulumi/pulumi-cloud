@@ -62,7 +62,7 @@ func TestTodo(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 1, len(endpoint.Properties))
-	assert.Equal(t, "https://a3g797nzxd.execute-api.us-east-2.amazonaws.com/stage/", endpoint.Properties[resource.PropertyKey("url")].StringValue())
+	assert.Equal(t, "https://eupwl7wu4i.execute-api.us-east-2.amazonaws.com/stage/", endpoint.Properties[resource.PropertyKey("url")].StringValue())
 	assert.Equal(t, 3, len(endpoint.Resources))
 	assert.Equal(t, pulumiEndpointType, endpoint.Type)
 }
