@@ -81,7 +81,7 @@ func GetComponents(source []*resource.State) component.Components {
 				}
 			}
 		} else if res.Type == functionType {
-			if !strings.HasSuffix(name, "pulumi-app-log-collector") {
+			if !strings.HasSuffix(name, "-log-collector") {
 				urn := newPulumiFrameworkURN(res.URN, tokens.Type(pulumiFunctionType), tokens.QName(name))
 				components[urn] = &component.Component{
 					Type:       pulumiFunctionType,
@@ -142,7 +142,7 @@ var _ component.OperationsProvider = (*componentOpsProvider)(nil)
 
 const (
 	// AWS config keys
-	regionKey      = "aws:config:region"
+	regionKey = "aws:config:region"
 
 	// AWS Resource Types
 	stageType      = "aws:apigateway/stage:Stage"
