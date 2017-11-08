@@ -29,34 +29,34 @@ func Test_Performance(t *testing.T) {
 		return
 	}
 	tests := []integration.ProgramTestOptions{
-		// {
-		// 	Dir: cwd + "/table",
-		// 	Config: map[string]string{
-		// 		"aws:config:region":     region,
-		// 		"cloud:config:provider": "aws",
-		// 	},
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-aws",
-		// 	},
-		// 	ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 		hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")
-		// 	},
-		// 	EditDirs: []integration.EditDir{
-		// 		{
-		// 			Dir: cwd + "/table/variants/update1",
-		// 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-		// 			},
-		// 		},
-		// 		{
-		// 			Dir: cwd + "/table/variants/update2",
-		// 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-		// 			},
-		// 		},
-		// 	},
-		// },
+		{
+			Dir: cwd + "/table",
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/table/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
+					},
+				},
+				{
+					Dir: cwd + "/table/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
+					},
+				},
+			},
+		},
 		{
 			Dir: cwd + "/httpEndpoint",
 			Config: map[string]string{
