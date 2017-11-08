@@ -67,12 +67,16 @@ namespace postApiTests {
 }
 
 namespace updateProgramTests {
-    const table1 = new cloud.Table("persistent_table");
-    export async function testPersistentTable() {
-        // in v0 of the program we only add data to the table.
-        for (let i = 0; i < 10; i++) {
-            await table1.insert({[table1.primaryKey]: "" + i, value1: i });
-        }
+    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint");
+    endpoint1.get("/", async (req, res) => {
+        res.json({ version: 0 });
+    });
+    const deployment1 = endpoint1.publish();
+
+    export async function testInitialGet() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/").expect(200, { version: "0" });
+        await supertest(address).get("stage/available").expect(403);
     }
 }
 

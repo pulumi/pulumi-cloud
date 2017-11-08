@@ -70,20 +70,20 @@ func Test_Performance(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")
 			},
-			// EditDirs: []integration.EditDir{
-			// 	{
-			// 		Dir: cwd + "/httpEndpoint/variants/update1",
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-			// 		},
-			// 	},
-			// 	{
-			// 		Dir: cwd + "/httpEndpoint/variants/update2",
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-			// 		},
-			// 	},
-			// },
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/httpEndpoint/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
+					},
+				},
+				{
+					Dir: cwd + "/httpEndpoint/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
+					},
+				},
+			},
 		},
 	}
 	for _, ex := range tests {

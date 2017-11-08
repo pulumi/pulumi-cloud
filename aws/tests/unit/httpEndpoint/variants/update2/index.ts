@@ -2,20 +2,20 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
+import * as supertest from "supertest";
 
 namespace updateProgramTests {
-    const table1 = new cloud.Table("persistent_table");
-    export async function testPersistentTable() {
-        // in v2 of the program make sure only half the data is still there.
-        for (let i = 0; i < 10; i++) {
-            const result = await table1.get({[table1.primaryKey]: "" + i });
-            if (i % 2 === 0) {
-                assert.equal(undefined, result);
-            }
-            else {
-                assert.equal(result.value1, i);
-            }
-        }
+    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint");
+    // in v2 change the path we're on.
+    endpoint1.get("/available", async (req, res) => {
+        res.json({ version: 2 });
+    });
+    const deployment1 = endpoint1.publish();
+
+    export async function testInitialGet() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/").expect(403);
+        await supertest(address).get("stage/available").expect(200, { version: "2" });
     }
 }
 
@@ -48,7 +48,7 @@ async function runAllTests(): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
-    passed = await runTests("tableTests.updateProgramTests", updateProgramTests, result) && passed;
+    passed = await runTests("httpEndpointTests.updateProgramTests", updateProgramTests, result) && passed;
 
     return [passed, result];
 }
@@ -72,4 +72,15 @@ async function runTests(moduleName: string, module: any, result: any) {
     }
 
     return passed;
+}
+
+async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
+    try {
+        await body();
+    }
+    catch (err) {
+        return;
+    }
+
+    throw new Error("Expected error to be thrown");
 }
