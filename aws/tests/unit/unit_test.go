@@ -39,7 +39,6 @@ func Test_Performance(t *testing.T) {
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
-				"@pulumi/cloud-aws-unittests-harness",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")

@@ -27,7 +27,7 @@ async function runAllTests(testModules: any): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
-    for (const moduleName of testModules) {
+    for (const moduleName of Object.keys(testModules)) {
         passed = await runTests(moduleName, testModules[moduleName], result) && passed;
     }
 

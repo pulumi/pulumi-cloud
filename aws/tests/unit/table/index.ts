@@ -1,19 +1,15 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as harnessMod from "@pulumi/cloud-aws-unittests-harness";
 import * as assert from "assert";
-
-function getHarness(): typeof harnessMod {
-    return require("@pulumi/cloud-aws-unittests-harness");
-}
+import * as harness from "../harness";
 
 let uniqueId = 0;
 
 namespace basicApiTests {
     const table1 = new cloud.Table("tab" + uniqueId++);
     export async function testShouldThrowWithNoPrimaryKey() {
-        await getHarness().assertThrowsAsync(async () => await table1.get({}));
+        await harness.assertThrowsAsync(async () => await table1.get({}));
     }
 
     const table2 = new cloud.Table("tab" + uniqueId++);
@@ -32,7 +28,7 @@ namespace basicApiTests {
     export async function testShouldThrowIfQueryDoesNotMatchSchema() {
         await table4.insert({[table4.primaryKey]: "val", value: 1});
 
-        await getHarness().assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
+        await harness.assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
     }
 
     const table5 = new cloud.Table("tab" + uniqueId++);
@@ -124,20 +120,15 @@ const endpoint = new cloud.HttpEndpoint("unittests");
 
 endpoint.get("/unittests", async (req, res) => {
     try {
-        res.json({ success: true, harness: getHarness(), foo: 2 });
+        await harness.runUnitTests(res, {
+            ["tableTests.basicApiTests"]: basicApiTests,
+            ["tableTests.updateApiTests"]: updateApiTests,
+            ["tableTests.scanApiTests"]: scanApiTests,
+            ["tableTests.updateProgramTests"]: updateProgramTests,
+        });
     } catch (err) {
-
         res.status(500).json(errorJSON(err));
     }
-    //     await harness.runUnitTests(res, {
-    //         ["tableTests.basicApiTests"]: basicApiTests,
-    //         ["tableTests.updateApiTests"]: updateApiTests,
-    //         ["tableTests.scanApiTests"]: scanApiTests,
-    //         ["tableTests.updateProgramTests"]: updateProgramTests,
-    //     });
-    // } catch (err) {
-    //     res.status(500).json(errorJSON(err));
-    // }
 });
 
 const deployment = endpoint.publish();

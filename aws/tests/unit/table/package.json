@@ -1,8 +1,8 @@
 {
     "name": "unittests",
     "version": "0.1",
-    "main": "bin/index.js",
-    "typings": "bin/index.d.ts",
+    "main": "bin/table/index.js",
+    "typings": "bin/table/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
@@ -14,8 +14,7 @@
     "peerDependencies": {
         "pulumi": "*",
         "@pulumi/cloud": "*",
-        "@pulumi/cloud-aws": "*",
-        "@pulumi/cloud-aws-unittests-harness": "*"
+        "@pulumi/cloud-aws": "*"
     },
     "dependencies": {
         "@types/node": "^8.0.26",
