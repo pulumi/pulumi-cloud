@@ -1,0 +1,24 @@
+{
+    "name": "unittests",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "typescript": "^2.1.4",
+        "mocha": "^3.5.3",
+        "chai": "^4.1.2"
+    },
+    "peerDependencies": {
+        "pulumi": "*",
+        "@pulumi/cloud": "*",
+        "@pulumi/cloud-aws": "*"
+    },
+    "dependencies": {
+        "@types/node": "^8.0.26",
+        "@types/mocha": "^2.2.43",
+        "@types/chai": "^4.0.4"
+    }
+}
