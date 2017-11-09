@@ -46,4 +46,5 @@ performance:
 
 .PHONY: unittests
 unittests:
-	$(MAKE) -C ./tests/unit
+	@echo "\033[0;32mUNIT TESTS:\033[0m"
+	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/unit
