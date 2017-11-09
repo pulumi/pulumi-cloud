@@ -1,4 +1,0 @@
-name: unittests
-runtime: nodejs
-config:
-  aws:config:region: us-east-2
