@@ -46,13 +46,13 @@ func Test_Performance(t *testing.T) {
 			},
 			EditDirs: []integration.EditDir{
 				{
-					Dir: cwd + "/table/variants/update1",
+					Dir: cwd + "/variants/update1",
 					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 						hitUnitTestsEndpoint(t, checkpoint)
 					},
 				},
 				{
-					Dir: cwd + "/table/variants/update2",
+					Dir: cwd + "/variants/update2",
 					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 						hitUnitTestsEndpoint(t, checkpoint)
 					},

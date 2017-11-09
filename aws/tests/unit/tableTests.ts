@@ -110,15 +110,6 @@ namespace updateProgramTests {
     }
 }
 
-// const table1 = new cloud.Table("persistent_table");
-// export async function testPersistentTable() {
-//     // in v0 of the program we only add data to the table.
-//     for (let i = 0; i < 10; i++) {
-//         await table1.insert({[table1.primaryKey]: "" + i, value1: i });
-//     }
-// }
-
-
 export async function runAllTests(result: any): Promise<boolean>{
     return await harness.testModule(result, {
         ["tableTests.basicApiTests"]: basicApiTests,
