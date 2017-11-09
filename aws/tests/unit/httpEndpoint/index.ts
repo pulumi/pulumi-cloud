@@ -34,7 +34,7 @@ namespace getApiTests {
 
             res.json(result);
         } catch (err) {
-            res.json(errorJSON(err));
+            res.json(harness.errorJSON(err));
         }
     });
     const deployment2 = endpoint2.publish();
