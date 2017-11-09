@@ -2,7 +2,7 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
-import * as harness from "../harness";
+import * as harness from "./harness";
 
 let uniqueId = 0;
 
@@ -110,25 +110,15 @@ namespace updateProgramTests {
     }
 }
 
-function errorJSON(err: any) {
-    const result: any = Object.create(null);
-    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
-    return result;
-}
-
 const endpoint = new cloud.HttpEndpoint("unittests");
 
 endpoint.get("/unittests", async (req, res) => {
-    try {
-        await harness.runUnitTests(res, {
-            ["tableTests.basicApiTests"]: basicApiTests,
-            ["tableTests.updateApiTests"]: updateApiTests,
-            ["tableTests.scanApiTests"]: scanApiTests,
-            ["tableTests.updateProgramTests"]: updateProgramTests,
-        });
-    } catch (err) {
-        res.status(500).json(errorJSON(err));
-    }
+    await harness.runUnitTests(res, {
+        ["tableTests.basicApiTests"]: basicApiTests,
+        ["tableTests.updateApiTests"]: updateApiTests,
+        ["tableTests.scanApiTests"]: scanApiTests,
+        ["tableTests.updateProgramTests"]: updateProgramTests,
+    });
 });
 
 const deployment = endpoint.publish();

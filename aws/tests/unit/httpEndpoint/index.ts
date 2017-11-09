@@ -3,6 +3,7 @@
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as supertest from "supertest";
+import * as harness from "harness";
 
 let uniqueId = 0;
 namespace getApiTests {

@@ -4,8 +4,14 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/xml/xmlutil","service/cloudwatch","service/cloudwatchlogs","service/sts"]
-  revision = "6061953e33da7e141a16c70ec9535467ce7f189a"
-  version = "v1.12.24"
+  revision = "a201bf33b18ad4ab54344e4bc26b87eb6ad37b8e"
+  version = "v1.12.25"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/cleversoap/go-cp"
+  packages = ["."]
+  revision = "c1540332ed3e3f5122faafcac57a6d6dedbeaacd"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -73,10 +79,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
-  revision = "33a032b5c28697fd0f4759279a20d2dac8c67678"
-  version = "v0.8.1"
+  revision = "4d26cf4f2c2e2ddd960143223af4f1fd8e0c0421"
 
 [[projects]]
   branch = "master"
@@ -118,7 +124,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "bcc62b628abe70dd6bee1f06c4e31630209cd8d7"
+  revision = "4b45465282a4624cf39876842a017334f13b8aff"
 
 [[projects]]
   branch = "master"
@@ -147,6 +153,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b8d0e5becf06679f70941955b789a4f310e281e5237ec5ca7572fbc1f559ff0a"
+  inputs-digest = "93e0fdaf63f6a29df1d7148d5371170f027cc198d8de896a2923da711e6ff335"
   solver-name = "gps-cdcl"
   solver-version = 1

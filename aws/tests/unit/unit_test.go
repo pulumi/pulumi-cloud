@@ -9,6 +9,7 @@ import (
 
 	"github.com/pulumi/pulumi/pkg/tokens"
 
+	"github.com/cleversoap/go-cp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
@@ -28,6 +29,24 @@ func Test_Performance(t *testing.T) {
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
+
+	testDirs := []string{
+		cwd + "/table",
+		cwd + "/table/variants/update1",
+		cwd + "/table/variants/update2",
+		cwd + "/httpEndpoint",
+		cwd + "/httpEndpoint/variants/update1",
+		cwd + "/httpEndpoint/variants/update2",
+	}
+
+	for _, dir := range testDirs {
+		// fmt.Printf("Copying " + cwd + "/harness.ts to " + dir + "/harness.ts\n")
+		err := cp.Copy(cwd+"/harness.ts", dir+"/harness.ts")
+		if !assert.NoError(t, err, "could not copy file", err) {
+			return
+		}
+	}
+
 	tests := []integration.ProgramTestOptions{
 		{
 			Verbose: true,
@@ -41,22 +60,22 @@ func Test_Performance(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")
+				hitUnitTestsEndpoint(t, checkpoint, cwd+"/table/harness.ts")
 			},
-			// EditDirs: []integration.EditDir{
-			// 	{
-			// 		Dir: cwd + "/table/variants/update1",
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-			// 		},
-			// 	},
-			// 	{
-			// 		Dir: cwd + "/table/variants/update2",
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-			// 		},
-			// 	},
-			// },
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/table/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint, cwd+"/table/variants/update1/harness.ts")
+					},
+				},
+				{
+					Dir: cwd + "/table/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint, cwd+"/table/variants/update2/harness.ts")
+					},
+				},
+			},
 		},
 		// {
 		// 	Dir: cwd + "/httpEndpoint",
@@ -95,12 +114,19 @@ func Test_Performance(t *testing.T) {
 	}
 }
 
-func hitJSONEndpoint(
+func hitUnitTestsEndpoint(
 	t *testing.T,
 	checkpoint stack.Checkpoint,
-	packageName tokens.PackageName,
-	endpointName tokens.QName,
-	urlPortion string) {
+	harnessFile string) {
+
+	defer func() {
+		fmt.Printf("Removing " + harnessFile + "\n")
+		os.Remove(harnessFile)
+	}()
+
+	var packageName tokens.PackageName = "unittests"
+	var endpointName tokens.QName = "unittests"
+	var urlPortion = "/unittests"
 
 	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {

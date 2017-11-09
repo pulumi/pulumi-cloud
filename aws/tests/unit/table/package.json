@@ -1,8 +1,8 @@
 {
     "name": "unittests",
     "version": "0.1",
-    "main": "bin/table/index.js",
-    "typings": "bin/table/index.d.ts",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
