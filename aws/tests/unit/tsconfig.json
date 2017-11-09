@@ -16,8 +16,6 @@
         "strictNullChecks": true
     },
     "files": [
-        "index.ts",
-        "harness.ts",
-        "tableTests.ts"
+        "index.ts"
     ]
 }
