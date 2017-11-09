@@ -8,7 +8,7 @@ export function errorJSON(err: any) {
     return result;
 }
 
-export async function testModules(
+async function testModulesWorker(
     testFunctions: { (result: any): Promise<boolean>}[]): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
@@ -20,12 +20,12 @@ export async function testModules(
     return [passed, result];
 }
 
-export async function runAllTests(
+export async function testModules(
     res: cloud.Response,
     testFunctions: { (result: any): Promise<boolean>}[]) {
 
     try {
-        const [passed, json] = await testModules(testFunctions);
+        const [passed, json] = await testModulesWorker(testFunctions);
         if (passed) {
             res.json(json);
         }

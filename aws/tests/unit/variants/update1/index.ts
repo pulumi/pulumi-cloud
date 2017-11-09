@@ -10,7 +10,7 @@ const endpoint = new cloud.HttpEndpoint("unittests");
 const testFunctions = [tableTests.runAllTests, httpEndpointTests.runAllTests];
 
 endpoint.get("/unittests", async (req, res) => {
-    await harness.testModules(testFunctions);
+    await harness.testModules(res, testFunctions);
 });
 
 const deployment = endpoint.publish();
