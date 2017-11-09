@@ -3,7 +3,7 @@
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as supertest from "supertest";
-import * as harness from "harness";
+import * as harness from "./harness";
 
 let uniqueId = 0;
 namespace getApiTests {
@@ -84,67 +84,12 @@ namespace updateProgramTests {
 const endpoint = new cloud.HttpEndpoint("unittests");
 
 endpoint.get("/unittests", async (req, res) => {
-    try {
-        const [passed, json] = await runAllTests();
-        if (passed) {
-            res.json(json);
-        }
-        else {
-            res.status(500).json(json);
-        }
-    } catch (err) {
-        res.status(500).json(errorJSON(err));
-    }
+    await harness.runUnitTests(res, {
+        ["httpEndpointTests.getApiTests"]: getApiTests,
+        ["httpEndpointTests.postApiTests"]: postApiTests,
+        ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
+    });
 });
 
 const deployment = endpoint.publish();
 deployment.url.then(u => console.log("Serving at: " + u));
-
-function errorJSON(err: any) {
-    const result: any = Object.create(null);
-    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
-    return result;
-}
-
-async function runAllTests(): Promise<[boolean, any]> {
-    let passed = true;
-    const result: any = Object.create(null);
-
-    passed = await runTests("httpEndpointTests.getApiTests", getApiTests, result) && passed;
-    passed = await runTests("httpEndpointTests.postApiTests", postApiTests, result) && passed;
-    passed = await runTests("httpEndpointTests.updateProgramTests", updateProgramTests, result) && passed;
-
-    return [passed, result];
-}
-
-async function runTests(moduleName: string, module: any, result: any) {
-    let passed = true;
-    for (const name of Object.keys(module)) {
-        if (!name.startsWith("test")) {
-            continue;
-        }
-
-        const fullName = `${moduleName}.${name}`;
-        try {
-            await module[name]();
-            result[fullName] = "passed";
-        }
-        catch (err) {
-            passed = false;
-            result[fullName] = errorJSON(err);
-        }
-    }
-
-    return passed;
-}
-
-async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
-    try {
-        await body();
-    }
-    catch (err) {
-        return;
-    }
-
-    throw new Error("Expected error to be thrown");
-}

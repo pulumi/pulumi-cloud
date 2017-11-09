@@ -1,8 +1,8 @@
 {
     "name": "unittests",
     "version": "0.1",
-    "main": "bin/httpEndpoint/index.js",
-    "typings": "bin/httpEndpoint/index.d.ts",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc"
     },

@@ -77,34 +77,34 @@ func Test_Performance(t *testing.T) {
 				},
 			},
 		},
-		// {
-		// 	Dir: cwd + "/httpEndpoint",
-		// 	Config: map[string]string{
-		// 		"aws:config:region":     region,
-		// 		"cloud:config:provider": "aws",
-		// 	},
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-aws",
-		// 	},
-		// 	ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 		hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "unittests")
-		// 	},
-		// 	EditDirs: []integration.EditDir{
-		// 		{
-		// 			Dir: cwd + "/httpEndpoint/variants/update1",
-		// 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-		// 			},
-		// 		},
-		// 		{
-		// 			Dir: cwd + "/httpEndpoint/variants/update2",
-		// 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-		// 				hitJSONEndpoint(t, checkpoint, "unittests", "unittests", "/unittests")
-		// 			},
-		// 		},
-		// 	},
-		// },
+		{
+			Dir: cwd + "/httpEndpoint",
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				hitUnitTestsEndpoint(t, checkpoint, cwd+"/httpEndpoint/harness.ts")
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/httpEndpoint/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint, cwd+"/httpEndpoint/variants/update1/harness.ts")
+					},
+				},
+				{
+					Dir: cwd + "/httpEndpoint/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint, cwd+"/httpEndpoint/variants/update2/harness.ts")
+					},
+				},
+			},
+		},
 	}
 	for _, ex := range tests {
 		test := ex
