@@ -9,7 +9,8 @@
     "devDependencies": {
         "typescript": "^2.1.4",
         "mocha": "^3.5.3",
-        "chai": "^4.1.2"
+        "chai": "^4.1.2",
+        "supertest": "^3.0.0"
     },
     "peerDependencies": {
         "pulumi": "*",
@@ -19,6 +20,7 @@
     "dependencies": {
         "@types/node": "^8.0.26",
         "@types/mocha": "^2.2.43",
-        "@types/chai": "^4.0.4"
+        "@types/chai": "^4.0.4",
+        "@types/supertest": "^2.0.3"
     }
 }
