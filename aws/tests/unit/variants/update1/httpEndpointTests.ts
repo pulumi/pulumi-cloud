@@ -18,6 +18,17 @@ namespace updateProgramTests {
         await supertest(address).get("stage/").expect(200, { version: "1" });
         await supertest(address).get("stage/available").expect(403);
     }
+
+
+    const endpoint2 = new cloud.HttpEndpoint("persistent_endpoint_2");
+    endpoint2.static("/", "www");
+    const deployment2 = endpoint2.publish();
+
+    export async function testStaticGet() {
+        const address = await deployment2.url;
+        await supertest(address).get("stage/file2.txt").expect(200, "contents2\n");
+        await supertest(address).get("stage/file1.txt").expect(403);
+    }
 }
 
 export async function runAllTests(result: any): Promise<boolean>{

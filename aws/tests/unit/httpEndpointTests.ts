@@ -68,7 +68,7 @@ namespace postApiTests {
 }
 
 namespace updateProgramTests {
-    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint");
+    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint_1");
     endpoint1.get("/", async (req, res) => {
         res.json({ version: 0 });
     });
@@ -78,6 +78,17 @@ namespace updateProgramTests {
         const address = await deployment1.url;
         await supertest(address).get("stage/").expect(200, { version: "0" });
         await supertest(address).get("stage/available").expect(403);
+    }
+
+
+    const endpoint2 = new cloud.HttpEndpoint("persistent_endpoint_2");
+    endpoint2.static("/", "www");
+    const deployment2 = endpoint2.publish();
+
+    export async function testStaticGet() {
+        const address = await deployment2.url;
+        await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
+        await supertest(address).get("stage/file2.txt").expect(403);
     }
 }
 
