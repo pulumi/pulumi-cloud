@@ -77,9 +77,44 @@ namespace staticTests {
         await supertest(address).get("stage/").expect(200, "<html></html>\n");
     }
 
-    export async function testIndexHtmlGetsServedDirectly() {
+    export async function testIndexHtmlGetsServedDirectly_1() {
         const address = await deployment1.url;
         await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+    }
+
+
+    const endpoint2 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint2.static("/", "www", { index: false });
+    const deployment2 = endpoint2.publish();
+
+    export async function testIndexHtmlDoesNotGetMappedToRoot_1() {
+        const address = await deployment2.url;
+        await supertest(address).get("stage/").expect(403);
+    }
+
+    export async function testIndexHtmlGetsServedDirectly_2() {
+        const address = await deployment2.url;
+        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+    }
+
+
+    const endpoint3 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint3.static("/", "www", { index: "file1.txt" });
+    const deployment3 = endpoint2.publish();
+
+    export async function testIndexHtmlDoesNotGetMappedToRoot_2() {
+        const address = await deployment3.url;
+        await supertest(address).get("stage/").expect(200, "contents1\n");
+    }
+
+    export async function testIndexHtmlGetsServedDirectly_3() {
+        const address = await deployment3.url;
+        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+    }
+
+    export async function testFileGetsServedDirectlyEvenWhenIndex() {
+        const address = await deployment3.url;
+        await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
     }
 }
 
