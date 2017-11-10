@@ -127,7 +127,8 @@ namespace staticApiTests {
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_2() {
         const address = await deployment3.url;
-        await supertest(address).get("stage/").expect(200, "contents1\n");
+        await supertest(address).get("stage/").expect("Content-Type", "text/plain")
+                                              .expect(200, "contents1\n");
     }
 
     export async function testIndexHtmlGetsServedDirectly_3() {
@@ -138,6 +139,17 @@ namespace staticApiTests {
     export async function testFileGetsServedDirectlyEvenWhenIndex() {
         const address = await deployment3.url;
         await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
+    }
+
+
+    const endpoint4 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint4.static("/", "www/file.txt", { contentType: "application/json" });
+    const deployment4 = endpoint4.publish();
+
+    export async function testSpecifiedContentType() {
+        const address = await deployment3.url;
+        await supertest(address).get("stage/").expect("Content-Type", "application/json")
+                                              .expect(200, "contents1\n");
     }
 }
 
