@@ -123,7 +123,7 @@ namespace staticApiTests {
 
     const endpoint3 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
     endpoint3.static("/", "www", { index: "file1.txt" });
-    const deployment3 = endpoint2.publish();
+    const deployment3 = endpoint3.publish();
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_2() {
         const address = await deployment3.url;
@@ -143,15 +143,16 @@ namespace staticApiTests {
 
 
     const endpoint4 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint4.static("/", "www/file.txt", { contentType: "application/json" });
+    endpoint4.static("/", "www/file1.txt", { contentType: "application/json" });
     const deployment4 = endpoint4.publish();
 
     export async function testSpecifiedContentType() {
-        const address = await deployment3.url;
-        await supertest(address).get("stage/").expect("Content-Type", "application/json")
-                                              .expect(200, "contents1\n");
+        const address = await deployment4.url;
+        await supertest(address).get("stage/").expect(200, "contents1\n");
+        await supertest(address).get("stage/").expect("Content-Type", "application/json");
     }
 }
+
 
 namespace updateProgramTests {
     const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint_1");
@@ -174,7 +175,7 @@ namespace updateProgramTests {
     export async function testStaticGet() {
         const address = await deployment2.url;
         await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
-        await supertest(address).get("stage/file2.txt").expect(403);
+        await supertest(address).get("stage/file2.txt").expect(400);
     }
 }
 

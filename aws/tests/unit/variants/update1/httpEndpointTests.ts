@@ -27,7 +27,7 @@ namespace updateProgramTests {
     export async function testStaticGet() {
         const address = await deployment2.url;
         await supertest(address).get("stage/file2.txt").expect(200, "contents2\n");
-        await supertest(address).get("stage/file1.txt").expect(403);
+        await supertest(address).get("stage/file1.txt").expect(400);
     }
 }
 
