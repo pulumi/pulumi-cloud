@@ -227,11 +227,15 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
     // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
     // Also ensure that we have an SSL certificate for termination at the LB, if that was requested.
     let protocol: string;
+    let targetProtocol: string;
     let useAppLoadBalancer: boolean;
     let useCertificateARN: string | undefined;
     switch (portMappingProtocol) {
         case "https":
             protocol = "HTTPS";
+            // Set the target protocol to HTTP, so that the ELB terminates the SSL traffic.
+            // IDEA: eventually we should let users choose where the SSL termination occurs.
+            targetProtocol = "HTTP";
             useAppLoadBalancer = true;
             useCertificateARN = config.acmCertificateARN;
             if (!useCertificateARN) {
@@ -240,12 +244,14 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
             break;
         case "http":
             protocol = "HTTP";
+            targetProtocol = "HTTP";
             useAppLoadBalancer = true;
             break;
         case "udp":
             throw new Error("UDP protocol unsupported for Services");
         case "tcp":
             protocol = "TCP";
+            targetProtocol = "TCP";
             useAppLoadBalancer = false;
             break;
         default:
@@ -260,7 +266,7 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
     const targetListenerName = getLoadBalancerPrefix(internal, useAppLoadBalancer) + listenerIndex;
     const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
         port: portMapping.port,
-        protocol: protocol,
+        protocol: targetProtocol,
         vpcId: network.vpcId,
         deregistrationDelay: 30,
     });
@@ -516,8 +522,9 @@ async function computeImage(imageName: string, container: cloud.Container, ports
                 }
                 firstPort = false;
 
-                preEnv[`${serviceEnv}_PORT`] = `${hostproto}://${hostname}:${hostport}`;
-                preEnv[`${serviceEnv}_PORT_${port}_TCP`] = `${hostproto}://${hostname}:${hostport}`;
+                const fullHost: Promise<string> = hostname.then((h) => `${hostproto}://${h}:${hostport}`);
+                preEnv[`${serviceEnv}_PORT`] = fullHost;
+                preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_PORT`] = hostport;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_ADDR`] = hostname;
