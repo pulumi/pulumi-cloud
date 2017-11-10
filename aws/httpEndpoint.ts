@@ -361,7 +361,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
                 // Finally, manufacture a URL and set it as an output property.
                 return {
-                    url: deployment.invokeUrl,
+                    url: deployment.invokeUrl + stageName,
                     customDomainNames: customDomainNames,
                 };
             },
