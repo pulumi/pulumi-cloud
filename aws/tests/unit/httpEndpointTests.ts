@@ -143,13 +143,13 @@ namespace staticApiTests {
 
 
     const endpoint4 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint4.static("/", "www/file1.txt", { contentType: "application/json" });
+    endpoint4.static("/", "www/file1.txt", { contentType: "text/html" });
     const deployment4 = endpoint4.publish();
 
     export async function testSpecifiedContentType() {
         const address = await deployment4.url;
         await supertest(address).get("stage/").expect(200, "contents1\n");
-        await supertest(address).get("stage/").expect("Content-Type", "application/json");
+        await supertest(address).get("stage/").expect("Content-Type", "text/html");
     }
 }
 

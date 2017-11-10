@@ -1,6 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import * as supertest from "supertest";
+
 import * as harness from "./harness";
 import * as httpEndpointTests from "./httpEndpointTests";
 import * as tableTests from "./tableTests";
