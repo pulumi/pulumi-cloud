@@ -46,6 +46,24 @@ namespace getApiTests {
     }
 }
 
+namespace deleteApiTests {
+    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint1.delete("/", async (req, res) => {
+        res.json({ success: true });
+    });
+    const deployment1 = endpoint1.publish();
+
+    export async function testDeleteOfExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).delete("stage/")
+                                .expect(200, { success: true });
+    }
+
+    export async function testDeleteOfNonExistingPath() {
+        const address = await deployment1.url;
+        await supertest(address).delete("stage/unavailable").expect(403);
+    }
+}
 
 namespace postApiTests {
     const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
@@ -67,7 +85,7 @@ namespace postApiTests {
     }
 }
 
-namespace staticTests {
+namespace staticApiTests {
     const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
     endpoint1.static("/", "www");
     const deployment1 = endpoint1.publish();
@@ -146,8 +164,9 @@ namespace updateProgramTests {
 export async function runAllTests(result: any): Promise<boolean>{
     return await harness.testModule(result, {
         ["httpEndpointTests.getApiTests"]: getApiTests,
+        ["httpEndpointTests.deleteApiTests"]: deleteApiTests,
         ["httpEndpointTests.postApiTests"]: postApiTests,
-        ["httpEndpointTests.staticTests"]: staticTests,
+        ["httpEndpointTests.staticApiTests"]: staticApiTests,
         ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
     });
 }
