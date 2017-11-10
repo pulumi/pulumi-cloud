@@ -100,6 +100,11 @@ namespace staticApiTests {
         await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
     }
 
+    export async function testSubFileServedDirectly() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/sub/file1.txt").expect(200, "othercontents1\n");
+    }
+
 
     const endpoint2 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
     endpoint2.static("/", "www", { index: false });
