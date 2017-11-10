@@ -67,6 +67,22 @@ namespace postApiTests {
     }
 }
 
+namespace staticTests {
+    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
+    endpoint1.static("/", "www");
+    const deployment1 = endpoint1.publish();
+
+    export async function testIndexHtmlGetsMappedToRoot() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/").expect(200, "<html></html>\n");
+    }
+
+    export async function testIndexHtmlGetsServedDirectly() {
+        const address = await deployment1.url;
+        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+    }
+}
+
 namespace updateProgramTests {
     const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint_1");
     endpoint1.get("/", async (req, res) => {
@@ -96,6 +112,7 @@ export async function runAllTests(result: any): Promise<boolean>{
     return await harness.testModule(result, {
         ["httpEndpointTests.getApiTests"]: getApiTests,
         ["httpEndpointTests.postApiTests"]: postApiTests,
+        ["httpEndpointTests.staticTests"]: staticTests,
         ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
     });
 }
