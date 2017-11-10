@@ -37,14 +37,14 @@ install:
 .PHONY: examples
 examples:
 	@echo "\033[0;32mTEST EXAMPLES:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./examples
+	go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} ./examples
 
 .PHONY: performance
 performance:
 	@echo "\033[0;32mTEST PERFORMANCE:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/performance
+	go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} ./tests/performance
 
 .PHONY: unittests
 unittests:
 	@echo "\033[0;32mUNIT TESTS:\033[0m"
-	go test -v -cover -timeout 1h -parallel ${TESTPARALLELISM} ./tests/unit
+	go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} ./tests/unit
