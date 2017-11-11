@@ -31,8 +31,7 @@ func Test_Performance(t *testing.T) {
 
 	tests := []integration.ProgramTestOptions{
 		{
-			Verbose: true,
-			Dir:     cwd,
+			Dir: cwd,
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
