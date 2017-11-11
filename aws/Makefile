@@ -4,7 +4,7 @@ TESTPARALLELISM=10
 default: banner dependencies lint build install
 
 .PHONY: all
-all: default examples performance unittests
+all: default unittests performance examples
 
 .PHONY: banner
 banner:
