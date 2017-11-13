@@ -279,7 +279,7 @@
 [[projects]]
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
-  revision = "1f22ab94d9f24534be86348048b40d0f049139ae"
+  revision = "82388966b694a5adb406051bfa7e89a781bbecaa"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
@@ -397,6 +397,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eb261d0f6d82e378bf8c83d1be42c8dd2caf4498dbcb003bbc2ceebbce9b81bc"
+  inputs-digest = "200addd6893427a3f98d90fe8bc7795c3828ab848355069ef075e31b3ab6cf09"
   solver-name = "gps-cdcl"
   solver-version = 1
