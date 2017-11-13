@@ -5,20 +5,22 @@ import * as assert from "assert";
 import * as supertest from "supertest";
 import * as harness from "./harness";
 
+const endpoint = new cloud.HttpEndpoint("unittests_endpoint");
+
 namespace updateProgramTests {
-    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint");
     // in v2 change the path we're on.
-    endpoint1.get("/available", async (req, res) => {
+    endpoint.get("/persistent1/available", async (req, res) => {
         res.json({ version: 2 });
     });
-    const deployment1 = endpoint1.publish();
 
     export async function testInitialGet() {
-        const address = await deployment1.url;
-        await supertest(address).get("stage/").expect(403);
-        await supertest(address).get("stage/available").expect(200, { version: "2" });
+        const address = await deployment.url;
+        await supertest(address).get("stage/persistent1/").expect(403);
+        await supertest(address).get("stage/persistent1/available").expect(200, { version: "2" });
     }
 }
+
+const deployment = endpoint.publish();
 
 export async function runAllTests(result: any): Promise<boolean>{
     return await harness.testModule(result, {

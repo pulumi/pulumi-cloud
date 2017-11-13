@@ -5,18 +5,18 @@ import * as assert from "assert";
 import * as supertest from "supertest";
 import * as harness from "./harness";
 
-let uniqueId = 0;
+
+const endpoint = new cloud.HttpEndpoint("unittests_endpoint");
+
 namespace getApiTests {
-    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint1.get("/", async (req, res) => {
+    endpoint.get("/get1", async (req, res) => {
         res.json({ success: true });
     });
-    const deployment1 = endpoint1.publish();
 
     export async function testGetOfExistingPath() {
-        const address = await deployment1.url;
+        const address = await deployment.url;
         try {
-            await supertest(address).get("stage/").expect(200, { success: true });
+            await supertest(address).get("stage/get1").expect(200, { success: true });
         }
         catch (err) {
             err.address = "address";
@@ -28,13 +28,12 @@ namespace getApiTests {
     }
 
     export async function testGetOfNonExistingPath() {
-        const address = await deployment1.url;
+        const address = await deployment.url;
         await supertest(address).get("stage/unavailable").expect(403);
     }
 
 
-    const endpoint2 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint2.get("/", async (req, res) => {
+    endpoint.get("/get2", async (req, res) => {
         try {
             const result = Object.create(null);
             for (const param of Object.keys(req.query)) {
@@ -46,147 +45,132 @@ namespace getApiTests {
             res.json(harness.errorJSON(err));
         }
     });
-    const deployment2 = endpoint2.publish();
+
     export async function testGetWithQuery() {
-        const address = await deployment2.url;
-        await supertest(address).get("stage/")
+        const address = await deployment.url;
+        await supertest(address).get("stage/get2")
                                 .query({ param1: 0, param2: 1 })
                                 .expect(200, { param1: "0", param2: "1" });
     }
 }
 
 namespace deleteApiTests {
-    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint1.delete("/", async (req, res) => {
+    endpoint.delete("/delete1", async (req, res) => {
         res.json({ success: true });
     });
-    const deployment1 = endpoint1.publish();
 
     export async function testDeleteOfExistingPath() {
-        const address = await deployment1.url;
-        await supertest(address).delete("stage/")
+        const address = await deployment.url;
+        await supertest(address).delete("stage/delete1")
                                 .expect(200, { success: true });
     }
 
     export async function testDeleteOfNonExistingPath() {
-        const address = await deployment1.url;
+        const address = await deployment.url;
         await supertest(address).delete("stage/unavailable").expect(403);
     }
 }
 
 namespace postApiTests {
-    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint1.post("/", async (req, res) => {
+    endpoint.post("/post1", async (req, res) => {
         res.json(JSON.parse(req.body.toString()));
     });
-    const deployment1 = endpoint1.publish();
 
     export async function testPostOfExistingPath() {
-        const address = await deployment1.url;
-        await supertest(address).post("stage/")
+        const address = await deployment.url;
+        await supertest(address).post("stage/post1")
                                 .send({ param1: "0", param2: "1" })
                                 .expect(200, { param1: "0", param2: "1" });
     }
 
     export async function testPostOfNonExistingPath() {
-        const address = await deployment1.url;
+        const address = await deployment.url;
         await supertest(address).post("stage/unavailable").expect(403);
     }
 }
 
 namespace staticApiTests {
-    const endpoint1 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint1.static("/", "www");
-    const deployment1 = endpoint1.publish();
+    endpoint.static("/static1/", "www");
 
     export async function testIndexHtmlGetsMappedToRoot() {
-        const address = await deployment1.url;
-        await supertest(address).get("stage/").expect(200, "<html></html>\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static1/").expect(200, "<html></html>\n");
     }
 
     export async function testIndexHtmlGetsServedDirectly_1() {
-        const address = await deployment1.url;
-        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static1/index.html").expect(200, "<html></html>\n");
     }
 
     export async function testSubFileServedDirectly() {
-        const address = await deployment1.url;
-        await supertest(address).get("stage/sub/file1.txt").expect(200, "othercontents1\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static1/sub/file1.txt").expect(200, "othercontents1\n");
     }
 
 
-    const endpoint2 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint2.static("/", "www", { index: false });
-    const deployment2 = endpoint2.publish();
+    endpoint.static("/static2/", "www", { index: false });
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_1() {
-        const address = await deployment2.url;
-        await supertest(address).get("stage/").expect(403);
+        const address = await deployment.url;
+        await supertest(address).get("stage/static2/").expect(403);
     }
 
     export async function testIndexHtmlGetsServedDirectly_2() {
-        const address = await deployment2.url;
-        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static2/index.html").expect(200, "<html></html>\n");
     }
 
 
-    const endpoint3 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint3.static("/", "www", { index: "file1.txt" });
-    const deployment3 = endpoint3.publish();
+    endpoint.static("/static3/", "www", { index: "file1.txt" });
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_2() {
-        const address = await deployment3.url;
-        await supertest(address).get("stage/").expect("Content-Type", "text/plain")
+        const address = await deployment.url;
+        await supertest(address).get("stage/static3/").expect("Content-Type", "text/plain")
                                               .expect(200, "contents1\n");
     }
 
     export async function testIndexHtmlGetsServedDirectly_3() {
-        const address = await deployment3.url;
-        await supertest(address).get("stage/index.html").expect(200, "<html></html>\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static3/index.html").expect(200, "<html></html>\n");
     }
 
     export async function testFileGetsServedDirectlyEvenWhenIndex() {
-        const address = await deployment3.url;
-        await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static3/file1.txt").expect(200, "contents1\n");
     }
 
 
-    const endpoint4 = new cloud.HttpEndpoint("endpoint" + uniqueId++);
-    endpoint4.static("/", "www/file1.txt", { contentType: "text/html" });
-    const deployment4 = endpoint4.publish();
+    endpoint.static("/static4/", "www/file1.txt", { contentType: "text/html" });
 
     export async function testSpecifiedContentType() {
-        const address = await deployment4.url;
-        await supertest(address).get("stage/").expect(200, "contents1\n");
-        await supertest(address).get("stage/").expect("Content-Type", "text/html");
+        const address = await deployment.url;
+        await supertest(address).get("stage/static4/").expect(200, "contents1\n");
+        await supertest(address).get("stage/static4/").expect("Content-Type", "text/html");
     }
 }
-
 
 namespace updateProgramTests {
-    const endpoint1 = new cloud.HttpEndpoint("persistent_endpoint_1");
-    endpoint1.get("/", async (req, res) => {
+    endpoint.get("/persistent1/", async (req, res) => {
         res.json({ version: 0 });
     });
-    const deployment1 = endpoint1.publish();
 
     export async function testInitialGet() {
-        const address = await deployment1.url;
-        await supertest(address).get("stage/").expect(200, { version: "0" });
-        await supertest(address).get("stage/available").expect(403);
+        const address = await deployment.url;
+        await supertest(address).get("stage/persistent1/").expect(200, { version: "0" });
+        await supertest(address).get("stage/persistent1/available").expect(403);
     }
 
 
-    const endpoint2 = new cloud.HttpEndpoint("persistent_endpoint_2");
-    endpoint2.static("/", "www");
-    const deployment2 = endpoint2.publish();
+    endpoint.static("/persistent2/", "www");
 
     export async function testStaticGet() {
-        const address = await deployment2.url;
-        await supertest(address).get("stage/file1.txt").expect(200, "contents1\n");
-        await supertest(address).get("stage/file2.txt").expect(400);
+        const address = await deployment.url;
+        await supertest(address).get("stage/persistent2/file1.txt").expect(200, "contents1\n");
+        await supertest(address).get("stage/persistent2/file2.txt").expect(400);
     }
 }
+
+const deployment = endpoint.publish();
 
 export async function runAllTests(result: any): Promise<boolean>{
     return await harness.testModule(result, {
