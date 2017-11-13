@@ -1,54 +1,22 @@
-.PHONY: default
-default: banner dependencies lint build install integration
+PROJECT_NAME := Pulumi Cloud Framework (Mock Implementation)
+NODE_MODULE_NAME := @pulumi/cloud-mock
+include ../build/common.mk
 
-.PHONY: all
-all: default tests
+export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
-.PHONY: banner
-banner:
-	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mPulumi Framework mock implementation package\033[0m"
-	@echo "\033[1;37m======================\033[0m"
+build::
+	yarn link pulumi @pulumi/cloud
+	tsc
 
-.PHONY: dependencies
-dependencies:
-	yarn install
+lint::
+	tslint -c ../tslint.json -p tsconfig.json
 
-.PHONY: lint
-lint:
-	@echo "\033[0;32mLINT:\033[0m"
-	@./node_modules/.bin/tslint ...
+TEST_PROJECTS := table topic httpEndpoint
 
-.PHONY: build
-build:
-	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link pulumi @pulumi/cloud # ensure we link dependencies.
-	yarn run build # compile the LumiPack
+test_fast:: $(TEST_PROJECTS:%=test_fast_%)
 
-
-.PHONY: install
-install:
-	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	cp package.json bin/
-	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
-	cd ../api/bin/ && (yarn unlink @pulumi/cloud-mock || true) && yarn link @pulumi/cloud-mock #ensure loader can see this package
-
-
-.PHONY: tests
-tests:
-	cd tests/table && yarn && yarn run build && yarn run test
-	cd tests/topic && yarn && yarn run build && yarn run test
-	cd tests/httpEndpoint && yarn && yarn run build && yarn run test
-
-
-.PHONY: integration
-integration:
-	$(MAKE) -C ./integration all
-
-
-.PHONY: publish
-publish:
-#publish:
-#	@echo "\033[0;32mPublishing current release:\033[0m"
-#	../scripts/publish.sh
-#.PHONY: publish
+$(TEST_PROJECTS:%=test_fast_%):
+	cd tests/$(@:test_fast_%=%) && yarn install
+	cd tests/$(@:test_fast_%=%) && yarn link pulumi @pulumi/cloud @pulumi/cloud-mock
+	cd tests/$(@:test_fast_%=%) && yarn run build
+	cd tests/$(@:test_fast_%=%) && yarn run test

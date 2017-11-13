@@ -2,10 +2,6 @@
     "name": "@pulumi/cloud",
     "version": "0.6.1",
     "types": "types.d.ts",
-    "scripts": {
-        "build": "tsc && yarn run lint",
-        "lint": "tslint -c ../tslint.json -p tsconfig.json"
-    },
     "devDependencies": {
         "@types/node": "^8.0.26",
         "tslint": "^5.7.0",

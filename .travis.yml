@@ -2,6 +2,7 @@ language: go
 go: 1.9
 sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
+    - export PULUMI_ROOT=/opt/pulumi
     # Dep for Go dependency management.
     - go get -v github.com/golang/dep/cmd/dep
     # Node.js 6.10.2 for Pulumi Fabric's Node.js runtime.
@@ -14,14 +15,8 @@ before_install:
 install:
     # Clone the Pulumi repo and use its script to fetch the latest installation packages.
     - git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home
-    - ${GOPATH}/src/github.com/pulumi/home/scripts/install-locked.sh /opt/pulumi pulumi pulumi-aws
-    - dep ensure
-    - pushd api && dep ensure && popd
-    - pushd aws && dep ensure && popd
-    - pushd mock && dep ensure && popd
-before_script:
-    - export PULUMI=/opt/pulumi
-    - export PATH=$PULUMI/bin:$PATH
+    - ${GOPATH}/src/github.com/pulumi/home/scripts/install-locked.sh ${PULUMI_ROOT} pulumi pulumi-aws
+    - make ensure
 script:
     - make travis_${TRAVIS_EVENT_TYPE}
 notifications:
