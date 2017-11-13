@@ -15,7 +15,16 @@ namespace getApiTests {
 
     export async function testGetOfExistingPath() {
         const address = await deployment1.url;
-        await supertest(address).get("stage/").expect(200, { success: true });
+        try {
+            await supertest(address).get("stage/").expect(200, { success: true });
+        }
+        catch (err) {
+            err.address = "address";
+            err.getUrl = "stage/";
+            err.originalStack = err.stack;
+            err.originalMessage = err.message;
+            throw err;
+        }
     }
 
     export async function testGetOfNonExistingPath() {
