@@ -19,10 +19,8 @@ namespace getApiTests {
             await supertest(address).get("stage/get1").expect(200, { success: true });
         }
         catch (err) {
-            err.address = "address";
-            err.getUrl = "stage/";
-            err.originalStack = err.stack;
-            err.originalMessage = err.message;
+            err.address = address;
+            err.getUrl = "stage/get1";
             throw err;
         }
     }
