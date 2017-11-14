@@ -35,9 +35,9 @@ const table = new cloud.Table("tests-table");
 
 // The set of tests we want to run.  It maps from the name of the test to the test function to call
 // and the number of times to call it.
-const tests- {[name: string]: [(record: boolean) => Promise<number>, number]} = {
-    tabletests- [testTablePerformance, /*repeat*/ 20],
-    httpEndpointtests- [testHttpEndpointPerformance, /*repeat*/ 2],
+const tests: {[name: string]: [(record: boolean) => Promise<number>, number]} = {
+    tableTests: [testTablePerformance, /*repeat*/ 20],
+    httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
 };
 
 // The topic we use to push all the tests we want to run to.  Each test will then run in its own
