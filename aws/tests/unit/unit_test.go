@@ -72,7 +72,7 @@ func hitUnitTestsEndpoint(
 	checkpoint stack.Checkpoint) {
 
 	var packageName tokens.PackageName = "unittests"
-	var endpointName tokens.QName = "tests:unittests"
+	var endpointName tokens.QName = "tests-unittests"
 	var urlPortion = "/unittests"
 
 	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)

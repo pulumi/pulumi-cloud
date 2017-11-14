@@ -27,22 +27,22 @@ interface TestResults { [name: string]: [/*passed*/ boolean, /*testTime:*/ numbe
 // We use a table here to effectively store a single value containing the results of our tests
 // runs.  this allows all our kicked off lambdas to record their results back to a central location
 // so that /check-performance-tests can see if they've completed or not.
-const testResultTable = new cloud.Table("tests:results");
+const testResultTable = new cloud.Table("tests-results");
 const testResultKey = { id: "0" };
 
 // A table used by the actual tests, not by the test harness itself.
-const table = new cloud.Table("tests:table");
+const table = new cloud.Table("tests-table");
 
 // The set of tests we want to run.  It maps from the name of the test to the test function to call
 // and the number of times to call it.
-const tests: {[name: string]: [(record: boolean) => Promise<number>, number]} = {
-    tableTests: [testTablePerformance, /*repeat*/ 20],
-    httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
+const tests- {[name: string]: [(record: boolean) => Promise<number>, number]} = {
+    tabletests- [testTablePerformance, /*repeat*/ 20],
+    httpEndpointtests- [testHttpEndpointPerformance, /*repeat*/ 2],
 };
 
 // The topic we use to push all the tests we want to run to.  Each test will then run in its own
 // AWS lambda.
-const topic = new cloud.Topic<TestInfo>("tests:topic");
+const topic = new cloud.Topic<TestInfo>("tests-topic");
 topic.subscribe("performance", async(info: TestInfo) => {
     // We've been asked to run a test.  Get the test function to call and the number of times to
     // call it.
@@ -54,7 +54,7 @@ topic.subscribe("performance", async(info: TestInfo) => {
     metrics.init({
         apiKey: info.apiKey,
         appKey: info.appKey,
-        prefix: "perf-tests:",
+        prefix: "perf-tests-",
     });
 
     // Warm things up first.
@@ -135,7 +135,7 @@ async function testHttpEndpointPerformance(record: boolean) {
 
 // Expose two endpoints for our test harness to interact with.  One to kick off the tests.
 // The other to poll to see if tests are complete.
-const endpoint = new cloud.HttpEndpoint("tests:performance");
+const endpoint = new cloud.HttpEndpoint("tests-performance");
 
 endpoint.get("/start-performance-tests", async (req, res) => {
     try {

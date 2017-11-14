@@ -6,12 +6,12 @@ import fetch, { Response } from "node-fetch";
 import { canonicalUrl, hostname} from "./support";
 
 // Pending sites to be processed
-let sites = new cloud.Topic<string>("examples:sites-to-process");
+let sites = new cloud.Topic<string>("examples-sites-to-process");
 // Documents and assocaited metadata for crawled sites
-let documents = new cloud.Table("examples:documents");
+let documents = new cloud.Table("examples-documents");
 
 // Front end API and console
-let frontEnd = new cloud.HttpEndpoint("examples:crawler-front-end");
+let frontEnd = new cloud.HttpEndpoint("examples-crawler-front-end");
 frontEnd.post("/queue", async (req, res) => {
     let url = req.body.toString();
     console.log(`Pushing ${url} to processing queue`);
