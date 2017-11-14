@@ -163,8 +163,8 @@ namespace updateProgramTests {
 
     export async function testStaticGet() {
         const address = await deployment.url;
-        await supertest(address).get("/persistent2/file1.txt").expect(200, "contents1\n");
-        await supertest(address).get("/persistent2/file2.txt").expect(400);
+        await supertest(address).get("/persistent3/file1.txt").expect(200, "contents1\n");
+        await supertest(address).get("/persistent3/file2.txt").expect(400);
     }
 }
 
