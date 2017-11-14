@@ -3,7 +3,7 @@
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
 
-let config = new pulumi.Config("examples-timers:config");
+let config = new pulumi.Config("timers:config");
 let message = config.require("message");
 
 cloud.timer.interval("examples-test-interval", { minutes: 1 }, async () => {
