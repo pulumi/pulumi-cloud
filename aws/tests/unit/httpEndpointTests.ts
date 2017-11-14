@@ -16,11 +16,11 @@ namespace getApiTests {
     export async function testGetOfExistingPath() {
         const address = await deployment.url;
         try {
-            await supertest(address).get("get1").expect(200, { success: true });
+            await supertest(address).get("/get1").expect(200, { success: true });
         }
         catch (err) {
             err.address = address;
-            err.getUrl1 = "get1";
+            err.getUrl1 = "/get1";
             throw err;
         }
     }
