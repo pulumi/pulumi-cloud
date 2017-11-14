@@ -5,7 +5,7 @@ import * as assert from "assert";
 import * as supertest from "supertest";
 import * as harness from "./harness";
 
-const endpoint = new cloud.HttpEndpoint("unittests_endpoint");
+const endpoint = new cloud.HttpEndpoint("tests-endpoint");
 
 namespace updateProgramTests {
     endpoint.get("/persistent1", async (req, res) => {
