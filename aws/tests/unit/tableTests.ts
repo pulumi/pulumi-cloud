@@ -7,38 +7,38 @@ import * as harness from "./harness";
 let uniqueId = 0;
 
 namespace basicApiTests {
-    const table1 = new cloud.Table("tests-table" + uniqueId++);
+    const table1 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldThrowWithNoPrimaryKey() {
         await harness.assertThrowsAsync(async () => await table1.get({}));
     }
 
-    const table2 = new cloud.Table("tests-table" + uniqueId++);
+    const table2 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldReturnUndefinedWithPrimaryKeyNotPresent() {
         const val = await table2.get({[table2.primaryKey]: "val"});
         assert.strictEqual(val, undefined);
     }
 
-    const table3 = new cloud.Table("tests-table" + uniqueId++);
+    const table3 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldFindInsertedValue() {
         await table3.insert({[table3.primaryKey]: "val", value: 1});
         assert.equal((await table3.get({[table3.primaryKey]: "val"})).value, 1);
     }
 
-    const table4 = new cloud.Table("tests-table" + uniqueId++);
+    const table4 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldThrowIfQueryDoesNotMatchSchema() {
         await table4.insert({[table4.primaryKey]: "val", value: 1});
 
         await harness.assertThrowsAsync(async () => await table4.get({[table4.primaryKey]: "val", value: 2}));
     }
 
-    const table5 = new cloud.Table("tests-table" + uniqueId++);
+    const table5 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldSeeSecondInsert() {
         await table5.insert({[table5.primaryKey]: "val", value: 1});
         await table5.insert({[table5.primaryKey]: "val", value: 2});
         assert.equal((await table5.get({[table5.primaryKey]: "val" })).value, 2);
     }
 
-    const table6 = new cloud.Table("tests-table" + uniqueId++);
+    const table6 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldNotSeeDeletedValue() {
         await table6.insert({[table6.primaryKey]: "val", value: 1});
         await table6.delete({[table6.primaryKey]: "val" });
@@ -47,8 +47,8 @@ namespace basicApiTests {
         assert.strictEqual(val, undefined);
     }
 
-    const table7 = new cloud.Table("tests-table" + uniqueId++);
-    const table8 = new cloud.Table("tests-table" + uniqueId++);
+    const table7 = new cloud.Table("tests:table" + uniqueId++);
+    const table8 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldNotSeeInsertsToOtherTable() {
         await table7.insert({[table7.primaryKey]: "val", value: 1});
 
@@ -58,7 +58,7 @@ namespace basicApiTests {
 }
 
 namespace updateApiTests {
-    const table1 = new cloud.Table("tests-table" + uniqueId++);
+    const table1 = new cloud.Table("tests:table" + uniqueId++);
     export async function testShouldOnlyUpdateProvidedKeys() {
         await table1.insert({[table1.primaryKey]: "val", value1: 1, value2: "2"});
         await table1.update({[table1.primaryKey]: "val" }, {value1: 3});
@@ -69,7 +69,7 @@ namespace updateApiTests {
 }
 
 namespace scanApiTests {
-    const table1 = new cloud.Table("tests-table" + uniqueId++);
+    const table1 = new cloud.Table("tests:table" + uniqueId++);
     export async function testScanReturnsAllValues() {
         await table1.insert({[table1.primaryKey]: "val1", value1: 1, value2: "1"});
         await table1.insert({[table1.primaryKey]: "val2", value1: 2, value2: "2"});
@@ -85,7 +85,7 @@ namespace scanApiTests {
         assert.equal(value2.value1, 2);
     }
 
-    const table2 = new cloud.Table("tests-table" + uniqueId++);
+    const table2 = new cloud.Table("tests:table" + uniqueId++);
     export async function testScanDoesNotReturnDeletedValues() {
         await table2.insert({[table2.primaryKey]: "val1", value1: 1, value2: "1"});
         await table2.insert({[table2.primaryKey]: "val2", value1: 2, value2: "2"});
@@ -101,7 +101,7 @@ namespace scanApiTests {
 }
 
 namespace updateProgramTests {
-    const table1 = new cloud.Table("tests-persistent-table");
+    const table1 = new cloud.Table("tests:persistent-table");
     export async function testPersistentTable() {
         // in v0 of the program we only add data to the table.
         for (let i = 0; i < 10; i++) {

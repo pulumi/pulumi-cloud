@@ -6,7 +6,7 @@ import * as supertest from "supertest";
 import * as harness from "./harness";
 
 
-const endpoint = new cloud.HttpEndpoint("tests-endpoint");
+const endpoint = new cloud.HttpEndpoint("tests:endpoint");
 
 namespace getApiTests {
     endpoint.get("/get1", async (req, res) => {

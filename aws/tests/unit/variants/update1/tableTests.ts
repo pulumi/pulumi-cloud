@@ -5,7 +5,7 @@ import * as assert from "assert";
 import * as harness from "./harness";
 
 namespace updateProgramTests {
-    const table1 = new cloud.Table("tests-persistent-table");
+    const table1 = new cloud.Table("tests:persistent-table");
     export async function testPersistentTable() {
         // in v1 of the program make sure the data is still there.
         for (let i = 0; i < 10; i++) {

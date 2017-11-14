@@ -7,7 +7,7 @@ import * as harness from "./harness";
 import * as httpEndpointTests from "./httpEndpointTests";
 import * as tableTests from "./tableTests";
 
-const endpoint = new cloud.HttpEndpoint("tests-unittests");
+const endpoint = new cloud.HttpEndpoint("tests:unittests");
 
 const testFunctions = [tableTests.runAllTests, httpEndpointTests.runAllTests];
 // const testFunctions = [httpEndpointTests.runAllTests];

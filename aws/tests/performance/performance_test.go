@@ -45,7 +45,7 @@ func Test_Performance(t *testing.T) {
 					return
 				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "performance", "pulumi:framework:Endpoint", "performance")
+				urn := resource.NewURN(checkpoint.Target, "performance", "pulumi:framework:Endpoint", "tests:performance")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
