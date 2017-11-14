@@ -8,6 +8,12 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/apache/thrift"
+  packages = ["lib/go/thrift"]
+  revision = "b2a4d4ae21c789b689dd162deb819665567f481c"
+  version = "0.10.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/apparentlymart/go-cidr"
   packages = ["cidr"]
@@ -50,6 +56,12 @@
   version = "v3.5.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/codahale/hdrhistogram"
+  packages = ["."]
+  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -78,6 +90,12 @@
   name = "github.com/golang/snappy"
   packages = ["."]
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/grpc-ecosystem/grpc-opentracing"
+  packages = ["go/otgrpc"]
+  revision = "01f8541d537215b2867e2745a1eb85c58c7c6b81"
 
 [[projects]]
   branch = "master"
@@ -235,6 +253,12 @@
   revision = "63d60e9d0dbc60cf9164e6510889b0db6683d98c"
 
 [[projects]]
+  name = "github.com/opentracing/opentracing-go"
+  packages = [".","ext","log"]
+  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -255,12 +279,12 @@
 [[projects]]
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
-  revision = "73d627edcacc3c1a68b6afa1f8bc134695da1923"
+  revision = "28579eba9400231f09ca126d989b5309cf153790"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "0983bc86a0860af9217ca801283157be37c6d694"
+  revision = "227341eda839f68cdfa3ec48c75bfec6c2932321"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -303,6 +327,18 @@
   packages = ["aws"]
   revision = "3d2cbe7d8b83fb70a4617c02189a28b55ecbccbd"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/uber/jaeger-client-go"
+  packages = [".","internal/spanlog","log","thrift-gen/agent","thrift-gen/jaeger","thrift-gen/sampling","thrift-gen/zipkincore","transport/zipkin","utils"]
+  revision = "3e3870040def0ebdaf65a003863fa64f5cb26139"
+  version = "v2.9.0"
+
+[[projects]]
+  name = "github.com/uber/jaeger-lib"
+  packages = ["metrics"]
+  revision = "3b2a9ad2a045881ab7a0f81d465be54c8292ee4f"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/ulikunitz/xz"
@@ -361,6 +397,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5b8e3b7ca716294dbc947f8a3d5403f2d6c5cbb7c893e902347570374da42ea4"
+  inputs-digest = "330fccb2dd487590462d55d9689270b9450a88444f0ec9986785d1042ed67878"
   solver-name = "gps-cdcl"
   solver-version = 1

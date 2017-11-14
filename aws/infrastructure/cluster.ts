@@ -41,6 +41,13 @@ export interface ClusterArgs {
      * If not provided, no SSH access is enabled on VMs.
      */
     publicKey?: string;
+    /**
+     * The name of the ECS-optimzed AMI to use for the Container Instances in this cluster, e.g.
+     * "amzn-ami-2017.09.a-amazon-ecs-optimized".
+     *
+     * See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html for valid values.
+     */
+    ecsOptimizedAMIName?: string;
 }
 
 /**
@@ -209,7 +216,7 @@ export class Cluster {
 
         // Specify the intance configuration for the cluster.
         const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(`${name}-instance-launch-configuration`, {
-            imageId: getEcsAmiId(),
+            imageId: getEcsAmiId(args.ecsOptimizedAMIName),
             instanceType: args.instanceType || "t2.micro",
             keyName: keyName,
             iamInstanceProfile: instanceProfile.id,
@@ -258,12 +265,12 @@ export class Cluster {
 }
 
 // http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_agent_versions.html
-async function getEcsAmiId() {
+async function getEcsAmiId(name?: string) {
     const result: aws.GetAmiResult = await aws.getAmi({
         filter: [
             {
                 name: "name",
-                values: [ "amzn-ami-2017.03.g-amazon-ecs-optimized" ],
+                values: [ name || "amzn-ami-2017.09.a-amazon-ecs-optimized" ],
             },
             {
                 name: "owner-id",
