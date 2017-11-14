@@ -4,7 +4,7 @@ import * as cloud from "@pulumi/cloud";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
-let nginx = new cloud.Service("nginx", {
+let nginx = new cloud.Service("examples:nginx", {
     containers: {
         nginx: {
             image: "nginx",
@@ -17,8 +17,8 @@ let nginx = new cloud.Service("nginx", {
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
-let dataVolume = new cloud.SharedVolume("mymongodb-data");
-let mongodb = new cloud.Service("mymongodb", {
+let dataVolume = new cloud.SharedVolume("examples:mymongodb-data");
+let mongodb = new cloud.Service("examples:mymongodb", {
     containers: {
         mongodb: {
             image: "mongo",
@@ -113,15 +113,15 @@ class Cache {
     }
 }
 
-let cache = new Cache("mycache");
+let cache = new Cache("examples:mycache");
 
-let helloTask = new cloud.Task("hello-world", {
+let helloTask = new cloud.Task("examples:hello-world", {
     image: "hello-world",
     memory: 20,
 });
 
 // build an anonymous image:
-let builtService = new cloud.Service("nginx2", {
+let builtService = new cloud.Service("examples:nginx2", {
     containers: {
         nginx: {
             build: "./app",
@@ -133,7 +133,7 @@ let builtService = new cloud.Service("nginx2", {
 });
 
 // build and name the resulting image:
-let builtNamedService = new cloud.Service("pulumiNginx", {
+let builtNamedService = new cloud.Service("examples:pulumiNginx", {
     containers: {
         nginx: {
             build: "./app",
@@ -146,7 +146,7 @@ let builtNamedService = new cloud.Service("pulumiNginx", {
 });
 
 // use a pre-built nginx image, and expose it via a TCP network load balancer (the default).
-let nginxOverNetLB = new cloud.Service("nginxOverNetLB", {
+let nginxOverNetLB = new cloud.Service("examples:nginxOverNetLB", {
     containers: {
         nginx: {
             image: "nginx",
@@ -158,7 +158,7 @@ let nginxOverNetLB = new cloud.Service("nginxOverNetLB", {
 });
 
 // use a pre-built nginx image, and expose it externally via an HTTP application load balancer.
-let nginxOverAppLB = new cloud.Service("nginxOverAppLB", {
+let nginxOverAppLB = new cloud.Service("examples:nginxOverAppLB", {
     containers: {
         nginx: {
             image: "nginx",
@@ -170,7 +170,7 @@ let nginxOverAppLB = new cloud.Service("nginxOverAppLB", {
 });
 
 // expose some APIs meant for testing purposes.
-let api = new cloud.HttpEndpoint("containers");
+let api = new cloud.HttpEndpoint("examples:containers");
 api.get("/test", async (req, res) => {
     res.json({
         nginx: await nginx.getEndpoint(),
