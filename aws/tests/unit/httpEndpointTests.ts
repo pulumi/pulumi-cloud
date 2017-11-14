@@ -16,18 +16,18 @@ namespace getApiTests {
     export async function testGetOfExistingPath() {
         const address = await deployment.url;
         try {
-            await supertest(address).get("stage/get1").expect(200, { success: true });
+            await supertest(address).get("get1").expect(200, { success: true });
         }
         catch (err) {
             err.address = address;
-            err.getUrl1 = "stage/get1";
+            err.getUrl1 = "get1";
             throw err;
         }
     }
 
     export async function testGetOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).get("stage/unavailable").expect(403);
+        await supertest(address).get("unavailable").expect(403);
     }
 
 
@@ -46,7 +46,7 @@ namespace getApiTests {
 
     export async function testGetWithQuery() {
         const address = await deployment.url;
-        await supertest(address).get("stage/get2")
+        await supertest(address).get("get2")
                                 .query({ param1: 0, param2: 1 })
                                 .expect(200, { param1: "0", param2: "1" });
     }
@@ -59,13 +59,13 @@ namespace deleteApiTests {
 
     export async function testDeleteOfExistingPath() {
         const address = await deployment.url;
-        await supertest(address).delete("stage/delete1")
+        await supertest(address).delete("delete1")
                                 .expect(200, { success: true });
     }
 
     export async function testDeleteOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).delete("stage/unavailable").expect(403);
+        await supertest(address).delete("unavailable").expect(403);
     }
 }
 
@@ -76,14 +76,14 @@ namespace postApiTests {
 
     export async function testPostOfExistingPath() {
         const address = await deployment.url;
-        await supertest(address).post("stage/post1")
+        await supertest(address).post("post1")
                                 .send({ param1: "0", param2: "1" })
                                 .expect(200, { param1: "0", param2: "1" });
     }
 
     export async function testPostOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).post("stage/unavailable").expect(403);
+        await supertest(address).post("unavailable").expect(403);
     }
 }
 
@@ -92,17 +92,17 @@ namespace staticApiTests {
 
     export async function testIndexHtmlGetsMappedToRoot() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static1/").expect(200, "<html></html>\n");
+        await supertest(address).get("static1/").expect(200, "<html></html>\n");
     }
 
     export async function testIndexHtmlGetsServedDirectly_1() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static1/index.html").expect(200, "<html></html>\n");
+        await supertest(address).get("static1/index.html").expect(200, "<html></html>\n");
     }
 
     export async function testSubFileServedDirectly() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static1/sub/file1.txt").expect(200, "othercontents1\n");
+        await supertest(address).get("static1/sub/file1.txt").expect(200, "othercontents1\n");
     }
 
 
@@ -110,12 +110,12 @@ namespace staticApiTests {
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_1() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static2/").expect(403);
+        await supertest(address).get("static2/").expect(403);
     }
 
     export async function testIndexHtmlGetsServedDirectly_2() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static2/index.html").expect(200, "<html></html>\n");
+        await supertest(address).get("static2/index.html").expect(200, "<html></html>\n");
     }
 
 
@@ -123,18 +123,18 @@ namespace staticApiTests {
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_2() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static3/").expect("Content-Type", "text/plain")
+        await supertest(address).get("static3/").expect("Content-Type", "text/plain")
                                               .expect(200, "contents1\n");
     }
 
     export async function testIndexHtmlGetsServedDirectly_3() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static3/index.html").expect(200, "<html></html>\n");
+        await supertest(address).get("static3/index.html").expect(200, "<html></html>\n");
     }
 
     export async function testFileGetsServedDirectlyEvenWhenIndex() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static3/file1.txt").expect(200, "contents1\n");
+        await supertest(address).get("static3/file1.txt").expect(200, "contents1\n");
     }
 
 
@@ -142,8 +142,8 @@ namespace staticApiTests {
 
     export async function testSpecifiedContentType() {
         const address = await deployment.url;
-        await supertest(address).get("stage/static4/").expect(200, "contents1\n");
-        await supertest(address).get("stage/static4/").expect("Content-Type", "text/html");
+        await supertest(address).get("static4/").expect(200, "contents1\n");
+        await supertest(address).get("static4/").expect("Content-Type", "text/html");
     }
 }
 
@@ -154,8 +154,8 @@ namespace updateProgramTests {
 
     export async function testInitialGet() {
         const address = await deployment.url;
-        await supertest(address).get("stage/persistent1/").expect(200, { version: "0" });
-        await supertest(address).get("stage/persistent1/available").expect(403);
+        await supertest(address).get("persistent1/").expect(200, { version: "0" });
+        await supertest(address).get("persistent1/available").expect(403);
     }
 
 
@@ -163,8 +163,8 @@ namespace updateProgramTests {
 
     export async function testStaticGet() {
         const address = await deployment.url;
-        await supertest(address).get("stage/persistent2/file1.txt").expect(200, "contents1\n");
-        await supertest(address).get("stage/persistent2/file2.txt").expect(400);
+        await supertest(address).get("persistent2/file1.txt").expect(200, "contents1\n");
+        await supertest(address).get("persistent2/file2.txt").expect(400);
     }
 }
 
