@@ -154,7 +154,7 @@ func Test_Examples(t *testing.T) {
 					return
 				}
 				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "todo")
+				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "examples:todo")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
