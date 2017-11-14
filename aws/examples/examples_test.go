@@ -254,7 +254,9 @@ func Test_Examples(t *testing.T) {
 		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {
-		example := ex
+		example := ex.With(integration.ProgramTestOptions{
+			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
+		})
 		t.Run(example.Dir, func(t *testing.T) {
 			integration.ProgramTest(t, example)
 		})
