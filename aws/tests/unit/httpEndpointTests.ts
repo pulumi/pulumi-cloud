@@ -148,18 +148,18 @@ namespace staticApiTests {
 }
 
 namespace updateProgramTests {
-    endpoint.get("/persistent1/", async (req, res) => {
+    endpoint.get("/persistent1", async (req, res) => {
         res.json({ version: 0 });
     });
 
     export async function testInitialGet() {
         const address = await deployment.url;
-        await supertest(address).get("/persistent1/").expect(200, { version: "0" });
-        await supertest(address).get("/persistent1/available").expect(403);
+        await supertest(address).get("/persistent1").expect(200, { version: "0" });
+        await supertest(address).get("/persistent2").expect(403);
     }
 
 
-    endpoint.static("/persistent2/", "www");
+    endpoint.static("/persistent3/", "www");
 
     export async function testStaticGet() {
         const address = await deployment.url;

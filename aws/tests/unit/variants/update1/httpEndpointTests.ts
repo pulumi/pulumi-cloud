@@ -8,24 +8,24 @@ import * as harness from "./harness";
 const endpoint = new cloud.HttpEndpoint("unittests_endpoint");
 
 namespace updateProgramTests {
-    endpoint.get("/persistent1/", async (req, res) => {
+    endpoint.get("/persistent1", async (req, res) => {
         // in v1 change the message we report.
         res.json({ version: 1 });
     });
 
     export async function testInitialGet() {
         const address = await deployment.url;
-        await supertest(address).get("/persistent1/").expect(200, { version: "1" });
-        await supertest(address).get("/persistent1/available").expect(403);
+        await supertest(address).get("/persistent1").expect(200, { version: "1" });
+        await supertest(address).get("/persistent2").expect(403);
     }
 
 
-    endpoint.static("/persistent2/", "www");
+    endpoint.static("/persistent3/", "www");
 
     export async function testStaticGet() {
         const address = await deployment.url;
-        await supertest(address).get("/persistent2/file2.txt").expect(200, "contents2\n");
-        await supertest(address).get("/sspersistent2/file1.txt").expect(400);
+        await supertest(address).get("/persistent3/file2.txt").expect(200, "contents2\n");
+        await supertest(address).get("/persistent2/file1.txt").expect(400);
     }
 }
 

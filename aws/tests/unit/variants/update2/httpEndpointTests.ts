@@ -9,14 +9,14 @@ const endpoint = new cloud.HttpEndpoint("unittests_endpoint");
 
 namespace updateProgramTests {
     // in v2 change the path we're on.
-    endpoint.get("/persistent1/available", async (req, res) => {
+    endpoint.get("/persistent2", async (req, res) => {
         res.json({ version: 2 });
     });
 
     export async function testInitialGet() {
         const address = await deployment.url;
-        await supertest(address).get("/persistent1/").expect(403);
-        await supertest(address).get("/persistent1/available").expect(200, { version: "2" });
+        await supertest(address).get("/persistent1").expect(403);
+        await supertest(address).get("/persistent2").expect(200, { version: "2" });
     }
 }
 
