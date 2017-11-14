@@ -267,7 +267,7 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 		return
 	}
 	pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "pulumi:framework:Endpoint", "test")
+	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "pulumi:framework:Endpoint", "examples:test")
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
 		return
