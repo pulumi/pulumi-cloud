@@ -2,7 +2,7 @@
 
 import * as pulumi from "@pulumi/cloud";
 
-let countDown = new pulumi.Topic<number>("countDown");
+let countDown = new pulumi.Topic<number>("examples-countDown");
 
 countDown.subscribe("watcher", async (num) => {
     console.log(num);
@@ -11,7 +11,7 @@ countDown.subscribe("watcher", async (num) => {
     }
 });
 
-pulumi.timer.interval("heartbeat", {minutes: 5}, async () => {
+pulumi.timer.interval("examples-heartbeat", {minutes: 5}, async () => {
     await countDown.publish(25);
 });
 

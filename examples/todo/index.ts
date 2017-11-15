@@ -3,8 +3,8 @@
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
 
-let todos = new cloud.Table("todo");
-let api = new cloud.HttpEndpoint("todo");
+let todos = new cloud.Table("examples-todo");
+let api = new cloud.HttpEndpoint("examples-todo");
 
 // Serve all files in the 'www' folder under '/'
 // 'index.html' will be automatically served as '/' as well as '/index.html'.

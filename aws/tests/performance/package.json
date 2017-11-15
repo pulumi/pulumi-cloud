@@ -1,0 +1,23 @@
+{
+    "name": "performance",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "typescript": "^2.1.4",
+        "datadog-metrics": "^0.6.1",
+        "debug": "^3.1.0"
+    },
+    "peerDependencies": {
+        "pulumi": "*",
+        "@pulumi/cloud": "*"
+    },
+    "dependencies": {
+        "@types/node": "^8.0.26",
+        "@types/datadog-metrics": "^0.4.0",
+        "@types/debug": "^0.0.30"
+    }
+}
