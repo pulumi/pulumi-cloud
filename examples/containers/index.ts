@@ -15,6 +15,8 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
+nginx.getEndpoint().then(endpoint => console.log(`Nginx endpoint: ${endpoint.hostname}:${endpoint.port}`));
+
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
 let dataVolume = new cloud.SharedVolume("examples-mymongodb-data");

@@ -823,11 +823,14 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 }
 
                 // TODO [pulumi/pulumi#331] When we capture promise values, they get exposed on the inside as the
-                // unwrapped value inside the promise.  This means we have to hack the types away. See
+                // unwrapped value inside the promise.  Because this function may be called on the 'inside' or
+                // 'outside', the value of `info.host.dnsName` may be a Promise<string|undefined> or a string|undefined.
+                // We can use `await` to turn either of these into a `string|undefined`, because `await` in JavaScript
+                // works fine on non-promise values. See
                 // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
-                const hostname = <string><any>info.host.dnsName;
+                const hostname = await info.host.dnsName;
                 return {
-                    hostname: hostname,
+                    hostname: hostname!,
                     port: info.hostPort,
                 };
             };
