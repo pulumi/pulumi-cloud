@@ -359,10 +359,26 @@ async function runCLICommand(
     });
 }
 
+// Store this so we can verify `docker` command is available only once per deployment.
+let cachedDockerVersionString: string|undefined;
+
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(imageName: string, container: cloud.Container,
                                  repository: aws.ecr.Repository): Promise<string | undefined> {
+    // Verify that 'docker' is on the PATH and get the client/server versions
+    if (!cachedDockerVersionString) {
+        try {
+            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], ".");
+            // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
+            // features we want to use.
+            cachedDockerVersionString = versionResult.stdout;
+            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
+        } catch (err) {
+            throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
+        }
+    }
+
     // Invoke Docker CLI commands to build and push
     const buildPath: string | undefined = container.build;
     if (!buildPath) {
