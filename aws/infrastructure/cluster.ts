@@ -141,8 +141,7 @@ export class Cluster {
             policy: JSON.stringify(instanceRolePolicyDoc),
         });
         const instanceProfile = new aws.iam.InstanceProfile(`${name}-instance-profile`, {
-            // TODO[pulumi/pulumi-aws/issues#41]: "roles" is deprecated, but if we use "role" then we can't delete this.
-            roles: [ instanceRole ],
+            role: instanceRole,
         });
 
         // Create the EC2 instance security group
