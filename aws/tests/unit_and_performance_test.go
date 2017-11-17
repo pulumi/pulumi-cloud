@@ -9,14 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pulumi/pulumi/pkg/tokens"
-
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi-cloud/pkg/pulumiframework"
+	"github.com/pulumi/pulumi/pkg/pulumiframework"
 	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
+	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
 func Test_Performance(t *testing.T) {

@@ -1,5 +1,5 @@
 .PHONY: all
-all: api aws examples mock test
+all: api aws examples mock
 
 .PHONY: api
 api:
@@ -16,11 +16,6 @@ examples:
 .PHONY: mock
 mock:
 	$(MAKE) -C ./mock all
-
-.PHONY: test
-test:
-	@echo "\033[0;32mTEST:\033[0m"
-	go test -v ./pkg/...
 
 .PHONY: publish
 publish:

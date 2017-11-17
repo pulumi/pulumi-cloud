@@ -279,7 +279,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/pulumi/pulumi"
-  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
+  packages = ["pkg/compiler/errors","pkg/component","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/pack","pkg/pulumiframework","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
   revision = "5fc226a952e3261ae0f0b40d512b091ef3c194d9"
 
 [[projects]]
@@ -399,6 +399,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "81f33d2c59a38e68b7b33569e1098dce85f14f3335065dd8fb120e4425dbd2f7"
+  inputs-digest = "72c7ea07b79626c217f2995bb3795c78289247185e9a8083b61de73ba8b1c8cb"
   solver-name = "gps-cdcl"
   solver-version = 1
