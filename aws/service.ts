@@ -78,48 +78,48 @@ interface ECSContainerEnvironmentEntry {
 let serviceLoadBalancerRole: aws.iam.Role | undefined;
 function getServiceLoadBalancerRole(): aws.iam.Role {
     if (!serviceLoadBalancerRole) {
-        serviceLoadBalancerRole = pulumi.Resource.runInParentlessScope(() => {
-            const assumeRolePolicy = {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": "sts:AssumeRole",
-                        "Principal": {
-                            "Service": "ecs.amazonaws.com",
-                        },
-                        "Effect": "Allow",
-                        "Sid": "",
+        const assumeRolePolicy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "sts:AssumeRole",
+                    "Principal": {
+                        "Service": "ecs.amazonaws.com",
                     },
-                ],
-            };
-            const policy = {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": [
-                            "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                            "elasticloadbalancing:DeregisterTargets",
-                            "elasticloadbalancing:Describe*",
-                            "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                            "elasticloadbalancing:RegisterTargets",
-                            "ec2:Describe*",
-                            "ec2:AuthorizeSecurityGroupIngress",
-                        ],
-                        "Effect": "Allow",
-                        "Resource": "*",
-                    },
-                ],
-            };
-            const role = new aws.iam.Role(`${commonPrefix}-s-lb-role`, {
-                assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-            });
-            const rolePolicy = new aws.iam.RolePolicy(`${commonPrefix}-s-lb-role`, {
-                role: role.name,
-                policy: JSON.stringify(policy),
-            });
-            return role;
+                    "Effect": "Allow",
+                    "Sid": "",
+                },
+            ],
+        };
+        const policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                        "elasticloadbalancing:DeregisterTargets",
+                        "elasticloadbalancing:Describe*",
+                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                        "elasticloadbalancing:RegisterTargets",
+                        "ec2:Describe*",
+                        "ec2:AuthorizeSecurityGroupIngress",
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "*",
+                },
+            ],
+        };
+
+        serviceLoadBalancerRole = new aws.iam.Role(`${commonPrefix}-s-lb-role`, {
+            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
+        });
+
+        const rolePolicy = new aws.iam.RolePolicy(`${commonPrefix}-s-lb-role`, {
+            role: serviceLoadBalancerRole.name,
+            policy: JSON.stringify(policy),
         });
     }
+
     return serviceLoadBalancerRole;
 }
 
@@ -178,16 +178,14 @@ function allocateListener(
     // Otherwise, if we've exhausted the cache, allocate a new LB with a sufficiently unique name.
     const lbNumber = listenerIndex / maxListeners + 1;
     const lbName = getLoadBalancerPrefix(internal, application) + lbNumber;
-    const loadBalancer = pulumi.Resource.runInParentlessScope(
-        () => new aws.elasticloadbalancingv2.LoadBalancer(lbName, {
-            loadBalancerType: application ? "application" : "network",
-            subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
-            internal: internal,
-            // If this is an application LB, we need to associate it with the ECS cluster's security group, so
-            // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
-            securityGroups: application && cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
-        }),
-    );
+    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbName, {
+        loadBalancerType: application ? "application" : "network",
+        subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
+        internal: internal,
+        // If this is an application LB, we need to associate it with the ECS cluster's security group, so
+        // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
+        securityGroups: application && cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
+    });
 
     // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.
     if (internal) {
@@ -216,7 +214,8 @@ interface ContainerPortLoadBalancer {
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
+function newLoadBalancerTargetGroup(parent: pulumi.Resource,
+                                    cluster: Cluster, portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
     const network: Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
@@ -271,7 +270,7 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
         protocol: targetProtocol,
         vpcId: network.vpcId,
         deregistrationDelay: 30,
-    });
+    }, parent);
 
     // Listen on a new port on the NLB and forward to the target.
     const listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
@@ -286,7 +285,7 @@ function newLoadBalancerTargetGroup(cluster: Cluster, portMapping: cloud.Contain
         // If SSL is used, we automatically insert the recommended ELB security policy from
         // http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html.
         sslPolicy: useCertificateARN ? "ELBSecurityPolicy-2016-08" : undefined,
-    });
+    }, parent);
 
     return {
         loadBalancer: loadBalancer,
@@ -510,7 +509,7 @@ function getImageName(container: cloud.Container): string {
 function getOrCreateRepository(imageName: string): aws.ecr.Repository {
     let repository: aws.ecr.Repository | undefined = repositories.get(imageName);
     if (!repository) {
-        repository = pulumi.Resource.runInParentlessScope(() => new aws.ecr.Repository(imageName.toLowerCase()));
+        repository = new aws.ecr.Repository(imageName.toLowerCase());
         repositories.set(imageName, repository);
     }
     return repository;
@@ -704,18 +703,19 @@ interface TaskDefinition {
 }
 
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(name: string, containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
+function createTaskDefinition(parent: pulumi.Resource, name: string,
+                              containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`, {
         retentionInDays: 1,
-    });
+    }, parent);
 
     // And hook it up to the aggregated log collector
     const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(`${name}-task-logs-filter`, {
         logGroup: logGroup,
         destinationArn: getLogCollector().arn,
         filterPattern: "",
-    });
+    }, parent);
 
     // Find all referenced Volumes and any `build` containers.
     const volumes: { hostPath?: string; name: string }[] = [];
@@ -742,7 +742,7 @@ function createTaskDefinition(name: string, containers: cloud.Containers, ports?
         containerDefinitions: containerDefintions,
         volume: volumes,
         taskRoleArn: getTaskRole().arn,
-    });
+    }, parent);
 
     return {
         task: taskDefinition,
@@ -785,7 +785,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         return getTaskRole();
     }
 
-    constructor(name: string, args: cloud.ServiceArguments) {
+    constructor(name: string, args: cloud.ServiceArguments,
+                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
         const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
@@ -796,55 +797,50 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
-        super(
-            "cloud:service:Service",
-            name,
-            {
-                containers: containers,
-                replicas: replicas,
-            },
-            () => {
-                // Create load balancer listeners/targets for each exposed port.
-                const loadBalancers = [];
-                for (const containerName of Object.keys(containers)) {
-                    const container = containers[containerName];
-                    ports[containerName] = {};
-                    if (container.ports) {
-                        for (const portMapping of container.ports) {
-                            const info = newLoadBalancerTargetGroup(cluster, portMapping);
-                            ports[containerName][portMapping.port] = {
-                                host: info.loadBalancer,
-                                hostPort: info.listenerPort,
-                                hostProtocol: info.protocol,
-                            };
-                            loadBalancers.push({
-                                containerName: containerName,
-                                containerPort: portMapping.port,
-                                targetGroupArn: info.targetGroup.arn,
-                            });
-                        }
-                    }
-                }
-
-                // Only provide a role if the service is attached to a load balancer.
-                const iamRole = loadBalancers.length ? getServiceLoadBalancerRole().arn : undefined;
-
-                // Create the task definition, parented to this component.
-                const taskDefinition = createTaskDefinition(name, containers, ports);
-
-                // Create the service.
-                const service = new aws.ecs.Service(name, {
-                    desiredCount: replicas,
-                    taskDefinition: taskDefinition.task.arn,
-                    cluster: cluster!.ecsClusterARN,
-                    loadBalancers: loadBalancers,
-                    iamRole: iamRole,
-                    placementConstraints: placementConstraintsForHost(args.host),
-                });
-            },
-        );
+        super("cloud:service:Service", name, {
+            containers: containers,
+            replicas: replicas,
+        }, parent, dependsOn);
 
         this.name = name;
+
+        // Create load balancer listeners/targets for each exposed port.
+        const loadBalancers = [];
+        for (const containerName of Object.keys(containers)) {
+            const container = containers[containerName];
+            ports[containerName] = {};
+            if (container.ports) {
+                for (const portMapping of container.ports) {
+                    const info = newLoadBalancerTargetGroup(this, cluster, portMapping);
+                    ports[containerName][portMapping.port] = {
+                        host: info.loadBalancer,
+                        hostPort: info.listenerPort,
+                        hostProtocol: info.protocol,
+                    };
+                    loadBalancers.push({
+                        containerName: containerName,
+                        containerPort: portMapping.port,
+                        targetGroupArn: info.targetGroup.arn,
+                    });
+                }
+            }
+        }
+
+        // Only provide a role if the service is attached to a load balancer.
+        const iamRole = loadBalancers.length ? getServiceLoadBalancerRole().arn : undefined;
+
+        // Create the task definition, parented to this component.
+        const taskDefinition = createTaskDefinition(this, name, containers, ports);
+
+        // Create the service.
+        const service = new aws.ecs.Service(name, {
+            desiredCount: replicas,
+            taskDefinition: taskDefinition.task.arn,
+            cluster: cluster!.ecsClusterARN,
+            loadBalancers: loadBalancers,
+            iamRole: iamRole,
+            placementConstraints: placementConstraintsForHost(args.host),
+        }, this);
 
         // getEndpoint returns the host and port info for a given containerName and exposed port.
         this.getEndpoint =
@@ -872,9 +868,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 }
 
                 // TODO [pulumi/pulumi#331] When we capture promise values, they get exposed on the inside as the
-                // unwrapped value inside the promise.  Because this function may be called on the 'inside' or
-                // 'outside', the value of `info.host.dnsName` may be a Promise<string|undefined> or a string|undefined.
-                // We can use `await` to turn either of these into a `string|undefined`, because `await` in JavaScript
+                // unwrapped value inside the promise.  Because this function may be called at deployment or runtime
+                // the value of `info.host.dnsName` may be a Promise<string|undefined> or a string|undefined.  We
+                // can use `await` to turn either of these into a `string|undefined`, because `await` in JavaScript
                 // works fine on non-promise values. See
                 // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
                 const hostname = await info.host.dnsName;
@@ -905,11 +901,11 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     public readonly kind: cloud.VolumeKind;
     public readonly name: string;
 
-    constructor(name: string) {
+    constructor(name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
         if (volumeNames.has(name)) {
             throw new Error("Must provide a unique volume name");
         }
-        super("cloud:volume:Volume", name, {}, () => {/* no children */});
+        super("cloud:volume:Volume", name, {}, parent, dependsOn);
         this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
@@ -963,25 +959,17 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         return getTaskRole();
     }
 
-    constructor(name: string, container: cloud.Container) {
+    constructor(name: string, container: cloud.Container, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+        super("cloud:task:Task", name, { container: container }, parent, dependsOn);
+
         const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
-
-        let taskDefinition: aws.ecs.TaskDefinition;
-        super(
-            "cloud:task:Task",
-            name,
-            {
-                container: container,
-            },
-            () => {
-                taskDefinition = createTaskDefinition(name, { container: container }).task;
-            },
-        );
-
         const clusterARN = cluster.ecsClusterARN;
+
+        const taskDefinition: aws.ecs.TaskDefinition = createTaskDefinition(this, name, { container: container }).task;
+
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
             const ecs = new awssdk.ECS();

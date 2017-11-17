@@ -81,7 +81,7 @@ func Test_Performance(t *testing.T) {
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.State.Inputs["url"].StringValue()
+				baseURL := endpoint.State.Outputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET /perf endpoint
@@ -162,7 +162,7 @@ func hitUnitTestsEndpoint(
 	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 		return
 	}
-	baseURL := endpoint.State.Inputs["url"].StringValue()
+	baseURL := endpoint.State.Outputs["url"].StringValue()
 	assert.NotEmpty(t, baseURL, fmt.Sprintf("expected a `%v` endpoint", endpointName))
 
 	// Validate the GET /unittests endpoint

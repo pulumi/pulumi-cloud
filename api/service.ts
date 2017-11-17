@@ -123,8 +123,12 @@ export interface SharedVolume extends Volume {
 export interface SharedVolumeConstructor {
     /**
      * Construct a new Volume with the given unique name.
+     *
+     * @param name The unique name of the volume.
+     * @param parent An optional parent resource to which this resource belongs.
+     * @param dependsOn Optional additional explicit dependencies on other resources.
      */
-    new (name: string): SharedVolume;
+    new (name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): SharedVolume;
 
     // TODO[pulumi/pulumi-cloud#84] - Likely important features:
     // backupToBucket(bucket: Bucket): Promise<void>
@@ -201,7 +205,14 @@ export interface Service {
 }
 
 export interface ServiceConstructor {
-    new (name: string, args: ServiceArguments): Service;
+    /**
+     * Construct a new Service, which is one or more managed replicas of a group of one or more Containers.
+     *
+     * @param name The unique name of the service.
+     * @param parent An optional parent resource to which this resource belongs.
+     * @param dependsOn Optional additional explicit dependencies on other resources.
+     */
+    new (name: string, args: ServiceArguments, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Service;
 }
 
 export let Service: ServiceConstructor; // tslint:disable-line
@@ -233,7 +244,15 @@ export interface Task {
 }
 
 export interface TaskConstructor {
-    new (name: string, container: Container): Task;
+    /**
+     * Construct a new Task, which is a Container that can be run many times as individual tasks.
+     *
+     * @param name The unique name of the task.
+     * @param container The container specification.
+     * @param parent An optional parent resource to which this resource belongs.
+     * @param dependsOn Optional additional explicit dependencies on other resources.
+     */
+    new (name: string, container: Container, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Task;
 }
 
 export let Task: TaskConstructor; // tslint:disable-line

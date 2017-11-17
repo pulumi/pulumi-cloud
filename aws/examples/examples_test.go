@@ -75,7 +75,7 @@ func Test_Examples(t *testing.T) {
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.State.Inputs["url"].StringValue()
+				baseURL := endpoint.State.Outputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `containers` endpoint")
 
 				// Validate the GET /test endpoint
@@ -159,7 +159,7 @@ func Test_Examples(t *testing.T) {
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.State.Inputs["url"].StringValue()
+				baseURL := endpoint.State.Outputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET / endpoint
@@ -274,7 +274,7 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
 		return
 	}
-	baseURL := endpoint.State.Inputs["url"].StringValue()
+	baseURL := endpoint.State.Outputs["url"].StringValue()
 	assert.NotEmpty(t, baseURL, "expected an `test` endpoint")
 
 	// Validate the GET /test1.txt endpoint

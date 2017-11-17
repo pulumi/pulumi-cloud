@@ -37,37 +37,32 @@ interface LogsLog {
 class LogCollector extends pulumi.ComponentResource {
     public readonly lambda: aws.lambda.Function;
     constructor(name: string) {
-        let lambda: aws.lambda.Function | undefined;
-        super(
-            "cloud:logCollector:LogCollector",
+        super("cloud:logCollector:LogCollector", name);
+
+        const collector = new aws.serverless.Function(
             name,
-            {},
-            () => {
-                const collector = new aws.serverless.Function(
-                    name,
-                    { policies: [ aws.iam.AWSLambdaFullAccess ] },
-                    async (ev: LogsPayload, ctx: aws.serverless.Context, cb: (error: any, result?: {}) => void) => {
-                        try {
-                            const zlib = await import("zlib");
-                            const payload = new Buffer(ev.awslogs.data, "base64");
-                            const result = zlib.gunzipSync(payload);
-                            console.log(result.toString("utf8"));
-                            cb(null, {});
-                        } catch (err) {
-                            cb(err);
-                        }
-                    },
-                );
-                lambda = collector.lambda;
-                const region = aws.config.requireRegion();
-                const permission = new aws.lambda.Permission(name, {
-                    action: "lambda:invokeFunction",
-                    function: lambda,
-                    principal: "logs." + region + ".amazonaws.com",
-                });
+            { policies: [ aws.iam.AWSLambdaFullAccess ] },
+            async (ev: LogsPayload, ctx: aws.serverless.Context, cb: (error: any, result?: {}) => void) => {
+                try {
+                    const zlib = await import("zlib");
+                    const payload = new Buffer(ev.awslogs.data, "base64");
+                    const result = zlib.gunzipSync(payload);
+                    console.log(result.toString("utf8"));
+                    cb(null, {});
+                } catch (err) {
+                    cb(err);
+                }
             },
+            this,
         );
-        this.lambda = lambda!;
+        this.lambda = collector.lambda;
+
+        const region = aws.config.requireRegion();
+        const permission = new aws.lambda.Permission(name, {
+            action: "lambda:invokeFunction",
+            function: this.lambda,
+            principal: "logs." + region + ".amazonaws.com",
+        }, this);
     }
 }
 
@@ -76,9 +71,7 @@ export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda; do it in a scope where we don't have a parent,
         // so the logCollector doesn't get falsely attributed to the caller.
-        logCollector = pulumi.Resource.runInParentlessScope(() =>
-            new LogCollector(logCollectorName),
-        );
+        logCollector = new LogCollector(logCollectorName);
     }
     return logCollector.lambda;
 }
