@@ -3,6 +3,12 @@ go: 1.9
 sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
     - export PULUMI_ROOT=/opt/pulumi
+    # Install Docker 17.09.
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    - sudo apt-get update
+    - sudo apt-get -y install docker-ce=17.09.0~ce-0~ubuntu
+    - docker --version
     # Dep for Go dependency management.
     - go get -v github.com/golang/dep/cmd/dep
     # Node.js 6.10.2 for Pulumi Fabric's Node.js runtime.
