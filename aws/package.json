@@ -1,10 +1,6 @@
 {
     "name": "@pulumi/cloud-aws",
     "version": "0.6.1",
-    "scripts": {
-        "build": "tsc && yarn run lint",
-        "lint": "tslint -c ../tslint.json -p tsconfig.json"
-    },
     "devDependencies": {
         "@types/aws-sdk": "^2.7.0",
         "@types/node": "^8.0.26",

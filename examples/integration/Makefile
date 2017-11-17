@@ -1,29 +1,11 @@
-.PHONY: default
-default: banner dependencies build install
+PROJECT_NAME := Pulumi Cloud Platform Integration Examples
+include ../../build/common.mk
 
-.PHONY: all
-all: default
+export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
-.PHONY: banner
-banner:
-	@echo "\033[1;37m======================\033[0m"
-	@echo "\033[1;37mPulumi Framework integration example\033[0m"
-	@echo "\033[1;37m======================\033[0m"
+build::
+	yarn link pulumi @pulumi/cloud
+	tsc
 
-.PHONY: dependencies
-dependencies:
-	yarn install
-
-
-.PHONY: build
-build:
-	@echo "\033[0;32mBUILD:\033[0m"
-	yarn link pulumi @pulumi/cloud # ensure we link dependencies.
-	yarn run build # compile the LumiPack
-
-
-.PHONY: install
-install:
-	@echo "\033[0;32mINSTALL:\033[0m [${LUMILIB}]"
-	cp package.json bin/
-	cd bin/ && (yarn unlink || true) && yarn link # ensure NPM references resolve locally
+lint::
+	tslint -c ../tslint.json -p tsconfig.json
