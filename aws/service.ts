@@ -366,6 +366,13 @@ let cachedDockerVersionString: string|undefined;
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(imageName: string, container: cloud.Container,
                                  repository: aws.ecr.Repository): Promise<string | undefined> {
+    const buildPath: string | undefined = container.build;
+    if (!buildPath) {
+        throw new Error(`Cannot build a container with an empty build specification`);
+    }
+
+    console.log(`Building container image '${imageName}' from ${buildPath}`);
+
     // Verify that 'docker' is on the PATH and get the client/server versions
     if (!cachedDockerVersionString) {
         try {
@@ -380,10 +387,6 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
     }
 
     // Invoke Docker CLI commands to build and push
-    const buildPath: string | undefined = container.build;
-    if (!buildPath) {
-        throw new Error(`Cannot build a container with an empty build specification`);
-    }
     const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
@@ -553,7 +556,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
-        console.log(`Building container image at '${container.build}'`);
+        pulumi.log.debug(`Building container image at '${container.build}'`);
         if (!repository) {
             throw new Error("Expected a container repository for build image");
         }
@@ -563,7 +566,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
         if (imageName && buildImageCache.has(imageName)) {
             // We got a cache hit, simply reuse the existing digest.
             imageDigest = await buildImageCache.get(imageName);
-            console.log(`    already built: ${imageName} (${imageDigest})`);
+            pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
         }
         else {
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
@@ -574,7 +577,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
                 buildImageCache.set(imageName, imageDigestAsync);
             }
             imageDigest = await imageDigestAsync;
-            console.log(`    build complete: ${imageName} (${imageDigest})`);
+            pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
         }
 
         env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
