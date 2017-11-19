@@ -369,7 +369,7 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
     // Verify that 'docker' is on the PATH and get the client/server versions
     if (!cachedDockerVersionString) {
         try {
-            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], ".");
+            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], ".", true);
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
