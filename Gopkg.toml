@@ -1,6 +1,6 @@
 required = ["github.com/pulumi/pulumi-aws"]
 
-[[override]]   
+[[override]]
   name = "github.com/pulumi/pulumi"
   branch = "master"
 
@@ -8,3 +8,6 @@ required = ["github.com/pulumi/pulumi-aws"]
   name = "github.com/pulumi/pulumi-aws"
   branch = "master"
 
+[[override]]
+  name = "github.com/hashicorp/terraform"
+  version = "0.10.8"
