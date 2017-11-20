@@ -129,6 +129,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),
                 json: (obj: any) => expressResponse.json(obj),
+                getHeader: (field: string) => {
+                    return expressResponse.get(field);
+                },
                 setHeader(headerName: string, value: string) {
                     expressResponse.setHeader(headerName, value);
                     return this;
