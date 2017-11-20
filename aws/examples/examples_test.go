@@ -29,6 +29,7 @@ func Test_Examples(t *testing.T) {
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
+
 	examples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "../../examples/crawler"),
