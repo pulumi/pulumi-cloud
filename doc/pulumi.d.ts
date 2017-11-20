@@ -26,6 +26,7 @@ export interface Request {
 }
 export interface Response {
     status(code: number): Response;
+    getHeader(name: string) : string;
     setHeader(name: string, value: string): Response;
     write(data: string): Response;
     end(data?: string): void;

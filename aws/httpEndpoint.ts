@@ -712,6 +712,9 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: any,
             response.statusCode = code;
             return res;
         },
+        getHeader: (name: string) => {
+            return response.headers![name];
+        },
         setHeader: (name: string, value: string) => {
             response.headers![name] = value;
             return res;

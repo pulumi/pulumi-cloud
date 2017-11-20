@@ -55,6 +55,10 @@ export interface Response {
      */
     status(code: number): Response;
     /**
+     * Gets the Headers for the Response
+     */
+    getHeader(name: string): string;
+    /**
      * Sets a header on the HTTP response and returns the `Response` for
      * chaining operations.
      */
