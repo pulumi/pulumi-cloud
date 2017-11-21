@@ -6,7 +6,7 @@ required = ["github.com/pulumi/pulumi-aws"]
 
 [[override]]
   name = "github.com/pulumi/pulumi-aws"
-  branch = "tf_v_11"
+  branch = "master"
 
 [[override]]
   name = "github.com/hashicorp/terraform"

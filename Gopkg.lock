@@ -34,8 +34,8 @@
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = ["aws","aws/arn","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restjson","private/protocol/restxml","private/protocol/xml/xmlutil","private/signer/v2","service/acm","service/apigateway","service/applicationautoscaling","service/athena","service/autoscaling","service/batch","service/cloudformation","service/cloudfront","service/cloudtrail","service/cloudwatch","service/cloudwatchevents","service/cloudwatchlogs","service/codebuild","service/codecommit","service/codedeploy","service/codepipeline","service/cognitoidentity","service/cognitoidentityprovider","service/configservice","service/databasemigrationservice","service/devicefarm","service/directconnect","service/directoryservice","service/dynamodb","service/ec2","service/ecr","service/ecs","service/efs","service/elasticache","service/elasticbeanstalk","service/elasticsearchservice","service/elastictranscoder","service/elb","service/elbv2","service/emr","service/firehose","service/glacier","service/iam","service/inspector","service/iot","service/kinesis","service/kms","service/lambda","service/lightsail","service/opsworks","service/rds","service/redshift","service/route53","service/s3","service/servicecatalog","service/ses","service/sfn","service/simpledb","service/sns","service/sqs","service/ssm","service/sts","service/waf","service/wafregional"]
-  revision = "a532359524fb25c60b6c938ec321b571adc857de"
-  version = "v1.12.28"
+  revision = "a32b1dcd091264b5dee7b386149b6cc3823395c9"
+  version = "v1.12.31"
 
 [[projects]]
   branch = "master"
@@ -70,8 +70,8 @@
 [[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
-  revision = "7e7da451323b6766da368f8a1e8ec9a88a16b4a0"
-  version = "v1.31.1"
+  revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
+  version = "v1.32.0"
 
 [[projects]]
   branch = "master"
@@ -280,13 +280,13 @@
   branch = "master"
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/component","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/pack","pkg/pulumiframework","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/workspace","sdk/proto/go"]
-  revision = "8e01135572df17b516c11d526c7d224e956eacbb"
+  revision = "e9d13dd40f4de7f1e0e93fe3f9c2160e4a972ac7"
 
 [[projects]]
-  branch = "tf_v_11"
+  branch = "master"
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "f813f8e4ad0b55ca4118af9ed3e04c749da75af7"
+  revision = "703470e10f37079b9f600a29897d233fbb53ddd2"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -308,9 +308,15 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+
+[[projects]]
+  branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "2da4a54c5ceefcee7ca5dd0eea1e18a3b6366489"
+  revision = "19e54c4a2b8a78c9d54b2bed61b1a6c5e1bfcf6f"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -327,8 +333,8 @@
 [[projects]]
   name = "github.com/terraform-providers/terraform-provider-aws"
   packages = ["aws"]
-  revision = "009addb94e8c2829b71d4848d60db7898c5af8ef"
-  version = "v1.3.0"
+  revision = "0788318d02a308ed6a437a5868ed93603d28e261"
+  version = "v1.3.1"
 
 [[projects]]
   name = "github.com/uber/jaeger-client-go"
@@ -370,7 +376,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "bf42f188b9bc6f2cf5b8ee5a912ef1aedd0eba4c"
+  revision = "328643532ee3c60c099171d4ce2cad0ca0354ca9"
 
 [[projects]]
   branch = "master"
@@ -382,7 +388,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "11c7f9e547da6db876260ce49ea7536985904c9b"
+  revision = "891aceb7c239e72692819142dfca057bdcbfcb96"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -399,6 +405,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9dac90df4e29ed769c3cef3dc670147640eb9d561cf362699ac8f1776fd9fe4c"
+  inputs-digest = "42ee150f4fc1e0f2fe0291c4a5612ba353e8b954f7a3a9f57eb8c7adeba8b276"
   solver-name = "gps-cdcl"
   solver-version = 1
