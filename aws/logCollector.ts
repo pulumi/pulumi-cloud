@@ -11,42 +11,57 @@ import { commonPrefix } from "./shared";
 // compiler will then elide this actual declaration when compiling.
 import _zlibTypesOnly = require("zlib");
 
-const region = aws.config.requireRegion();
+const logCollectorName = `${commonPrefix}-log-collector`;
 
-// logCollector is a shared and lazily created Function resource which
+// LogCollector is a shared and lazily created Function resource which
 // is wired up as a listener on the cloud watch logs for all users functions
 // created and managed by the Pulumi framework.
+class LogCollector extends pulumi.ComponentResource {
+    public readonly lambda: aws.lambda.Function;
+    constructor(name: string) {
+        let lambda: aws.lambda.Function | undefined;
+        super(
+            "cloud:logCollector:LogCollector",
+            name,
+            {},
+            () => {
+                const collector = new aws.serverless.Function(
+                    name,
+                    { policies: [ aws.iam.AWSLambdaFullAccess ] },
+                    (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+                        const zlib: typeof _zlibTypesOnly = require("zlib");
+                        const payload = new Buffer(ev.awslogs.data, "base64");
+                        zlib.gunzip(payload, (err: any, result: Buffer) => {
+                            if (err !== undefined && err !== null) {
+                                cb(err, null);
+                            } else {
+                                console.log(result.toString("utf8"));
+                                cb(null, {});
+                            }
+                        });
+                    },
+                );
+                lambda = collector.lambda;
+                const region = aws.config.requireRegion();
+                const permission = new aws.lambda.Permission(name, {
+                    action: "lambda:invokeFunction",
+                    function: lambda,
+                    principal: "logs." + region + ".amazonaws.com",
+                });
+            },
+        );
+        this.lambda = lambda!;
+    }
+}
 
-const logCollectorName = `${commonPrefix}-log-collector`;
-let logCollector: aws.serverless.Function | undefined;
-
+let logCollector: LogCollector | undefined;
 export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda; do it in a scope where we don't have a parent,
         // so the logCollector doesn't get falsely attributed to the caller.
         logCollector = pulumi.Resource.runInParentlessScope(() =>
-            new aws.serverless.Function(
-                logCollectorName,
-                { policies: [ aws.iam.AWSLambdaFullAccess ] },
-                (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
-                    const zlib: typeof _zlibTypesOnly = require("zlib");
-                    const payload = new Buffer(ev.awslogs.data, "base64");
-                    zlib.gunzip(payload, (err: any, result: Buffer) => {
-                        if (err !== undefined && err !== null) {
-                            cb(err, null);
-                        } else {
-                            console.log(result.toString("utf8"));
-                            cb(null, {});
-                        }
-                    });
-                },
-            ),
+            new LogCollector(logCollectorName),
         );
-        const permission = new aws.lambda.Permission(logCollectorName, {
-            action: "lambda:invokeFunction",
-            function: logCollector.lambda,
-            principal: "logs." + region + ".amazonaws.com",
-        });
     }
     return logCollector.lambda;
 }
