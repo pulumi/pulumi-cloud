@@ -202,11 +202,6 @@ export let HostPathVolume: HostPathVolumeConstructor; // tslint:disable-line
  */
 export interface ServiceArguments {
     /**
-     * The collection of containers that will be deployed as part of this
-     * Service.
-     */
-    containers: Containers;
-    /**
      * The number of copies of this Service's containers to deploy and maintain
      * as part of the running service.  Defaults to `1`.
      */
@@ -256,7 +251,8 @@ export interface ServiceConstructor {
      * @param name The unique name of the service.
      * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, args: ServiceArguments, opts?: pulumi.ResourceOptions): Service;
+    new (name: string, containers: Containers, args?: ServiceArguments, opts?: pulumi.ResourceOptions): Service;
+    new (name: string, container: Container, args?: ServiceArguments, opts?: pulumi.ResourceOptions): Service;
 }
 
 export let Service: ServiceConstructor; // tslint:disable-line

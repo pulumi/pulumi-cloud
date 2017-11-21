@@ -781,14 +781,24 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         return getTaskRole();
     }
 
-    constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
+    constructor(name: string, container: cloud.Container, args?: cloud.ServiceArguments, opts?: pulumi.ResourceOptions)
+    // tslint:disable-next-line:max-line-length
+    constructor(name: string, containers: cloud.Containers, args?: cloud.ServiceArguments, opts?: pulumi.ResourceOptions)
+    constructor(name: string, containerish: any, args: cloud.ServiceArguments = {}, opts?: pulumi.ResourceOptions) {
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
                 " or 'cloud-aws:config:ecsAutoCluster'");
         }
+        let containers: cloud.Containers;
+        if (containerish.build || containerish.image || containerish.function) {
+            containers = {
+                [name]: containerish,
+            };
+        } else {
+            containers = containerish;
+        }
 
-        const containers = args.containers;
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
