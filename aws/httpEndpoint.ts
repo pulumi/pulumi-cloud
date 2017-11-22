@@ -394,7 +394,14 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
         paths: paths,
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
         "x-amazon-apigateway-gateway-responses": {
+            // Map paths the user doesn't have access to as 404.
             "MISSING_AUTHENTICATION_TOKEN": {
+                "statusCode": 404,
+                "responseTemplates": {
+                    "application/json": "{\"message\": \"404 Not found\" }",
+                },
+            },
+            "ACCESS_DENIED": {
                 "statusCode": 404,
                 "responseTemplates": {
                     "application/json": "{\"message\": \"404 Not found\" }",
