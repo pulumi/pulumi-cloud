@@ -393,6 +393,14 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
         info: spec.info,
         paths: paths,
         "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+        "x-amazon-apigateway-gateway-responses": {
+            "MISSING_AUTHENTICATION_TOKEN": {
+                "statusCode": 404,
+                "responseTemplates": {
+                    "application/json": "{\"message\": \"404 Not found\" }",
+                },
+            },
+        },
     });
 
     // local functions
