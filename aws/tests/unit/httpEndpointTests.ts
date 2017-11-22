@@ -27,7 +27,7 @@ namespace getApiTests {
 
     export async function testGetOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).get("unavailable").expect(403);
+        await supertest(address).get("unavailable").expect(404);
     }
 
 
@@ -65,7 +65,7 @@ namespace deleteApiTests {
 
     export async function testDeleteOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).delete("/unavailable").expect(403);
+        await supertest(address).delete("/unavailable").expect(404);
     }
 }
 
@@ -83,7 +83,7 @@ namespace postApiTests {
 
     export async function testPostOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).post("/unavailable").expect(403);
+        await supertest(address).post("/unavailable").expect(404);
     }
 }
 
@@ -110,7 +110,7 @@ namespace staticApiTests {
 
     export async function testIndexHtmlDoesNotGetMappedToRoot_1() {
         const address = await deployment.url;
-        await supertest(address).get("/static2/").expect(403);
+        await supertest(address).get("/static2/").expect(404);
     }
 
     export async function testIndexHtmlGetsServedDirectly_2() {
@@ -155,7 +155,7 @@ namespace updateProgramTests {
     export async function testInitialGet() {
         const address = await deployment.url;
         await supertest(address).get("/persistent1").expect(200, { version: "0" });
-        await supertest(address).get("/persistent2").expect(403);
+        await supertest(address).get("/persistent2").expect(404);
     }
 
 
