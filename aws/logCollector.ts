@@ -4,14 +4,32 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
 import { commonPrefix } from "./shared";
 
-// For type-safety purposes, we want to be able to mark some of our types with typing information
-// from other libraries.  However, we don't want to actually import those libraries, causing those
-// module to load and run doing pulumi planning time.  so we just do an "import + require" and we
-// note that this imported variable should only be used in 'type' (and not value) positions.  The ts
-// compiler will then elide this actual declaration when compiling.
-import _zlibTypesOnly = require("zlib");
-
 const logCollectorName = `${commonPrefix}-log-collector`;
+
+// The type of the Lambda payload from Cloudwatch Logs subscriptions.
+// See http://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-cloudwatch-logs
+interface LogsPayload {
+    awslogs: {
+        // Base64-encoded gzipped UTF8 string of JSON of type CloudWatchLogsEvent
+        data: string;
+    };
+}
+
+// These interfaces are unused, but captured here to document the full type of the payload in case it is needed.
+interface LogsEvent {
+    messageType: string;
+    owner: string;
+    logGroup: string;
+    logStream: string;
+    subscriptionFilters: string[];
+    logEvents: LogsLog[];
+}
+
+interface LogsLog {
+    id: string;
+    timestamp: string;
+    message: string;
+}
 
 // LogCollector is a shared and lazily created Function resource which
 // is wired up as a listener on the cloud watch logs for all users functions
@@ -28,17 +46,16 @@ class LogCollector extends pulumi.ComponentResource {
                 const collector = new aws.serverless.Function(
                     name,
                     { policies: [ aws.iam.AWSLambdaFullAccess ] },
-                    (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
-                        const zlib: typeof _zlibTypesOnly = require("zlib");
-                        const payload = new Buffer(ev.awslogs.data, "base64");
-                        zlib.gunzip(payload, (err: any, result: Buffer) => {
-                            if (err !== undefined && err !== null) {
-                                cb(err, null);
-                            } else {
-                                console.log(result.toString("utf8"));
-                                cb(null, {});
-                            }
-                        });
+                    async (ev: LogsPayload, ctx: aws.serverless.Context, cb: (error: any, result?: {}) => void) => {
+                        try {
+                            const zlib = await import("zlib");
+                            const payload = new Buffer(ev.awslogs.data, "base64");
+                            const result = zlib.gunzipSync(payload);
+                            console.log(result.toString("utf8"));
+                            cb(null, {});
+                        } catch (err) {
+                            cb(err);
+                        }
                     },
                 );
                 lambda = collector.lambda;
