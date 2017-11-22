@@ -10,4 +10,5 @@ required = ["github.com/pulumi/pulumi-aws"]
 
 [[override]]
   name = "github.com/hashicorp/terraform"
-  version = "0.11"
+  source = "github.com/pulumi/terraform"
+  branch = "pulumi-master"
