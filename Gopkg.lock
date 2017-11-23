@@ -158,10 +158,11 @@
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
+  branch = "pulumi-master"
   name = "github.com/hashicorp/terraform"
   packages = ["config","config/configschema","config/hcl2shim","config/module","dag","flatmap","helper/config","helper/encryption","helper/hashcode","helper/hilmapstructure","helper/logging","helper/mutexkv","helper/resource","helper/schema","helper/structure","helper/validation","moduledeps","plugin/discovery","registry/regsrc","registry/response","svchost","svchost/auth","svchost/disco","terraform","tfdiags","version"]
-  revision = "ec9d4f1d0f90e8ec5148f94b6d634eb542a4f0ce"
-  version = "v0.11.0"
+  revision = "908310ae7bd2260b84479a641d677eb33d1623ab"
+  source = "github.com/pulumi/terraform"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
@@ -286,7 +287,7 @@
   branch = "master"
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "703470e10f37079b9f600a29897d233fbb53ddd2"
+  revision = "9170895cd0ba84ef1e06372f3eed2ab3b912dc2d"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -405,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "42ee150f4fc1e0f2fe0291c4a5612ba353e8b954f7a3a9f57eb8c7adeba8b276"
+  inputs-digest = "79c535e5c0c5c4f8c587a0062a0ebc5c34d2833db326da002dcb92e7b601ec49"
   solver-name = "gps-cdcl"
   solver-version = 1
