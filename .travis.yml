@@ -27,8 +27,10 @@ install:
     - ${GOPATH}/src/github.com/pulumi/home/scripts/install-locked.sh ${PULUMI_ROOT} pulumi pulumi-aws
     - make ensure
 script:
-    # Configure the environment s.t. Terraform panics on schema errors in order to aid debugging.
+    # Configure the environment s.t. Terraform panics on schema errors in order to aid debugging and Terraform tracing
+    # is enabled.
     - export TF_SCHEMA_PANIC_ON_ERROR=true
+    - export TF_LOG=TRACE
     - make travis_${TRAVIS_EVENT_TYPE}
 notifications:
     webhooks: https://ufci1w66n3.execute-api.us-west-2.amazonaws.com/stage/travis
