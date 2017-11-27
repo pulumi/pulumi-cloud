@@ -27,7 +27,7 @@ namespace getApiTests {
 
     export async function testGetOfNonExistingPath() {
         const address = await deployment.url;
-        await supertest(address).get("unavailable").expect(404);
+        await supertest(address).get("/unavailable").expect(404);
     }
 
 
