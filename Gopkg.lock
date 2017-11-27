@@ -287,7 +287,7 @@
   branch = "master"
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "fbfe6ab639287b109cf932d932ddd55ceffea1d2"
+  revision = "35ee9e36338d62e042f05ac9b2c1e0a9327d813e"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
