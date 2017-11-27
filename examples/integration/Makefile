@@ -1,5 +1,5 @@
 PROJECT_NAME := Pulumi Cloud Platform Integration Examples
-include ../../../build/common.mk
+include ../../build/common.mk
 
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
