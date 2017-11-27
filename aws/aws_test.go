@@ -138,7 +138,7 @@ func Test_Examples(t *testing.T) {
 		},
 
 		{
-			Dir: path.Join(cwd, "examples/crawler"),
+			Dir: path.Join(cwd, "../examples/crawler"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
@@ -149,7 +149,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "examples/countdown"),
+			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
 				"aws:config:region": region,
 				// TODO[pulumi/pulumi-cloud#138]: Would love to use this example to test private networking for
@@ -162,7 +162,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "examples/containers"),
+			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
 				"aws:config:region":               region,
 				"cloud-aws:config:ecsAutoCluster": "true",
@@ -246,7 +246,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "examples/todo"),
+			Dir: path.Join(cwd, "../examples/todo"),
 
 			Config: map[string]string{
 				"aws:config:region":     region,
@@ -322,7 +322,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "examples/timers"),
+			Dir: path.Join(cwd, "../examples/timers"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
@@ -335,7 +335,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "examples/httpEndpoint"),
+			Dir: path.Join(cwd, "../examples/httpEndpoint"),
 
 			Config: map[string]string{
 				"aws:config:region":     region,
