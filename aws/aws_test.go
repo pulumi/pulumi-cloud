@@ -33,7 +33,7 @@ func Test_Examples(t *testing.T) {
 	}
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir: cwd + "/tests/unit",
+			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
@@ -62,7 +62,7 @@ func Test_Examples(t *testing.T) {
 		},
 
 		{
-			Dir: cwd + "/tests/performance",
+			Dir: path.Join(cwd, "/tests/performance"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
