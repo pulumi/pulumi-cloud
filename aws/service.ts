@@ -9,6 +9,7 @@ import * as stream from "stream";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
+import { getLogCollector } from "./logCollector";
 import { commonPrefix, computePolicies, getCluster, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 
@@ -685,7 +686,16 @@ interface TaskDefinition {
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
 function createTaskDefinition(name: string, containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
     // Create a single log group for all logging associated with the Service
-    const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`);
+    const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`, {
+        retentionInDays: 1,
+    });
+
+    // And hook it up to the aggregated log collector
+    const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(`${name}-task-logs-filter`, {
+        logGroup: logGroup,
+        destinationArn: getLogCollector().arn,
+        filterPattern: "",
+    });
 
     // Find all referenced Volumes and any `build` containers.
     const volumes: { hostPath?: string; name: string }[] = [];
