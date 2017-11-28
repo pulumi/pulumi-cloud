@@ -76,12 +76,12 @@ func Test_Performance(t *testing.T) {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "performance", "pulumi:framework:Endpoint", "tests-performance")
+				urn := resource.NewURN(checkpoint.Target, "performance", "cloud:http:HttpEndpoint", "tests-performance")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.Properties["url"].StringValue()
+				baseURL := endpoint.State.Inputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET /perf endpoint
@@ -156,13 +156,13 @@ func hitUnitTestsEndpoint(
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 		return
 	}
-	pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Target, packageName, "pulumi:framework:Endpoint", endpointName)
+	pulumiResources := operations.NewResourceMap(snapshot.Resources)
+	urn := resource.NewURN(checkpoint.Target, packageName, "cloud:http:HttpEndpoint", endpointName)
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 		return
 	}
-	baseURL := endpoint.Properties["url"].StringValue()
+	baseURL := endpoint.State.Inputs["url"].StringValue()
 	assert.NotEmpty(t, baseURL, fmt.Sprintf("expected a `%v` endpoint", endpointName))
 
 	// Validate the GET /unittests endpoint
