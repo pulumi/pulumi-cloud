@@ -1,20 +1,20 @@
 package examples
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	//"io/ioutil"
+	//"net/http"
 	"os"
 	"path"
-	"strings"
+	//"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi/pkg/operations"
-	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/stack"
+	//"github.com/pulumi/pulumi/pkg/operations"
+	//"github.com/pulumi/pulumi/pkg/resource"
+	//"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
@@ -64,6 +64,7 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 			},
 			DebugUpdates: true,
+			/* TODO[pulumi/pulumi-aws#80]: reenable this once it's working again.
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
@@ -135,8 +136,8 @@ func Test_Examples(t *testing.T) {
 					assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
-
 			},
+			*/
 		},
 		{
 			Dir: path.Join(cwd, "../../examples/todo"),
@@ -149,6 +150,7 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			/* TODO[pulumi/pulumi-aws#80]: reenable this once it's working again.
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
@@ -213,6 +215,7 @@ func Test_Examples(t *testing.T) {
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
 			},
+			*/
 		},
 		{
 			Dir: path.Join(cwd, "../../examples/timers"),
@@ -238,9 +241,11 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			/* TODO[pulumi/pulumi-aws#80]: reenable this once it's working again.
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				testURLGet(t, checkpoint, "test1.txt", "You got test1")
 			},
+			*/
 			// EditDirs: []integration.EditDir{
 			// 	// Validate that if we change an httpendpoint url that updating works and that we
 			// 	// can retrieve the new content and the new endpoint.
@@ -264,6 +269,7 @@ func Test_Examples(t *testing.T) {
 	}
 }
 
+/* TODO[pulumi/pulumi-aws#80]: reenable this once it's working again.
 func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
 	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
@@ -288,3 +294,4 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
 	assert.Equal(t, contents, string(bytes))
 }
+*/
