@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi/pkg/pulumiframework"
+	"github.com/pulumi/pulumi/pkg/operations"
 	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
@@ -69,13 +69,13 @@ func Test_Examples(t *testing.T) {
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
-				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				pulumiResources := operations.NewResourceMap(snapshot.Resources)
 				urn := resource.NewURN(checkpoint.Target, "containers", "pulumi:framework:Endpoint", "examples-containers")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.Properties["url"].StringValue()
+				baseURL := endpoint.State.Outputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `containers` endpoint")
 
 				// Validate the GET /test endpoint
@@ -154,13 +154,13 @@ func Test_Examples(t *testing.T) {
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
-				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				pulumiResources := operations.NewResourceMap(snapshot.Resources)
 				urn := resource.NewURN(checkpoint.Target, "todo", "pulumi:framework:Endpoint", "examples-todo")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
 				}
-				baseURL := endpoint.Properties["url"].StringValue()
+				baseURL := endpoint.State.Outputs["url"].StringValue()
 				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
 
 				// Validate the GET / endpoint
@@ -269,13 +269,13 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 		return
 	}
-	pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+	pulumiResources := operations.NewResourceMap(snapshot.Resources)
 	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "pulumi:framework:Endpoint", "examples-test")
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
 		return
 	}
-	baseURL := endpoint.Properties["url"].StringValue()
+	baseURL := endpoint.State.Outputs["url"].StringValue()
 	assert.NotEmpty(t, baseURL, "expected an `test` endpoint")
 
 	// Validate the GET /test1.txt endpoint

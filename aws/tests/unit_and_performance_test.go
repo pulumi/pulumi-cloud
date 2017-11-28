@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pulumi/pulumi/pkg/pulumiframework"
+	"github.com/pulumi/pulumi/pkg/operations"
 	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
@@ -75,7 +75,7 @@ func Test_Performance(t *testing.T) {
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
-				pulumiResources := pulumiframework.GetComponents(snapshot.Resources)
+				pulumiResources := operations.NewResourceMap(snapshot.Resources)
 				urn := resource.NewURN(checkpoint.Target, "performance", "pulumi:framework:Endpoint", "tests-performance")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
