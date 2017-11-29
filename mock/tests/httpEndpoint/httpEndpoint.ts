@@ -2,6 +2,7 @@
 
 import * as pulumi from "pulumi";
 pulumi.runtime.setConfig("cloud:config:provider", "mock");
+pulumi.runtime.setConfig("mock:config:httpEndpoint:port", "0");
 
 import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
