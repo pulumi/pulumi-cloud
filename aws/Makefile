@@ -7,6 +7,7 @@ export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 TESTPARALLELISM := 10
 
 build::
+	yarn install
 	yarn link pulumi @pulumi/aws @pulumi/cloud
 	tsc
 

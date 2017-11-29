@@ -5,6 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
+import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
@@ -361,6 +362,7 @@ async function runCLICommand(
 
 // Store this so we can verify `docker` command is available only once per deployment.
 let cachedDockerVersionString: string|undefined;
+let dockerPasswordStdin: boolean = false;
 
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
@@ -383,6 +385,17 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
             pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
         } catch (err) {
             throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
+        }
+
+        // Decide whether to use --password or --password-stdin based on the client version.
+        try {
+            const versionData: any = JSON.parse(cachedDockerVersionString!);
+            const clientVersion: string = versionData.Client.Version;
+            if (semver.gte(clientVersion, "17.07.0", true)) {
+                dockerPasswordStdin = true;
+            }
+        } catch (err) {
+            console.log(`Could not process Docker version (${err})`);
         }
     }
 
@@ -411,8 +424,15 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
             throw new Error("Invalid credentials");
         }
         const registry = credentials.proxyEndpoint;
-        const loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "-p", password, registry], buildPath);
+
+        let loginResult: CommandResult;
+        if (!dockerPasswordStdin) {
+            loginResult = await runCLICommand(
+                "docker", ["login", "-u", username, "-p", password, registry], buildPath);
+        } else {
+            loginResult = await runCLICommand(
+                "docker", ["login", "-u", username, "--password-stdin", registry], buildPath, false, password);
+        }
         if (loginResult.code) {
             throw new Error(`Failed to login to Docker registry ${registry}`);
         }
