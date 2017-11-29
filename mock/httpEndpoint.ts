@@ -11,10 +11,6 @@ import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
 const config = new pulumi.Config("mock:config:httpEndpoint");
-let publishPort = config.getNumber("port");
-if (publishPort === undefined) {
-    publishPort = 10321;
-}
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
@@ -161,6 +157,11 @@ class HttpDeployment implements cloud.HttpDeployment {
     private server: http.Server;
 
     constructor(app: express.Application) {
+        let publishPort = config.getNumber("port");
+        if (publishPort === undefined) {
+            publishPort = 10321;
+        }
+
         this.server = app.listen(publishPort);
         this.url = Promise.resolve(`http://localhost:${this.server.address().port}`);
         this.customDomainNames = [];
