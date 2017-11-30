@@ -226,11 +226,13 @@ export class Cluster {
                     deviceName: "/dev/xvdb",
                     volumeSize: 5, // GB
                     volumeType: "gp2", // default is "standard"
+                    deleteOnTermination: true,
                 },
                 {
                     deviceName: "/dev/xvdcz",
                     volumeSize: 50,
                     volumeType: "gp2",
+                    deleteOnTermination: true,
                 },
             ],
             securityGroups: [ instanceSecurityGroup.id ],
@@ -257,6 +259,7 @@ export class Cluster {
                     args.network.subnetIds,
                 ),
             },
+            undefined,
             dependsOn,
         );
 

@@ -1,7 +1,16 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "pulumi";
+
 export interface TopicConstructor {
-    new<T>(name: string): Topic<T>;
+    /**
+     * Allocate a new Topic with a given name.
+     *
+     * @param name The unique name of the Topic.
+     * @param parent An optional parent resource to which this resource belongs.
+     * @param dependsOn Optional additional explicit dependencies on other resources.
+     */
+    new<T>(name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Topic<T>;
 }
 
 export let Topic: TopicConstructor; // tslint:disable-line

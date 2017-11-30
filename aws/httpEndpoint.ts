@@ -101,11 +101,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly url: pulumi.Computed<string>; // the URL for this deployment.
     public /*out*/ readonly customDomainNames: pulumi.Computed<string>[]; // any custom domain names.
 
-    private static registerStaticRoutes(
-            apiName: string,
-            staticRoutes: StaticRoute[],
-            swagger: SwaggerSpec) {
-
+    private static registerStaticRoutes(apiName: string, staticRoutes: StaticRoute[], swagger: SwaggerSpec) {
         // If there are no static files or directories, then we can bail out early.
         if (staticRoutes.length === 0) {
             return;
@@ -233,7 +229,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         }
     }
 
-    private static registerRoutes(apiName: string, routes: Route[], swagger: SwaggerSpec): {[key: string]: Function} {
+    private static registerRoutes(parent: pulumi.Resource, apiName: string,
+                                  routes: Route[], swagger: SwaggerSpec): {[key: string]: Function} {
         const lambdas: {[key: string]: Function} = {};
         for (const route of routes) {
             const method: string = swaggerMethod(route.method);
@@ -261,6 +258,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     };
                     next();
                 },
+                parent,
             );
             lambdas[method + ":" + route.path] = lambda;
 
@@ -295,77 +293,73 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         return names;
     }
 
-    constructor(name: string,
-                staticRoutes: StaticRoute[],
-                routes: Route[],
-                customDomains: cloud.Domain[]) {
-        super(
-            "cloud:http:HttpEndpoint",
-            name,
-            {
-                staticRoutes: staticRoutes,
-                routes: routes,
-                customDomains: customDomains,
-            },
-            () => {
-                // Create a SwaggerSpec and then expand out all of the static files and routes.
-                const swagger: SwaggerSpec = createBaseSpec(name);
-                HttpDeployment.registerStaticRoutes(name, staticRoutes, swagger);
-                const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(name, routes, swagger);
+    constructor(name: string, staticRoutes: StaticRoute[], routes: Route[], customDomains: cloud.Domain[],
+                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
 
-                // Now stringify the resulting swagger specification and create the various API Gateway objects.
-                const api = new aws.apigateway.RestApi(name, {
-                    body: createSwaggerString(swagger),
-                });
+        super("cloud:http:HttpEndpoint", name, {
+            staticRoutes: staticRoutes,
+            routes: routes,
+            customDomains: customDomains,
+        }, parent, dependsOn);
 
-                const bodyHash = createSwaggerHash(swagger);
-                const deployment = new aws.apigateway.Deployment(`${name}_${bodyHash}`, {
-                    restApi: api,
-                    stageName: "",
-                    description: `Deployment of version ${name}_${bodyHash}`,
-                });
+        // Create a SwaggerSpec and then expand out all of the static files and routes.
+        const swagger: SwaggerSpec = createBaseSpec(name);
+        HttpDeployment.registerStaticRoutes(name, staticRoutes, swagger);
+        const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
 
-                const stage = new aws.apigateway.Stage(name, {
-                    stageName: stageName,
-                    description: "The current deployment of the API.",
-                    restApi: api,
-                    deployment: deployment,
-                });
+        // Now stringify the resulting swagger specification and create the various API Gateway objects.
+        const api = new aws.apigateway.RestApi(name, {
+            body: createSwaggerString(swagger),
+        }, this);
 
-                // Ensure that the permissions allow the API Gateway to invoke the lambdas.
-                for (const path of Object.keys(swagger.paths)) {
-                    for (let method of Object.keys(swagger.paths[path])) {
-                        const lambda = lambdas[method + ":" + path];
-                        if (lambda !== undefined) {
-                            if (method === "x-amazon-apigateway-any-method") {
-                                method = "*";
-                            }
-                            else {
-                                method = method.toUpperCase();
-                            }
-                            const permissionName = name + "_invoke_" + sha1hash(method + path);
-                            const invokePermission = new aws.lambda.Permission(permissionName, {
-                                action: "lambda:invokeFunction",
-                                function: lambda.lambda,
-                                principal: "apigateway.amazonaws.com",
-                                sourceArn: deployment.executionArn.then((arn: aws.ARN | undefined) =>
-                                    arn && (arn + stageName + "/" + method + path)),
-                            });
-                        }
+        const bodyHash = createSwaggerHash(swagger);
+        const deployment = new aws.apigateway.Deployment(`${name}_${bodyHash}`, {
+            restApi: api,
+            stageName: "",
+            description: `Deployment of version ${name}_${bodyHash}`,
+        }, this);
+
+        const stage = new aws.apigateway.Stage(name, {
+            stageName: stageName,
+            description: "The current deployment of the API.",
+            restApi: api,
+            deployment: deployment,
+        }, this);
+
+        // Ensure that the permissions allow the API Gateway to invoke the lambdas.
+        for (const path of Object.keys(swagger.paths)) {
+            for (let method of Object.keys(swagger.paths[path])) {
+                const lambda = lambdas[method + ":" + path];
+                if (lambda !== undefined) {
+                    if (method === "x-amazon-apigateway-any-method") {
+                        method = "*";
                     }
+                    else {
+                        method = method.toUpperCase();
+                    }
+                    const permissionName = name + "_invoke_" + sha1hash(method + path);
+                    const invokePermission = new aws.lambda.Permission(permissionName, {
+                        action: "lambda:invokeFunction",
+                        function: lambda.lambda,
+                        principal: "apigateway.amazonaws.com",
+                        sourceArn: deployment.executionArn.then((arn: aws.ARN | undefined) =>
+                            arn && (arn + stageName + "/" + method + path)),
+                    }, this);
                 }
+            }
+        }
 
-                // If there are any custom domains, attach them now.
-                const customDomainNames: pulumi.Computed<string>[] =
-                    HttpDeployment.registerCustomDomains(name, api, customDomains);
+        // If there are any custom domains, attach them now.
+        const customDomainNames: pulumi.Computed<string>[] =
+            HttpDeployment.registerCustomDomains(name, api, customDomains);
 
-                // Finally, manufacture a URL and set it as an output property.
-                return {
-                    url: deployment.invokeUrl.then(url => url ? url + stageName : undefined),
-                    customDomainNames: customDomainNames,
-                };
-            },
-        );
+        // Finally, manufacture a URL and set it as an output property.
+        this.url = deployment.invokeUrl.then(url => url ? (url + stageName + "/") : undefined);
+        this.customDomainNames = customDomainNames;
+        super.registerOutputs({
+            url: this.url,
+            customDomainNames: this.customDomainNames,
+        });
     }
 }
 
