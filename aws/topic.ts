@@ -17,18 +17,11 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
 
     // Outside API (constructor and methods)
 
-    constructor(name: string) {
-        let topic: aws.sns.Topic | undefined;
-        super(
-            "cloud:topic:Topic",
-            name,
-            {},
-            () => {
-                topic = new aws.sns.Topic(name);
-            },
-        );
+    constructor(name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+        super("cloud:topic:Topic", name, {}, parent, dependsOn);
+
         this.name = name;
-        this.topic = topic!;
+        this.topic = new aws.sns.Topic(name, {}, this);
 
         this.publish = (item) => {
             const awssdk = require("aws-sdk");

@@ -1,5 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "pulumi";
+
 /**
  * Action is a handler that performs an action in response to a timer firing.
  */
@@ -56,8 +58,11 @@ export interface HourlySchedule {
  * @param name The name of this timer.
  * @param options The interval between firing events on the timer.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function interval(name: string, options: IntervalRate, handler: Action): void;
+export declare function interval(name: string, options: IntervalRate, handler: Action,
+                                 parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;
 
 /**
  * A cron timer, which fires on based on a specificied cron schedule.
@@ -67,8 +72,11 @@ export declare function interval(name: string, options: IntervalRate, handler: A
  * @param name The name of this timer.
  * @param cronTab A cronTab that specifies that times at which the timer will fire.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function cron(name: string, cronTab: string, handler: Action): void;
+export declare function cron(name: string, cronTab: string, handler: Action,
+                             parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;
 
 /**
  * A daily timer, firing each day, on the day (at UTC midnight).
@@ -76,8 +84,11 @@ export declare function cron(name: string, cronTab: string, handler: Action): vo
  * @param name The name of this timer.
  * @param schedule The UTC hour and minute at which to fire each day.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function daily(name: string, handler: Action): void;
+export declare function daily(name: string, handler: Action,
+                              parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;
 
 /**
  * A daily timer, firing at the specified UTC hour and minute each day.
@@ -85,16 +96,22 @@ export declare function daily(name: string, handler: Action): void;
  * @param name The name of this timer.
  * @param schedule The UTC hour and minute at which to fire each day.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function daily(name: string, schedule: DailySchedule, handler: Action): void;
+export declare function daily(name: string, schedule: DailySchedule, handler: Action,
+                              parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;
 
 /**
  * An hourly timer, firing each hour, on the hour.
  *
  * @param name The name of this timer.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function hourly(name: string, handler: Action): void;
+export declare function hourly(name: string, handler: Action,
+                               parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;
 
 /**
  * An hourly timer, firing at the specified UTC minute each hour.
@@ -102,6 +119,8 @@ export declare function hourly(name: string, handler: Action): void;
  * @param name The name of this timer.
  * @param schedule The UTC minute at which to fire each day.
  * @param handler A handler to invoke when the timer fires.
+ * @param parent An optional parent resource to which this resource belongs.
+ * @param dependsOn Optional additional explicit dependencies on other resources.
  */
-export declare function hourly(name: string, schedule: HourlySchedule, handler: Action): void;
-
+export declare function hourly(name: string, schedule: HourlySchedule, handler: Action,
+                               parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void;

@@ -36,7 +36,8 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
 
     // Outside API (constructor and methods)
 
-    constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType) {
+    constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType,
+                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
         if (primaryKey === undefined) {
             primaryKey = "id";
         }
@@ -44,30 +45,24 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             primaryKeyType = "string";
         }
 
-        let tableName: pulumi.Computed<string>;
-        super(
-            "cloud:table:Table",
-            name,
-            {
-                primaryKey: primaryKey,
-                primaryKeyType: primaryKeyType,
-            },
-            () => {
-                const table = new aws.dynamodb.Table(name, {
-                    attribute: [
-                        {
-                            name: primaryKey,
-                            type: pulumiKeyTypeToDynamoKeyType(primaryKeyType!),
-                        },
-                    ],
-                    hashKey: primaryKey,
-                    readCapacity: 5,
-                    writeCapacity: 5,
-                });
-                tableName = table.name;
-            },
-        );
+        super("cloud:table:Table", name, {
+            primaryKey: primaryKey,
+            primaryKeyType: primaryKeyType,
+        }, parent, dependsOn);
 
+        const table = new aws.dynamodb.Table(name, {
+            attribute: [
+                {
+                    name: primaryKey,
+                    type: pulumiKeyTypeToDynamoKeyType(primaryKeyType!),
+                },
+            ],
+            hashKey: primaryKey,
+            readCapacity: 5,
+            writeCapacity: 5,
+        }, this);
+
+        const tableName: pulumi.Computed<string> = table.name;
         const db = () => {
             const awssdk: typeof _awsTypesOnly = require("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();

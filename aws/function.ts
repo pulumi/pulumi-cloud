@@ -17,49 +17,38 @@ export class Function extends pulumi.ComponentResource {
     public readonly handler: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
 
-    constructor(name: string, handler: aws.serverless.Handler) {
-        let lambda: aws.lambda.Function | undefined;
-        super(
-            "cloud:function:Function",
-            name,
-            {
-                handler: handler,
-            },
-            () => {
-                // First allocate a function.
-                const options: aws.serverless.FunctionOptions = {
-                    policies: [...computePolicies],
-                    deadLetterConfig: {
-                        targetArn: getUnhandledErrorTopic().arn,
-                    },
-                    memorySize: functionMemorySize,
-                };
-                if (runLambdaInVPC) {
-                    const network: Network | undefined = getNetwork();
-                    // TODO[terraform-providers/terraform-provider-aws#1507]:
-                    // Updates which cause existing Lambdas to need to add VPC
-                    // access will currently fail due to an issue in the
-                    // Terraform provider.
-                    options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
-                    options.vpcConfig = {
-                        securityGroupIds: network!.securityGroupIds,
-                        subnetIds: network!.subnetIds,
-                    };
-                }
-                lambda = new aws.serverless.Function(name, options, handler).lambda;
+    constructor(name: string, handler: aws.serverless.Handler,
+                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+        super("cloud:function:Function", name, { handler: handler }, parent, dependsOn);
 
-                // And then a log group and subscription filter for that lambda.
-                const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
-                    logGroup: new aws.cloudwatch.LogGroup(`${name}-func-logs`, {
-                        name: lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
-                        retentionInDays: 1,
-                    }),
-                    destinationArn: getLogCollector().arn,
-                    filterPattern: "",
-                });
+        // First allocate a function.
+        const options: aws.serverless.FunctionOptions = {
+            policies: [...computePolicies],
+            deadLetterConfig: {
+                targetArn: getUnhandledErrorTopic().arn,
             },
-        );
-        this.lambda = lambda!;
+            memorySize: functionMemorySize,
+        };
+        if (runLambdaInVPC) {
+            const network: Network | undefined = getNetwork();
+            // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
+            //     add VPC access will currently fail due to an issue in the Terraform provider.
+            options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+            options.vpcConfig = {
+                securityGroupIds: network!.securityGroupIds,
+                subnetIds: network!.subnetIds,
+            };
+        }
+        this.lambda = new aws.serverless.Function(name, options, handler, this).lambda;
+
+        // And then a log group and subscription filter for that lambda.
+        const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
+            logGroup: new aws.cloudwatch.LogGroup(`${name}-func-logs`, {
+                name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
+                retentionInDays: 1,
+            }),
+            destinationArn: getLogCollector().arn,
+            filterPattern: "",
+        }, this);
     }
 }
-

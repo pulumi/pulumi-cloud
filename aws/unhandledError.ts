@@ -7,9 +7,8 @@ import * as sns from "./sns";
 
 let unhandledErrorTopic: aws.sns.Topic | undefined;
 export function getUnhandledErrorTopic(): aws.sns.Topic {
-    if (unhandledErrorTopic === undefined) {
-        unhandledErrorTopic = pulumi.Resource.runInParentlessScope(
-            () => new aws.sns.Topic("unhandled-error-topic", {}));
+    if (!unhandledErrorTopic) {
+        unhandledErrorTopic = new aws.sns.Topic("unhandled-error-topic");
     }
     return unhandledErrorTopic;
 }

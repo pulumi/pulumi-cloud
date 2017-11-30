@@ -9,7 +9,17 @@ import * as pulumi from "pulumi";
 export type PrimaryKeyType = "string" | "number" | "boolean";
 
 export interface TableConstructor {
-    new (name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType): Table;
+    /**
+     * Creates a new Table.
+     *
+     * @param name A unique name for the table.
+     * @param primaryKey An optional primary key name.
+     * @param primaryKeyType An optional primary key type.
+     * @param parent An optional parent resource to which this resource belongs.
+     * @param dependsOn Optional additional explicit dependencies on other resources.
+     */
+    new (name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType,
+         parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Table;
 }
 
 export let Table: TableConstructor; // tslint:disable-line
