@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
+	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
 func Test_Examples(t *testing.T) {
@@ -31,7 +33,112 @@ func Test_Examples(t *testing.T) {
 	}
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "../../examples/crawler"),
+			Dir: path.Join(cwd, "tests/unit"),
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				hitUnitTestsEndpoint(t, checkpoint)
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/tests/unit/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint)
+					},
+				},
+				{
+					Dir: cwd + "/tests/unit/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+						hitUnitTestsEndpoint(t, checkpoint)
+					},
+				},
+			},
+		},
+
+		{
+			Dir: path.Join(cwd, "/tests/performance"),
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+					return
+				}
+				pulumiResources := operations.NewResourceMap(snapshot.Resources)
+				urn := resource.NewURN(checkpoint.Target, "performance", "cloud:http:HttpEndpoint", "tests-performance")
+				endpoint := pulumiResources[urn]
+				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
+					return
+				}
+				baseURL := endpoint.State.Outputs["url"].StringValue()
+				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
+
+				// Validate the GET /perf endpoint
+				//values url.Values := {}
+
+				dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
+				dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
+
+				resp, err := http.Get(baseURL + "/start-performance-tests?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
+				assert.NoError(t, err, "expected to be able to GET /start-performance-tests")
+
+				contentType := resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html", contentType)
+
+				_, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				assert.Equal(t, 200, resp.StatusCode)
+
+				start := time.Now()
+				for true {
+					elapsed := time.Now().Sub(start)
+
+					// lambdas can ony run up to 5 minutes.  So if we go to 6, then there's no point
+					// continuing.
+					if elapsed.Minutes() >= 6 {
+						assert.Fail(t, "Performance tests did not finish")
+						break
+					}
+
+					resp, err := http.Get(baseURL + "/check-performance-tests")
+					assert.NoError(t, err, "expected to be able to GET /check-performance-tests")
+
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					assert.Equal(t, 200, resp.StatusCode)
+					t.Logf("GET %v [%v/%v]: %v", baseURL+"/check-performance-tests", resp.StatusCode, contentType, string(bytes))
+
+					var v struct {
+						Status string `json:"status"`
+					}
+					err = json.Unmarshal(bytes, &v)
+					assert.NoError(t, err)
+					if v.Status == "complete" {
+						break
+					}
+
+					time.Sleep(5 * time.Second)
+				}
+			},
+		},
+
+		{
+			Dir: path.Join(cwd, "../examples/crawler"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
@@ -42,7 +149,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../../examples/countdown"),
+			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
 				"aws:config:region": region,
 				// TODO[pulumi/pulumi-cloud#138]: Would love to use this example to test private networking for
@@ -55,7 +162,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../../examples/containers"),
+			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
 				"aws:config:region":               region,
 				"cloud-aws:config:ecsAutoCluster": "true",
@@ -138,7 +245,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../../examples/todo"),
+			Dir: path.Join(cwd, "../examples/todo"),
 
 			Config: map[string]string{
 				"aws:config:region":     region,
@@ -214,7 +321,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../../examples/timers"),
+			Dir: path.Join(cwd, "../examples/timers"),
 			Config: map[string]string{
 				"aws:config:region":     region,
 				"cloud:config:provider": "aws",
@@ -227,7 +334,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../../examples/httpEndpoint"),
+			Dir: path.Join(cwd, "../examples/httpEndpoint"),
 
 			Config: map[string]string{
 				"aws:config:region":     region,
@@ -286,4 +393,39 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 	assert.NoError(t, err)
 	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
 	assert.Equal(t, contents, string(bytes))
+}
+
+func hitUnitTestsEndpoint(
+	t *testing.T,
+	checkpoint stack.Checkpoint) {
+
+	var packageName tokens.PackageName = "unittests"
+	var endpointName tokens.QName = "tests-unittests"
+	var urlPortion = "/unittests"
+
+	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+		return
+	}
+	pulumiResources := operations.NewResourceMap(snapshot.Resources)
+	urn := resource.NewURN(checkpoint.Target, packageName, "cloud:http:HttpEndpoint", endpointName)
+	endpoint := pulumiResources[urn]
+	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
+		return
+	}
+	baseURL := endpoint.State.Outputs["url"].StringValue()
+	assert.NotEmpty(t, baseURL, fmt.Sprintf("expected a `%v` endpoint", endpointName))
+
+	// Validate the GET /unittests endpoint
+
+	resp, err := http.Get(baseURL + urlPortion)
+	assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion)
+
+	contentType := resp.Header.Get("Content-Type")
+	assert.Equal(t, "application/json", contentType)
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	t.Logf("GET %v [%v/%v]: %v", baseURL+urlPortion, resp.StatusCode, contentType, string(bytes))
 }
