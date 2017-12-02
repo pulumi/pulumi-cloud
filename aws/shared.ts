@@ -68,7 +68,7 @@ export function getCluster(): Cluster | undefined {
             // above - create a cluster in that network.
             cluster = new Cluster(commonPrefix, {
                 network: getNetwork()!,
-                addEFS: config.ecsAutoClusterUseEFS,
+                addEFS: config.ecsAutoClusterUseEFS === undefined ? true : config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
                 minSize: config.ecsAutoClusterMinSize,

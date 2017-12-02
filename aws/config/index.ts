@@ -122,7 +122,7 @@ export let ecsAutoClusterECSOptimizedAMIName = config.get("ecsAutoClusterECSOpti
 /**
  * Optionally auto-provision an Elastic File System for the Cluster.  Defaults to true.
  */
-export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS") || true;
+export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS");
 
 /**
  * setEcsCluster configures the ambient ECS cluster imperatively rather than using standard configuration.
