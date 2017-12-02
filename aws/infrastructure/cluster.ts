@@ -30,9 +30,10 @@ export interface ClusterArgs {
     /**
      * The policy to apply to the cluster instance role.
      *
-     * The default is `arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role`.
+     * The default is `["arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role",
+     * "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"]`.
      */
-    instanceRolePolicyARN?: string;
+    instanceRolePolicyARNs?: string[];
     /**
      * The minimum size of the cluster. Defaults to 2.
      */
@@ -104,10 +105,15 @@ export class Cluster {
         const instanceRole = new aws.iam.Role(`${name}-instance-role`, {
             assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
         });
-        const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-instance-role-policy`, {
-            role: instanceRole,
-            policyArn: args.instanceRolePolicyARN || aws.iam.AmazonEC2ContainerServiceforEC2Role,
-        });
+        const policyARNs = args.instanceRolePolicyARNs
+            || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
+        for (let i = 0; i < policyARNs.length; i++) {
+            const policyARN = policyARNs[i];
+            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-instance-role-policy-${i}`, {
+                role: instanceRole,
+                policyArn: policyARN,
+            });
+        }
         const instanceProfile = new aws.iam.InstanceProfile(`${name}-instance-profile`, {
             role: instanceRole,
         });

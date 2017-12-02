@@ -94,9 +94,10 @@ export let ecsAutoCluster = config.getBoolean("ecsAutoCluster") || false;
 export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");
 /**
  * The EC2 instance role policy ARN to use for the cluster.  Defaults to
- * `arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role`.
+ * `arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role,
+ *  arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess`.
  */
-export let ecsAutoClusterInstanceRolePolicyARN = config.get("ecsAutoClusterInstanceRolePolicyARN");
+export let ecsAutoClusterInstanceRolePolicyARNs = config.get("ecsAutoClusterInstanceRolePolicyARNs");
 /**
  * The minimum size of the cluster. Defaults to 2.
  */

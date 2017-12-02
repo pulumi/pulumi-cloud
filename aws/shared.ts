@@ -58,13 +58,18 @@ export function getCluster(): Cluster | undefined {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {
         if (config.ecsAutoCluster) {
+            // Translate the comma-seperated list into an array or undefined.
+            let instanceRolePolicyARNs;
+            if  (config.ecsAutoClusterInstanceRolePolicyARNs) {
+                instanceRolePolicyARNs = (config.ecsAutoClusterInstanceRolePolicyARNs || "").split(",");
+            }
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new Cluster(commonPrefix, {
                 network: getNetwork()!,
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
-                instanceRolePolicyARN: config.ecsAutoClusterInstanceRolePolicyARN,
+                instanceRolePolicyARNs: instanceRolePolicyARNs,
                 minSize: config.ecsAutoClusterMinSize,
                 maxSize: config.ecsAutoClusterMaxSize,
                 publicKey: config.ecsAutoClusterPublicKey,

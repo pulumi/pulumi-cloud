@@ -14,12 +14,12 @@ Pulumi's framework for building modern cloud applications.
 ### Added
 - [cloud] Added `Response#getHeader` function.
 - [cloud-aws] New config settings have been added to enable overriding default cluster EC2 instance roles and to
-  suppress creating a File System as part of a cluster. (`cloud-aws:config:ecsAutoClusterInstanceRolePolicyARN` and
+  suppress creating a File System as part of a cluster. (`cloud-aws:config:ecsAutoClusterInstanceRolePolicyARNs` and
   `cloud-aws:config:ecsAutoClusterUseEFS`)
 
 ### Changed
 - [cloud-aws] The default permissions for cluster EC2 instances and for function and container-based compute have been
-  reduced, to `AmazonEC2ContainerServiceforEC2Role` and `AWSLambdaFullAccess` respectively.
+  reduced.
 
 ## Released
 
@@ -27,7 +27,9 @@ Pulumi's framework for building modern cloud applications.
 
 ### Added
 - [cloud-aws] The `ecsOptimizedAMIName` config variable can now be used to configure which ECS Optimized AMI will be
-  used in an automatically created `Cluster`. ### Changed
+  used in an automatically created `Cluster`.
+  
+### Changed
 - [cloud] `Table` is now specified to perform strongly consistent reads.  Previously reads were eventually consistent.
 - [cloud-aws] The `url` returned from `HttpEndpoint#publish` is now the correct base URL (appends the `/stage` part).
 - [cloud] `Service#getEndpoint` can now safely be used at deployment time (as well as runtime).
