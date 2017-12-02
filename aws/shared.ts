@@ -16,7 +16,6 @@ export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 // The IAM Role Policies to apply to compute for both Lambda and ECS
 const defaultComputePolicies = [
     aws.iam.AWSLambdaFullAccess,                 // Provides wide access to "serverless" services (Dynamo, S3, etc.)
-    aws.iam.AmazonEC2ContainerServiceFullAccess, // Required for lambda compute to be able to discover ECS endpoints
 ];
 export let computePolicies: aws.ARN[] = config.computeIAMRolePolicyARNs
     ? config.computeIAMRolePolicyARNs.split(",")
@@ -63,8 +62,9 @@ export function getCluster(): Cluster | undefined {
             // above - create a cluster in that network.
             cluster = new Cluster(commonPrefix, {
                 network: getNetwork()!,
-                addEFS: true,
+                addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
+                instanceRolePolicyARN: config.ecsAutoClusterInstanceRolePolicyARN,
                 minSize: config.ecsAutoClusterMinSize,
                 maxSize: config.ecsAutoClusterMaxSize,
                 publicKey: config.ecsAutoClusterPublicKey,
