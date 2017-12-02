@@ -28,6 +28,13 @@ export interface ClusterArgs {
      */
     instanceType?: string;
     /**
+     * The policy to apply to the cluster instance role.
+     *
+     * The default is `["arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role",
+     * "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"]`.
+     */
+    instanceRolePolicyARNs?: string[];
+    /**
      * The minimum size of the cluster. Defaults to 2.
      */
     minSize?: number;
@@ -95,51 +102,18 @@ export class Cluster {
                 },
             }],
         };
-        const instanceRolePolicyDoc: aws.iam.PolicyDocument = {
-            Version: "2012-10-17",
-            Statement: [{
-                Effect: "Allow",
-                Action: [
-                    "apigateway:*",
-                    "autoscaling:CompleteLifecycleAction",
-                    "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeLifecycleHooks",
-                    "autoscaling:SetInstanceHealth",
-                    "ec2:DescribeInstances",
-                    "ecr:BatchCheckLayerAvailability",
-                    "ecr:BatchGetImage",
-                    "ecr:GetAuthorizationToken",
-                    "ecr:GetDownloadUrlForLayer",
-                    "ecs:CreateCluster",
-                    "ecs:DeregisterContainerInstance",
-                    "ecs:DiscoverPollEndpoint",
-                    "ecs:Poll",
-                    "ecs:RegisterContainerInstance",
-                    "ecs:RegisterTaskDefinition",
-                    "ecs:RunTask",
-                    "ecs:StartTelemetrySession",
-                    "ecs:Submit*",
-                    "events:*",
-                    "iam:*",
-                    "lambda:*",
-                    "logs:*",
-                    "logs:CreateLogStream",
-                    "logs:DescribeLogStreams",
-                    "logs:GetLogEvents",
-                    "logs:PutLogEvents",
-                    "s3:*",
-                    "sns:*",
-                ],
-                Resource: "*",
-            }],
-        };
         const instanceRole = new aws.iam.Role(`${name}-instance-role`, {
             assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
         });
-        const instanceRolePolicy = new aws.iam.RolePolicy(`${name}-instance-role-policy`, {
-            role: instanceRole.id,
-            policy: JSON.stringify(instanceRolePolicyDoc),
-        });
+        const policyARNs = args.instanceRolePolicyARNs
+            || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
+        for (let i = 0; i < policyARNs.length; i++) {
+            const policyARN = policyARNs[i];
+            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-instance-role-policy-${i}`, {
+                role: instanceRole,
+                policyArn: policyARN,
+            });
+        }
         const instanceProfile = new aws.iam.InstanceProfile(`${name}-instance-profile`, {
             role: instanceRole,
         });
@@ -338,6 +312,11 @@ async function getInstanceUserData(
             AWS_REGION=$(echo $AWS_AVAILABILITY_ZONE | sed 's/.$//')
 
             ${fileSystemRuncmdBlock}
+
+            # Disable container access to EC2 metadata instance
+            # See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
+            iptables --insert FORWARD 1 --in-interface docker+ --destination 169.254.169.254/32 --jump DROP
+            service iptables save
 
             # cloud-init docs are unclear about whether $INSTANCE_ID is available in runcmd.
             EC2_INSTANCE_ID=$(curl -s 169.254.169.254/2016-09-02/meta-data/instance-id)

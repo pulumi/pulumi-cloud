@@ -93,6 +93,12 @@ export let ecsAutoCluster = config.getBoolean("ecsAutoCluster") || false;
  */
 export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");
 /**
+ * The EC2 instance role policy ARN to use for the cluster.  Defaults to
+ * `arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role,
+ *  arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess`.
+ */
+export let ecsAutoClusterInstanceRolePolicyARNs = config.get("ecsAutoClusterInstanceRolePolicyARNs");
+/**
  * The minimum size of the cluster. Defaults to 2.
  */
 export let ecsAutoClusterMinSize = config.getNumber("ecsAutoClusterMinSize");
@@ -113,6 +119,10 @@ export let ecsAutoClusterPublicKey = config.get("ecsAutoClusterPublicKey");
  * See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html for valid values.
  */
 export let ecsAutoClusterECSOptimizedAMIName = config.get("ecsAutoClusterECSOptimizedAMIName");
+/**
+ * Optionally auto-provision an Elastic File System for the Cluster.  Defaults to true.
+ */
+export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS");
 
 /**
  * setEcsCluster configures the ambient ECS cluster imperatively rather than using standard configuration.
