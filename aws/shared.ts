@@ -16,6 +16,7 @@ export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 // The IAM Role Policies to apply to compute for both Lambda and ECS
 const defaultComputePolicies = [
     aws.iam.AWSLambdaFullAccess,                 // Provides wide access to "serverless" services (Dynamo, S3, etc.)
+    aws.iam.AmazonEC2ContainerServiceFullAccess, // Required for lambda compute to be able to run Tasks
 ];
 export let computePolicies: aws.ARN[] = config.computeIAMRolePolicyARNs
     ? config.computeIAMRolePolicyARNs.split(",")

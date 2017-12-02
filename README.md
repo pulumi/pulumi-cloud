@@ -18,8 +18,7 @@ Pulumi's framework for building modern cloud applications.
   `cloud-aws:config:ecsAutoClusterUseEFS`)
 
 ### Changed
-- [cloud-aws] The default permissions for cluster EC2 instances and for function and container-based compute have been
-  reduced.
+- [cloud-aws] The default permissions for cluster EC2 instances have been reduced.
 
 ## Released
 
