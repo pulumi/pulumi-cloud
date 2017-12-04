@@ -72,12 +72,12 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "performance", "cloud:http:HttpEndpoint", "tests-performance")
+				urn := resource.NewURN(checkpoint.Stack, "performance", "cloud:http:HttpEndpoint", "tests-performance")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -172,12 +172,12 @@ func Test_Examples(t *testing.T) {
 			},
 			DebugUpdates: true,
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "containers", "cloud:http:HttpEndpoint", "examples-containers")
+				urn := resource.NewURN(checkpoint.Stack, "containers", "cloud:http:HttpEndpoint", "examples-containers")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -256,12 +256,12 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Target, "todo", "cloud:http:HttpEndpoint", "examples-todo")
+				urn := resource.NewURN(checkpoint.Stack, "todo", "cloud:http:HttpEndpoint", "examples-todo")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -371,12 +371,12 @@ func Test_Examples(t *testing.T) {
 }
 
 func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
-	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 		return
 	}
 	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Target, "httpEndpoint", "cloud:http:HttpEndpoint", "examples-test")
+	urn := resource.NewURN(checkpoint.Stack, "httpEndpoint", "cloud:http:HttpEndpoint", "examples-test")
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
 		return
@@ -403,12 +403,12 @@ func hitUnitTestsEndpoint(
 	var endpointName tokens.QName = "tests-unittests"
 	var urlPortion = "/unittests"
 
-	_, _, snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 		return
 	}
 	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Target, packageName, "cloud:http:HttpEndpoint", endpointName)
+	urn := resource.NewURN(checkpoint.Stack, packageName, "cloud:http:HttpEndpoint", endpointName)
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 		return
