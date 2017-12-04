@@ -115,8 +115,7 @@ export interface ServeStaticOptions {
  * ```javascript
  * let api = new HttpEndpoint("myapi")
  * api.get("/", (req, res) => res.json({hello: "world"}));
- * api.publish();
- * api.url.mapValue(url =>
+ * api.publish().url.then(url =>
  *   console.log(`Serving myapi at ${url}`)
  * );
  * ```
