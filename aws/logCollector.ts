@@ -2,9 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
-import { commonPrefix } from "./shared";
-
-const logCollectorName = `${commonPrefix}-log-collector`;
+import { createNameWithStackInfo } from "./shared";
 
 // The type of the Lambda payload from Cloudwatch Logs subscriptions.
 // See http://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-cloudwatch-logs
@@ -71,7 +69,7 @@ export function getLogCollector(): aws.lambda.Function {
     if (logCollector === undefined) {
         // Lazily construct the application logCollector lambda; do it in a scope where we don't have a parent,
         // so the logCollector doesn't get falsely attributed to the caller.
-        logCollector = new LogCollector(logCollectorName);
+        logCollector = new LogCollector(createNameWithStackInfo(`-global`, 56));
     }
     return logCollector.lambda;
 }
