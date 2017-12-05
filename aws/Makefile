@@ -2,6 +2,8 @@ PROJECT_NAME := Pulumi Cloud Framework (AWS Implementation)
 NODE_MODULE_NAME := @pulumi/cloud-aws
 include ../build/common.mk
 
+VERSION := $(shell git describe --tags --dirty 2>/dev/null)
+
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 TESTPARALLELISM := 10
@@ -10,6 +12,7 @@ build::
 	yarn install
 	yarn link pulumi @pulumi/aws @pulumi/cloud
 	tsc
+	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
