@@ -8,6 +8,7 @@ publish:
 	./scripts/publish.sh
 
 .PHONY: queue_sdk_build
+queue_sdk_build:
 	$(call STEP_MESSAGE)
 	./scripts/queue-sdk-build.sh
 
