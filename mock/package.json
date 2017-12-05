@@ -1,6 +1,6 @@
 {
     "name": "@pulumi/cloud-mock",
-    "version": "0.1",
+    "version": "${VERSION}",
     "devDependencies": {
         "@types/node": "^8.0.26",
         "@types/cron": "^1.2.1",

@@ -1,6 +1,6 @@
 {
     "name": "@pulumi/cloud",
-    "version": "0.6.1",
+    "version": "${VERSION}",
     "types": "types.d.ts",
     "devDependencies": {
         "@types/node": "^8.0.26",
