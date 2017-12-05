@@ -77,7 +77,7 @@ func Test_Examples(t *testing.T) {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "performance", "pulumi:pulumi:Stack", "cloud:http:HttpEndpoint", "tests-performance")
+				urn := resource.NewURN(checkpoint.Stack, "performance", "", "cloud:http:HttpEndpoint", "tests-performance")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -177,7 +177,7 @@ func Test_Examples(t *testing.T) {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "containers", "pulumi:pulumi:Stack", "cloud:http:HttpEndpoint", "examples-containers")
+				urn := resource.NewURN(checkpoint.Stack, "containers", "", "cloud:http:HttpEndpoint", "examples-containers")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -261,7 +261,7 @@ func Test_Examples(t *testing.T) {
 					return
 				}
 				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "todo", "pulumi:pulumi:Stack", "cloud:http:HttpEndpoint", "examples-todo")
+				urn := resource.NewURN(checkpoint.Stack, "todo", "", "cloud:http:HttpEndpoint", "examples-todo")
 				endpoint := pulumiResources[urn]
 				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 					return
@@ -376,7 +376,7 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 		return
 	}
 	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Stack, "httpEndpoint", "pulumi:pulumi:Stack", "cloud:http:HttpEndpoint", "examples-test")
+	urn := resource.NewURN(checkpoint.Stack, "httpEndpoint", "", "cloud:http:HttpEndpoint", "examples-test")
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
 		return
@@ -408,7 +408,7 @@ func hitUnitTestsEndpoint(
 		return
 	}
 	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Stack, packageName, "pulumi:pulumi:Stack", "cloud:http:HttpEndpoint", endpointName)
+	urn := resource.NewURN(checkpoint.Stack, packageName, "", "cloud:http:HttpEndpoint", endpointName)
 	endpoint := pulumiResources[urn]
 	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
 		return
