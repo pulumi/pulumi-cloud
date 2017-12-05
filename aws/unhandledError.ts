@@ -3,12 +3,13 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
+import { createNameWithStackInfo } from "./shared";
 import * as sns from "./sns";
 
 let unhandledErrorTopic: aws.sns.Topic | undefined;
 export function getUnhandledErrorTopic(): aws.sns.Topic {
     if (!unhandledErrorTopic) {
-        unhandledErrorTopic = new aws.sns.Topic("unhandled-error-topic");
+        unhandledErrorTopic = new aws.sns.Topic(createNameWithStackInfo(`-global-unhandled-error`, -1));
     }
     return unhandledErrorTopic;
 }

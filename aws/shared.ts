@@ -6,9 +6,20 @@ import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 
-// commonPrefix is the resource prefix we'll use for all resources we auto-provision.  In general, it's safe to use
-// these for top-level components like Network and Cluster, because they suffix all internal resources they provision.
-export const commonPrefix = `pulumi-${pulumi.getStack()}`;
+// nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
+// it's safe to use these for top-level components like Network and Cluster, because they suffix all
+// internal resources they provision.
+const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
+export const commonPrefix = nameWithStackInfo;
+
+export function createNameWithStackInfo(suffix: string, trimLength: number) {
+    const result = nameWithStackInfo + suffix;
+    if (trimLength < 0) {
+        return result;
+    }
+
+    return result.substr(0, trimLength);
+}
 
 // Whether or not we should run lamabda-based compute in the private network
 export let runLambdaInVPC: boolean = config.usePrivateNetwork;
@@ -30,7 +41,7 @@ export function getNetwork(): Network | undefined {
     if (!network) {
         if (config.usePrivateNetwork || config.ecsAutoCluster) {
             // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
-            network = new Network(commonPrefix, {
+            network = new Network(createNameWithStackInfo("-global", -1), {
                 privateSubnets: config.usePrivateNetwork,
             });
         } else if (config.externalVpcId) {
@@ -66,7 +77,7 @@ export function getCluster(): Cluster | undefined {
             }
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
-            cluster = new Cluster(commonPrefix, {
+            cluster = new Cluster(createNameWithStackInfo("-global", -1), {
                 network: getNetwork()!,
                 addEFS: config.ecsAutoClusterUseEFS === undefined ? true : config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,

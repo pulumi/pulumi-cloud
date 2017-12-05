@@ -86,7 +86,7 @@ export class Cluster {
         }
 
         // First create an ECS cluster.
-        const cluster = new aws.ecs.Cluster(`${name}-cluster`);
+        const cluster = new aws.ecs.Cluster(name);
         this.ecsClusterARN = cluster.id;
 
         // Next create all of the IAM/security resources.
@@ -102,19 +102,19 @@ export class Cluster {
                 },
             }],
         };
-        const instanceRole = new aws.iam.Role(`${name}-instance-role`, {
+        const instanceRole = new aws.iam.Role(name, {
             assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
         });
         const policyARNs = args.instanceRolePolicyARNs
             || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
         for (let i = 0; i < policyARNs.length; i++) {
             const policyARN = policyARNs[i];
-            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-instance-role-policy-${i}`, {
+            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${i}`, {
                 role: instanceRole,
                 policyArn: policyARN,
             });
         }
-        const instanceProfile = new aws.iam.InstanceProfile(`${name}-instance-profile`, {
+        const instanceProfile = new aws.iam.InstanceProfile(name, {
             role: instanceRole,
         });
 
@@ -128,7 +128,7 @@ export class Cluster {
         // IDEA: Can we re-use the network's default security group instead of creating a specific
         // new security group in the Cluster layer?  This may allow us to share a single Security Group
         // across both instance and Lambda compute.
-        const instanceSecurityGroup = new aws.ec2.SecurityGroup(`${name}-instance-security-group`, {
+        const instanceSecurityGroup = new aws.ec2.SecurityGroup(name, {
             vpcId: args.network.vpcId,
             ingress: [
                 // Expose SSH
@@ -154,8 +154,8 @@ export class Cluster {
         // If requested, add EFS file system and mount targets in each subnet.
         let filesystem: aws.efs.FileSystem | undefined;
         if (args.addEFS) {
-            filesystem = new aws.efs.FileSystem(`${name}-filesystem`);
-            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-filesystem-securitygroup`, {
+            filesystem = new aws.efs.FileSystem(name);
+            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-fs`, {
                 vpcId: args.network.vpcId,
                 ingress: [
                     // Allow NFS traffic from the instance security group
@@ -169,7 +169,7 @@ export class Cluster {
             });
             for (let i = 0; i <  args.network.subnetIds.length; i++) {
                 const subnetId = args.network.subnetIds[i];
-                const mountTarget = new aws.efs.MountTarget(`${name}-mounttarget-${i}`, {
+                const mountTarget = new aws.efs.MountTarget(`${name}-${i}`, {
                     fileSystemId: filesystem.id,
                     subnetId: subnetId,
                     securityGroups: [ efsSecurityGroup.id ],
@@ -181,14 +181,14 @@ export class Cluster {
         // If requested, add a new EC2 KeyPair for SSH access to the instances.
         let keyName: pulumi.Computed<string> | undefined;
         if (args.publicKey) {
-            const key = new aws.ec2.KeyPair(`${name}-keypair`, {
+            const key = new aws.ec2.KeyPair(name, {
                 publicKey: args.publicKey,
             });
             keyName = key.keyName;
         }
 
         // Specify the intance configuration for the cluster.
-        const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(`${name}-instance-launch-configuration`, {
+        const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(name, {
             imageId: getEcsAmiId(args.ecsOptimizedAMIName),
             instanceType: args.instanceType || "t2.micro",
             keyName: keyName,
@@ -224,7 +224,7 @@ export class Cluster {
             }
         }
         this.autoScalingGroupStack = new aws.cloudformation.Stack(
-            `${name}-asg-stack`,
+            name,
             {
                 templateBody: getCloudFormationAsgTemplate(
                     args.minSize || 2,
@@ -234,9 +234,7 @@ export class Cluster {
                 ),
             },
             undefined,
-            dependsOn,
-        );
-
+            dependsOn);
     }
 }
 

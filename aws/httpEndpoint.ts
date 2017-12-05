@@ -274,7 +274,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                                          domains: cloud.Domain[]): pulumi.Computed<string>[] {
         const names: pulumi.Computed<string>[] = [];
         for (const domain of domains) {
-            const awsDomain = new aws.apigateway.DomainName(apiName + "-" + domain.domainName, {
+            // Ensure this pair of api-domain name doesn't conflict with anything else.  i.e. there
+            // may be another http endpoint that registers a custom domain with a different data.
+            // We don't want to collide with that. hash the name to ensure this urn doesn't get too
+            // long.
+            const domainNameHash = sha1hash(domain.domainName);
+            const apiNameAndHash = `${apiName}-${domainNameHash}`;
+
+            const awsDomain = new aws.apigateway.DomainName(apiNameAndHash, {
                 domainName: domain.domainName,
                 certificateName: domain.domainName,
                 certificateBody: domain.certificateBody,
@@ -282,7 +289,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 certificateChain: domain.certificateChain,
             });
 
-            const basePathMapping = new aws.apigateway.BasePathMapping(apiName + "-" + domain.domainName, {
+            const basePathMapping = new aws.apigateway.BasePathMapping(apiNameAndHash, {
                 restApi: api,
                 stageName: stageName,
                 domainName: awsDomain.domainName,
@@ -290,6 +297,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
             names.push(awsDomain.cloudfrontDomainName);
         }
+
         return names;
     }
 
@@ -313,10 +321,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         }, this);
 
         const bodyHash = createSwaggerHash(swagger);
-        const deployment = new aws.apigateway.Deployment(`${name}_${bodyHash}`, {
+
+        // we need to ensure a fresh deployment any time our body changes. So include the hash as
+        // part of the deployment urn.
+        const deplymentNameAndHash = `${name}-${bodyHash}`;
+        const deployment = new aws.apigateway.Deployment(deplymentNameAndHash, {
             restApi: api,
             stageName: "",
-            description: `Deployment of version ${name}_${bodyHash}`,
+            description: `Deployment of version ${deplymentNameAndHash}`,
         }, this);
 
         const stage = new aws.apigateway.Stage(name, {
@@ -329,7 +341,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         // Ensure that the permissions allow the API Gateway to invoke the lambdas.
         for (const path of Object.keys(swagger.paths)) {
             for (let method of Object.keys(swagger.paths[path])) {
-                const lambda = lambdas[method + ":" + path];
+                const methodAndPath = method + ":" + path;
+                const lambda = lambdas[methodAndPath];
                 if (lambda !== undefined) {
                     if (method === "x-amazon-apigateway-any-method") {
                         method = "*";
@@ -337,7 +350,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     else {
                         method = method.toUpperCase();
                     }
-                    const permissionName = name + "_invoke_" + sha1hash(method + path);
+                    const permissionName = name + "-" + sha1hash(methodAndPath);
                     const invokePermission = new aws.lambda.Permission(permissionName, {
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
