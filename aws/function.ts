@@ -46,7 +46,7 @@ export class Function extends pulumi.ComponentResource {
             logGroup: new aws.cloudwatch.LogGroup(name, {
                 name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
                 retentionInDays: 1,
-            }),
+            }, this),
             destinationArn: getLogCollector().arn,
             filterPattern: "",
         }, this);
