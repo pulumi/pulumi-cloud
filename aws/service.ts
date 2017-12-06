@@ -691,7 +691,7 @@ function getTaskRole(): aws.iam.Role {
         for (let i = 0; i < policies.length; i++) {
             const policyArn = policies[i];
             const _ = new aws.iam.RolePolicyAttachment(
-                createNameWithStackInfo(`-${sha1hash(policyArn)}-global-task`, 56), {
+                createNameWithStackInfo(`global-task-${sha1hash(policyArn)}`, -1), {
                     role: taskRole,
                     policyArn: policyArn,
                 });

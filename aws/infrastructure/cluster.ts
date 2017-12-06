@@ -110,7 +110,7 @@ export class Cluster {
             || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
         for (let i = 0; i < policyARNs.length; i++) {
             const policyARN = policyARNs[i];
-            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`-${sha1hash(policyARN)}-${name}`, {
+            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${sha1hash(policyARN)}`, {
                 role: instanceRole,
                 policyArn: policyARN,
             });
