@@ -707,12 +707,12 @@ interface TaskDefinition {
 function createTaskDefinition(parent: pulumi.Resource, name: string,
                               containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
     // Create a single log group for all logging associated with the Service
-    const logGroup = new aws.cloudwatch.LogGroup(`${name}-task-logs`, {
+    const logGroup = new aws.cloudwatch.LogGroup(name, {
         retentionInDays: 1,
     }, parent);
 
     // And hook it up to the aggregated log collector
-    const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(`${name}-task-logs-filter`, {
+    const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(name, {
         logGroup: logGroup,
         destinationArn: getLogCollector().arn,
         filterPattern: "",
