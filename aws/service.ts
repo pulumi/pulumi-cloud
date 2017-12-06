@@ -11,7 +11,7 @@ import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
-import { commonPrefix, computePolicies, getCluster, getNetwork } from "./shared";
+import { computePolicies, createNameWithStackInfo, getCluster, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
@@ -110,11 +110,12 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
             ],
         };
 
-        serviceLoadBalancerRole = new aws.iam.Role(`${commonPrefix}-s-lb-role`, {
+        const roleName = createNameWithStackInfo("-global-load-balancer", 56);
+        serviceLoadBalancerRole = new aws.iam.Role(roleName, {
             assumeRolePolicy: JSON.stringify(assumeRolePolicy),
         });
 
-        const rolePolicy = new aws.iam.RolePolicy(`${commonPrefix}-s-lb-role`, {
+        const rolePolicy = new aws.iam.RolePolicy(roleName, {
             role: serviceLoadBalancerRole.name,
             policy: JSON.stringify(policy),
         });
@@ -151,7 +152,7 @@ const loadBalancerPrefixLength =
     - 3  /* for -[a|n][i|e], where a = application, n = network; i = internal, e = external */;
 
 function getLoadBalancerPrefix(internal: boolean, application: boolean): string {
-    return commonPrefix.substring(0, loadBalancerPrefixLength) + "-" +
+    return createNameWithStackInfo("", loadBalancerPrefixLength) + "-" +
         (application ? "a" : "n") + (internal ? "i" : "e");
 }
 
@@ -494,7 +495,7 @@ function getImageName(container: cloud.Container): string {
     }
     else if (container.build) {
         // Produce a hash of the build context and use that for the image name.
-        return `${commonPrefix}-container-${sha1hash(container.build)}`;
+        return createNameWithStackInfo(`-container-${sha1hash(container.build)}`, -1);
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
@@ -681,14 +682,14 @@ const taskRolePolicy = {
 let taskRole: aws.iam.Role | undefined;
 function getTaskRole(): aws.iam.Role {
     if (!taskRole) {
-        taskRole = new aws.iam.Role(`${commonPrefix}-task-role`, {
+        taskRole = new aws.iam.Role(createNameWithStackInfo("global-task", 56), {
             assumeRolePolicy: JSON.stringify(taskRolePolicy),
         });
         // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
         const policies = computePolicies;
         for (let i = 0; i < policies.length; i++) {
-            const _ = new aws.iam.RolePolicyAttachment(`${commonPrefix}-task-iampolicy-${i}`, {
+            const _ = new aws.iam.RolePolicyAttachment(createNameWithStackInfo(`-${i}-global-task`, 56), {
                 role: taskRole,
                 policyArn: policies[i],
             });

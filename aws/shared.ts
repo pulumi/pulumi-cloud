@@ -10,7 +10,6 @@ import { Network } from "./infrastructure/network";
 // it's safe to use these for top-level components like Network and Cluster, because they suffix all
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
-export const commonPrefix = nameWithStackInfo;
 
 export function createNameWithStackInfo(suffix: string, trimLength: number) {
     const result = nameWithStackInfo + suffix;
