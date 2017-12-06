@@ -689,12 +689,15 @@ function getTaskRole(): aws.iam.Role {
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
         const policies = computePolicies;
         for (let i = 0; i < policies.length; i++) {
-            const _ = new aws.iam.RolePolicyAttachment(createNameWithStackInfo(`-${i}-global-task`, 56), {
-                role: taskRole,
-                policyArn: policies[i],
-            });
+            const policyArn = policies[i];
+            const _ = new aws.iam.RolePolicyAttachment(
+                createNameWithStackInfo(`-${sha1hash(policyArn)}-global-task`, 56), {
+                    role: taskRole,
+                    policyArn: policyArn,
+                });
         }
     }
+
     return taskRole!;
 }
 

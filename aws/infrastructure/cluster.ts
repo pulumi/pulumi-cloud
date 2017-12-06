@@ -7,6 +7,7 @@ import { awsAccountId, awsRegion } from "./aws";
 import { Network } from "./network";
 
 import * as config from "../config";
+import { sha1hash } from "../utils";
 
 // The default path to use for mounting EFS inside ECS container instances.
 const efsMountPath = "/mnt/efs";
@@ -109,7 +110,7 @@ export class Cluster {
             || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
         for (let i = 0; i < policyARNs.length; i++) {
             const policyARN = policyARNs[i];
-            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${i}`, {
+            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${sha1hash(policyARN)}`, {
                 role: instanceRole,
                 policyArn: policyARN,
             });
