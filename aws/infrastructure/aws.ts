@@ -21,5 +21,6 @@ export let awsRegion = getAwsRegion();
 // Export as a function instead of a variable so clients can pass one AZ as a promise to a resource.
 export async function getAwsAz(index: number) {
     const azs = await aws.getAvailabilityZones();
-    return azs.names[index];
+    const sorted = azs.names.sort();
+    return sorted[index];
 }
