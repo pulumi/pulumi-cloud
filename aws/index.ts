@@ -16,6 +16,9 @@ import * as config from "./config";
 import * as timer from "./timer";
 export { config, timer };
 
+// This is an AWS-only API that allows configuring AWS-specific role policies.
+export { setComputeIAMRolePolicies } from "./shared";
+
 // Code purely for enforcement that our module properly exports the same surface area as the API. We
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
 // cost here.  This code can also go into a separate file if we don't want it cluttering this one.

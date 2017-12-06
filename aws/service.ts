@@ -11,8 +11,8 @@ import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
-// tslint:disable-next-line:max-line-length
-import { computePolicies, createNameWithStackInfo, getCluster, getGlobalInfrastructureResource, getNetwork } from "./shared";
+import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
+         getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 
 // For type-safety purposes, we want to be able to mark some of our types with typing information
@@ -688,7 +688,7 @@ function getTaskRole(): aws.iam.Role {
         }, getGlobalInfrastructureResource());
         // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
-        const policies = computePolicies;
+        const policies = getComputeIAMRolePolicies();
         for (let i = 0; i < policies.length; i++) {
             const policyArn = policies[i];
             const _ = new aws.iam.RolePolicyAttachment(
