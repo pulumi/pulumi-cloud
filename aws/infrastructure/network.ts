@@ -70,7 +70,7 @@ export class Network {
 
             const subnet = new aws.ec2.Subnet(zoneName, {
                 vpcId: vpc.id,
-                availabilityZone: getAwsAz(i),
+                availabilityZone: availabilityZone,
                 cidrBlock: `10.10.${i}.0/24`,         // IDEA: Consider larger default CIDR block sizing
                 mapPublicIpOnLaunch: !this.privateSubnets, // Only assign public IP if we are exposing public subnets
             });
@@ -84,7 +84,7 @@ export class Network {
                 // We need a public subnet for the NAT Gateway
                 const natGatewayPublicSubnet = new aws.ec2.Subnet(zoneNatName, {
                     vpcId: vpc.id,
-                    availabilityZone: getAwsAz(i),
+                    availabilityZone: availabilityZone,
                     cidrBlock: `10.10.${i+64}.0/24`, // Use top half of the subnet space
                     mapPublicIpOnLaunch: true,        // Always assign a public IP in NAT subnet
                 });
