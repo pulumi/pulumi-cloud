@@ -11,14 +11,36 @@ import { Network } from "./infrastructure/network";
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
-export function createNameWithStackInfo(suffix: string, trimLength: number) {
-    const result = nameWithStackInfo + suffix;
-    if (trimLength < 0) {
+export function createNameWithStackInfo(requiredInfo: string) {
+    const maxLength = 24;
+
+    if (requiredInfo.length > maxLength) {
+        throw new Error(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
+    }
+
+    const result = nameWithStackInfo + "-" + requiredInfo;
+    if (result.length <= maxLength) {
         return result;
     }
 
-    return result.substr(0, trimLength);
+    return result.substr(result.length - maxLength, maxLength);
 }
+
+class InfrastructureResource extends pulumi.ComponentResource {
+    constructor() {
+        super("global-infrastructure", "global-infrastructure");
+    }
+}
+
+let globalInfrastructureResource: InfrastructureResource | undefined;
+export function getGlobalInfrastructureResource(): pulumi.Resource {
+    if (!globalInfrastructureResource) {
+        globalInfrastructureResource = new InfrastructureResource();
+    }
+
+    return globalInfrastructureResource;
+}
+
 
 // Whether or not we should run lamabda-based compute in the private network
 export let runLambdaInVPC: boolean = config.usePrivateNetwork;
@@ -40,7 +62,7 @@ export function getNetwork(): Network | undefined {
     if (!network) {
         if (config.usePrivateNetwork || config.ecsAutoCluster) {
             // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
-            network = new Network(createNameWithStackInfo("-global", -1), {
+            network = new Network(createNameWithStackInfo("global"), {
                 privateSubnets: config.usePrivateNetwork,
             });
         } else if (config.externalVpcId) {
@@ -76,7 +98,7 @@ export function getCluster(): Cluster | undefined {
             }
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
-            cluster = new Cluster(createNameWithStackInfo("-global", -1), {
+            cluster = new Cluster(createNameWithStackInfo("global"), {
                 network: getNetwork()!,
                 addEFS: config.ecsAutoClusterUseEFS === undefined ? true : config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
