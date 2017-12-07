@@ -18,7 +18,9 @@ export function createNameWithStackInfo(requiredInfo: string) {
         throw new Error(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
 
-    const result = nameWithStackInfo + "-" + requiredInfo;
+    const result = requiredInfo.length == 0
+        ? nameWithStackInfo
+        : nameWithStackInfo + "-" + requiredInfo;
     if (result.length <= maxLength) {
         return result;
     }
@@ -26,6 +28,7 @@ export function createNameWithStackInfo(requiredInfo: string) {
     return result.substr(result.length - maxLength, maxLength);
 }
 
+// Expose a common infrastructure resource
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
         super("global-infrastructure", "global-infrastructure");
