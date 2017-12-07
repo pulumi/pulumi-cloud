@@ -5,7 +5,7 @@ import * as pulumi from "pulumi";
 import { functionMemorySize } from "./config";
 import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
-import { computePolicies, getNetwork, runLambdaInVPC } from "./shared";
+import { getComputeIAMRolePolicies, getNetwork, runLambdaInVPC } from "./shared";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -23,7 +23,7 @@ export class Function extends pulumi.ComponentResource {
 
         // First allocate a function.
         const options: aws.serverless.FunctionOptions = {
-            policies: [...computePolicies],
+            policies: [...getComputeIAMRolePolicies()],
             deadLetterConfig: {
                 targetArn: getUnhandledErrorTopic().arn,
             },
