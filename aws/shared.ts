@@ -28,10 +28,12 @@ export function createNameWithStackInfo(requiredInfo: string) {
     return result.substr(result.length - maxLength, maxLength);
 }
 
-// Expose a common infrastructure resource
+// Expose a common infrastructure resource that all our global resources can consider themselves to
+// be parented by.  This helps ensure unique URN naming for these guys as tey cannot conflict with
+// any other user resource.
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
-        super("global-infrastructure", "global-infrastructure");
+        super("global:infrastructure", "global-infrastructure");
     }
 }
 
