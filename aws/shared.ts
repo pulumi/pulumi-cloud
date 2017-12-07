@@ -18,7 +18,7 @@ export function createNameWithStackInfo(requiredInfo: string) {
         throw new Error(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
 
-    const result = requiredInfo.length == 0
+    const result = requiredInfo.length === 0
         ? nameWithStackInfo
         : nameWithStackInfo + "-" + requiredInfo;
     if (result.length <= maxLength) {
