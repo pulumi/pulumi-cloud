@@ -18,14 +18,21 @@ export function createNameWithStackInfo(requiredInfo: string) {
         throw new Error(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
 
-    const result = requiredInfo.length === 0
-        ? nameWithStackInfo
-        : nameWithStackInfo + "-" + requiredInfo;
-    if (result.length <= maxLength) {
-        return result;
+    // No required portion.  Just return the stack name.
+    if (requiredInfo.length === 0) {
+        return nameWithStackInfo.substr(0, maxLength);
     }
 
-    return result.substr(result.length - maxLength, maxLength);
+    // Only enough room for required portion, don't add the stack.
+    // Also don't add the stack if there wouldn't be room to add it and a dash.
+    if (requiredInfo.length >= maxLength - "-".length) {
+        return requiredInfo;
+    }
+
+    // Attempt to keep some portion of the stack, then - then the required part.
+    const suffix = "-" + requiredInfo;
+    const result = nameWithStackInfo.substr(0, maxLength - suffix.length) + suffix;
+    return result;
 }
 
 // Expose a common infrastructure resource that all our global resources can consider themselves to
