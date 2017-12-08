@@ -40,7 +40,7 @@ export function createNameWithStackInfo(requiredInfo: string) {
 // any other user resource.
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
-        super("global:infrastructure", "global-infrastructure");
+        super("cloud:global:infrastructure", "global-infrastructure");
     }
 }
 
@@ -52,7 +52,6 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 
     return globalInfrastructureResource;
 }
-
 
 // Whether or not we should run lamabda-based compute in the private network
 export let runLambdaInVPC: boolean = config.usePrivateNetwork;
