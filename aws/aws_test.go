@@ -365,7 +365,7 @@ func Test_Examples(t *testing.T) {
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 		})
 		t.Run(example.Dir, func(t *testing.T) {
-			integration.TestLifeCycle(t, &example)
+			integration.ProgramTest(t, example)
 		})
 	}
 }
