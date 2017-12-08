@@ -139,7 +139,7 @@ func Test_Performance(t *testing.T) {
 	for _, ex := range tests {
 		test := ex
 		t.Run(test.Dir, func(t *testing.T) {
-			integration.ProgramTest(t, test)
+			integration.TestLifeCycle(t, &test)
 		})
 	}
 }
