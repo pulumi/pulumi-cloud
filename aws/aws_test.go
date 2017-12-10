@@ -166,7 +166,7 @@ func Test_Examples(t *testing.T) {
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
-				if !assert.Len(t, *logs, 26, "expected 26 logs entries from countdown") {
+				if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown") {
 					return
 				}
 				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
@@ -283,7 +283,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(nginxLogs) > 0) {
 						return
 					}
-					assert.Contains(t, "GET /", nginxLogs[0])
+					assert.Contains(t, nginxLogs[0], "GET /")
 				}
 
 				// Hello World container Task logs
@@ -296,20 +296,20 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(hellowWorldLogs) > 16) {
 						return
 					}
-					assert.Contains(t, "Hello from Docker!", hellowWorldLogs[0])
+					assert.Contains(t, hellowWorldLogs[0], "Hello from Docker!")
 				}
 
 				// Cache Redis container  logs
 				//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
 				{
-					redisLogs, exists := logsByResource["examples-hello-world"]
+					redisLogs, exists := logsByResource["examples-mycache"]
 					if !assert.True(t, exists) {
 						return
 					}
 					if !assert.True(t, len(redisLogs) > 5) {
 						return
 					}
-					assert.Contains(t, "Redis is starting", redisLogs[0])
+					assert.Contains(t, redisLogs[0], "Redis is starting")
 				}
 			},
 		},
