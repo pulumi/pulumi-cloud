@@ -158,15 +158,17 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				// Wait 2 minutes to give the timer a chance to fire and for Lambda logs to be collected
-				time.Sleep(2 * time.Minute)
+				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
+				time.Sleep(6 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint)
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
-				assert.Len(t, *logs, 26, "expected 26 logs entries from countdown")
+				if !assert.Len(t, *logs, 26, "expected 26 logs entries from countdown") {
+					return
+				}
 				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
 					"expected ID of logs to match the topic+subscription name")
 				assert.Equal(t, "25", (*logs)[0].Message)
@@ -258,12 +260,57 @@ func Test_Examples(t *testing.T) {
 				time.Sleep(1 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint)
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
+				if !assert.True(t, len(*logs) > 10) {
+					return
+				}
+				logsByResource := map[string][]operations.LogEntry{}
+				for _, l := range *logs {
+					cur, _ := logsByResource[l.ID]
+					logsByResource[l.ID] = append(cur, l)
+				}
 
-				fmt.Printf("Logs: %v", logs)
+				// NGINX logs
+				//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+				{
+					nginxLogs, exists := logsByResource["examples-nginx"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(nginxLogs) > 0) {
+						return
+					}
+					assert.Contains(t, "GET /", nginxLogs[0])
+				}
+
+				// Hello World container Task logs
+				//  {examples-hello-world 1512871250458 Hello from Docker!}
+				{
+					hellowWorldLogs, exists := logsByResource["examples-hello-world"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(hellowWorldLogs) > 16) {
+						return
+					}
+					assert.Contains(t, "Hello from Docker!", hellowWorldLogs[0])
+				}
+
+				// Cache Redis container  logs
+				//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
+				{
+					redisLogs, exists := logsByResource["examples-hello-world"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(redisLogs) > 5) {
+						return
+					}
+					assert.Contains(t, "Redis is starting", redisLogs[0])
+				}
 			},
 		},
 		{
@@ -345,7 +392,7 @@ func Test_Examples(t *testing.T) {
 				time.Sleep(1 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint)
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
@@ -390,7 +437,9 @@ func Test_Examples(t *testing.T) {
 	}
 }
 
-func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint) *[]operations.LogEntry {
+func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint,
+	query operations.LogQuery) *[]operations.LogEntry {
+
 	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
 	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
 		return nil
@@ -405,7 +454,7 @@ func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint) *[]operat
 	ops := tree.OperationsProvider(cfg)
 
 	// Validate logs from example
-	logs, err := ops.GetLogs(operations.LogQuery{})
+	logs, err := ops.GetLogs(query)
 	if !assert.NoError(t, err) {
 		return nil
 	}
