@@ -40,9 +40,5 @@ api.get("/todo", async (req, res) => {
 });
 
 // Publish
-api.publish().url.then((url: string | undefined) => {
-    if (url) {
-        console.log(`Listening at: ${url}`);
-    }
-});
+export let url = api.publish().url;
 

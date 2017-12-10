@@ -151,14 +151,27 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
-				"aws:config:region": region,
-				// TODO[pulumi/pulumi-cloud#138]: Would love to use this example to test private networking for
-				// lambdas, but we are blocked on doing this in CI due to the inability to automatically delete
-				// the VPC used for hosting Lambda within a day of running a Lambda in it.
-				// "cloud-aws:config:usePrivateNetwork": "true",
+				"aws:config:region":                  region,
+				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
+				time.Sleep(6 * time.Minute)
+
+				// Validate logs from example
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
+					return
+				}
+				if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown") {
+					return
+				}
+				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
+					"expected ID of logs to match the topic+subscription name")
+				assert.Equal(t, "25", (*logs)[0].Message)
 			},
 		},
 		{
@@ -242,6 +255,62 @@ func Test_Examples(t *testing.T) {
 					assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
+
+				// Wait for a minute before getting logs
+				time.Sleep(1 * time.Minute)
+
+				// Validate logs from example
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
+					return
+				}
+				if !assert.True(t, len(*logs) > 10) {
+					return
+				}
+				logsByResource := map[string][]operations.LogEntry{}
+				for _, l := range *logs {
+					cur, _ := logsByResource[l.ID]
+					logsByResource[l.ID] = append(cur, l)
+				}
+
+				// NGINX logs
+				//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+				{
+					nginxLogs, exists := logsByResource["examples-nginx"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(nginxLogs) > 0) {
+						return
+					}
+					assert.Contains(t, nginxLogs[0].Message, "GET /")
+				}
+
+				// Hello World container Task logs
+				//  {examples-hello-world 1512871250458 Hello from Docker!}
+				{
+					hellowWorldLogs, exists := logsByResource["examples-hello-world"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(hellowWorldLogs) > 16) {
+						return
+					}
+					assert.Contains(t, hellowWorldLogs[0].Message, "Hello from Docker!")
+				}
+
+				// Cache Redis container  logs
+				//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
+				{
+					redisLogs, exists := logsByResource["examples-mycache"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(redisLogs) > 5) {
+						return
+					}
+					assert.Contains(t, redisLogs[0].Message, "Redis is starting")
+				}
 			},
 		},
 		{
@@ -318,6 +387,15 @@ func Test_Examples(t *testing.T) {
 				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
+
+				// Wait for a minute before getting logs
+				time.Sleep(1 * time.Minute)
+
+				// Validate logs from example
+				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
+					return
+				}
 			},
 		},
 		{
@@ -347,18 +425,7 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				testURLGet(t, checkpoint, "test1.txt", "You got test1")
 			},
-			// EditDirs: []integration.EditDir{
-			// 	// Validate that if we change an httpendpoint url that updating works and that we
-			// 	// can retrieve the new content and the new endpoint.
-			// 	integration.EditDir{
-			// 		Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			testURLGet(t, checkpoint, "test2.txt", "You got test2")
-			// 		},
-			// 	},
-			// },
 		},
-		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {
 		example := ex.With(integration.ProgramTestOptions{
@@ -368,6 +435,30 @@ func Test_Examples(t *testing.T) {
 			integration.ProgramTest(t, &example)
 		})
 	}
+}
+
+func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint,
+	query operations.LogQuery) *[]operations.LogEntry {
+
+	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+		return nil
+	}
+	tree := operations.NewResourceTree(snapshot.Resources)
+	if !assert.NotNil(t, tree) {
+		return nil
+	}
+	cfg := map[tokens.ModuleMember]string{
+		"aws:config:region": region,
+	}
+	ops := tree.OperationsProvider(cfg)
+
+	// Validate logs from example
+	logs, err := ops.GetLogs(query)
+	if !assert.NoError(t, err) {
+		return nil
+	}
+	return logs
 }
 
 func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
