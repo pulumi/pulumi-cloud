@@ -283,7 +283,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(nginxLogs) > 0) {
 						return
 					}
-					assert.Contains(t, nginxLogs[0], "GET /")
+					assert.Contains(t, nginxLogs[0].Message, "GET /")
 				}
 
 				// Hello World container Task logs
@@ -296,7 +296,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(hellowWorldLogs) > 16) {
 						return
 					}
-					assert.Contains(t, hellowWorldLogs[0], "Hello from Docker!")
+					assert.Contains(t, hellowWorldLogs[0].Message, "Hello from Docker!")
 				}
 
 				// Cache Redis container  logs
@@ -309,7 +309,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(redisLogs) > 5) {
 						return
 					}
-					assert.Contains(t, redisLogs[0], "Redis is starting")
+					assert.Contains(t, redisLogs[0].Message, "Redis is starting")
 				}
 			},
 		},
