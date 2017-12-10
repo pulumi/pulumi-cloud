@@ -160,25 +160,12 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				// Wait 2 minutes to give the timer a chance to fire and for Lambda logs to be collected
 				time.Sleep(2 * time.Minute)
-				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.NoError(t, err, "expected checkpoint deserialization to succeed") {
-					return
-				}
-				tree := operations.NewResourceTree(snapshot.Resources)
-				if !assert.NotNil(t, tree) {
-					return
-				}
-				cfg := map[tokens.ModuleMember]string{
-					"aws:config:region": region,
-				}
-				ops := tree.OperationsProvider(cfg)
 
 				// Validate logs from example
-				logs, err := ops.GetLogs(operations.LogQuery{})
-				if !assert.NoError(t, err) {
+				logs := getLogs(t, region, checkpoint)
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
-				assert.NotNil(t, logs, "expected logs to be produced")
 				assert.Len(t, *logs, 26, "expected 26 logs entries from countdown")
 				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
 					"expected ID of logs to match the topic+subscription name")
@@ -267,24 +254,15 @@ func Test_Examples(t *testing.T) {
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
 
-				// Get Logs
+				// Wait for a minute before getting logs
 				time.Sleep(1 * time.Minute)
 
-				tree := operations.NewResourceTree(snapshot.Resources)
-				if !assert.NotNil(t, tree) {
-					return
-				}
-				cfg := map[tokens.ModuleMember]string{
-					"aws:config:region": region,
-				}
-				ops := tree.OperationsProvider(cfg)
-
 				// Validate logs from example
-				logs, err := ops.GetLogs(operations.LogQuery{})
-				if !assert.NoError(t, err) {
+				logs := getLogs(t, region, checkpoint)
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
-				assert.NotNil(t, logs, "expected logs to be produced")
+
 				fmt.Printf("Logs: %v", logs)
 			},
 		},
@@ -362,6 +340,15 @@ func Test_Examples(t *testing.T) {
 				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
+
+				// Wait for a minute before getting logs
+				time.Sleep(1 * time.Minute)
+
+				// Validate logs from example
+				logs := getLogs(t, region, checkpoint)
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
+					return
+				}
 			},
 		},
 		{
@@ -391,18 +378,7 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
 				testURLGet(t, checkpoint, "test1.txt", "You got test1")
 			},
-			// EditDirs: []integration.EditDir{
-			// 	// Validate that if we change an httpendpoint url that updating works and that we
-			// 	// can retrieve the new content and the new endpoint.
-			// 	integration.EditDir{
-			// 		Dir: path.Join(cwd, "../../examples/httpEndpoint/variants/updateGetEndpoint"),
-			// 		ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-			// 			testURLGet(t, checkpoint, "test2.txt", "You got test2")
-			// 		},
-			// 	},
-			// },
 		},
-		// Leaving out of integration tests until we have shareable credentials for testing these integrations.
 	}
 	for _, ex := range examples {
 		example := ex.With(integration.ProgramTestOptions{
@@ -412,6 +388,28 @@ func Test_Examples(t *testing.T) {
 			integration.ProgramTest(t, &example)
 		})
 	}
+}
+
+func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint) *[]operations.LogEntry {
+	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
+	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
+		return nil
+	}
+	tree := operations.NewResourceTree(snapshot.Resources)
+	if !assert.NotNil(t, tree) {
+		return nil
+	}
+	cfg := map[tokens.ModuleMember]string{
+		"aws:config:region": region,
+	}
+	ops := tree.OperationsProvider(cfg)
+
+	// Validate logs from example
+	logs, err := ops.GetLogs(operations.LogQuery{})
+	if !assert.NoError(t, err) {
+		return nil
+	}
+	return logs
 }
 
 func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
