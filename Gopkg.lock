@@ -283,10 +283,10 @@
   version = "v1.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/operations","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/version","pkg/workspace","sdk/proto/go"]
-  revision = "e93fe05efea6cc2dbeff391489557612e40302a0"
-  version = "v0.9-rc1"
+  revision = "9bc9ce150586dab870daa17771194ff43406943d"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
