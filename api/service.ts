@@ -55,7 +55,7 @@ export interface Container {
      * `--memory` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    memory?: number;
+    memory?: pulumi.ComputedValue<number>;
     /**
      * The amount of memory to reserve for the container, but the container will
      * be allowed to use more memory if it's available.  At least one of
@@ -63,7 +63,7 @@ export interface Container {
      * `--memory-reservation` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    memoryReservation?: number;
+    memoryReservation?: pulumi.ComputedValue<number>;
     /**
      * An array of ports to publish from the container.  Ports are exposed using the TCP protocol.  If the [external]
      * flag is true, the port will be exposed to the Internet even if the service is running in a private network.
@@ -88,7 +88,7 @@ export interface Container {
      * information about the Docker `CMD` parameter, go to
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
-    command?: string[];
+    command?: pulumi.ComputedValue<string[]>;
 }
 
 export interface ContainerPort {

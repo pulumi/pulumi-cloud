@@ -271,7 +271,7 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource,
         port: portMapping.port,
         protocol: targetProtocol,
         vpcId: network.vpcId,
-        deregistrationDelay: 30,
+        deregistrationDelay: 180, // 3 minutes
     }, parent);
 
     // Listen on a new port on the NLB and forward to the target.
@@ -642,9 +642,9 @@ async function computeContainerDefintions(containers: cloud.Containers, ports: E
         const containerDefinition: ECSContainerDefinition = {
             name: containerName,
             image: image,
-            command: container.command,
-            memory: container.memory,
-            memoryReservation: container.memoryReservation,
+            command: await container.command,
+            memory: await container.memory,
+            memoryReservation: await container.memoryReservation,
             portMappings: portMappings,
             environment: environment,
             mountPoints: (container.volumes || []).map(v => ({
@@ -780,6 +780,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
+    public readonly cluster: Cluster;
+    public readonly ecsService: aws.ecs.Service;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -808,6 +810,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         }, parent, dependsOn);
 
         this.name = name;
+        this.cluster = cluster;
 
         // Create load balancer listeners/targets for each exposed port.
         const loadBalancers = [];
@@ -838,7 +841,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const taskDefinition = createTaskDefinition(this, name, containers, ports);
 
         // Create the service.
-        const service = new aws.ecs.Service(name, {
+        this.ecsService = new aws.ecs.Service(name, {
             desiredCount: replicas,
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster!.ecsClusterARN,
