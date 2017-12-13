@@ -26,7 +26,7 @@ export class Network {
         // invoking the provider, which requires that we "go async" at a very inopportune time here.  When
         // pulumi/pulumi#331 lands, this will be much easier to do, and we can improve this situation.
         this.numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
-        if (this.numberOfAvailabilityZones < 1 || this.numberOfAvailabilityZones > 2) {
+        if (this.numberOfAvailabilityZones < 1 || this.numberOfAvailabilityZones > 4) {
             throw new Error(
                 `Unsupported number of availability zones for network: ${this.numberOfAvailabilityZones}`);
         }
