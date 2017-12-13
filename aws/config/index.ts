@@ -89,6 +89,10 @@ if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
  */
 export let ecsAutoCluster = config.getBoolean("ecsAutoCluster") || false;
 /**
+ * The number of AZs to create subnets in as part of the cluster.  Defaults to 2.
+ */
+export let ecsAutoClusterNumberOfAZs = config.getNumber("ecsAutoClusterNumberOfAZs");
+/**
  * The EC2 instance type to use for the cluster.  Defaults to `t2-micro`.
  */
 export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");

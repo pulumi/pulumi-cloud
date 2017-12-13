@@ -91,6 +91,7 @@ export function getNetwork(): Network | undefined {
             // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
             network = new Network(createNameWithStackInfo("global"), {
                 privateSubnets: config.usePrivateNetwork,
+                numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
             });
         } else if (config.externalVpcId) {
             if (!config.externalSubnets || !config.externalSecurityGroups) {
