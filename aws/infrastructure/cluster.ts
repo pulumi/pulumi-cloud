@@ -36,6 +36,24 @@ export interface ClusterArgs {
      */
     instanceRolePolicyARNs?: string[];
     /**
+     * The size (in GiB) of the EBS volume to attach to each instance as the root volume.
+     *
+     * The default is 8 GiB.
+     */
+    instanceRootVolumeSize?: number;
+    /**
+     * The size (in GiB) of the EBS volume to attach to each instance to use for Docker image and metadata storage.
+     *
+     * The default is 50 GiB.
+     */
+    instanceDockerImageVolumeSize?: number;
+    /**
+     * The size (in GiB) of the EBS volume to attach to each instance for swap space.
+     *
+     * The default is 5 GiB.
+     */
+    instanceSwapVolumeSize?: number;
+    /**
      * The minimum size of the cluster. Defaults to 2.
      */
     minSize?: number;
@@ -196,16 +214,23 @@ export class Cluster {
             iamInstanceProfile: instanceProfile.id,
             enableMonitoring: true,  // default is true
             placementTenancy: "default",  // default is "default"
+            rootBlockDevice: [{
+                volumeSize: args.instanceRootVolumeSize || 8, // GiB
+                volumeType: "gp2", // default is "standard"
+                deleteOnTermination: true,
+            }],
             ebsBlockDevices: [
                 {
+                    // Swap volume
                     deviceName: "/dev/xvdb",
-                    volumeSize: 5, // GB
+                    volumeSize: args.instanceSwapVolumeSize || 5, // GiB
                     volumeType: "gp2", // default is "standard"
                     deleteOnTermination: true,
                 },
                 {
+                    // Docker image and metadata volume
                     deviceName: "/dev/xvdcz",
-                    volumeSize: 50,
+                    volumeSize: args.instanceDockerImageVolumeSize || 50, // GiB
                     volumeType: "gp2",
                     deleteOnTermination: true,
                 },

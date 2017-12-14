@@ -103,6 +103,19 @@ export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType")
  */
 export let ecsAutoClusterInstanceRolePolicyARNs = config.get("ecsAutoClusterInstanceRolePolicyARNs");
 /**
+ * The size (in GiB) of the EBS volume to attach to each instance as the root volume.  Defaults to 8 GiB.
+ */
+export let ecsAutoClusterInstanceRootVolumeSize = config.getNumber("ecsAutoClusterInstanceRootVolumeSize");
+/**
+ * The size (in GiB) of the EBS volume to attach to each instance as Docker Image volume.  Defaults to 50 GiB.
+ */
+export let ecsAutoClusterInstanceDockerImageVolumeSize =
+    config.getNumber("ecsAutoClusterInstanceDockerImageVolumeSize");
+/**
+ * The size (in GiB) of the EBS volume to attach to each instance as the swap volume.  Defaults to 5 GiB.
+ */
+export let ecsAutoClusterInstanceSwapVolumeSize = config.getNumber("ecsAutoClusterInstanceSwapVolumeSize");
+/**
  * The minimum size of the cluster. Defaults to 2.
  */
 export let ecsAutoClusterMinSize = config.getNumber("ecsAutoClusterMinSize");
