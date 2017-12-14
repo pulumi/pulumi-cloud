@@ -8,4 +8,4 @@ endpoint.get("/test1.txt", (req, res) => {
     res.end("You got test1");
 });
 
-endpoint.publish();
+export let url = endpoint.publish().url;
