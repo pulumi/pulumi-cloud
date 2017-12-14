@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi/pkg/operations"
-	"github.com/pulumi/pulumi/pkg/resource"
-	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 	"github.com/pulumi/pulumi/pkg/tokens"
 )
@@ -42,20 +40,20 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				hitUnitTestsEndpoint(t, checkpoint)
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				hitUnitTestsEndpoint(t, stackInfo)
 			},
 			EditDirs: []integration.EditDir{
 				{
 					Dir: cwd + "/tests/unit/variants/update1",
-					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-						hitUnitTestsEndpoint(t, checkpoint)
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
 					},
 				},
 				{
 					Dir: cwd + "/tests/unit/variants/update2",
-					ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-						hitUnitTestsEndpoint(t, checkpoint)
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
 					},
 				},
 			},
@@ -71,22 +69,12 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-					return
-				}
-				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "performance", "", "cloud:http:HttpEndpoint", "tests-performance")
-				endpoint := pulumiResources[urn]
-				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
-					return
-				}
-				baseURL := endpoint.State.Outputs["url"].StringValue()
-				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url"].(string)
+				assert.True(t, ok, "expected a `url` output property of type string")
 
 				// Validate the GET /perf endpoint
-				//values url.Values := {}
+				// values url.Values := {}
 
 				dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
 				dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
@@ -157,12 +145,12 @@ func Test_Examples(t *testing.T) {
 			Dependencies: []string{
 				"@pulumi/cloud",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
 				time.Sleep(6 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
@@ -185,19 +173,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 			},
 			DebugUpdates: true,
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-					return
-				}
-				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "containers", "", "cloud:http:HttpEndpoint", "examples-containers")
-				endpoint := pulumiResources[urn]
-				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
-					return
-				}
-				baseURL := endpoint.State.Outputs["url"].StringValue()
-				assert.NotEmpty(t, baseURL, "expected a `containers` endpoint")
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
+				assert.True(t, ok, "expected a `frontendURL` output property of type string")
 
 				// Validate the GET /test endpoint
 				{
@@ -261,7 +239,7 @@ func Test_Examples(t *testing.T) {
 				time.Sleep(1 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
@@ -325,19 +303,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-				if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-					return
-				}
-				pulumiResources := operations.NewResourceMap(snapshot.Resources)
-				urn := resource.NewURN(checkpoint.Stack, "todo", "", "cloud:http:HttpEndpoint", "examples-todo")
-				endpoint := pulumiResources[urn]
-				if !assert.NotNil(t, endpoint, "expected to find endpoint") {
-					return
-				}
-				baseURL := endpoint.State.Outputs["url"].StringValue()
-				assert.NotEmpty(t, baseURL, "expected a `todo` endpoint")
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url"].(string)
+				assert.True(t, ok, "expected a `url` output property of type string")
 
 				// Validate the GET / endpoint
 				resp, err := http.Get(baseURL)
@@ -393,7 +361,7 @@ func Test_Examples(t *testing.T) {
 				time.Sleep(1 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, checkpoint, operations.LogQuery{})
+				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
@@ -423,8 +391,10 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: func(t *testing.T, checkpoint stack.Checkpoint) {
-				testURLGet(t, checkpoint, "test1.txt", "You got test1")
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url"].(string)
+				assert.True(t, ok, "expected a `url` output string property")
+				testURLGet(t, baseURL, "test1.txt", "You got test1")
 			},
 		},
 	}
@@ -438,14 +408,10 @@ func Test_Examples(t *testing.T) {
 	}
 }
 
-func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint,
+func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidationStackInfo,
 	query operations.LogQuery) *[]operations.LogEntry {
 
-	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-		return nil
-	}
-	tree := operations.NewResourceTree(snapshot.Resources)
+	tree := operations.NewResourceTree(stackInfo.Snapshot.Resources)
 	if !assert.NotNil(t, tree) {
 		return nil
 	}
@@ -462,20 +428,7 @@ func getLogs(t *testing.T, region string, checkpoint stack.Checkpoint,
 	return logs
 }
 
-func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents string) {
-	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-		return
-	}
-	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Stack, "httpEndpoint", "", "cloud:http:HttpEndpoint", "examples-test")
-	endpoint := pulumiResources[urn]
-	if !assert.NotNil(t, endpoint, "expected to find 'test' endpoint") {
-		return
-	}
-	baseURL := endpoint.State.Outputs["url"].StringValue()
-	assert.NotEmpty(t, baseURL, "expected an `test` endpoint")
-
+func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 	// Validate the GET /test1.txt endpoint
 	resp, err := http.Get(baseURL + path)
 	assert.NoError(t, err, "expected to be able to GET /"+path)
@@ -487,26 +440,11 @@ func testURLGet(t *testing.T, checkpoint stack.Checkpoint, path string, contents
 	assert.Equal(t, contents, string(bytes))
 }
 
-func hitUnitTestsEndpoint(
-	t *testing.T,
-	checkpoint stack.Checkpoint) {
+func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+	const urlPortion = "/unittests"
 
-	var packageName tokens.PackageName = "unittests"
-	var endpointName tokens.QName = "tests-unittests"
-	var urlPortion = "/unittests"
-
-	snapshot, err := stack.DeserializeCheckpoint(&checkpoint)
-	if !assert.Nil(t, err, "expected checkpoint deserialization to succeed") {
-		return
-	}
-	pulumiResources := operations.NewResourceMap(snapshot.Resources)
-	urn := resource.NewURN(checkpoint.Stack, packageName, "", "cloud:http:HttpEndpoint", endpointName)
-	endpoint := pulumiResources[urn]
-	if !assert.NotNil(t, endpoint, "expected to find endpoint") {
-		return
-	}
-	baseURL := endpoint.State.Outputs["url"].StringValue()
-	assert.NotEmpty(t, baseURL, fmt.Sprintf("expected a `%v` endpoint", endpointName))
+	baseURL, ok := stackInfo.Outputs["url"].(string)
+	assert.True(t, ok, fmt.Sprintf("expected a `url` output property of type string"))
 
 	// Validate the GET /unittests endpoint
 
