@@ -14,4 +14,4 @@ endpoint.get("/unittests", async (req, res) => {
 });
 
 const deployment = endpoint.publish();
-deployment.url.then(u => console.log("Serving at: " + u));
+export let url = deployment.url;
