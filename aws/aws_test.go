@@ -165,9 +165,12 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
-				"aws:config:region":                          region,
-				"cloud-aws:config:ecsAutoCluster":            "true",
-				"cloud-aws:config:ecsAutoClusterNumberOfAZs": "3",
+				"aws:config:region":                                            region,
+				"cloud-aws:config:ecsAutoCluster":                              "true",
+				"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "3",
+				"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
+				"cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize": "100",
+				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
