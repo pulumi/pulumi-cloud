@@ -13,8 +13,9 @@ export * from "./topic";
 export * from "./service";
 export { onError } from "./unhandledError";
 import * as config from "./config";
+import * as infrastructure from "./infrastructure";
 import * as timer from "./timer";
-export { config, timer };
+export { config, infrastructure, timer };
 
 // This is an AWS-only API that allows configuring AWS-specific role policies.
 export { setComputeIAMRolePolicies } from "./shared";
@@ -36,4 +37,3 @@ apiShape = thisShape;
 // uncomment it because our use of private members in classes *does* mean that we're effectively
 // exporting a larger surface area.  We can solve this in the future by using the IIFE pattern.
 // thisShape = frameworkShape;
-
