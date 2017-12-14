@@ -431,7 +431,9 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 	// Validate the GET /test1.txt endpoint
 	resp, err := http.Get(baseURL + path)
-	assert.NoError(t, err, "expected to be able to GET /"+path)
+	if !assert.NoError(t, err, "expected to be able to GET /"+path) {
+		return
+	}
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
 	bytes, err := ioutil.ReadAll(resp.Body)
@@ -444,12 +446,16 @@ func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationS
 	const urlPortion = "/unittests"
 
 	baseURL, ok := stackInfo.Outputs["url"].(string)
-	assert.True(t, ok, fmt.Sprintf("expected a `url` output property of type string"))
+	if !assert.True(t, ok, fmt.Sprintf("expected a `url` output property of type string")) {
+		return
+	}
 
 	// Validate the GET /unittests endpoint
 
 	resp, err := http.Get(baseURL + urlPortion)
-	assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion)
+	if !assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion) {
+		return
+	}
 
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "application/json", contentType)
