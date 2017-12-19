@@ -719,6 +719,11 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: any,
         headers: <{[header: string]: string}>{},
         body: Buffer.from([]),
     };
+
+    if (body && body.length) {
+        ev.headers["Content-Length"] = body.length;
+    }
+
     const req: cloud.Request = {
         headers: ev.headers,
         body: body,
