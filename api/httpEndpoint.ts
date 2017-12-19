@@ -24,6 +24,10 @@ export interface Request {
      */
     headers: { [header: string]: string | string[]; };
     /**
+     * The headers of the HTTP request.
+     */
+    rawHeaders: string[];
+    /**
      * The query parameters parsed from the query string of the request URL.
      */
     query: { [query: string]: string | string[]; };
