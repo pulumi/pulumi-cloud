@@ -63,9 +63,14 @@ export class Network {
 
         for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
             // Create the subnet for this AZ - either - either public or private
-            const subnet = new aws.ec2.Subnet(`${name}-${i}`, {
+            const availabilityZone = getAwsAz(i);
+
+            const zoneName = `${name}-${availabilityZone}`;
+            const zoneNatName = `${name}-${availabilityZone}-nat`;
+
+            const subnet = new aws.ec2.Subnet(zoneName, {
                 vpcId: vpc.id,
-                availabilityZone: getAwsAz(i),
+                availabilityZone: availabilityZone,
                 cidrBlock: `10.10.${i}.0/24`,         // IDEA: Consider larger default CIDR block sizing
                 mapPublicIpOnLaunch: !this.privateSubnets, // Only assign public IP if we are exposing public subnets
             });
@@ -77,32 +82,31 @@ export class Network {
 
             if (this.privateSubnets) {
                 // We need a public subnet for the NAT Gateway
-                const natName = `${name}-nat-${i}`;
-                const natGatewayPublicSubnet = new aws.ec2.Subnet(natName, {
+                const natGatewayPublicSubnet = new aws.ec2.Subnet(zoneNatName, {
                     vpcId: vpc.id,
-                    availabilityZone: getAwsAz(i),
+                    availabilityZone: availabilityZone,
                     cidrBlock: `10.10.${i+64}.0/24`, // Use top half of the subnet space
                     mapPublicIpOnLaunch: true,        // Always assign a public IP in NAT subnet
                 });
                 this.publicSubnetIds.push(natGatewayPublicSubnet.id);
 
                 // And we need to route traffic from that public subnet to the Internet Gateway
-                const natGatewayRoutes = new aws.ec2.RouteTableAssociation(natName, {
+                const natGatewayRoutes = new aws.ec2.RouteTableAssociation(zoneNatName, {
                     subnetId: natGatewayPublicSubnet.id,
                     routeTableId: publicRouteTable.id,
                 });
 
                 // We need an Elastic IP for the NAT Gateway
-                const eip = new aws.ec2.Eip(natName);
+                const eip = new aws.ec2.Eip(zoneNatName);
 
                 // And we need a NAT Gateway to be able to access the Internet
-                const natGateway = new aws.ec2.NatGateway(natName, {
+                const natGateway = new aws.ec2.NatGateway(zoneNatName, {
                     subnetId: natGatewayPublicSubnet.id,
                     allocationId: eip.id,
                 });
                 this.natGateways.push(natGateway);
 
-                const natRouteTable = new aws.ec2.RouteTable(natName, {
+                const natRouteTable = new aws.ec2.RouteTable(zoneNatName, {
                     vpcId: vpc.id,
                     route: [
                         {
@@ -121,7 +125,7 @@ export class Network {
                 this.publicSubnetIds.push(subnet.id);
             }
 
-            const routTableAssociation = new aws.ec2.RouteTableAssociation(`${name}-${i}`, {
+            const routTableAssociation = new aws.ec2.RouteTableAssociation(zoneName, {
                 subnetId: subnet.id,
                 routeTableId: subnetRouteTable.id,
             });
