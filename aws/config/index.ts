@@ -59,17 +59,25 @@ export let externalVpcId = config.get("externalVpcId");
 
 const externalSubnetsString = config.get("externalSubnets");
 /**
- * Provvide subnets ids for the VPC as a comma-seperated string.  Required if using an existing VPC.
+ * Provide subnets ids for the VPC as a comma-seperated string.  Required if using an existing VPC.
  */
-
 export let externalSubnets: string[] | undefined = undefined;
 if (externalSubnetsString) {
     externalSubnets = externalSubnetsString.split(",");
 }
 
+const externalPublicSubnetsString = config.get("externalPublicSubnets");
+/**
+ * Provide public subnets ids for the VPC as a comma-seperated string.  Required if using an existing VPC.
+ */
+export let externalPublicSubnets: string[] | undefined = undefined;
+if (externalPublicSubnetsString) {
+    externalPublicSubnets = externalPublicSubnetsString.split(",");
+}
+
 const externalSecurityGroupsString = config.get("externalSecurityGroups");
 /**
- * Provvide securityGroup ids for the VPC as a comma-seperated string.  Required if using an existing VPC.
+ * Provide securityGroup ids for the VPC as a comma-seperated string.  Required if using an existing VPC.
  */
 export let externalSecurityGroups: string[] | undefined = undefined;
 if (externalSecurityGroupsString) {

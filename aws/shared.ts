@@ -94,9 +94,10 @@ export function getNetwork(): Network | undefined {
                 numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
             });
         } else if (config.externalVpcId) {
-            if (!config.externalSubnets || !config.externalSecurityGroups) {
+            if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
                 throw new Error(
-                    "If providing 'externalVpcId', must provide 'externalSubnets' and 'externalSecurityGroups'");
+                    "If providing 'externalVpcId', must provide 'externalSubnets', " +
+                    "'externalPublicSubnets' and 'externalSecurityGroups'");
             }
             // Use an exsting VPC for this private network
             network = {
@@ -104,8 +105,7 @@ export function getNetwork(): Network | undefined {
                 vpcId: Promise.resolve(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets.map(s => Promise.resolve(s)),
-                // TODO: Do we need separate config?
-                publicSubnetIds: config.externalSubnets.map(s => Promise.resolve(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => Promise.resolve(s)),
                 securityGroupIds: config.externalSecurityGroups.map(s => Promise.resolve(s)),
             };
         }
