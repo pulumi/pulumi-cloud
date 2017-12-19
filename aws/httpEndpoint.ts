@@ -237,13 +237,15 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             const lambda = new Function(
                 apiName + sha1hash(method + ":" + route.path),
                 (ev: APIGatewayRequest, ctx, cb) => {
-                    let body: any;
+                    let body: Buffer;
                     if (ev.body !== null) {
                         if (ev.isBase64Encoded) {
                             body = Buffer.from(ev.body, "base64");
                         } else {
                             body = Buffer.from(ev.body, "utf8");
                         }
+                    } else {
+                        body = Buffer.from([]);
                     }
 
                     ctx.callbackWaitsForEmptyEventLoop = false;
@@ -712,15 +714,27 @@ interface RequestResponse {
 }
 
 const stageName = "stage";
-function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: any,
+function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: Buffer,
                                      cb: (err: any, result: APIGatewayResponse) => void): RequestResponse {
     const response = {
         statusCode: 200,
         headers: <{[header: string]: string}>{},
         body: Buffer.from([]),
     };
+    const headers: { [name: string]: string; } = {};
+    const rawHeaders: string[] = [];
+    // Lowercase all header names to align with Node.js HTTP request behaviour,
+    // and create the `rawHeaders` array to maintain access to raw header data.
+    for (const name of Object.keys(ev.headers)) {
+        headers[name.toLowerCase()] = ev.headers[name];
+        rawHeaders.push(name);
+        rawHeaders.push(ev.headers[name]);
+    }
+    // Always add `content-length` header, as this is stripped by API Gateway
+    headers["content-length"] = body.length.toString();
     const req: cloud.Request = {
-        headers: ev.headers,
+        headers: headers,
+        rawHeaders: rawHeaders,
         body: body,
         method: ev.httpMethod,
         params: ev.pathParameters,

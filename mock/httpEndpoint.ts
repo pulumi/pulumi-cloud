@@ -116,6 +116,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 method: expressRequest.method,
                 params: expressRequest.params,
                 headers: expressRequest.headers,
+                rawHeaders: expressRequest.rawHeaders,
                 query: expressRequest.query,
                 path:   expressRequest.path,
                 protocol: expressRequest.protocol,
