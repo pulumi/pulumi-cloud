@@ -6,12 +6,9 @@ import * as pulumi from "pulumi";
 import * as sns from "./sns";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
-    // Inside + Outside API
-
     private readonly name: string;
-    private readonly topic: aws.sns.Topic;
-
-    // Inside API
+    public readonly topic: aws.sns.Topic;
+    public readonly subscriptions: aws.sns.TopicSubscription[];
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -22,21 +19,25 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
 
         this.name = name;
         this.topic = new aws.sns.Topic(name, {}, { parent: this });
+        this.subscriptions = [];
+        const topicId = this.topic.id;
 
-        this.publish = (item) => {
-            const awssdk = require("aws-sdk");
+        this.publish = async (item) => {
+            const awssdk = await import("aws-sdk");
             const snsconn = new awssdk.SNS();
-            return snsconn.publish({
+            const result = await snsconn.publish({
                 Message: JSON.stringify(item),
-                TopicArn: this.topic.id,
+                TopicArn: await topicId,
             }).promise();
         };
     }
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
-        sns.createSubscription(this.name + "_" + name, this.topic, async (snsItem: sns.SNSItem) => {
+        const subscriptionName = this.name + "_" + name;
+        const subscription = sns.createSubscription(subscriptionName, this.topic, async (snsItem: sns.SNSItem) => {
             const item = JSON.parse(snsItem.Message);
             await handler(item);
         });
+        this.subscriptions.push(subscription);
     }
 }
