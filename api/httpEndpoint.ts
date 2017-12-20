@@ -259,4 +259,3 @@ export interface Domain {
      */
     certificateChain: string;
 }
-

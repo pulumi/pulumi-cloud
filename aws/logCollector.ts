@@ -34,8 +34,8 @@ interface LogsLog {
 // created and managed by the Pulumi framework.
 class LogCollector extends pulumi.ComponentResource {
     public readonly lambda: aws.lambda.Function;
-    constructor(name: string, parent?: pulumi.Resource) {
-        super("cloud:logCollector:LogCollector", name, parent);
+    constructor(name: string, opts?: pulumi.ResourceOptions) {
+        super("cloud:logCollector:LogCollector", name, opts);
 
         const collector = new aws.serverless.Function(
             name,
@@ -51,7 +51,7 @@ class LogCollector extends pulumi.ComponentResource {
                     cb(err);
                 }
             },
-            this,
+            { parent: this },
         );
         this.lambda = collector.lambda;
 
@@ -60,7 +60,7 @@ class LogCollector extends pulumi.ComponentResource {
             action: "lambda:invokeFunction",
             function: this.lambda,
             principal: "logs." + region + ".amazonaws.com",
-        }, this);
+        }, { parent: this });
     }
 }
 
@@ -71,7 +71,7 @@ export function getLogCollector(): aws.lambda.Function {
         // so the logCollector doesn't get falsely attributed to the caller.
         logCollector = new LogCollector(
             shared.createNameWithStackInfo(""),
-            shared.getGlobalInfrastructureResource());
+            { parent: shared.getGlobalInfrastructureResource() });
     }
 
     return logCollector.lambda;

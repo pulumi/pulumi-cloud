@@ -37,7 +37,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
     // Outside API (constructor and methods)
 
     constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType,
-                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+                opts?: pulumi.ResourceOptions) {
         if (primaryKey === undefined) {
             primaryKey = "id";
         }
@@ -48,7 +48,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         super("cloud:table:Table", name, {
             primaryKey: primaryKey,
             primaryKeyType: primaryKeyType,
-        }, parent, dependsOn);
+        }, opts);
 
         const table = new aws.dynamodb.Table(name, {
             attribute: [
@@ -60,7 +60,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             hashKey: primaryKey,
             readCapacity: 5,
             writeCapacity: 5,
-        }, this);
+        }, { parent: this });
 
         const tableName: pulumi.Computed<string> = table.name;
         const db = () => {

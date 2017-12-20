@@ -15,11 +15,9 @@ export interface TableConstructor {
      * @param name A unique name for the table.
      * @param primaryKey An optional primary key name.
      * @param primaryKeyType An optional primary key type.
-     * @param parent An optional parent resource to which this resource belongs.
-     * @param dependsOn Optional additional explicit dependencies on other resources.
+     * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType,
-         parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Table;
+    new (name: string, primaryKey?: string, primaryKeyType?: PrimaryKeyType, opts?: pulumi.ResourceOptions): Table;
 }
 
 export let Table: TableConstructor; // tslint:disable-line
