@@ -125,10 +125,9 @@ export interface SharedVolumeConstructor {
      * Construct a new Volume with the given unique name.
      *
      * @param name The unique name of the volume.
-     * @param parent An optional parent resource to which this resource belongs.
-     * @param dependsOn Optional additional explicit dependencies on other resources.
+     * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): SharedVolume;
+    new (name: string, opts?: pulumi.ResourceOptions): SharedVolume;
 
     // TODO[pulumi/pulumi-cloud#84] - Likely important features:
     // backupToBucket(bucket: Bucket): Promise<void>
@@ -209,10 +208,9 @@ export interface ServiceConstructor {
      * Construct a new Service, which is one or more managed replicas of a group of one or more Containers.
      *
      * @param name The unique name of the service.
-     * @param parent An optional parent resource to which this resource belongs.
-     * @param dependsOn Optional additional explicit dependencies on other resources.
+     * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, args: ServiceArguments, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Service;
+    new (name: string, args: ServiceArguments, opts?: pulumi.ResourceOptions): Service;
 }
 
 export let Service: ServiceConstructor; // tslint:disable-line
@@ -249,10 +247,9 @@ export interface TaskConstructor {
      *
      * @param name The unique name of the task.
      * @param container The container specification.
-     * @param parent An optional parent resource to which this resource belongs.
-     * @param dependsOn Optional additional explicit dependencies on other resources.
+     * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, container: Container, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): Task;
+    new (name: string, container: Container, opts?: pulumi.ResourceOptions): Task;
 }
 
 export let Task: TaskConstructor; // tslint:disable-line

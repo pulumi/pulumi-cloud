@@ -12,7 +12,7 @@ export function getUnhandledErrorTopic(): aws.sns.Topic {
         unhandledErrorTopic = new aws.sns.Topic(
             createNameWithStackInfo(`unhandled-error`),
             undefined,
-             getGlobalInfrastructureResource());
+            { parent: getGlobalInfrastructureResource() });
     }
 
     return unhandledErrorTopic;

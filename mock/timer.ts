@@ -7,8 +7,7 @@ import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
 
-export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>,
-                         parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void {
+export function interval(name: string, options: timer.IntervalRate, handler: () => Promise<void>): void {
     utils.ensureUnique(usedNames, name, "Timer");
 
     let rateMinutes = 0;
@@ -35,8 +34,7 @@ export function interval(name: string, options: timer.IntervalRate, handler: () 
     }, 5);
 }
 
-export function cron(name: string, cronTab: string, handler: () => Promise<void>,
-                     parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void {
+export function cron(name: string, cronTab: string, handler: () => Promise<void>): void {
     utils.ensureUnique(usedNames, name, "Timer");
 
     const job = new node_cron.CronJob(cronTab, handler);
@@ -45,53 +43,41 @@ export function cron(name: string, cronTab: string, handler: () => Promise<void>
 
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | timer.Action,
-                      handlerOrParent?: timer.Action | pulumi.Resource,
-                      parentOrDependsOn?: pulumi.Resource | pulumi.Resource[],
-                      dependsOn?: pulumi.Resource[]): void {
+                      handlerOrOpts?: timer.Action | pulumi.ResourceOptions): void {
     let hour: number;
     let minute: number;
     let handler: timer.Action;
-    let parent: pulumi.Resource | undefined;
     if (typeof scheduleOrHandler === "function") {
         hour = 0;
         minute = 0;
         handler = scheduleOrHandler as timer.Action;
-        parent = handlerOrParent as pulumi.Resource | undefined;
-        dependsOn = parentOrDependsOn as pulumi.Resource[] | undefined;
     }
-    else if (!handlerOrParent) {
+    else if (!handlerOrOpts) {
         throw new Error("Missing required timer handler function");
     }
     else {
         hour = scheduleOrHandler.hourUTC || 0;
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrParent as timer.Action;
-        parent = parentOrDependsOn as pulumi.Resource | undefined;
+        handler = handlerOrOpts as timer.Action;
     }
-    cron(name, `${minute} ${hour} * * ? *`, handler, parent, dependsOn);
+    cron(name, `${minute} ${hour} * * ? *`, handler);
 }
 
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | timer.Action,
-                       handlerOrParent?: timer.Action | pulumi.Resource,
-                       parentOrDependsOn?: pulumi.Resource | pulumi.Resource[],
-                       dependsOn?: pulumi.Resource[]): void {
+                       handlerOrOpts?: timer.Action | pulumi.ResourceOptions) {
     let minute: number;
     let handler: timer.Action;
-    let parent: pulumi.Resource | undefined;
     if (typeof scheduleOrHandler === "function") {
         minute = 0;
         handler = scheduleOrHandler as timer.Action;
-        parent = handlerOrParent as pulumi.Resource | undefined;
-        dependsOn = parentOrDependsOn as pulumi.Resource[] | undefined;
     }
-    else if (!handlerOrParent) {
+    else if (!handlerOrOpts) {
         throw new Error("Missing required timer handler function");
     }
     else {
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrParent as timer.Action;
-        parent = parentOrDependsOn as pulumi.Resource | undefined;
+        handler = handlerOrOpts as timer.Action;
     }
     cron(name, `${minute} * * * ? *`, handler);
 }

@@ -260,7 +260,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     };
                     next();
                 },
-                parent,
+                { parent: parent },
             );
             lambdas[method + ":" + route.path] = lambda;
 
@@ -304,13 +304,13 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 
     constructor(name: string, staticRoutes: StaticRoute[], routes: Route[], customDomains: cloud.Domain[],
-                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+                opts?: pulumi.ResourceOptions) {
 
         super("cloud:http:HttpEndpoint", name, {
             staticRoutes: staticRoutes,
             routes: routes,
             customDomains: customDomains,
-        }, parent, dependsOn);
+        }, opts);
 
         // Create a SwaggerSpec and then expand out all of the static files and routes.
         const swagger: SwaggerSpec = createBaseSpec(name);
@@ -320,7 +320,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
         const api = new aws.apigateway.RestApi(name, {
             body: createSwaggerString(swagger),
-        }, this);
+        }, { parent: this });
 
         const bodyHash = createSwaggerHash(swagger);
 
@@ -331,14 +331,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             restApi: api,
             stageName: "",
             description: `Deployment of version ${deplymentNameAndHash}`,
-        }, this);
+        }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
             stageName: stageName,
             description: "The current deployment of the API.",
             restApi: api,
             deployment: deployment,
-        }, this);
+        }, { parent: this });
 
         // Ensure that the permissions allow the API Gateway to invoke the lambdas.
         for (const path of Object.keys(swagger.paths)) {
@@ -359,7 +359,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         principal: "apigateway.amazonaws.com",
                         sourceArn: deployment.executionArn.then((arn: aws.ARN | undefined) =>
                             arn && (arn + stageName + "/" + method + path)),
-                    }, this);
+                    }, { parent: this });
                 }
             }
         }

@@ -6,7 +6,7 @@ import * as pulumi from "pulumi";
 import { Function } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
-                         parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void {
+                         opts?: pulumi.ResourceOptions): void {
     let rateMinutes = 0;
     if (options.minutes) {
         rateMinutes += options.minutes;
@@ -26,29 +26,26 @@ export function interval(name: string, options: timer.IntervalRate, handler: tim
         unit = "minute";
     }
 
-    createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler, parent, dependsOn);
+    createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler, opts);
 }
 
 export function cron(name: string, cronTab: string, handler: timer.Action,
-                     parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void {
-    createScheduledEvent(name, `cron(${cronTab})`, handler, parent, dependsOn);
+                     opts?: pulumi.ResourceOptions): void {
+    createScheduledEvent(name, `cron(${cronTab})`, handler, opts);
 }
 
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | timer.Action,
-                      handlerOrParent?: timer.Action | pulumi.Resource,
-                      parentOrDependsOn?: pulumi.Resource | pulumi.Resource[],
-                      dependsOn?: pulumi.Resource[]): void {
+                      handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
+                      opts?: pulumi.ResourceOptions): void {
     let hour: number;
     let minute: number;
     let handler: timer.Action;
-    let parent: pulumi.Resource | undefined;
     if (typeof scheduleOrHandler === "function") {
         hour = 0;
         minute = 0;
         handler = scheduleOrHandler as timer.Action;
-        parent = handlerOrParent as pulumi.Resource | undefined;
-        dependsOn = parentOrDependsOn as pulumi.Resource[] | undefined;
+        opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
         throw new Error("Missing required timer handler function");
@@ -56,45 +53,39 @@ export function daily(name: string,
     else {
         hour = scheduleOrHandler.hourUTC || 0;
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrParent as timer.Action;
-        parent = parentOrDependsOn as pulumi.Resource | undefined;
+        handler = handlerOrOptions as timer.Action;
     }
-    cron(name, `${minute} ${hour} * * ? *`, handler, parent, dependsOn);
+    cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | timer.Action,
-                       handlerOrParent?: timer.Action | pulumi.Resource,
-                       parentOrDependsOn?: pulumi.Resource | pulumi.Resource[],
-                       dependsOn?: pulumi.Resource[]): void {
+                       handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
+                       opts?: pulumi.ResourceOptions): void {
     let minute: number;
     let handler: timer.Action;
-    let parent: pulumi.Resource | undefined;
     if (typeof scheduleOrHandler === "function") {
         minute = 0;
         handler = scheduleOrHandler as timer.Action;
-        parent = handlerOrParent as pulumi.Resource | undefined;
-        dependsOn = parentOrDependsOn as pulumi.Resource[] | undefined;
+        opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
         throw new Error("Missing required timer handler function");
     }
     else {
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrParent as timer.Action;
-        parent = parentOrDependsOn as pulumi.Resource | undefined;
+        handler = handlerOrOptions as timer.Action;
     }
-    cron(name, `${minute} * * * ? *`, handler, parent, dependsOn);
+    cron(name, `${minute} * * * ? *`, handler, opts);
 }
 
 class Timer extends pulumi.ComponentResource {
     public readonly scheduleExpression: string;
 
-    constructor(name: string, scheduleExpression: string, handler: timer.Action,
-                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+    constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, {
             scheduleExpression: scheduleExpression,
-        }, parent, dependsOn);
+        }, opts);
 
         const func = new Function(
             name,
@@ -105,29 +96,29 @@ class Timer extends pulumi.ComponentResource {
                     cb(err, null);
                 });
             },
-            this,
+            { parent: this },
         );
 
         const rule = new aws.cloudwatch.EventRule(name, {
             scheduleExpression: scheduleExpression,
-        }, this);
+        }, { parent: this });
         const target = new aws.cloudwatch.EventTarget(name, {
             rule: rule.name,
             arn: func.lambda.arn,
             targetId: name,
-        }, this);
+        }, { parent: this });
         const permission = new aws.lambda.Permission(name, {
             action: "lambda:invokeFunction",
             function: func.lambda,
             principal: "events.amazonaws.com",
             sourceArn: rule.arn,
-        }, this);
+        }, { parent: this });
 
         this.scheduleExpression = scheduleExpression;
     }
 }
 
 function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action,
-                              parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]): void {
-    const t = new Timer(name, scheduleExpression, handler, parent, dependsOn);
+                              opts?: pulumi.ResourceOptions): void {
+    const t = new Timer(name, scheduleExpression, handler, opts);
 }

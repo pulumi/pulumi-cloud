@@ -285,14 +285,14 @@
 [[projects]]
   name = "github.com/pulumi/pulumi"
   packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/operations","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/version","pkg/workspace","sdk/proto/go"]
-  revision = "680a09a164fc9ff9124fbd269a55e32417aa00f3"
-  version = "v0.9.5"
+  revision = "af087103b9722909a3f71bd82e3dd247df197791"
+  version = "v0.9.6"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "cec8b17ec15fc9d1ee7b08cb0e5e9106875a5f96"
-  version = "v0.9.5"
+  revision = "a178c0cd3098c1d6541e0560b3d6225a92de81ba"
+  version = "v0.9.6"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -411,6 +411,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a0620f9ace92fd1f81eba621821ea7f4f8059f203e390c7106f0bb5c7ad81cf5"
+  inputs-digest = "d87b9ef28ace58a2f9e06bd4a0d58d24683afcdff2f8d14720f2b8903c3a5dab"
   solver-name = "gps-cdcl"
   solver-version = 1

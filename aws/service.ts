@@ -114,12 +114,12 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
         const roleName = createNameWithStackInfo("load-balancer");
         serviceLoadBalancerRole = new aws.iam.Role(roleName, {
             assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-        }, getGlobalInfrastructureResource());
+        }, { parent: getGlobalInfrastructureResource() });
 
         const rolePolicy = new aws.iam.RolePolicy(roleName, {
             role: serviceLoadBalancerRole.name,
             policy: JSON.stringify(policy),
-        }, getGlobalInfrastructureResource());
+        }, { parent: getGlobalInfrastructureResource() });
     }
 
     return serviceLoadBalancerRole;
@@ -272,7 +272,7 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource,
         protocol: targetProtocol,
         vpcId: network.vpcId,
         deregistrationDelay: 180, // 3 minutes
-    }, parent);
+    }, { parent: parent });
 
     // Listen on a new port on the NLB and forward to the target.
     const listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
@@ -287,7 +287,7 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource,
         // If SSL is used, we automatically insert the recommended ELB security policy from
         // http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html.
         sslPolicy: useCertificateARN ? "ELBSecurityPolicy-2016-08" : undefined,
-    }, parent);
+    }, { parent: parent });
 
     return {
         loadBalancer: loadBalancer,
@@ -685,7 +685,7 @@ function getTaskRole(): aws.iam.Role {
     if (!taskRole) {
         taskRole = new aws.iam.Role(createNameWithStackInfo("task"), {
             assumeRolePolicy: JSON.stringify(taskRolePolicy),
-        }, getGlobalInfrastructureResource());
+        }, { parent: getGlobalInfrastructureResource() });
         // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
         // We need to audit these permissions and potentially provide ways for users to directly configure these.
         const policies = getComputeIAMRolePolicies();
@@ -695,7 +695,7 @@ function getTaskRole(): aws.iam.Role {
                 createNameWithStackInfo(`task-${sha1hash(policyArn)}`), {
                     role: taskRole,
                     policyArn: policyArn,
-                }, getGlobalInfrastructureResource());
+                }, { parent: getGlobalInfrastructureResource() });
         }
     }
 
@@ -713,14 +713,14 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {
         retentionInDays: 1,
-    }, parent);
+    }, { parent: parent });
 
     // And hook it up to the aggregated log collector
     const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(name, {
         logGroup: logGroup,
         destinationArn: getLogCollector().arn,
         filterPattern: "",
-    }, parent);
+    }, { parent: parent });
 
     // Find all referenced Volumes and any `build` containers.
     const volumes: { hostPath?: string; name: string }[] = [];
@@ -747,7 +747,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
         containerDefinitions: containerDefintions,
         volume: volumes,
         taskRoleArn: getTaskRole().arn,
-    }, parent);
+    }, { parent: parent });
 
     return {
         task: taskDefinition,
@@ -792,8 +792,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         return getTaskRole();
     }
 
-    constructor(name: string, args: cloud.ServiceArguments,
-                parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+    constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster: Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
@@ -807,7 +806,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         super("cloud:service:Service", name, {
             containers: containers,
             replicas: replicas,
-        }, parent, dependsOn);
+        }, opts);
 
         this.name = name;
         this.cluster = cluster;
@@ -848,7 +847,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             loadBalancers: loadBalancers,
             iamRole: iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
-        }, this);
+        }, { parent: this });
 
         // getEndpoint returns the host and port info for a given containerName and exposed port.
         this.getEndpoint =
@@ -909,11 +908,11 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     public readonly kind: cloud.VolumeKind;
     public readonly name: string;
 
-    constructor(name: string, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
+    constructor(name: string, opts?: pulumi.ResourceOptions) {
         if (volumeNames.has(name)) {
             throw new Error("Must provide a unique volume name");
         }
-        super("cloud:volume:Volume", name, {}, parent, dependsOn);
+        super("cloud:volume:Volume", name, {}, opts);
         this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
@@ -967,8 +966,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         return getTaskRole();
     }
 
-    constructor(name: string, container: cloud.Container, parent?: pulumi.Resource, dependsOn?: pulumi.Resource[]) {
-        super("cloud:task:Task", name, { container: container }, parent, dependsOn);
+    constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
+        super("cloud:task:Task", name, { container: container }, opts);
 
         const cluster: Cluster | undefined = getCluster();
         if (!cluster) {

@@ -259,8 +259,8 @@ export class Cluster {
                     args.network.subnetIds,
                 ),
             },
-            undefined,
-            dependsOn);
+            { dependsOn: dependsOn },
+        );
     }
 }
 
