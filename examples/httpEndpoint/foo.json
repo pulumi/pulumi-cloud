@@ -1,0 +1,48 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "examples-test",
+        "version": "1.0"
+    },
+    "paths": {
+        "/google/{proxy+}": {
+            "x-amazon-apigateway-any-method": {
+                "parameters": [
+                    {
+                        "name": "proxy",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "x-amazon-apigateway-integration": {
+                    "responses": {
+                        "default": {
+                            "statusCode": "200"
+                        }
+                    },
+                    "requestParameters": {
+                        "integration.request.path.proxy": "method.request.path.proxy"
+                    },
+                    "uri": {},
+                    "passthroughBehavior": "when_no_match",
+                    "httpMethod": "ANY",
+                    "type": "http_proxy"
+                }
+            }
+        },
+        "/test1.txt": {
+            "get": {
+                "x-amazon-apigateway-integration": {
+                    "uri": {},
+                    "passthroughBehavior": "when_no_match",
+                    "httpMethod": "POST",
+                    "type": "aws_proxy"
+                }
+            }
+        }
+    },
+    "x-amazon-apigateway-binary-media-types": [
+        "*/*"
+    ]
+}

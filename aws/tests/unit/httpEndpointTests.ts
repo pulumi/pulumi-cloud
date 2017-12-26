@@ -147,6 +147,43 @@ namespace staticApiTests {
     }
 }
 
+namespace proxyApiTests {
+    endpoint.proxy("/google", "http://www.google.com");
+
+    export async function testGoogle1() {
+        const address = await deployment.url;
+        await supertest(address).get("/google").expect(200);
+    }
+
+    export async function testGoogle2() {
+        const address = await deployment.url;
+        await supertest(address).get("/google/").expect(200);
+    }
+
+    export async function testGoogle3() {
+        const address = await deployment.url;
+        await supertest(address).get("/google/about").expect(301);
+    }
+
+    endpoint.proxy("/google", "http://www.google.com/");
+
+    export async function testGoogleSlash1() {
+        const address = await deployment.url;
+        await supertest(address).get("/google").expect(200);
+    }
+
+    export async function testGoogleSlash2() {
+        const address = await deployment.url;
+        await supertest(address).get("/google/").expect(200);
+    }
+
+    export async function testGoogleSlash3() {
+        const address = await deployment.url;
+        await supertest(address).get("/google/about").expect(301);
+    }
+
+}
+
 namespace updateProgramTests {
     endpoint.get("/persistent1", async (req, res) => {
         res.json({ version: 0 });
@@ -176,6 +213,7 @@ export async function runAllTests(result: any): Promise<boolean>{
         ["httpEndpointTests.deleteApiTests"]: deleteApiTests,
         ["httpEndpointTests.postApiTests"]: postApiTests,
         ["httpEndpointTests.staticApiTests"]: staticApiTests,
+        ["httpEndpointTests.proxyApiTests"]: proxyApiTests,
         ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
     });
 }

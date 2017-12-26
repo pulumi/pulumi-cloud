@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as pulumi from "pulumi";
+import { Endpoint } from "./service";
 
 /**
  * Request represents an HttpEndpoint request.
@@ -143,6 +144,16 @@ export interface HttpEndpoint {
      * @param options Optional options that can be provided to customize the serving behavior.
      */
     static(path: string, localPath: string, options?: ServeStaticOptions): void;
+
+    /**
+     * proxy forwards an HTTP request to a target URL or Endpoint.
+     *
+     * @param path The route path at which to serve the file.
+     * @param target The target URL or Endpoint to proxy to. If a string is provided, it must be an Internet reachable
+     *               URL.  If an Endpoint is provided, it can be any endpoint exposed by the stack, including endpoints
+     *               which are not expoed directly to the Internet.
+     */
+    proxy(path: string, target: string | Endpoint): void;
 
     /**
      * Routes any requests with given HTTP method on the given path to the
