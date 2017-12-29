@@ -142,6 +142,7 @@ export function getCluster(): Cluster | undefined {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
                 ecsClusterARN: Promise.resolve(config.ecsClusterARN),
+                securityGroupId: Promise.resolve(config.ecsClusterSecurityGroup),
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }

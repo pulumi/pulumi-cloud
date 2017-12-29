@@ -32,14 +32,11 @@ export let acmCertificateARN = config.get("acmCertificateARN");
  * environment.
  */
 export let ecsClusterARN: string | pulumi.ComputedValue<string> = config.get("ecsClusterARN");
+
 /**
- * Subnets associated with an externally-provided ECS Cluster.  Required if `ecsClusterARN` is set.
+ * Optional ECS cluster security group that all ALBs for services within the cluster will use.
  */
-export let ecsClusterSubnets: string | pulumi.ComputedValue<string>[] | undefined = config.get("ecsClusterSubnets");
-/**
- * VPC id associated with an externally-provided ECS Cluster.  Required if `ecsClusterARN` is set.
- */
-export let ecsClusterVpcId: string | pulumi.ComputedValue<string> = config.get("ecsClusterVpcId");
+export let ecsClusterSecurityGroup: string | pulumi.ComputedValue<string> = config.get("ecsClusterSecurityGroup");
 
 /**
  * Optional EFS mount path on the cluster hosts.  If not provided, `Volumes` cannot be used in `Service`s and `Task`s.
@@ -152,14 +149,14 @@ export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS");
 /**
  * setEcsCluster configures the ambient ECS cluster imperatively rather than using standard configuration.
  */
-export function setEcsCluster(cluster?: aws.ecs.Cluster, subnets?: aws.ec2.Subnet[], vpc?: aws.ec2.Vpc): void {
-    if (cluster) {
-        ecsClusterARN = cluster.name;
+export function setEcsCluster(cluster: aws.ecs.Cluster,
+                              securityGroup?: pulumi.Computed<string>,
+                              efsMountPath?: string): void {
+    ecsClusterARN = cluster.name;
+    if (securityGroup) {
+        ecsClusterSecurityGroup = securityGroup;
     }
-    if (subnets) {
-        ecsClusterSubnets = subnets.map(s => s.id);
-    }
-    if (vpc) {
-        ecsClusterVpcId = vpc.id;
+    if (efsMountPath) {
+        ecsClusterEfsMountPath = efsMountPath;
     }
 }

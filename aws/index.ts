@@ -7,6 +7,7 @@
 // this package.  Instead things should only reference the @pulumi/cloud package.  That package
 // actually exports the API types.
 
+export * from "./function";
 export * from "./httpEndpoint";
 export * from "./table";
 export * from "./topic";
@@ -17,8 +18,8 @@ import * as infrastructure from "./infrastructure";
 import * as timer from "./timer";
 export { config, infrastructure, timer };
 
-// This is an AWS-only API that allows configuring AWS-specific role policies.
-export { setComputeIAMRolePolicies } from "./shared";
+// Export internal AWS-only APIs that allows configuring AWS-specific settings.
+export * from "./shared";
 
 // Code purely for enforcement that our module properly exports the same surface area as the API. We
 // don't ever actually pull in any value from these modules, so there is no actual dependency or
