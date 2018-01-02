@@ -37,7 +37,7 @@ export class Network {
             enableDnsHostnames: true,
             enableDnsSupport: true,
             tags: {
-                Name: "Pulumi VPC",
+                Name: `Pulumi VPC - ${pulumi.getStack()}`,
             },
         });
         this.vpcId = vpc.id;
