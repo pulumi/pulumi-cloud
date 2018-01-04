@@ -17,7 +17,7 @@ export interface StaticRoute {
     options: cloud.ServeStaticOptions;
 }
 
-// ProxyRoute is a registered static file route, backed by an S3 bucket.
+// ProxyRoute is a registered proxy route, proxying to either a URL or cloud.Endpoint.
 export interface ProxyRoute {
     path: string;
     target: string | cloud.Endpoint;
@@ -117,7 +117,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly customDomainNames: pulumi.Computed<string>[]; // any custom domain names.
 
     private static registerStaticRoutes(parent: pulumi.Resource, apiName: string,
-                                        staticRoutes: StaticRoute[], swagger: SwaggerSpec,) {
+                                        staticRoutes: StaticRoute[], swagger: SwaggerSpec) {
         // If there are no static files or directories, then we can bail out early.
         if (staticRoutes.length === 0) {
             return;
@@ -252,7 +252,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             const swaggerPath = route.path.endsWith("/")
                 ? route.path
                 : route.path + "/";
-                const swaggerPathProxy = swaggerPath + "{proxy+}";
+            const swaggerPathProxy = swaggerPath + "{proxy+}";
             if (typeof route.target === "string") {
                 // Target is a URL
                 swagger.paths[swaggerPath] = {
