@@ -889,7 +889,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 return {
                     hostname: hostname!,
                     port: info.hostPort,
-                    loadBalancer: info.host, 
+                    loadBalancer: info.host,
                 };
             };
     }

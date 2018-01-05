@@ -9,8 +9,8 @@ import * as fspath from "path";
 import * as pulumi from "pulumi";
 
 import { Function } from "./function";
-import { sha1hash } from "./utils";
 import { Endpoint } from "./service";
+import { sha1hash } from "./utils";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
 export interface StaticRoute {
@@ -255,10 +255,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 ? route.path
                 : route.path + "/";
             const swaggerPathProxy = swaggerPath + "{proxy+}";
-            
+
             // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
             let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
-            if (typeof route.target !== "string") { 
+            if (typeof route.target !== "string") {
                 async function getTargetArn() {
                     const t = await route.target;
                     const endpoint = t as Endpoint;
@@ -267,8 +267,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     }
                     const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
                     if (loadBalancerType !== "network") {
-                        // Our cloud.Service allows for 
-                        throw new Error("Endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                        // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
+                        // case for cloud.Service ports exposed as type "tcp".
+                        throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
                     }
                     return endpoint.loadBalancer.arn;
                 }
@@ -277,7 +278,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     targetArn: getTargetArn(),
                 });
             }
-            
+
             // Register two paths in the Swagger spec, for the root and for a catch all under the root
             swagger.paths[swaggerPath] = {
                 [method]:  createPathSpecProxy(route.target, vpcLink, false),
@@ -615,8 +616,11 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
     };
 }
 
-function createPathSpecProxy(target: string | pulumi.Computed<cloud.Endpoint>, vpcLink: aws.apigateway.VpcLink | undefined, useProxyPathParameter: boolean): SwaggerOperationAsync {
-    
+function createPathSpecProxy(
+    target: string | pulumi.Computed<cloud.Endpoint>,
+    vpcLink: aws.apigateway.VpcLink | undefined,
+    useProxyPathParameter: boolean): SwaggerOperationAsync {
+
     async function computeUri() {
         const targetValue = await target;
         let url = "";
