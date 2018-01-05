@@ -13,7 +13,7 @@ const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
-    public proxy: (path: string, target: string | cloud.Endpoint) => void;
+    public proxy: (path: string, target: string | pulumi.Computed<cloud.Endpoint>) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -40,12 +40,13 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             app.use(path, express.static(localPath, expressOptions));
         };
 
-        this.proxy = (path, target) => {
+        this.proxy = async (path, target) => {
             let url: string;
             if (typeof target === "string") {
                 url = target;
             } else {
-                url = `http://${target.hostname}:${target.port}`;
+                const targetEndpoint = await target;
+                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
             }
             app.use(path, httpProxy({target: url}));
         };

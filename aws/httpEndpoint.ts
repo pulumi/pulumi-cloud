@@ -7,8 +7,10 @@ import * as fs from "fs";
 import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
+
 import { Function } from "./function";
 import { sha1hash } from "./utils";
+import { Endpoint } from "./service";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
 export interface StaticRoute {
@@ -20,7 +22,7 @@ export interface StaticRoute {
 // ProxyRoute is a registered proxy route, proxying to either a URL or cloud.Endpoint.
 export interface ProxyRoute {
     path: string;
-    target: string | cloud.Endpoint;
+    target: string | pulumi.Computed<cloud.Endpoint>;
 }
 
 // Route is a registered dynamic route, backed by a serverless Lambda.
@@ -56,11 +58,11 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.staticRoutes.push({ path, localPath, options: options || {} });
     }
 
-    public proxy(path: string, target: string) {
+    public proxy(path: string, target: string | pulumi.Computed<cloud.Endpoint>) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
-        this.proxyRoutes.push({ path, target});
+        this.proxyRoutes.push({ path, target });
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
@@ -253,18 +255,36 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 ? route.path
                 : route.path + "/";
             const swaggerPathProxy = swaggerPath + "{proxy+}";
-            if (typeof route.target === "string") {
-                // Target is a URL
-                swagger.paths[swaggerPath] = {
-                    [method]:  createPathSpecHttpProxy(route.target, false),
-                };
-                swagger.paths[swaggerPathProxy] = {
-                    [method]: createPathSpecHttpProxy(route.target, true),
-                };
-            } else {
-                // Target is an Endpoint
-                throw new Error("Not yet implemented - proxy route targeting Endpoint");
+            
+            // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
+            let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
+            if (typeof route.target !== "string") { 
+                async function getTargetArn() {
+                    const t = await route.target;
+                    const endpoint = t as Endpoint;
+                    if (!endpoint.loadBalancer) {
+                        throw new Error("AWS endpoint proxy requires an AWS Endpoint");
+                    }
+                    const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
+                    if (loadBalancerType !== "network") {
+                        // Our cloud.Service allows for 
+                        throw new Error("Endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                    }
+                    return endpoint.loadBalancer.arn;
+                }
+                const name = apiName + sha1hash(route.path);
+                vpcLink = new aws.apigateway.VpcLink(name, {
+                    targetArn: getTargetArn(),
+                });
             }
+            
+            // Register two paths in the Swagger spec, for the root and for a catch all under the root
+            swagger.paths[swaggerPath] = {
+                [method]:  createPathSpecProxy(route.target, vpcLink, false),
+            };
+            swagger.paths[swaggerPathProxy] = {
+                [method]: createPathSpecProxy(route.target, vpcLink, true),
+            };
         }
     }
 
@@ -358,7 +378,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         HttpDeployment.registerStaticRoutes(this, name, staticRoutes, swagger);
         HttpDeployment.registerProxyRoutes(this, name, proxyRoutes, swagger);
         const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
-        console.log(JSON.stringify(swagger));
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
         const api = new aws.apigateway.RestApi(name, {
@@ -479,8 +498,10 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
             httpMethod: op.httpMethod,
             type: op.type,
             responses: op.responses,
+            connectionType: op.connectionType,
             uri: await op.uri,
             credentials: await op.credentials,
+            connectionId: await op.connectionId,
         };
     }
 }
@@ -515,16 +536,19 @@ interface ApigatewayIntegrationBase {
     httpMethod: string;
     type: string;
     responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
+    connectionType?: string;
 }
 
 interface ApigatewayIntegration extends ApigatewayIntegrationBase {
     uri: string;
     credentials?: string;
+    connectionId?: string;
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
     uri: Promise<string>;
     credentials?: Promise<string>;
+    connectionId?: Promise<string>;
 }
 
 interface SwaggerOperationAsync {
@@ -591,15 +615,28 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
     };
 }
 
-function createPathSpecHttpProxy(target: string, proxy: boolean): SwaggerOperationAsync {
-    if (!target.endsWith("/")) {
-        target = target + "/";
-    }
+function createPathSpecProxy(target: string | pulumi.Computed<cloud.Endpoint>, vpcLink: aws.apigateway.VpcLink | undefined, useProxyPathParameter: boolean): SwaggerOperationAsync {
+    
     async function computeUri() {
-        if (proxy) {
-            return `${target}{proxy}`;
+        const targetValue = await target;
+        let url = "";
+        if (targetValue === undefined) {
+            // Use an invlaid dummy URL during preview
+            url = "<computed>";
+        } else if (typeof targetValue === "string") {
+            // For URL target, ensure there is a trailing `/`
+            url = targetValue;
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
         } else {
-            return target;
+            // For Endpoint target, construct an HTTP URL from the hostname and port
+            url = `http://${targetValue.hostname}:${targetValue.port}/`;
+        }
+        if (useProxyPathParameter) {
+            return `${url}{proxy}`;
+        } else {
+            return url;
         }
     }
     const result: SwaggerOperationAsync = {
@@ -612,10 +649,12 @@ function createPathSpecHttpProxy(target: string, proxy: boolean): SwaggerOperati
             uri: computeUri(),
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
+            connectionType: vpcLink ? "VPC_LINK" : undefined,
+            connectionId: vpcLink ? vpcLink.id.then(s => s || "<undefined>") : undefined,
             type: "http_proxy",
         },
     };
-    if (proxy) {
+    if (useProxyPathParameter) {
         result.parameters = [{
             name: "proxy",
             in: "path",
