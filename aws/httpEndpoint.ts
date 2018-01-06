@@ -266,7 +266,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         throw new Error("AWS endpoint proxy requires an AWS Endpoint");
                     }
                     const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
-                    if (loadBalancerType !== "network") {
+                    if (loadBalancerType === "application") {
                         // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
                         // case for cloud.Service ports exposed as type "tcp".
                         throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
