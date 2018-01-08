@@ -7,7 +7,9 @@ import * as fs from "fs";
 import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
+
 import { Function } from "./function";
+import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
@@ -15,6 +17,12 @@ export interface StaticRoute {
     path: string;
     localPath: string;
     options: cloud.ServeStaticOptions;
+}
+
+// ProxyRoute is a registered proxy route, proxying to either a URL or cloud.Endpoint.
+export interface ProxyRoute {
+    path: string;
+    target: string | pulumi.Computed<cloud.Endpoint>;
 }
 
 // Route is a registered dynamic route, backed by a serverless Lambda.
@@ -27,6 +35,7 @@ export interface Route {
 export class HttpEndpoint implements cloud.HttpEndpoint {
     private readonly name: string;
     private readonly staticRoutes: StaticRoute[];
+    private readonly proxyRoutes: ProxyRoute[];
     private readonly routes: Route[];
     private readonly customDomains: cloud.Domain[];
     private isPublished: boolean;
@@ -36,6 +45,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     constructor(name: string) {
         this.name = name;
         this.staticRoutes = [];
+        this.proxyRoutes = [];
         this.routes = [];
         this.customDomains = [];
         this.isPublished = false;
@@ -46,6 +56,13 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             path = "/" + path;
         }
         this.staticRoutes.push({ path, localPath, options: options || {} });
+    }
+
+    public proxy(path: string, target: string | pulumi.Computed<cloud.Endpoint>) {
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        this.proxyRoutes.push({ path, target });
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
@@ -89,7 +106,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         }
         // Create a unique name prefix that includes the name plus all the registered routes.
         this.isPublished = true;
-        return new HttpDeployment(this.name, this.staticRoutes, this.routes, this.customDomains);
+        return new HttpDeployment(this.name, this.staticRoutes, this.proxyRoutes, this.routes, this.customDomains);
     }
 }
 
@@ -101,7 +118,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly url: pulumi.Computed<string>; // the URL for this deployment.
     public /*out*/ readonly customDomainNames: pulumi.Computed<string>[]; // any custom domain names.
 
-    private static registerStaticRoutes(apiName: string, staticRoutes: StaticRoute[], swagger: SwaggerSpec) {
+    private static registerStaticRoutes(parent: pulumi.Resource, apiName: string,
+                                        staticRoutes: StaticRoute[], swagger: SwaggerSpec) {
         // If there are no static files or directories, then we can bail out early.
         if (staticRoutes.length === 0) {
             return;
@@ -110,17 +128,17 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         const method: string = swaggerMethod("GET");
 
         // Create a bucket to place all the static data under.
-        const bucket = new aws.s3.Bucket(safeS3BucketName(apiName));
+        const bucket = new aws.s3.Bucket(safeS3BucketName(apiName), undefined, {parent});
 
         function createRole(key: string) {
             // Create a role and attach it so that this route can access the AWS bucket.
             const role = new aws.iam.Role(key, {
                 assumeRolePolicy: JSON.stringify(apigatewayAssumeRolePolicyDocument),
-            });
+            }, {parent});
             const attachment = new aws.iam.RolePolicyAttachment(key, {
                 role: role,
                 policyArn: aws.iam.AmazonS3FullAccess,
-            });
+            }, {parent});
 
             return role;
         }
@@ -147,7 +165,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 key: key,
                 source: new pulumi.asset.FileAsset(localPath),
                 contentType: contentType || mime.getType(localPath) || undefined,
-            });
+            }, {parent});
         }
 
         function processFile(route: StaticRoute) {
@@ -229,6 +247,47 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         }
     }
 
+    private static registerProxyRoutes(parent: pulumi.Resource, apiName: string,
+                                       proxyRoutes: ProxyRoute[], swagger: SwaggerSpec) {
+        const method = "x-amazon-apigateway-any-method";
+        for (const route of proxyRoutes) {
+            const swaggerPath = route.path.endsWith("/")
+                ? route.path
+                : route.path + "/";
+            const swaggerPathProxy = swaggerPath + "{proxy+}";
+
+            // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
+            let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
+            if (typeof route.target !== "string") {
+                async function getTargetArn() {
+                    const endpoint = (await route.target) as Endpoint;
+                    if (!endpoint.loadBalancer) {
+                        throw new Error("AWS endpoint proxy requires an AWS Endpoint");
+                    }
+                    const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
+                    if (loadBalancerType === "application") {
+                        // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
+                        // case for cloud.Service ports exposed as type "tcp".
+                        throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                    }
+                    return endpoint.loadBalancer.arn;
+                }
+                const name = apiName + sha1hash(route.path);
+                vpcLink = new aws.apigateway.VpcLink(name, {
+                    targetArn: getTargetArn(),
+                });
+            }
+
+            // Register two paths in the Swagger spec, for the root and for a catch all under the root
+            swagger.paths[swaggerPath] = {
+                [method]:  createPathSpecProxy(route.target, vpcLink, false),
+            };
+            swagger.paths[swaggerPathProxy] = {
+                [method]: createPathSpecProxy(route.target, vpcLink, true),
+            };
+        }
+    }
+
     private static registerRoutes(parent: pulumi.Resource, apiName: string,
                                   routes: Route[], swagger: SwaggerSpec): {[key: string]: Function} {
         const lambdas: {[key: string]: Function} = {};
@@ -272,7 +331,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         return lambdas;
     }
 
-    private static registerCustomDomains(apiName: string, api: aws.apigateway.RestApi,
+    private static registerCustomDomains(parent: pulumi.Resource, apiName: string, api: aws.apigateway.RestApi,
                                          domains: cloud.Domain[]): pulumi.Computed<string>[] {
         const names: pulumi.Computed<string>[] = [];
         for (const domain of domains) {
@@ -289,13 +348,13 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 certificateBody: domain.certificateBody,
                 certificatePrivateKey: domain.certificatePrivateKey,
                 certificateChain: domain.certificateChain,
-            });
+            }, {parent});
 
             const basePathMapping = new aws.apigateway.BasePathMapping(apiNameAndHash, {
                 restApi: api,
                 stageName: stageName,
                 domainName: awsDomain.domainName,
-            });
+            }, {parent});
 
             names.push(awsDomain.cloudfrontDomainName);
         }
@@ -303,18 +362,21 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         return names;
     }
 
-    constructor(name: string, staticRoutes: StaticRoute[], routes: Route[], customDomains: cloud.Domain[],
+    constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
+                routes: Route[], customDomains: cloud.Domain[],
                 opts?: pulumi.ResourceOptions) {
 
         super("cloud:http:HttpEndpoint", name, {
             staticRoutes: staticRoutes,
+            proxyRoutes: proxyRoutes,
             routes: routes,
             customDomains: customDomains,
         }, opts);
 
         // Create a SwaggerSpec and then expand out all of the static files and routes.
         const swagger: SwaggerSpec = createBaseSpec(name);
-        HttpDeployment.registerStaticRoutes(name, staticRoutes, swagger);
+        HttpDeployment.registerStaticRoutes(this, name, staticRoutes, swagger);
+        HttpDeployment.registerProxyRoutes(this, name, proxyRoutes, swagger);
         const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
@@ -366,7 +428,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
         // If there are any custom domains, attach them now.
         const customDomainNames: pulumi.Computed<string>[] =
-            HttpDeployment.registerCustomDomains(name, api, customDomains);
+            HttpDeployment.registerCustomDomains(this, name, api, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
         this.url = deployment.invokeUrl.then(url => url ? (url + stageName + "/") : undefined);
@@ -436,8 +498,10 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
             httpMethod: op.httpMethod,
             type: op.type,
             responses: op.responses,
+            connectionType: op.connectionType,
             uri: await op.uri,
             credentials: await op.credentials,
+            connectionId: await op.connectionId,
         };
     }
 }
@@ -472,16 +536,19 @@ interface ApigatewayIntegrationBase {
     httpMethod: string;
     type: string;
     responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
+    connectionType?: string;
 }
 
 interface ApigatewayIntegration extends ApigatewayIntegrationBase {
     uri: string;
     credentials?: string;
+    connectionId?: string;
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
     uri: Promise<string>;
     credentials?: Promise<string>;
+    connectionId?: Promise<string>;
 }
 
 interface SwaggerOperationAsync {
@@ -546,6 +613,62 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
             type: "aws_proxy",
         },
     };
+}
+
+function createPathSpecProxy(
+    target: string | pulumi.Computed<cloud.Endpoint>,
+    vpcLink: aws.apigateway.VpcLink | undefined,
+    useProxyPathParameter: boolean): SwaggerOperationAsync {
+
+    async function computeUri() {
+        const targetValue = await target;
+        let url = "";
+        if (targetValue === undefined) {
+            // Use an invlaid dummy URL during preview
+            url = "<computed>";
+        } else if (typeof targetValue === "string") {
+            // For URL target, ensure there is a trailing `/`
+            url = targetValue;
+            if (!url.endsWith("/")) {
+                url = url + "/";
+            }
+        } else {
+            // For Endpoint target, construct an HTTP URL from the hostname and port
+            url = `http://${targetValue.hostname}:${targetValue.port}/`;
+        }
+        if (useProxyPathParameter) {
+            return `${url}{proxy}`;
+        } else {
+            return url;
+        }
+    }
+    const result: SwaggerOperationAsync = {
+        "x-amazon-apigateway-integration": {
+            responses: {
+                default: {
+                    statusCode: "200",
+                },
+            },
+            uri: computeUri(),
+            passthroughBehavior: "when_no_match",
+            httpMethod: "ANY",
+            connectionType: vpcLink ? "VPC_LINK" : undefined,
+            connectionId: vpcLink ? vpcLink.id.then(s => s || "<undefined>") : undefined,
+            type: "http_proxy",
+        },
+    };
+    if (useProxyPathParameter) {
+        result.parameters = [{
+            name: "proxy",
+            in: "path",
+            required: true,
+            type: "string",
+        }];
+        result["x-amazon-apigateway-integration"].requestParameters = {
+            "integration.request.path.proxy": "method.request.path.proxy",
+        };
+    }
+    return result;
 }
 
 function createPathSpecObject(

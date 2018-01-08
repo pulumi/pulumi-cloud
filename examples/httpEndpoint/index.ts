@@ -7,5 +7,6 @@ endpoint.get("/test1.txt", (req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.end("You got test1");
 });
+endpoint.proxy("/google", "http://www.google.com/")
 
 export let url = endpoint.publish().url;

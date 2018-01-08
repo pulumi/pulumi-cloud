@@ -3,8 +3,8 @@
 import * as cloud from "@pulumi/cloud";
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as core from "express-serve-static-core";
 import * as http from "http";
+import * as httpProxy from "http-proxy-middleware";
 import * as pulumi from "pulumi";
 import * as serveStatic from "serve-static";
 import * as utils from "./utils";
@@ -13,6 +13,7 @@ const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
+    public proxy: (path: string, target: string | pulumi.Computed<cloud.Endpoint>) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -37,6 +38,17 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 ? { index: options.index }
                 : undefined;
             app.use(path, express.static(localPath, expressOptions));
+        };
+
+        this.proxy = async (path, target) => {
+            let url: string;
+            if (typeof target === "string") {
+                url = target;
+            } else {
+                const targetEndpoint = await target;
+                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
+            }
+            app.use(path, httpProxy({target: url}));
         };
 
         this.route = (method, path, ...handlers) => {
@@ -103,12 +115,14 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         };
 
         function convertRequestHandler(handler: cloud.RouteHandler): express.RequestHandler {
-            return (expressRequest: core.Request, expressResponse: core.Response, expressNext: core.NextFunction) => {
+            return (expressRequest: express.Request,
+                    expressResponse: express.Response,
+                    expressNext: express.NextFunction) => {
                 return handler(convertRequest(expressRequest), convertResponse(expressResponse), expressNext);
             };
         }
 
-        function convertRequest(expressRequest: core.Request): cloud.Request {
+        function convertRequest(expressRequest: express.Request): cloud.Request {
             return {
                 // Safe to directly convert the body to a buffer because we are using raw body
                 // parsing above.
@@ -125,7 +139,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             };
         }
 
-        function convertResponse(expressResponse: core.Response): cloud.Response {
+        function convertResponse(expressResponse: express.Response): cloud.Response {
             return {
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),

@@ -776,6 +776,11 @@ interface ExposedPort {
     hostProtocol: cloud.ContainerProtocol;
 }
 
+// The AWS-specific Endpoint interface includes additional AWS implementation details for the exposed Endpoint.
+export interface Endpoint extends cloud.Endpoint {
+    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
+}
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -851,7 +856,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         // getEndpoint returns the host and port info for a given containerName and exposed port.
         this.getEndpoint =
-            async function (this: Service, containerName: string, containerPort: number): Promise<cloud.Endpoint> {
+            async function (this: Service, containerName?: string, containerPort?: number): Promise<Endpoint> {
                 if (!containerName) {
                     // If no container name provided, choose the first container
                     containerName = Object.keys(ports)[0];
@@ -884,6 +889,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 return {
                     hostname: hostname!,
                     port: info.hostPort,
+                    loadBalancer: info.host,
                 };
             };
     }

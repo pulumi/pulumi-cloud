@@ -175,7 +175,7 @@ func Test_Examples(t *testing.T) {
 			Dependencies: []string{
 				"@pulumi/cloud",
 			},
-			DebugUpdates: true,
+			Verbose: true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
 				assert.True(t, ok, "expected a `frontendURL` output property of type string")
@@ -205,6 +205,30 @@ func Test_Examples(t *testing.T) {
 					bytes, err := ioutil.ReadAll(resp.Body)
 					assert.NoError(t, err)
 					t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+				}
+
+				// Validate the GET /nginx endpoint
+				{
+					{
+						resp, err := http.Get(baseURL + "nginx")
+						assert.NoError(t, err, "expected to be able to GET /nginx")
+						assert.Equal(t, 200, resp.StatusCode, "expected 200")
+						contentType := resp.Header.Get("Content-Type")
+						assert.Equal(t, "text/html", contentType)
+						bytes, err := ioutil.ReadAll(resp.Body)
+						assert.NoError(t, err)
+						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+					}
+					{
+						resp, err := http.Get(baseURL + "nginx/doesnotexist")
+						assert.NoError(t, err, "expected to be able to GET /nginx/doesnotexist")
+						assert.Equal(t, 404, resp.StatusCode, "expected 404")
+						contentType := resp.Header.Get("Content-Type")
+						assert.Equal(t, "text/html", contentType)
+						bytes, err := ioutil.ReadAll(resp.Body)
+						assert.NoError(t, err)
+						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+					}
 				}
 
 				// Validate the GET /run endpoint
