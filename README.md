@@ -16,7 +16,7 @@ Pulumi's framework for building modern cloud applications.
   `cloud.Enboint`.
 - [cloud] Added `Response#getHeader` function.
 - [cloud-aws] Many new config settings have been added to enable overriding defaults for Network and Cluster
-  configuration - both for auto clusters and for externallyu provided networks and clusters.
+  configuration - both for auto clusters and for externally provided networks and clusters.
 
 ### Changed
 - [cloud] Header names are now normalized (using `toLowerCase`) for `HTTPEndpoint`.
