@@ -12,14 +12,14 @@ Pulumi's framework for building modern cloud applications.
 ## [0.9.x](https://github.com/pulumi/pulumi-cloud/compare/v0.8.3...master)
 
 ### Added
-- [cloud] Added `HTTPEndpoint#proxy` function to provide routes on an HTTP endpoint which redirect to a URL or
-  `cloud.Enboint`.
+- [cloud] Added `HttpEndpoint#proxy` function to provide routes on an HTTP endpoint which redirect to a URL or
+  `cloud.Endpoint`.
 - [cloud] Added `Response#getHeader` function.
 - [cloud-aws] Many new config settings have been added to enable overriding defaults for Network and Cluster
   configuration - both for auto clusters and for externally provided networks and clusters.
 
 ### Changed
-- [cloud] Header names are now normalized (using `toLowerCase`) for `HTTPEndpoint`.
+- [cloud] Header names are now normalized (using `toLowerCase`) for `HttpEndpoint`.
 - [cloud-aws] The default permissions for cluster EC2 instances have been reduced.
 
 ## Released
