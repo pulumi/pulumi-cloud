@@ -9,15 +9,17 @@ Pulumi's framework for building modern cloud applications.
 
 ## Unreleased
 
-## [0.9](https://github.com/pulumi/pulumi-cloud/compare/v0.8.3...master)
+## [0.9.x](https://github.com/pulumi/pulumi-cloud/compare/v0.8.3...master)
 
 ### Added
+- [cloud] Added `HTTPEndpoint#proxy` function to provide routes on an HTTP endpoint which redirect to a URL or
+  `cloud.Enboint`.
 - [cloud] Added `Response#getHeader` function.
-- [cloud-aws] New config settings have been added to enable overriding default cluster EC2 instance roles and to
-  suppress creating a File System as part of a cluster. (`cloud-aws:config:ecsAutoClusterInstanceRolePolicyARNs` and
-  `cloud-aws:config:ecsAutoClusterUseEFS`)
+- [cloud-aws] Many new config settings have been added to enable overriding defaults for Network and Cluster
+  configuration - both for auto clusters and for externallyu provided networks and clusters.
 
 ### Changed
+- [cloud] Header names are now normalized (using `toLowerCase`) for `HTTPEndpoint`.
 - [cloud-aws] The default permissions for cluster EC2 instances have been reduced.
 
 ## Released

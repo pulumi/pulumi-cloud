@@ -260,8 +260,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
             if (typeof route.target !== "string") {
                 async function getTargetArn() {
-                    const t = await route.target;
-                    const endpoint = t as Endpoint;
+                    const endpoint = (await route.target) as Endpoint;
                     if (!endpoint.loadBalancer) {
                         throw new Error("AWS endpoint proxy requires an AWS Endpoint");
                     }
