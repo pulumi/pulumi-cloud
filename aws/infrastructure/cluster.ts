@@ -167,6 +167,9 @@ export class Cluster {
                 },
             ],
             egress: [ ALL ],  // See TerraformEgressNote
+            tags: {
+                Name: name,
+            },
         });
         this.securityGroupId = instanceSecurityGroup.id;
 
@@ -174,7 +177,8 @@ export class Cluster {
         let filesystem: aws.efs.FileSystem | undefined;
         if (args.addEFS) {
             filesystem = new aws.efs.FileSystem(name);
-            const efsSecurityGroup = new aws.ec2.SecurityGroup(`${name}-fs`, {
+            const efsSecurityGroupName = `${name}-fs`;
+            const efsSecurityGroup = new aws.ec2.SecurityGroup(efsSecurityGroupName, {
                 vpcId: args.network.vpcId,
                 ingress: [
                     // Allow NFS traffic from the instance security group
@@ -185,6 +189,9 @@ export class Cluster {
                         toPort: 2049,
                     },
                 ],
+                tags: {
+                    Name: efsSecurityGroupName,
+                },
             });
             for (let i = 0; i <  args.network.subnetIds.length; i++) {
                 const subnetId = args.network.subnetIds[i];

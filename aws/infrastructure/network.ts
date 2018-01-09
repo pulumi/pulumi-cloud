@@ -37,7 +37,7 @@ export class Network {
             enableDnsHostnames: true,
             enableDnsSupport: true,
             tags: {
-                Name: "Pulumi VPC",
+                Name: name,
             },
         });
         this.vpcId = vpc.id;
@@ -45,6 +45,9 @@ export class Network {
 
         this.internetGateway = new aws.ec2.InternetGateway(name, {
             vpcId: vpc.id,
+            tags: {
+                Name: name,
+            },
         });
 
         const publicRouteTable = new aws.ec2.RouteTable(name, {
@@ -55,6 +58,9 @@ export class Network {
                     gatewayId: this.internetGateway.id,
                 },
             ],
+            tags: {
+                Name: name,
+            },
         });
 
         this.natGateways = [];
@@ -62,12 +68,16 @@ export class Network {
         this.publicSubnetIds = [];
 
         for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
+            const subnetName = `${name}-${i}`;
             // Create the subnet for this AZ - either - either public or private
-            const subnet = new aws.ec2.Subnet(`${name}-${i}`, {
+            const subnet = new aws.ec2.Subnet(subnetName, {
                 vpcId: vpc.id,
                 availabilityZone: getAwsAz(i),
                 cidrBlock: `10.10.${i}.0/24`,         // IDEA: Consider larger default CIDR block sizing
                 mapPublicIpOnLaunch: !this.privateSubnets, // Only assign public IP if we are exposing public subnets
+                tags: {
+                    Name: subnetName,
+                },
             });
             this.subnetIds.push(subnet.id);
 
@@ -83,6 +93,9 @@ export class Network {
                     availabilityZone: getAwsAz(i),
                     cidrBlock: `10.10.${i+64}.0/24`, // Use top half of the subnet space
                     mapPublicIpOnLaunch: true,        // Always assign a public IP in NAT subnet
+                    tags: {
+                        Name: natName,
+                    },
                 });
                 this.publicSubnetIds.push(natGatewayPublicSubnet.id);
 
@@ -99,6 +112,9 @@ export class Network {
                 const natGateway = new aws.ec2.NatGateway(natName, {
                     subnetId: natGatewayPublicSubnet.id,
                     allocationId: eip.id,
+                    tags: {
+                        Name: natName,
+                    },
                 });
                 this.natGateways.push(natGateway);
 
@@ -110,6 +126,9 @@ export class Network {
                             natGatewayId: natGateway.id,
                         },
                     ],
+                    tags: {
+                        Name: natName,
+                    },
                 });
 
                 // Route through the NAT gateway for the private subnet
