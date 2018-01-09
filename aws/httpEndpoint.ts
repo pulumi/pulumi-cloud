@@ -402,16 +402,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             deployment: deployment,
         }, { parent: this });
 
-        const settings = new aws.apigateway.MethodSettings(name, {
-            restApi: api,
-            stageName: stageName,
-            methodPath: "*/*",
-            settings: [{
-                metricsEnabled: true,
-                loggingLevel: "INFO",
-            }],
-        });
-
         // Ensure that the permissions allow the API Gateway to invoke the lambdas.
         for (const path of Object.keys(swagger.paths)) {
             for (let method of Object.keys(swagger.paths[path])) {
