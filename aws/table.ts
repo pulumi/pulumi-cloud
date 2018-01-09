@@ -4,13 +4,6 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
 
-// For type-safety purposes, we want to be able to mark some of our types with typing information
-// from aws-sdk.  However, we don't want to actually import this library and cause that module to
-// load and run doing pulumi planning time.  so we just do an "import + require" and we note that
-// this imported variable should only be used in 'type' (and not value) positions.  The ts compiler
-// will then elide this actual declaration when compiling.
-import _awsTypesOnly = require("aws-sdk");
-
 function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
         case "string": return "S";
@@ -62,25 +55,16 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             writeCapacity: 5,
         }, { parent: this });
 
-        const tableName: pulumi.Computed<string> = table.name;
-        const db = () => {
-            const awssdk: typeof _awsTypesOnly = require("aws-sdk");
+        const tableName = table.name.then(t => t || "<computed>");
+        async function getDb() {
+            const awssdk = await import("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
-        };
-
-        function getTableName(): string {
-            // Hack: Because of our outside/inside system for pulumi, tableName is seen as a
-            // Computed<string> on the outside, but a string on the inside. Of course, there's no
-            // way to make TypeScript aware of that.  So we just fool the typesystem with these
-            // explicit casts.
-            //
-            // see: https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955
-            return <string><any>tableName;
         }
 
         this.get = async (query) => {
-            const result = await db().get({
-                TableName: getTableName(),
+            const db = await getDb();
+            const result = await db.get({
+                TableName: await tableName,
                 Key: query,
                 ConsistentRead: consistentRead,
             }).promise();
@@ -88,17 +72,18 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             return result.Item;
         };
         this.insert = async (item) => {
-            await db().put({
-                TableName: getTableName(),
+            const db = await getDb();
+            await db.put({
+                TableName: await tableName,
                 Item: item,
             }).promise();
         };
         this.scan = async () => {
-            const result = await db().scan({
-                TableName: getTableName(),
+            const db = await getDb();
+            const result = await db.scan({
+                TableName: await tableName,
                 ConsistentRead: consistentRead,
             }).promise();
-
             return <any[]>result.Items;
         };
         this.update = async (query: any, updates: any) => {
@@ -114,16 +99,18 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 updateExpression += `${key} = :${key}`;
                 attributeValues[`:${key}`] = val;
             }
-            await db().update({
-                TableName: getTableName(),
+            const db = await getDb();
+            await db.update({
+                TableName: await tableName,
                 Key: query,
                 UpdateExpression: updateExpression,
                 ExpressionAttributeValues: attributeValues,
             }).promise();
         };
         this.delete = async (query) => {
-            await db().delete({
-                TableName: getTableName(),
+            const db = await getDb();
+            await db.delete({
+                TableName: await tableName,
                 Key: query,
             }).promise();
         };
