@@ -38,9 +38,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     private readonly proxyRoutes: ProxyRoute[];
     private readonly routes: Route[];
     private readonly customDomains: cloud.Domain[];
-    private isPublished: boolean;
-
-    // Outside API (constructor and methods)
+    public deployment?: HttpDeployment;
 
     constructor(name: string) {
         this.name = name;
@@ -48,7 +46,6 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.proxyRoutes = [];
         this.routes = [];
         this.customDomains = [];
-        this.isPublished = false;
     }
 
     public static(path: string, localPath: string, options?: cloud.ServeStaticOptions) {
@@ -101,20 +98,20 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     }
 
     public publish(): cloud.HttpDeployment {
-        if (this.isPublished) {
+        if (this.deployment) {
             throw new Error("This endpoint is already published and cannot be re-published.");
         }
         // Create a unique name prefix that includes the name plus all the registered routes.
-        this.isPublished = true;
-        return new HttpDeployment(this.name, this.staticRoutes, this.proxyRoutes, this.routes, this.customDomains);
+        this.deployment = new HttpDeployment(
+            this.name, this.staticRoutes, this.proxyRoutes, this.routes, this.customDomains);
+        return this.deployment;
     }
 }
 
 // HttpDeployment actually performs a deployment of a set of HTTP API Gateway resources.
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
-    public readonly staticRoutes: StaticRoute[];
-    public readonly customDomains: cloud.Domain[];
-
+    public routes: Route[];
+    public staticRoutes: StaticRoute[];
     public /*out*/ readonly url: pulumi.Computed<string>; // the URL for this deployment.
     public /*out*/ readonly customDomainNames: pulumi.Computed<string>[]; // any custom domain names.
 
@@ -372,6 +369,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             routes: routes,
             customDomains: customDomains,
         }, opts);
+
+        this.routes = routes;
+        this.staticRoutes = staticRoutes;
 
         // Create a SwaggerSpec and then expand out all of the static files and routes.
         const swagger: SwaggerSpec = createBaseSpec(name);

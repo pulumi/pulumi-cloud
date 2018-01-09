@@ -81,13 +81,18 @@ export function hourly(name: string,
 
 class Timer extends pulumi.ComponentResource {
     public readonly scheduleExpression: string;
+    public readonly rule: aws.cloudwatch.EventRule;
+    public readonly target: aws.cloudwatch.EventTarget;
+    public readonly function: Function;
 
     constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, {
             scheduleExpression: scheduleExpression,
         }, opts);
 
-        const func = new Function(
+        this.scheduleExpression = scheduleExpression;
+
+        this.function = new Function(
             name,
             (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 handler().then(() => {
@@ -99,19 +104,19 @@ class Timer extends pulumi.ComponentResource {
             { parent: this },
         );
 
-        const rule = new aws.cloudwatch.EventRule(name, {
+        this.rule = new aws.cloudwatch.EventRule(name, {
             scheduleExpression: scheduleExpression,
         }, { parent: this });
-        const target = new aws.cloudwatch.EventTarget(name, {
-            rule: rule.name,
-            arn: func.lambda.arn,
+        this.target = new aws.cloudwatch.EventTarget(name, {
+            rule: this.rule.name,
+            arn: this.function.lambda.arn,
             targetId: name,
         }, { parent: this });
         const permission = new aws.lambda.Permission(name, {
             action: "lambda:invokeFunction",
-            function: func.lambda,
+            function: this.function.lambda,
             principal: "events.amazonaws.com",
-            sourceArn: rule.arn,
+            sourceArn: this.rule.arn,
         }, { parent: this });
 
         this.scheduleExpression = scheduleExpression;

@@ -16,18 +16,15 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
 const consistentRead = true;
 
 export class Table extends pulumi.ComponentResource implements cloud.Table {
-    // Inside + Outside API
-
     public readonly primaryKey: string;
     public readonly primaryKeyType: string;
+    public readonly dynamodbTable: aws.dynamodb.Table;
 
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
     public scan: () => Promise<any[]>;
     public delete: (query: Object) => Promise<void>;
     public update: (query: Object, updates: Object) => Promise<void>;
-
-    // Outside API (constructor and methods)
 
     constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType,
                 opts?: pulumi.ResourceOptions) {
@@ -43,7 +40,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             primaryKeyType: primaryKeyType,
         }, opts);
 
-        const table = new aws.dynamodb.Table(name, {
+        this.dynamodbTable = new aws.dynamodb.Table(name, {
             attribute: [
                 {
                     name: primaryKey,
@@ -55,7 +52,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             writeCapacity: 5,
         }, { parent: this });
 
-        const tableName = table.name.then(t => t || "<computed>");
+        const tableName = this.dynamodbTable.name.then(t => t || "<computed>");
         async function getDb() {
             const awssdk = await import("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
