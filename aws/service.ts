@@ -15,13 +15,6 @@ import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 
-// For type-safety purposes, we want to be able to mark some of our types with typing information
-// from other libraries.  However, we don't want to actually import those libraries, causing those
-// module to load and run doing pulumi planning time.  so we just do an "import + require" and we
-// note that this imported variable should only be used in 'type' (and not value) positions.  The ts
-// compiler will then elide this actual declaration when compiling.
-import _awsSdkTypesOnly = require("aws-sdk");
-
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
     "DAC_READ_SEARCH" | "FOWNER" | "FSETID" | "IPC_LOCK" | "IPC_OWNER" | "KILL" | "LEASE" | "LINUX_IMMUTABLE" |
@@ -980,11 +973,10 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
         const clusterARN = cluster.ecsClusterARN;
-
-        const taskDefinition: aws.ecs.TaskDefinition = createTaskDefinition(this, name, { container: container }).task;
+        const taskDefinitionArn = createTaskDefinition(this, name, { container: container }).task.arn;
 
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
-            const awssdk: typeof _awsSdkTypesOnly = require("aws-sdk");
+            const awssdk = await import("aws-sdk");
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
@@ -998,22 +990,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 }
             }
 
-            function getTypeDefinitionARN(): string {
-                // BUGBUG[pulumi/pulumi#459]:
-                //
-                // Hack: Because of our outside/inside system for pulumi, typeDefinition.arg is seen as a
-                // Computed<string> on the outside, but a string on the inside. Of course, there's no
-                // way to make TypeScript aware of that.  So we just fool the typesystem with these
-                // explicit casts.
-                //
-                // see: https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955
-                return <string><any>taskDefinition.arn;
-            }
-
-            function getClusterARN(): string {
-                return <string><any>clusterARN;
-            }
-
             // Ensure all environment entries are accessible.  These can contain promises, so we'll need to await.
             const env: {name: string; value: string}[] = [];
             for (const entry of environment) {
@@ -1022,9 +998,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
 
             // Run the task
-            const request: _awsSdkTypesOnly.ECS.RunTaskRequest = {
-                cluster: getClusterARN(),
-                taskDefinition: getTypeDefinitionARN(),
+            await ecs.runTask({
+                cluster: (await clusterARN)!,
+                taskDefinition: (await taskDefinitionArn)!,
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
                     containerOverrides: [
@@ -1034,8 +1010,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                         },
                     ],
                 },
-            };
-            await ecs.runTask(request).promise();
+            }).promise();
         };
     }
 }

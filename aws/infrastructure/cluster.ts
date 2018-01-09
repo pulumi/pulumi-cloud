@@ -253,6 +253,7 @@ export class Cluster {
             name,
             {
                 templateBody: getCloudFormationAsgTemplate(
+                    name,
                     args.minSize || 2,
                     args.maxSize || 100,
                     instanceLaunchConfiguration.id,
@@ -366,6 +367,7 @@ async function getInstanceUserData(
 // TODO[pulumi/pulumi-aws/issues#43]: We'd prefer not to use CloudFormation, but it's the best way to implement
 // rolling updates in an autoscaling group.
 async function getCloudFormationAsgTemplate(
+    instanceName: string,
     minSize: number,
     maxSize: number,
     instanceLaunchConfigurationId: pulumi.Computed<string>,
@@ -392,6 +394,10 @@ async function getCloudFormationAsgTemplate(
                 -   Granularity: 1Minute
                 MinSize: ${minSize}
                 VPCZoneIdentifier: ${JSON.stringify(subnetsIdsArray)}
+                Tags:
+                - Key: Name
+                  Value: ${instanceName}
+                  PropagateAtLaunch: true
             CreationPolicy:
                 ResourceSignal:
                     Count: ${minSize}
