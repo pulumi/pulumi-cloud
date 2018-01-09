@@ -291,8 +291,7 @@
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "59f897905f2acc095657cb1e496fc66ed79fc687"
-  version = "v0.9.8"
+  revision = "5304541d3a15d738bd7ac866b363c0595a5e5e5f"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -411,6 +410,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "94a58c36362cd61c46960df1b47c6f73b1370c1680355f2032129419b7aad728"
+  inputs-digest = "ba0767afaf317db00f02d4ab2841a3d5ce924d2b14050ad1cc44e23aa6a0652f"
   solver-name = "gps-cdcl"
   solver-version = 1
