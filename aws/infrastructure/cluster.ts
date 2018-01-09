@@ -169,7 +169,7 @@ export class Cluster {
             egress: [ ALL ],  // See TerraformEgressNote
             tags: {
                 Name: name,
-            }
+            },
         });
         this.securityGroupId = instanceSecurityGroup.id;
 
