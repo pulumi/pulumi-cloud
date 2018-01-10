@@ -284,9 +284,8 @@
 
 [[projects]]
   name = "github.com/pulumi/pulumi"
-  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/operations","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/mapper","pkg/util/rpcutil","pkg/version","pkg/workspace","sdk/proto/go"]
-  revision = "fcaf2a5145b3c3d0128e307c1fc8ca05706f52ce"
-  version = "v0.9.8"
+  packages = ["pkg/compiler/errors","pkg/diag","pkg/diag/colors","pkg/encoding","pkg/engine","pkg/operations","pkg/pack","pkg/resource","pkg/resource/config","pkg/resource/deploy","pkg/resource/plugin","pkg/resource/provider","pkg/resource/stack","pkg/testing","pkg/testing/integration","pkg/tokens","pkg/util/cmdutil","pkg/util/contract","pkg/util/fsutil","pkg/util/ioutil","pkg/util/mapper","pkg/util/rpcutil","pkg/version","pkg/workspace","sdk/proto/go"]
+  revision = "208b7296bee8f876b48950e9df12869adc32a76a"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
@@ -410,6 +409,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ba0767afaf317db00f02d4ab2841a3d5ce924d2b14050ad1cc44e23aa6a0652f"
+  inputs-digest = "d8278357216b66011518a64ed653695af33b56f451931966c637ace3624537d1"
   solver-name = "gps-cdcl"
   solver-version = 1
