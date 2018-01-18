@@ -967,13 +967,17 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         return getTaskRole();
     }
 
-    constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
-        super("cloud:task:Task", name, { container: container }, opts);
-
-        const cluster: awsinfra.Cluster | undefined = getCluster();
+    constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions, cluster?: awsinfra.Cluster) {
         if (!cluster) {
-            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+            const autoCluster: awsinfra.Cluster | undefined = getCluster();
+            if (!autoCluster) {
+                throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+            }
+            cluster = autoCluster!;
         }
+
+        super("cloud:task:Task", name, { container: container, cluster: cluster }, opts);
+
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
 
