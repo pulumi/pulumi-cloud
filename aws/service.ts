@@ -8,8 +8,7 @@ import * as pulumi from "pulumi";
 import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
-import { Cluster } from "./infrastructure/cluster";
-import { Network } from "./infrastructure/network";
+import * as awsinfra from "./infrastructure";
 import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
@@ -118,7 +117,7 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
-function getMaxListenersPerLb(network: Network): number {
+function getMaxListenersPerLb(network: awsinfra.Network): number {
     // If we are single-AZ, we can share load balancers, and cut down on costs.  Otherwise, we cannot.
     if (network.numberOfAvailabilityZones === 1) {
         return 50;
@@ -151,7 +150,7 @@ function getLoadBalancerPrefix(internal: boolean, application: boolean): string 
 }
 
 function allocateListener(
-    cluster: Cluster, network: Network, internal: boolean, application: boolean): {
+    cluster: awsinfra.Cluster, network: awsinfra.Network, internal: boolean, application: boolean): {
         loadBalancer: aws.elasticloadbalancingv2.LoadBalancer, listenerIndex: number, listenerPort: number} {
     // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every getMaxListeners.
     const maxListeners: number = getMaxListenersPerLb(network);
@@ -209,9 +208,9 @@ interface ContainerPortLoadBalancer {
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(parent: pulumi.Resource,
-                                    cluster: Cluster, portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
-    const network: Network | undefined = getNetwork();
+function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.Cluster, 
+                                    portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
+    const network: awsinfra.Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
     }
@@ -778,7 +777,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
-    public readonly cluster: Cluster;
+    public readonly cluster: awsinfra.Cluster;
     public readonly ecsService: aws.ecs.Service;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
@@ -791,7 +790,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
-        const cluster: Cluster | undefined = getCluster();
+        const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
                 " or 'cloud-aws:config:ecsAutoCluster'");
@@ -924,7 +923,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     }
 
     getHostPath() {
-        const cluster: Cluster | undefined = getCluster();
+        const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster || !cluster.efsMountPath) {
             throw new Error(
                 "Cannot use 'Volume'.  Configured cluster does not support EFS.",
@@ -958,6 +957,9 @@ export class HostPathVolume implements cloud.HostPathVolume {
  * A Task represents a container which can be [run] dynamically whenever (and as many times as) needed.
  */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
+    public readonly cluster: awsinfra.Cluster;
+    public readonly taskDefinition: aws.ecs.TaskDefinition;
+
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     // See comment for Service.getTaskRole.
@@ -968,12 +970,15 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
         super("cloud:task:Task", name, { container: container }, opts);
 
-        const cluster: Cluster | undefined = getCluster();
+        const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
-        const clusterARN = cluster.ecsClusterARN;
-        const taskDefinitionArn = createTaskDefinition(this, name, { container: container }).task.arn;
+        this.cluster = cluster;
+        this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
+
+        const clusterARN = this.cluster.ecsClusterARN;
+        const taskDefinitionArn = this.taskDefinition.arn;
 
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = await import("aws-sdk");
