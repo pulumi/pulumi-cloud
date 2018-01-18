@@ -208,7 +208,7 @@ interface ContainerPortLoadBalancer {
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.Cluster, 
+function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.Cluster,
                                     portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
     const network: awsinfra.Network | undefined = getNetwork();
     if (!network) {
