@@ -213,6 +213,11 @@ export class Cluster {
             keyName = key.keyName;
         }
 
+        // Create the full name of our CloudFormation stack here explicitly. Since the CFN stack references the
+        // launch configuration and vice-versa, we use this to break the cycle.
+        // TODO[pulumi/pulumi#381]: Creating an S3 bucket is an inelegant way to get a durable, unique name.
+        const cloudFormationStackName = new aws.s3.Bucket(name).id;
+
         // Specify the intance configuration for the cluster.
         const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(name, {
             imageId: getEcsAmiId(args.ecsOptimizedAMIName),
@@ -243,7 +248,7 @@ export class Cluster {
                 },
             ],
             securityGroups: [ instanceSecurityGroup.id ],
-            userData: getInstanceUserData(cluster, filesystem, this.efsMountPath),
+            userData: getInstanceUserData(cluster, filesystem, this.efsMountPath, cloudFormationStackName),
         });
 
         // Finally, create the AutoScaling Group.
@@ -259,6 +264,7 @@ export class Cluster {
         this.autoScalingGroupStack = new aws.cloudformation.Stack(
             name,
             {
+                name: cloudFormationStackName,
                 templateBody: getCloudFormationAsgTemplate(
                     name,
                     args.minSize || 2,
@@ -297,10 +303,13 @@ async function getEcsAmiId(name?: string) {
 async function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
-    mountPath: string | undefined) {
+    mountPath: string | undefined,
+    cloudFormationStackName: Promise<string | undefined>) {
 
     let fileSystemRuncmdBlock = "";
     if (fileSystem && mountPath) {
+        // This string must be indented exactly as much as the block of commands it's inserted into below!
+
         // tslint:disable max-line-length
         fileSystemRuncmdBlock = `
             # Create EFS mount path
@@ -350,24 +359,10 @@ async function getInstanceUserData(
             iptables --insert FORWARD 1 --in-interface docker+ --destination 169.254.169.254/32 --jump DROP
             service iptables save
 
-            # cloud-init docs are unclear about whether $INSTANCE_ID is available in runcmd.
-            EC2_INSTANCE_ID=$(curl -s 169.254.169.254/2016-09-02/meta-data/instance-id)
-            # \$ below so we don't get Javascript interpolation.
-            # Line continuations are processed by Javascript before YAML or shell sees them.
-            CFN_STACK=$(aws ec2 describe-instances \
-                --instance-id "\${EC2_INSTANCE_ID}" \
-                --region "\${AWS_REGION}" \
-                --query "Reservations[0].Instances[0].Tags[?Key=='aws:cloudformation:stack-name'].Value" \
-                --output text)
-            CFN_RESOURCE=$(aws ec2 describe-instances \
-                --instance-id "\${EC2_INSTANCE_ID}" \
-                --region "\${AWS_REGION}" \
-                --query "Reservations[0].Instances[0].Tags[?Key=='aws:cloudformation:logical-id'].Value" \
-                --output text)
             /opt/aws/bin/cfn-signal \
                 --region "\${AWS_REGION}" \
-                --stack "\${CFN_STACK}" \
-                --resource "\${CFN_RESOURCE}"
+                --stack "${await cloudFormationStackName}" \
+                --resource Instances
     `;
 }
 
@@ -402,9 +397,9 @@ async function getCloudFormationAsgTemplate(
                 MinSize: ${minSize}
                 VPCZoneIdentifier: ${JSON.stringify(subnetsIdsArray)}
                 Tags:
-                - Key: Name
-                  Value: ${instanceName}
-                  PropagateAtLaunch: true
+                -   Key: Name
+                    Value: ${instanceName}
+                    PropagateAtLaunch: true
             CreationPolicy:
                 ResourceSignal:
                     Count: ${minSize}
@@ -415,7 +410,7 @@ async function getCloudFormationAsgTemplate(
                     MinInstancesInService: ${minSize}
                     PauseTime: PT15M
                     SuspendProcesses:
-                    - ScheduledActions
+                    -   ScheduledActions
                     WaitOnResourceSignals: true
     `;
 }
