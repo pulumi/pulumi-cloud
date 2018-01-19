@@ -402,9 +402,9 @@ async function getCloudFormationAsgTemplate(
                 MinSize: ${minSize}
                 VPCZoneIdentifier: ${JSON.stringify(subnetsIdsArray)}
                 Tags:
-                - Key: Name
-                  Value: ${instanceName}
-                  PropagateAtLaunch: true
+                -   Key: Name
+                    Value: ${instanceName}
+                    PropagateAtLaunch: true
             CreationPolicy:
                 ResourceSignal:
                     Count: ${minSize}
@@ -415,7 +415,7 @@ async function getCloudFormationAsgTemplate(
                     MinInstancesInService: ${minSize}
                     PauseTime: PT15M
                     SuspendProcesses:
-                    - ScheduledActions
+                    -   ScheduledActions
                     WaitOnResourceSignals: true
     `;
 }
