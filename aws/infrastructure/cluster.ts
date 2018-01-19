@@ -301,6 +301,8 @@ async function getInstanceUserData(
 
     let fileSystemRuncmdBlock = "";
     if (fileSystem && mountPath) {
+        // This string must be indented exactly as much as the block of commands it's inserted into below!
+
         // tslint:disable max-line-length
         fileSystemRuncmdBlock = `
             # Create EFS mount path
