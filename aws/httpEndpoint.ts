@@ -32,12 +32,23 @@ export interface Route {
     handlers: cloud.RouteHandler[];
 }
 
+// Domain represents a hosted domain and associated SSL/TLS certificates.
+export type Domain = cloud.Domain | {
+    domainName: string;
+    certificateArn: pulumi.ComputedValue<string>;
+};
+
+// Helper to test whether the Domain is a cloud.Domain or an AWS-specific Domain.
+function isCloudDomain(domain: Domain): domain is cloud.Domain {
+    return !!(domain as cloud.Domain).certificateBody;
+}
+
 export class HttpEndpoint implements cloud.HttpEndpoint {
     private readonly name: string;
     private readonly staticRoutes: StaticRoute[];
     private readonly proxyRoutes: ProxyRoute[];
     private readonly routes: Route[];
-    private readonly customDomains: cloud.Domain[];
+    private readonly customDomains: Domain[];
     public deployment?: HttpDeployment;
 
     constructor(name: string) {
@@ -93,7 +104,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.route("ANY", path, ...handlers);
     }
 
-    public attachCustomDomain(domain: cloud.Domain): void {
+    public attachCustomDomain(domain: Domain): void {
         this.customDomains.push(domain);
     }
 
@@ -329,7 +340,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 
     private static registerCustomDomains(parent: pulumi.Resource, apiName: string, api: aws.apigateway.RestApi,
-                                         domains: cloud.Domain[]): pulumi.Computed<string>[] {
+                                         domains: Domain[]): pulumi.Computed<string>[] {
         const names: pulumi.Computed<string>[] = [];
         for (const domain of domains) {
             // Ensure this pair of api-domain name doesn't conflict with anything else.  i.e. there
@@ -339,13 +350,23 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             const domainNameHash = sha1hash(domain.domainName);
             const apiNameAndHash = `${apiName}-${domainNameHash}`;
 
-            const awsDomain = new aws.apigateway.DomainName(apiNameAndHash, {
-                domainName: domain.domainName,
-                certificateName: domain.domainName,
-                certificateBody: domain.certificateBody,
-                certificatePrivateKey: domain.certificatePrivateKey,
-                certificateChain: domain.certificateChain,
-            }, {parent});
+            let domainArgs: aws.apigateway.DomainNameArgs;
+            if (isCloudDomain(domain)) {
+                domainArgs = {
+                    domainName: domain.domainName,
+                    certificateName: domain.domainName,
+                    certificateBody: domain.certificateBody,
+                    certificatePrivateKey: domain.certificatePrivateKey,
+                    certificateChain: domain.certificateChain,
+                };
+            } else {
+                domainArgs = {
+                    domainName: domain.domainName,
+                    certificateArn: domain.certificateArn,
+                };
+            }
+            
+            const awsDomain = new aws.apigateway.DomainName(apiNameAndHash, domainArgs, {parent});
 
             const basePathMapping = new aws.apigateway.BasePathMapping(apiNameAndHash, {
                 restApi: api,
@@ -360,8 +381,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
-                routes: Route[], customDomains: cloud.Domain[],
-                opts?: pulumi.ResourceOptions) {
+                routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
         super("cloud:http:HttpEndpoint", name, {
             staticRoutes: staticRoutes,
