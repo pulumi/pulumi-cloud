@@ -195,10 +195,18 @@ class LogTarget extends pulumi.ComponentResource {
     }
 }
 
+// TODO: the log destination can be in a different account but must be in the same region.
+// However, the destination should be able to point to a Kinesis stream in a different region:
+//   "The log group and the destination must be in the same AWS region. However, the AWS resource
+//   that the destination points to can be located in a different region.
+// https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CrossAccountSubscriptions.html
+// Ultimately we should be able to create a log destination in each region in one account,
+// all pointing to one Kinesis stream in one region in that account, with each log destination
+// accepting logs from resources in all accounts in its region.
+
 let logTarget: LogTarget | undefined;
 export function getLogDestinationArn(): Promise<string> {
     if (config.logDestinationArn) {
-        // TODO: this must be in the same region
         return Promise.resolve(config.logDestinationArn);
     }
 
