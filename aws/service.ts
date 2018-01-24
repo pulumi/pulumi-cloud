@@ -9,7 +9,7 @@ import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
 import * as awsinfra from "./infrastructure";
-import { getLogCollector } from "./logCollector";
+import { getLogDestinationArn } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
@@ -710,7 +710,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     // And hook it up to the aggregated log collector
     const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(name, {
         logGroup: logGroup,
-        destinationArn: getLogCollector().arn,
+        destinationArn: getLogDestinationArn(),
         filterPattern: "",
     }, { parent: parent });
 

@@ -160,3 +160,5 @@ export function setEcsCluster(cluster: aws.ecs.Cluster,
         ecsClusterEfsMountPath = efsMountPath;
     }
 }
+
+export let logDestinationArn = config.get("logDestinationArn");

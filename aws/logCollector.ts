@@ -2,77 +2,212 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import * as config from "./config";
 import * as shared from "./shared";
 
-// The type of the Lambda payload from Cloudwatch Logs subscriptions.
-// See http://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-cloudwatch-logs
-interface LogsPayload {
-    awslogs: {
-        // Base64-encoded gzipped UTF8 string of JSON of type CloudWatchLogsEvent
-        data: string;
-    };
+// https://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-kinesis-streams
+interface KinesisDataStreamsEvent {
+    Records: {
+        eventId: string;
+        eventVersion: string;
+        kinesis: {
+            partitionKey: string;
+            data: string;  // base64-encoded
+            kinesisSchemaVersion: string;
+            sequenceNumber: string;
+        };
+        invokeIdentityArn: string;
+        eventName: string;
+        eventSourceARN: string;
+        eventSource: string;
+        awsRegion: string;
+    }[];
 }
 
-// These interfaces are unused, but captured here to document the full type of the payload in case it is needed.
-interface LogsEvent {
-    messageType: string;
+// https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters.html#LambdaFunctionExample
+interface CloudwatchLogsDestinationEvent {
     owner: string;
     logGroup: string;
     logStream: string;
     subscriptionFilters: string[];
-    logEvents: LogsLog[];
+    messageType: "DATA_MESSAGE" | "CONTROL_MESSAGE";
+    logEvents: {
+        id: string;
+        timestamp: number;
+        message: string;
+    }[];
 }
 
-interface LogsLog {
-    id: string;
-    timestamp: string;
-    message: string;
-}
+// TODO: use config
+const sumoEndpoint = {
+    hostname: "endpoint3.collection.us2.sumologic.com",
+    path: "/receiver/v1/http/ZaVnC4dhaV1WSO8CA25pU3U2Zcx26SDK_vsRJWx1ullkOffeLWDF0evPJge0v982P-XQQ6E9F49GW2uN" +
+          "QQWotp1JHU-UFp02fEp44OoYHWBo1aMRwDjMPw==",
+};
 
-// LogCollector is a shared and lazily created Function resource which
-// is wired up as a listener on the cloud watch logs for all users functions
-// created and managed by the Pulumi framework.
-class LogCollector extends pulumi.ComponentResource {
-    public readonly lambda: aws.lambda.Function;
+class LogTarget extends pulumi.ComponentResource {
+    public readonly destination: aws.cloudwatch.LogDestination;
+
     constructor(name: string, opts?: pulumi.ResourceOptions) {
-        super("cloud:logCollector:LogCollector", name, opts);
+        super("cloud:logTarget:LogTarget", name, opts);
 
-        const collector = new aws.serverless.Function(
+        const stream = new aws.kinesis.Stream(
             name,
-            { policies: [ aws.iam.AWSLambdaFullAccess ] },
-            async (ev: LogsPayload, ctx: aws.serverless.Context, cb: (error: any, result?: {}) => void) => {
+            {
+                shardCount: 1,
+                retentionPeriod: 24,  // hours
+            },
+            { parent: this },
+        );
+
+        const assumeRolePolicyDocument = JSON.stringify(<aws.iam.PolicyDocument>{
+            Version: "2012-10-17",
+            Statement: [{
+                Effect: "Allow",
+                Action: "sts:AssumeRole",
+                Principal: { Service: `logs.${aws.config.requireRegion()}.amazonaws.com` },
+            }],
+        });
+
+        const cloudwatchLogsPermissionsDocument = (async () => {
+            return JSON.stringify(<aws.iam.PolicyDocument>{
+                Version: "2012-10-17",
+                Statement: [{
+                    Effect: "Allow",
+                    Action: "kinesis:PutRecord",
+                    Resource: await stream.arn,
+                }],
+            });
+        })();
+
+        const cloudwatchLogsRole = new aws.iam.Role(
+            name,
+            { assumeRolePolicy: assumeRolePolicyDocument },
+            { parent: this },
+        );
+
+        const cloudwatchLogsRolePolicy = new aws.iam.RolePolicy(
+            name,
+            {
+                role: cloudwatchLogsRole.id,
+                policy: cloudwatchLogsPermissionsDocument,
+            },
+            { parent: this },
+        );
+
+        this.destination = new aws.cloudwatch.LogDestination(
+            name,
+            {
+                roleArn: cloudwatchLogsRole.arn,
+                targetArn: stream.arn,
+            },
+            { parent: this},
+        );
+
+        const destinationPolicyDocument = (async () => {
+            const accountId = (await aws.getCallerIdentity()).accountId;
+
+            return JSON.stringify(<aws.iam.PolicyDocument>{
+                Version: "2012-10-17",
+                Statement: [{
+                    Effect: "Allow",
+                    Action: "logs:PutSubscriptionFilter",
+                    Resource: await this.destination.arn,
+                    Principal: { AWS: "*" },  // Allow any account to write.
+                }],
+            });
+        })();
+
+        const destinationPolicy = new aws.cloudwatch.LogDestinationPolicy(
+            name,
+            {
+                accessPolicy: destinationPolicyDocument,
+                destinationName: this.destination.name,
+            },
+            { parent: this },
+        );
+
+        // https://github.com/SumoLogic/sumologic-aws-lambda/blob/master/kinesis/node.js/k2sl_lambda.js
+        const forwarder = new aws.serverless.Function(
+            name,
+            { policies: [ aws.iam.AWSLambdaKinesisExecutionRole ] },
+            async (event: KinesisDataStreamsEvent, context, callback) => {
+                const https = await import("https");
+                const zlib = await import("zlib");
+
                 try {
-                    const zlib = await import("zlib");
-                    const payload = new Buffer(ev.awslogs.data, "base64");
-                    const result = zlib.gunzipSync(payload);
-                    console.log(result.toString("utf8"));
-                    cb(null, {});
+                    for (const record of event.Records) {
+                        const compressedPayload = new Buffer(record.kinesis.data, "base64");
+                        const payloadBytes = zlib.gunzipSync(compressedPayload);
+                        const payloadString = payloadBytes.toString("utf8");
+                        const payload: CloudwatchLogsDestinationEvent = JSON.parse(payloadString);
+
+                        if (payload.messageType !== "DATA_MESSAGE") {
+                            continue;
+                        }
+
+                        const request = https.request({
+                            ...sumoEndpoint,
+                            method: "POST",
+                            headers: {
+                                "X-Sumo-Name": payload.logStream,
+                                "X-Sumo-Host": payload.logGroup,
+                                "X-Sumo-Category": "KinesisEvents",
+                            },
+                        }, response => {
+                            if (response.statusCode !== 200) {
+                                console.log(`failed POST: ${response.statusCode} ${response.statusMessage}`);
+                            }
+                        });
+
+                        request.on("error", err => {
+                            console.log(`failed POST: ${err.message}`);
+                        });
+
+                        for (const logEvent of payload.logEvents) {
+                            request.write(logEvent.message + "\n");
+                            // TODO: use logEvent.timestamp?
+                        }
+
+                        request.end();
+                    }
+
+                    callback(null, null);
                 } catch (err) {
-                    cb(err);
+                    // TODO: Perhaps skip individual records/events instead of failing the whole batch.
+                    callback(err, null);
                 }
             },
             { parent: this },
         );
-        this.lambda = collector.lambda;
 
-        const region = aws.config.requireRegion();
-        const permission = new aws.lambda.Permission(name, {
-            action: "lambda:invokeFunction",
-            function: this.lambda,
-            principal: "logs." + region + ".amazonaws.com",
-        }, { parent: this });
+        const mapping = new aws.lambda.EventSourceMapping(
+            name,
+            {
+                eventSourceArn: stream.arn,
+                functionName: forwarder.lambda.arn,
+                startingPosition: "LATEST",
+            },
+            { parent: this },
+        );
+
+        // No aws.lambda.Permission to create because Lambda is polling Kinesis and calling the function itself.
     }
 }
 
-let logCollector: LogCollector | undefined;
-export function getLogCollector(): aws.lambda.Function {
-    if (!logCollector) {
-        // Lazily construct the application logCollector lambda; do it in a scope where we don't have a parent,
-        // so the logCollector doesn't get falsely attributed to the caller.
-        logCollector = new LogCollector(
-            shared.createNameWithStackInfo(""),
-            { parent: shared.getGlobalInfrastructureResource() });
+let logTarget: LogTarget | undefined;
+export function getLogDestinationArn(): Promise<string> {
+    if (config.logDestinationArn) {
+        // TODO: this must be in the same region
+        return Promise.resolve(config.logDestinationArn);
     }
 
-    return logCollector.lambda;
+    if (!logTarget) {
+        logTarget = new LogTarget(
+            shared.createNameWithStackInfo("logtarget"),
+            { parent: shared.getGlobalInfrastructureResource() },
+        );
+    }
+
+    return <Promise<string>>logTarget.destination.arn;
 }

@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
 import { functionMemorySize } from "./config";
 import { Network } from "./infrastructure/network";
-import { getLogCollector } from "./logCollector";
+import { getLogDestinationArn } from "./logCollector";
 import { getComputeIAMRolePolicies, getNetwork, runLambdaInVPC } from "./shared";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
@@ -46,7 +46,7 @@ export class Function extends pulumi.ComponentResource {
                 name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
                 retentionInDays: 1,
             }, { parent: this }),
-            destinationArn: getLogCollector().arn,
+            destinationArn: getLogDestinationArn(),
             filterPattern: "",
         }, { parent: this });
     }
