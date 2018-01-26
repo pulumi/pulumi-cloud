@@ -13,13 +13,14 @@ async function testModulesWorker(
     let passed = true;
     const result: any = Object.create(null);
 
-    for (const testFn of testFunctions) {
+    await Promise.all(testFunctions.map(async (testFn) => {
         passed = await testFn(result) && passed;
-    }
+    }));
 
     return [passed, result];
 }
 
+// Run each of the `testFunction`s in parallel, each writing their results into `result.
 export async function testModules(
     res: cloud.Response,
     testFunctions: { (result: any): Promise<boolean>}[]) {
@@ -37,16 +38,18 @@ export async function testModules(
     }
 }
 
+// Run tests in each submodule of `module` in parallel, writing results into `result`.
 export async function testModule(result: any, module: any): Promise<boolean> {
     let passed = true;
 
-    for (const moduleName of Object.keys(module)) {
+    await Promise.all(Object.keys(module).map(async (moduleName) => {
         passed = await runTests(moduleName, module[moduleName], result) && passed;
-    }
+    }));
 
     return passed;
 }
 
+// Run each exported test function on `module` sequentially, writing results into `result`.
 async function runTests(moduleName: string, module: any, result: any) {
     let passed = true;
     for (const name of Object.keys(module)) {
