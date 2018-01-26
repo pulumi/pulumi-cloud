@@ -134,43 +134,6 @@ let builtService = new cloud.Service("examples-nginx2", {
     replicas: 2,
 });
 
-// build and name the resulting image:
-let builtNamedService = new cloud.Service("examples-pulumiNginx", {
-    containers: {
-        nginx: {
-            build: "./app",
-            image: "pulumi/nginx",
-            memory: 128,
-            ports: [{ port: 80 }],
-        },
-    },
-    replicas: 2,
-});
-
-// use a pre-built nginx image, and expose it via a TCP network load balancer (the default).
-let nginxOverNetLB = new cloud.Service("examples-nginxOverNetLB", {
-    containers: {
-        nginx: {
-            image: "nginx",
-            memory: 128,
-            ports: [{ port: 80, protocol: "tcp" }],
-        },
-    },
-    replicas: 2,
-});
-
-// use a pre-built nginx image, and expose it externally via an HTTP application load balancer.
-let nginxOverAppLB = new cloud.Service("examples-nginxOverAppLB", {
-    containers: {
-        nginx: {
-            image: "nginx",
-            memory: 128,
-            ports: [{ port: 80, external: true, protocol: "http" }],
-        },
-    },
-    replicas: 2,
-});
-
 // expose some APIs meant for testing purposes.
 let api = new cloud.HttpEndpoint("examples-containers");
 api.get("/test", async (req, res) => {
@@ -178,9 +141,6 @@ api.get("/test", async (req, res) => {
         nginx: await nginx.getEndpoint(),
         mongodb: await mongodb.getEndpoint(),
         nginx2: await builtService.getEndpoint(),
-        pulumiNginx: await builtNamedService.getEndpoint(),
-        nginxOverNetLB: await nginxOverNetLB.getEndpoint(),
-        nginxOverAppLB: await nginxOverAppLB.getEndpoint(),
     });
 });
 api.get("/", async (req, res) => {
