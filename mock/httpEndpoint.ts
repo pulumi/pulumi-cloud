@@ -10,6 +10,7 @@ import * as serveStatic from "serve-static";
 import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
+const config = new pulumi.Config("mock:config:httpEndpoint");
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
@@ -107,11 +108,11 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.options = (path, ...handlers) => this.route("options", path, ...handlers);
         this.all = (path, ...handlers) => this.route("all", path, ...handlers);
 
-        this.publish = (port?: number) =>  {
+        this.publish = () =>  {
             if (app === undefined) {
                 throw new Error("HttpAPI has already been published");
             }
-            return new HttpDeployment(app, port);
+            return new HttpDeployment(app);
         };
 
         function convertRequestHandler(handler: cloud.RouteHandler): express.RequestHandler {
@@ -168,10 +169,21 @@ class HttpDeployment implements cloud.HttpDeployment {
     public readonly url: pulumi.Computed<string>;
     public readonly customDomainNames: pulumi.Computed<string>[];
 
-    constructor(app: express.Application, port?: number) {
-        const server: http.Server = app.listen(port || 0);
-        this.url = Promise.resolve(`http://localhost:${server.address().port}`);
+    private server: http.Server;
+
+    constructor(app: express.Application) {
+        let publishPort = config.getNumber("port");
+        if (publishPort === undefined) {
+            publishPort = 10321;
+        }
+
+        this.server = app.listen(publishPort);
+        this.url = Promise.resolve(`http://localhost:${this.server.address().port}`);
         this.customDomainNames = [];
+    }
+
+    public close() {
+        this.server.close();
     }
 }
 
