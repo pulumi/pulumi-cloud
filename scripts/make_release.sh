@@ -31,4 +31,3 @@ copy_package "${ROOT}/mock/bin/." "@pulumi/cloud-mock"
 # Tar up the file and then print it out for use by the caller or script.
 tar -czf ${PUBFILE} -C ${PUBDIR} .
 echo ${PUBFILE} ${PUBTARGETS[@]}
-

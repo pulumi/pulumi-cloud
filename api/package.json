@@ -1,11 +1,18 @@
 {
     "name": "@pulumi/cloud",
     "version": "${VERSION}",
+    "description": "A highly productive, cloud neutral programming model.",
+    "keywords": [
+        "pulumi",
+        "cloud"
+    ],
+    "homepage": "https://pulumi.io/cloud",
+    "repository": "https://github.com/pulumi/pulumi-cloud",
     "types": "types.d.ts",
     "devDependencies": {
         "@types/node": "^8.0.26",
         "tslint": "^5.7.0",
-        "typescript": "^2.5.2"
+        "typescript": "^2.6.2"
     },
     "peerDependencies": {
         "pulumi": "*"
