@@ -13,11 +13,11 @@ export interface NetworkArgs {
 
 export class Network {
     public readonly numberOfAvailabilityZones: number;
-    public readonly vpcId: pulumi.Computed<string>;
+    public readonly vpcId: pulumi.ComputedValue<string>;
     public readonly privateSubnets: boolean;
-    public readonly securityGroupIds: pulumi.Computed<string[]>;
-    public readonly subnetIds: pulumi.Computed<string[]>;
-    public readonly publicSubnetIds: pulumi.Computed<string[]>;
+    public readonly securityGroupIds: pulumi.ComputedValue<string[]>;
+    public readonly subnetIds: pulumi.ComputedValue<string[]>;
+    public readonly publicSubnetIds: pulumi.ComputedValue<string[]>;
     public readonly internetGateway?: aws.ec2.InternetGateway;
     public readonly natGateways?: aws.ec2.NatGateway[];
 
