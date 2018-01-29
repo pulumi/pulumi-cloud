@@ -443,8 +443,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: deployment.executionArn.then((arn: aws.ARN | undefined) =>
-                            arn && (arn + stageName + "/" + method + path)),
+                        sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
                     }, { parent: this });
                 }
             }
@@ -455,7 +454,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             HttpDeployment.registerCustomDomains(this, name, api, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
-        this.url = deployment.invokeUrl.then(url => url ? (url + stageName + "/") : undefined);
+        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
         super.registerOutputs({
