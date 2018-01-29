@@ -52,7 +52,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             writeCapacity: 5,
         }, { parent: this });
 
-        const tableName = this.dynamodbTable.name.then(t => t || "<computed>");
+        const tableName = this.dynamodbTable.name;
         async function getDb() {
             const awssdk = await import("aws-sdk");
             return new awssdk.DynamoDB.DocumentClient();
@@ -61,7 +61,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         this.get = async (query) => {
             const db = await getDb();
             const result = await db.get({
-                TableName: await tableName,
+                TableName: tableName.get(),
                 Key: query,
                 ConsistentRead: consistentRead,
             }).promise();
@@ -71,14 +71,14 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         this.insert = async (item) => {
             const db = await getDb();
             await db.put({
-                TableName: await tableName,
+                TableName: tableName.get(),
                 Item: item,
             }).promise();
         };
         this.scan = async () => {
             const db = await getDb();
             const result = await db.scan({
-                TableName: await tableName,
+                TableName: tableName.get(),
                 ConsistentRead: consistentRead,
             }).promise();
             return <any[]>result.Items;
@@ -98,7 +98,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             }
             const db = await getDb();
             await db.update({
-                TableName: await tableName,
+                TableName: tableName.get(),
                 Key: query,
                 UpdateExpression: updateExpression,
                 ExpressionAttributeValues: attributeValues,
@@ -107,7 +107,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         this.delete = async (query) => {
             const db = await getDb();
             await db.delete({
-                TableName: await tableName,
+                TableName: tableName.get(),
                 Key: query,
             }).promise();
         };
