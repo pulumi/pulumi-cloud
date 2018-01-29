@@ -27,7 +27,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             const snsconn = new awssdk.SNS();
             const result = await snsconn.publish({
                 Message: JSON.stringify(item),
-                TopicArn: await topicId,
+                TopicArn: topicId.get(),
             }).promise();
         };
     }
