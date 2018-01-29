@@ -84,11 +84,11 @@ export class Cluster {
     /**
      * The ECS Cluster ARN.
      */
-    public readonly ecsClusterARN: pulumi.Computed<string>;
+    public readonly ecsClusterARN: pulumi.ComputedValue<string | undefined>;
     /**
      * The ECS Cluster's Security Group ID.
      */
-    public readonly securityGroupId?: pulumi.Computed<string>;
+    public readonly securityGroupId?: pulumi.ComputedValue<string | undefined>;
     /**
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.

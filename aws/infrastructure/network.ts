@@ -15,9 +15,9 @@ export class Network {
     public readonly numberOfAvailabilityZones: number;
     public readonly vpcId: pulumi.Computed<string>;
     public readonly privateSubnets: boolean;
-    public readonly securityGroupIds: pulumi.Computed<string>[];
-    public readonly subnetIds: pulumi.Computed<string>[];
-    public readonly publicSubnetIds: pulumi.Computed<string>[];
+    public readonly securityGroupIds: pulumi.Computed<string[]>;
+    public readonly subnetIds: pulumi.Computed<string[]>;
+    public readonly publicSubnetIds: pulumi.Computed<string[]>;
     public readonly internetGateway?: aws.ec2.InternetGateway;
     public readonly natGateways?: aws.ec2.NatGateway[];
 
@@ -41,7 +41,7 @@ export class Network {
             },
         });
         this.vpcId = vpc.id;
-        this.securityGroupIds = [ vpc.defaultSecurityGroupId ];
+        this.securityGroupIds = vpc.defaultSecurityGroupId.apply(v => [v]);
 
         this.internetGateway = new aws.ec2.InternetGateway(name, {
             vpcId: vpc.id,
@@ -64,8 +64,9 @@ export class Network {
         });
 
         this.natGateways = [];
-        this.subnetIds = [];
-        this.publicSubnetIds = [];
+
+        const localSubnetIds: pulumi.Dependency<string>[] = [];
+        const localPublicSubnetIds: pulumi.Dependency<string>[] = [];
 
         for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
             const subnetName = `${name}-${i}`;
@@ -79,7 +80,7 @@ export class Network {
                     Name: subnetName,
                 },
             });
-            this.subnetIds.push(subnet.id);
+            localSubnetIds.push(subnet.id);
 
             // We will use a different route table for this subnet depending on
             // whether we are in a public or private subnet
@@ -97,7 +98,7 @@ export class Network {
                         Name: natName,
                     },
                 });
-                this.publicSubnetIds.push(natGatewayPublicSubnet.id);
+                localPublicSubnetIds.push(natGatewayPublicSubnet.id);
 
                 // And we need to route traffic from that public subnet to the Internet Gateway
                 const natGatewayRoutes = new aws.ec2.RouteTableAssociation(natName, {
@@ -137,7 +138,7 @@ export class Network {
                 // Route directly to the Internet Gateway for the public subnet
                 subnetRouteTable = publicRouteTable;
                 // The subnet is public, so register it as our public subnet
-                this.publicSubnetIds.push(subnet.id);
+                localPublicSubnetIds.push(subnet.id);
             }
 
             const routTableAssociation = new aws.ec2.RouteTableAssociation(`${name}-${i}`, {
@@ -145,5 +146,8 @@ export class Network {
                 routeTableId: subnetRouteTable.id,
             });
         }
+
+        this.subnetIds = pulumi.combine(...localSubnetIds);
+        this.publicSubnetIds = pulumi.combine(...localPublicSubnetIds);
     }
 }
