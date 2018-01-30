@@ -64,7 +64,7 @@ type ECSContainerEnvironment = ECSContainerEnvironmentEntry[];
 
 interface ECSContainerEnvironmentEntry {
     name: string;
-    value: string;
+    value: pulumi.Dependency<string>;
 }
 
 // The shared Load Balancer management role used across all Services.
@@ -290,19 +290,17 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.C
 }
 
 interface ImageOptions {
-    image: string;
-    environment: ECSContainerEnvironment;
+    image: pulumi.Dependency<string>;
+    environment: pulumi.Dependency<ECSContainerEnvironment>;
 }
 
-async function ecsEnvironmentFromMap(
-        environment: {[name: string]: pulumi.ComputedValue<string>} | undefined): Promise<ECSContainerEnvironment> {
+function ecsEnvironmentFromMap(
+        environment: {[name: string]: pulumi.Dependency<string>} | undefined): ECSContainerEnvironment {
+    // TODO: reimplement in terms of `apply` instead of using `await.
     const result: ECSContainerEnvironment = [];
     if (environment) {
         for (const name of Object.keys(environment)) {
-            const env: string | undefined = await environment[name];
-            if (env) {
-                result.push({ name: name, value: env });
-            }
+            result.push({ name: name, value: environment[name] });
         }
     }
     return result;
@@ -510,7 +508,7 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
-const buildImageCache = new Map<string, Promise<string | undefined>>();
+const buildImageCache = new Map<string, pulumi.Dependency<string>>();
 
 // makeServiceEnvName turns a service name into something suitable for an environment variable.
 function makeServiceEnvName(service: string): string {
@@ -519,10 +517,10 @@ function makeServiceEnvName(service: string): string {
 
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(imageName: string, container: cloud.Container, ports: ExposedPorts | undefined,
-                            repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
+function computeImage(imageName: string, container: cloud.Container, ports: ExposedPorts | undefined,
+                            repository: aws.ecr.Repository | undefined): ImageOptions {
     // Start with a copy from the container specification.
-    const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
+    const preEnv: {[key: string]: pulumi.Dependency<string>} =
         <any>Object.assign({}, container.environment || {});
 
     // Now add entries for service discovery amongst containers exposing endpoints.
@@ -555,7 +553,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
                 }
                 firstPort = false;
 
-                const fullHost: Promise<string> = hostname.then((h) => `${hostproto}://${h}:${hostport}`);
+                const fullHost: pulumi.Dependency<string> = hostname.apply((h) => `${hostproto}://${h}:${hostport}`);
                 preEnv[`${serviceEnv}_PORT`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
@@ -566,7 +564,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
     }
 
     // Now wait for any environment entries to settle before proceeding.
-    const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(preEnv);
+    const env: ECSContainerEnvironment =  ecsEnvironmentFromMap(preEnv);
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
@@ -586,7 +584,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(imageName, container, repository!);
+            const imageDigest: pulumi.Dependency<string> = buildAndPushImage(imageName, container, repository!);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigestAsync);
             }
@@ -602,6 +600,9 @@ async function computeImage(imageName: string, container: cloud.Container, ports
         return { image: imageName, environment: env };
     }
     else if (container.function) {
+        // I think we will still need await here since there is I/O underneath? Which may mean promises need to get
+        // threaded through everything still (in addition to Dependency).  Should `serializeClousre` have a
+        // `serializeClosureSync` variant?
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
@@ -733,7 +734,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, ports, logGroup).then(JSON.stringify);
+    const containerDefintions = computeContainerDefintions(containers, ports, logGroup).apply(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefintions,
@@ -987,8 +988,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
 
-        const clusterARN = this.cluster.ecsClusterARN;
-        const taskDefinitionArn = this.taskDefinition.arn;
+        const clusterARN: pulumi.Dependency<string> = this.cluster.ecsClusterARN;
+        const taskDefinitionArn: pulumi.Dependency<string> = this.taskDefinition.arn;
 
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = await import("aws-sdk");
@@ -998,10 +999,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const environment: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    const envVal: string | undefined = await options.environment[envName];
-                    if (envVal) {
-                        environment.push({ name: envName, value: envVal });
-                    }
+                    const envVal: string = options.environment[envName].get();
+                    environment.push({ name: envName, value: envVal });
                 }
             }
 
@@ -1009,13 +1008,13 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const env: {name: string; value: string}[] = [];
             for (const entry of environment) {
                 // TODO[pulumi/pulumi#459]: we will eventually need to reenable the await, rather than casting.
-                env.push({ name: entry.name, value: <string><any>/*await*/entry.value });
+                env.push({ name: entry.name, value: entry.value });
             }
 
             // Run the task
             await ecs.runTask({
-                cluster: (await clusterARN)!,
-                taskDefinition: (await taskDefinitionArn)!,
+                cluster: clusterARN.get(),
+                taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
                     containerOverrides: [
