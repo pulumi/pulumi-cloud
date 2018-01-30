@@ -141,7 +141,7 @@ export function getCluster(): Cluster | undefined {
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
-                ecsClusterARN: config.ecsClusterARN,
+                ecsClusterARN: <pulumi.ComputedValue<string>>config.ecsClusterARN,
                 securityGroupId: config.ecsClusterSecurityGroup,
                 efsMountPath: config.ecsClusterEfsMountPath,
             };

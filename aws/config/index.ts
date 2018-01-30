@@ -37,7 +37,7 @@ export let ecsClusterARN: ComputedValue<string | undefined> = config.get("ecsClu
 /**
  * Optional ECS cluster security group that all ALBs for services within the cluster will use.
  */
-export let ecsClusterSecurityGroup: ComputedValue<string | undefined> = config.get("ecsClusterSecurityGroup");
+export let ecsClusterSecurityGroup: ComputedValue<string> | undefined = config.get("ecsClusterSecurityGroup");
 
 /**
  * Optional EFS mount path on the cluster hosts.  If not provided, `Volumes` cannot be used in `Service`s and `Task`s.
