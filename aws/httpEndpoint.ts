@@ -415,11 +415,18 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
         // we need to ensure a fresh deployment any time our body changes. So include the hash as
         // part of the deployment urn.
-        const deplymentNameAndHash = `${name}-${bodyHash}`;
-        const deployment = new aws.apigateway.Deployment(deplymentNameAndHash, {
+        const deployment = new aws.apigateway.Deployment(name, {
             restApi: api,
             stageName: "",
-            description: `Deployment of version ${deplymentNameAndHash}`,
+            // Note: We set `variables` here because it forces recreation of the Deployment object whenever the body
+            // hash changes.  Because we use a blank stage name above, there will not actually be any stage created in
+            // AWS, and thus these variables will not actually end up anywhere.  But this will still cause the right
+            // replacement of the Deployment when needed.  The Stage allocated below will be the stable stage that
+            // always points to the latest deployment of the API.
+            variables: {
+                version: bodyHash,
+            },
+            description: bodyHash.then(hash => `Deployment of version ${hash || "<computed>"}`),
         }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
@@ -565,22 +572,9 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
 }
 
 // createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
-// Note: we need this hash up front when creating deployments/stages (as those must be recreated) if
-// any spec routes change.  However, parts of the spec are promises, which we can't observe when
-// creating those resources.  This means we'll only recreate those resources if the routes change.
-// We will not recreate them if only the promise parts of them change.
-function createSwaggerHash(spec: SwaggerSpec): string {
-    return sha1hash(JSON.stringify(spec, (key, value) => {
-        // http://www.ecma-international.org/ecma-262/6.0/#sec-promise.resolve
-        // > The resolve function returns either a new promise resolved with the passed argument, or
-        //   the argument itself if the argument is a promise produced by this constructor.
-        if (Promise.resolve(value) === value) {
-            return `computed(${key})`;
-        }
-        else {
-            return value;
-        }
-    }));
+async function createSwaggerHash(spec: SwaggerSpec): Promise<string> {
+    const str = await createSwaggerString(spec);
+    return sha1hash(str);
 }
 
 interface SwaggerInfo {
