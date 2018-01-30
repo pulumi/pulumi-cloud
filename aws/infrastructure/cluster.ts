@@ -368,15 +368,16 @@ async function getInstanceUserData(
 
 // TODO[pulumi/pulumi-aws/issues#43]: We'd prefer not to use CloudFormation, but it's the best way to implement
 // rolling updates in an autoscaling group.
-async function getCloudFormationAsgTemplate(
+function getCloudFormationAsgTemplate(
     instanceName: string,
     minSize: number,
     maxSize: number,
     instanceLaunchConfigurationId: pulumi.Computed<string>,
     subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
 
-    const subnetsIdsArray = await Promise.all(subnetIds);
-
+    const subnetsIdsArray = pulumi.combine(...subnetIds);
+    return pulumi.combine(subnetsIdsArray, instanceLaunchConfigurationId)
+                 .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'
     Outputs:
@@ -390,12 +391,12 @@ async function getCloudFormationAsgTemplate(
                 DesiredCapacity: ${minSize}
                 HealthCheckGracePeriod: 120
                 HealthCheckType: EC2
-                LaunchConfigurationName: "${await instanceLaunchConfigurationId}"
+                LaunchConfigurationName: "${configId}"
                 MaxSize: ${maxSize}
                 MetricsCollection:
                 -   Granularity: 1Minute
                 MinSize: ${minSize}
-                VPCZoneIdentifier: ${JSON.stringify(subnetsIdsArray)}
+                VPCZoneIdentifier: ${JSON.stringify(array)}
                 Tags:
                 -   Key: Name
                     Value: ${instanceName}
@@ -413,4 +414,5 @@ async function getCloudFormationAsgTemplate(
                     -   ScheduledActions
                     WaitOnResourceSignals: true
     `;
+                 });
 }
