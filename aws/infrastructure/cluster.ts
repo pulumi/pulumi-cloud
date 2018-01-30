@@ -8,7 +8,6 @@ import { Network } from "./network";
 
 import * as config from "../config";
 import { sha1hash } from "../utils";
-import { Dependency } from "pulumi";
 
 // The default path to use for mounting EFS inside ECS container instances.
 const efsMountPath = "/mnt/efs";
@@ -305,7 +304,7 @@ function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
     mountPath: string | undefined,
-    cloudFormationStackName: Dependency<string>) {
+    cloudFormationStackName: pulumi.Dependency<string>) {
 
     const fsIdDep = pulumi.resolve(fileSystem ? fileSystem.id : undefined);
 
