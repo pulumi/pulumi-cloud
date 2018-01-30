@@ -300,7 +300,7 @@ async function ecsEnvironmentFromMap(
     const result: ECSContainerEnvironment = [];
     if (environment) {
         for (const name of Object.keys(environment)) {
-            const env: string | undefined = await environment[name];
+            const env = await unwrapComputedValue(environment[name]);
             if (env) {
                 result.push({ name: name, value: env });
             }
@@ -308,6 +308,15 @@ async function ecsEnvironmentFromMap(
     }
     return result;
 }
+
+// async function unwrapComputedValue(val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
+//     if (val === undefined) {
+//         return undefined;
+//     }
+
+//     const unpromised = await val;
+//     return typeof unpromised === "string" ? unpromised : unpromised.get();
+// }
 
 interface CommandResult {
     code: number;
@@ -1017,16 +1026,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     ],
                 },
             }).promise();
-
-            // local functions
-            async function unwrapComputedValue(val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
-                if (val === undefined) {
-                    return undefined;
-                }
-
-                const unpromised = await val;
-                return typeof unpromised === "string" ? unpromised : unpromised.get();
-            }
         };
     }
 }

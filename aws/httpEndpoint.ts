@@ -11,6 +11,7 @@ import * as pulumi from "pulumi";
 import { Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
+import { Dependency } from "pulumi";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
 export interface StaticRoute {
@@ -507,26 +508,32 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
     });
 
     // local functions
-    async function resolveOperationPromises(op: SwaggerOperationAsync): Promise<SwaggerOperation> {
-        return {
-            parameters: op.parameters,
-            responses: op.responses,
-            "x-amazon-apigateway-integration": await resolveIntegrationPromises(op["x-amazon-apigateway-integration"]),
-        };
+    function resolveOperationPromises(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
+        return resolveIntegrationPromises(op["x-amazon-apigateway-integration"]).apply(
+            integration => {
+                return {
+                    parameters: op.parameters,
+                    responses: op.responses,
+                    "x-amazon-apigateway-integration": integration,
+                };
+            });
     }
 
-    async function resolveIntegrationPromises(op: ApigatewayIntegrationAsync): Promise<ApigatewayIntegration> {
-        return {
-            requestParameters: op.requestParameters,
-            passthroughBehavior: op.passthroughBehavior,
-            httpMethod: op.httpMethod,
-            type: op.type,
-            responses: op.responses,
-            connectionType: op.connectionType,
-            uri: await op.uri,
-            credentials: await op.credentials,
-            connectionId: await op.connectionId,
-        };
+    function resolveIntegrationPromises(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
+        return pulumi.combine(op.uri, op.credentials, op.connectionId)
+                     .apply(([uri, credentials, connectionId]) => {
+            return {
+                requestParameters: op.requestParameters,
+                passthroughBehavior: op.passthroughBehavior,
+                httpMethod: op.httpMethod,
+                type: op.type,
+                responses: op.responses,
+                connectionType: op.connectionType,
+                uri: uri,
+                credentials: credentials,
+                connectionId: connectionId,
+            };
+        });
     }
 }
 
@@ -565,14 +572,14 @@ interface ApigatewayIntegrationBase {
 
 interface ApigatewayIntegration extends ApigatewayIntegrationBase {
     uri: string;
-    credentials?: string;
-    connectionId?: string;
+    credentials: string | undefined;
+    connectionId: string | undefined;
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
-    uri: Promise<string>;
-    credentials?: Promise<string>;
-    connectionId?: Promise<string>;
+    uri: Dependency<string>;
+    credentials: Dependency<string | undefined>;
+    connectionId: Dependency<string | undefined>;
 }
 
 interface SwaggerOperationAsync {
@@ -623,18 +630,17 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 
 function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
     const region = aws.config.requireRegion();
-
-    async function computeUri() {
-        const lambdaARN: aws.ARN = await lambda.arn || "computed(lambda.arn)";
-        return "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations";
-    }
+    const uri = lambda.arn.apply(lambdaARN =>
+        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
 
     return {
         "x-amazon-apigateway-integration": {
-            uri: computeUri(),
+            uri: uri,
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
+            credentials: pulumi.makeOpt<string>(),
+            connectionId: pulumi.makeOpt<string>(),
         },
     };
 }
@@ -644,28 +650,28 @@ function createPathSpecProxy(
     vpcLink: aws.apigateway.VpcLink | undefined,
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
-    async function computeUri() {
-        const targetValue = await target;
-        let url = "";
-        if (targetValue === undefined) {
-            // Use an invlaid dummy URL during preview
-            url = "<computed>";
-        } else if (typeof targetValue === "string") {
-            // For URL target, ensure there is a trailing `/`
-            url = targetValue;
-            if (!url.endsWith("/")) {
-                url = url + "/";
-            }
-        } else {
-            // For Endpoint target, construct an HTTP URL from the hostname and port
-            url = `http://${targetValue.hostname}:${targetValue.port}/`;
-        }
-        if (useProxyPathParameter) {
-            return `${url}{proxy}`;
-        } else {
-            return url;
-        }
-    }
+    const uri =
+        pulumi.combine(<string>target, <pulumi.Computed<cloud.Endpoint>>target)
+              .apply(([targetStr, targetEndpoint]) => {
+                let url = "";
+                if (typeof targetStr === "string") {
+                    // For URL target, ensure there is a trailing `/`
+                    url = targetStr;
+                    if (!url.endsWith("/")) {
+                        url = url + "/";
+                    }
+                } else {
+                    // For Endpoint target, construct an HTTP URL from the hostname and port
+                    url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
+                }
+
+                if (useProxyPathParameter) {
+                    return `${url}{proxy}`;
+                } else {
+                    return url;
+                }
+              });
+
     const result: SwaggerOperationAsync = {
         "x-amazon-apigateway-integration": {
             responses: {
@@ -673,11 +679,12 @@ function createPathSpecProxy(
                     statusCode: "200",
                 },
             },
-            uri: computeUri(),
+            uri: uri,
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: vpcLink ? vpcLink.id.then(s => s || "<undefined>") : undefined,
+            connectionId: pulumi.makeOpt(vpcLink ? vpcLink.id : undefined),
+            credentials: pulumi.makeOpt<string>(),
             type: "http_proxy",
         },
     };
@@ -703,19 +710,8 @@ function createPathSpecObject(
 
     const region = aws.config.requireRegion();
 
-    async function computeCredentials() {
-        const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-        return roleARN;
-    }
-
-    async function computeUri() {
-        const bucketName: string = await bucket.bucket || "computed(bucket.name)";
-
-        const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
-            (pathParameter ? `/{${pathParameter}}` : ``)}`;
-
-        return uri;
-    }
+    const uri = bucket.bucket.apply(bucketName =>
+        `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${(pathParameter ? `/{${pathParameter}}` : ``)}`);
 
     const result: SwaggerOperationAsync = {
         responses: {
@@ -735,8 +731,9 @@ function createPathSpecObject(
             },
         },
         "x-amazon-apigateway-integration": {
-            credentials: computeCredentials(),
-            uri: computeUri(),
+            credentials: role.arn,
+            uri: uri,
+            connectionId: pulumi.makeOpt<string>(),
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",
