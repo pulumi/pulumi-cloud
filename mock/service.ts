@@ -5,6 +5,7 @@ import * as pulumi from "pulumi";
 
 export class Service implements cloud.Service {
     name: string;
+    endpoints: Promise<{ [containerName: string]: { [port: number]: cloud.Endpoint } }>;
     getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
     constructor(name: string, args: cloud.ServiceArguments) {
         throw new Error(`Service not yet supported in mock implementation.`);

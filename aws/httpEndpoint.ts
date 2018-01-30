@@ -8,10 +8,10 @@ import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
 
+import { Dependency } from "pulumi";
 import { Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
-import { Dependency } from "pulumi";
 
 // StaticRoute is a registered static file route, backed by an S3 bucket.
 export interface StaticRoute {
@@ -279,8 +279,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     }
                     return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
                         if (loadBalancerType === "application") {
-                            // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
-                            // case for cloud.Service ports exposed as type "tcp".
+                            // We can only support proxying to an Endpoint if it is backed by an
+                            // NLB, which will only be the case for cloud.Service ports exposed as
+                            // type "tcp".
                             throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
                         }
                         return endpoint.loadBalancer.arn;
