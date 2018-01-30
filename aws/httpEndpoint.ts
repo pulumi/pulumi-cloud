@@ -573,8 +573,8 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
 
 // createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
 async function createSwaggerHash(spec: SwaggerSpec): Promise<string> {
-    const str = await createSwaggerString(spec);
-    return sha1hash(str);
+    const str = createSwaggerString(spec);
+    return sha1hash(await (<any>str).promise());
 }
 
 interface SwaggerInfo {
