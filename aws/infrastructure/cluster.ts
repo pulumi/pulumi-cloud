@@ -8,6 +8,7 @@ import { Network } from "./network";
 
 import * as config from "../config";
 import { sha1hash } from "../utils";
+import { Dependency } from "pulumi";
 
 // The default path to use for mounting EFS inside ECS container instances.
 const efsMountPath = "/mnt/efs";
@@ -304,66 +305,71 @@ async function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
     mountPath: string | undefined,
-    cloudFormationStackName: Promise<string | undefined>) {
+    cloudFormationStackName: Dependency<string>) {
 
-    let fileSystemRuncmdBlock = "";
-    if (fileSystem && mountPath) {
-        // This string must be indented exactly as much as the block of commands it's inserted into below!
+    const fsIdDep = fileSystem ? fileSystem.id : pulumi.makeOpt<string>();
 
-        // tslint:disable max-line-length
-        fileSystemRuncmdBlock = `
-            # Create EFS mount path
-            mkdir ${mountPath}
-            chown ec2-user:ec2-user ${mountPath}
-            # Create environment variables
-            EFS_FILE_SYSTEM_ID=${await fileSystem.id}
-            DIR_SRC=$AWS_AVAILABILITY_ZONE.$EFS_FILE_SYSTEM_ID.efs.$AWS_REGION.amazonaws.com
-            DIR_TGT=${mountPath}
-            # Update /etc/fstab with the new NFS mount
-            cp -p /etc/fstab /etc/fstab.back-$(date +%F)
-            echo -e \"$DIR_SRC:/ $DIR_TGT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0\" | tee -a /etc/fstab
-            mount -a -t nfs4
-            # Restart Docker
-            docker ps
-            service docker stop
-            service docker start
+    const combined = pulumi.combine(fsIdDep, cluster.id, cloudFormationStackName);
+    return combined.apply(([fsId, clusterId, stackName]) => {
+        let fileSystemRuncmdBlock = "";
+        if (fileSystem && mountPath) {
+            // This string must be indented exactly as much as the block of commands it's inserted into below!
+
+            // tslint:disable max-line-length
+            fileSystemRuncmdBlock = `
+                # Create EFS mount path
+                mkdir ${mountPath}
+                chown ec2-user:ec2-user ${mountPath}
+                # Create environment variables
+                EFS_FILE_SYSTEM_ID=${fsId}
+                DIR_SRC=$AWS_AVAILABILITY_ZONE.$EFS_FILE_SYSTEM_ID.efs.$AWS_REGION.amazonaws.com
+                DIR_TGT=${mountPath}
+                # Update /etc/fstab with the new NFS mount
+                cp -p /etc/fstab /etc/fstab.back-$(date +%F)
+                echo -e \"$DIR_SRC:/ $DIR_TGT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0\" | tee -a /etc/fstab
+                mount -a -t nfs4
+                # Restart Docker
+                docker ps
+                service docker stop
+                service docker start
+            `;
+        }
+
+        return `#cloud-config
+        repo_upgrade_exclude:
+            - kernel*
+        packages:
+            - aws-cfn-bootstrap
+            - aws-cli
+            - nfs-utils
+        mounts:
+            - ['/dev/xvdb', 'none', 'swap', 'sw', '0', '0']
+        bootcmd:
+            - mkswap /dev/xvdb
+            - swapon /dev/xvdb
+            - echo ECS_CLUSTER='${clusterId}' >> /etc/ecs/ecs.config
+            - echo ECS_ENGINE_AUTH_TYPE=docker >> /etc/ecs/ecs.config
+        runcmd:
+            # Set and use variables in the same command, since it's not obvious if
+            # different commands will run in different shells.
+            - |
+                # Knock one letter off of availability zone to get region.
+                AWS_AVAILABILITY_ZONE=$(curl -s 169.254.169.254/2016-09-02/meta-data/placement/availability-zone)
+                AWS_REGION=$(echo $AWS_AVAILABILITY_ZONE | sed 's/.$//')
+
+                ${fileSystemRuncmdBlock}
+
+                # Disable container access to EC2 metadata instance
+                # See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
+                iptables --insert FORWARD 1 --in-interface docker+ --destination 169.254.169.254/32 --jump DROP
+                service iptables save
+
+                /opt/aws/bin/cfn-signal \
+                    --region "\${AWS_REGION}" \
+                    --stack "${stackName}" \
+                    --resource Instances
         `;
-    }
-
-    return `#cloud-config
-    repo_upgrade_exclude:
-        - kernel*
-    packages:
-        - aws-cfn-bootstrap
-        - aws-cli
-        - nfs-utils
-    mounts:
-        - ['/dev/xvdb', 'none', 'swap', 'sw', '0', '0']
-    bootcmd:
-        - mkswap /dev/xvdb
-        - swapon /dev/xvdb
-        - echo ECS_CLUSTER='${await cluster.id}' >> /etc/ecs/ecs.config
-        - echo ECS_ENGINE_AUTH_TYPE=docker >> /etc/ecs/ecs.config
-    runcmd:
-        # Set and use variables in the same command, since it's not obvious if
-        # different commands will run in different shells.
-        - |
-            # Knock one letter off of availability zone to get region.
-            AWS_AVAILABILITY_ZONE=$(curl -s 169.254.169.254/2016-09-02/meta-data/placement/availability-zone)
-            AWS_REGION=$(echo $AWS_AVAILABILITY_ZONE | sed 's/.$//')
-
-            ${fileSystemRuncmdBlock}
-
-            # Disable container access to EC2 metadata instance
-            # See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
-            iptables --insert FORWARD 1 --in-interface docker+ --destination 169.254.169.254/32 --jump DROP
-            service iptables save
-
-            /opt/aws/bin/cfn-signal \
-                --region "\${AWS_REGION}" \
-                --stack "${await cloudFormationStackName}" \
-                --resource Instances
-    `;
+    });
 }
 
 // TODO[pulumi/pulumi-aws/issues#43]: We'd prefer not to use CloudFormation, but it's the best way to implement
@@ -373,7 +379,7 @@ function getCloudFormationAsgTemplate(
     minSize: number,
     maxSize: number,
     instanceLaunchConfigurationId: pulumi.Computed<string>,
-    subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
+    subnetIds: pulumi.ComputedValue<string>[]): pulumi.Computed<string> {
 
     const subnetsIdsArray = pulumi.combine(...subnetIds);
     return pulumi.combine(subnetsIdsArray, instanceLaunchConfigurationId)
