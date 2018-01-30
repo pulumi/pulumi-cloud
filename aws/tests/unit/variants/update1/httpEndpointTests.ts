@@ -14,7 +14,7 @@ namespace updateProgramTests {
     });
 
     export async function testInitialGet() {
-        const address = await deployment.url;
+        const address = deployment.url.get();
         await supertest(address).get("/persistent1").expect(200, { version: "1" });
         await supertest(address).get("/persistent2").expect(404);
     }
@@ -23,7 +23,7 @@ namespace updateProgramTests {
     endpoint.static("/persistent3/", "www");
 
     export async function testStaticGet() {
-        const address = await deployment.url;
+        const address = deployment.url.get();
         await supertest(address).get("/persistent3/file2.txt").expect(200, "contents2\n");
         await supertest(address).get("/persistent3/file1.txt").expect(400);
     }
