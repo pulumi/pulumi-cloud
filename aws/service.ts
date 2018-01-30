@@ -773,6 +773,8 @@ export interface Endpoint extends cloud.Endpoint {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
 }
 
+export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -780,7 +782,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: awsinfra.Cluster;
     public readonly ecsService: aws.ecs.Service;
 
-    public readonly endpoints: Promise<{ [containerName: string]: { [port: number]: Endpoint } }>;
+    public readonly endpoints: Promise<Endpoints>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -874,8 +876,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 }
 
-async function getEndpoints(ports: ExposedPorts) {
-    const result: { [containerName: string]: { [port: number]: Endpoint } } = {};
+async function getEndpoints(ports: ExposedPorts): Promise<Endpoints> {
+    const result: Endpoints = {};
     for (const containerName of Object.keys(ports)) {
         const portInfo = ports[containerName];
         const portToEndpoint: { [port: number]: Endpoint } = {};
