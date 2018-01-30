@@ -669,8 +669,8 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
-            credentials: pulumi.makeOpt<string>(),
-            connectionId: pulumi.makeOpt<string>(),
+            credentials: pulumi.resolve<string>(),
+            connectionId: pulumi.resolve<string>(),
         },
     };
 }
@@ -713,8 +713,8 @@ function createPathSpecProxy(
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: pulumi.makeOpt(vpcLink ? vpcLink.id : undefined),
-            credentials: pulumi.makeOpt<string>(),
+            connectionId: pulumi.resolve(vpcLink ? vpcLink.id : undefined),
+            credentials: pulumi.resolve<string>(),
             type: "http_proxy",
         },
     };
@@ -763,7 +763,7 @@ function createPathSpecObject(
         "x-amazon-apigateway-integration": {
             credentials: role.arn,
             uri: uri,
-            connectionId: pulumi.makeOpt<string>(),
+            connectionId: pulumi.resolve<string>(),
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",

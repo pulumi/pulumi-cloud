@@ -307,7 +307,7 @@ function getInstanceUserData(
     mountPath: string | undefined,
     cloudFormationStackName: Dependency<string>) {
 
-    const fsIdDep = fileSystem ? fileSystem.id : pulumi.makeOpt<string>();
+    const fsIdDep = pulumi.resolve(fileSystem ? fileSystem.id : undefined);
 
     const combined = pulumi.combine(fsIdDep, cluster.id, cloudFormationStackName);
     return combined.apply(([fsId, clusterId, stackName]) => {

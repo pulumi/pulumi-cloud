@@ -299,7 +299,7 @@ function ecsEnvironmentFromMap(
 
     environment = environment || {};
     const array = Object.keys(environment).map(name => {
-        return pulumi.convertToDependency(environment[name]).apply(v => ({
+        return pulumi.resolve(environment[name]).apply(v => ({
             name: name,
             value: v,
         }));
@@ -644,9 +644,9 @@ async function computeContainerDefintions(
 
         const combined = pulumi.combine(
             imageOptionsDep,
-            pulumi.makeOpt(container.command),
-            pulumi.makeOpt(container.memory),
-            pulumi.makeOpt(container.memoryReservation),
+            pulumi.resolve(container.command),
+            pulumi.resolve(container.memory),
+            pulumi.resolve(container.memoryReservation),
             logGroup.id);
 
         return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {

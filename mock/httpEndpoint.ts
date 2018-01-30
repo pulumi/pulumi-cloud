@@ -45,8 +45,9 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             if (typeof target === "string") {
                 url = target;
             } else {
-                const targetEndpoint = await target;
-                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
+                throw new Error("Endpoint targets not currently supported in the mock impl.");
+                // const targetEndpoint = await target;
+                // url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
             }
             app.use(path, httpProxy({target: url}));
         };
@@ -170,7 +171,7 @@ class HttpDeployment implements cloud.HttpDeployment {
 
     constructor(app: express.Application, port?: number) {
         const server: http.Server = app.listen(port || 0);
-        this.url = Promise.resolve(`http://localhost:${server.address().port}`);
+        this.url = pulumi.resolve(`http://localhost:${server.address().port}`);
         this.customDomainNames = [];
     }
 }
