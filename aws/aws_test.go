@@ -37,6 +37,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud-aws",
 			},
 		},
@@ -48,6 +49,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -77,6 +79,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -143,6 +146,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -154,6 +158,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
@@ -184,6 +189,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 			},
 			Verbose: true,
@@ -338,6 +344,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -426,6 +433,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},

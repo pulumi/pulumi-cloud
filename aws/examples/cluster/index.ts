@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as awsinfra from "@pulumi/cloud-aws/infrastructure";
+import { Dependency } from "pulumi";
 
 const prefix = "infratest";
 const numAvailabilityZones = 2;
