@@ -1033,9 +1033,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const environment: ECSContainerEnvironment = [];
             if (container.environment) {
                 for (const key of Object.keys(container.environment)) {
-                    // We're on the inside, so we know container.environment has been completely
-                    // realized.  So we can just blindly cast to string
-                    environment.push({ name: key, value: <string>container.environment[key] });
+                    environment.push({ name: key, value: unwrapComputedValue(container.environment[key]) });
                 }
             }
 
@@ -1043,7 +1041,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 for (const key of Object.keys(options.environment)) {
                     // We're on the inside, so we know options.environment has been completely
                     // realized.  So we can just blindly cast to string
-                    const envVal = <string>options.environment[key];
+                    const envVal = unwrapComputedValue(options.environment[key]);
                     if (envVal) {
                         environment.push({ name: key, value: envVal });
                     }
@@ -1059,7 +1057,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Run the task
             await ecs.runTask({
-                cluster: await unwrapComputedValue(clusterARN),
+                cluster: unwrapComputedValue(clusterARN),
                 taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
@@ -1072,14 +1070,13 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 },
             }).promise();
 
-            async function unwrapComputedValue(
-                    val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
-                if (val === undefined) {
-                    return undefined;
-                }
-
-                const unpromised = await val;
-                return typeof unpromised === "string" ? unpromised : unpromised.get();
+            function unwrapComputedValue(
+                    val: pulumi.ComputedValue<string>): string {
+                // On the inside, we only ever have string or Dependency.  All promises will
+                // have been unwrapped.
+                return val instanceof pulumi.Dependency
+                    ? (<pulumi.Dependency<string>>val).get()
+                    : <string>val;
             }
         };
     }
