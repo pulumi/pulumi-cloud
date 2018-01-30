@@ -625,8 +625,9 @@ async function computeImage(
 
 // computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is lifted over
 // a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
-async function computeContainerDefintions(containers: cloud.Containers, ports: ExposedPorts | undefined,
-                                          logGroup: aws.cloudwatch.LogGroup): Promise<ECSContainerDefinition[]> {
+async function computeContainerDefintions(
+        containers: cloud.Containers, ports: ExposedPorts | undefined,
+        logGroup: aws.cloudwatch.LogGroup): Promise<pulumi.Dependency<ECSContainerDefinition>[]> {
     return Promise.all(Object.keys(containers).map(async (containerName) => {
         const container = containers[containerName];
         const imageName: string = getImageName(container);
@@ -638,30 +639,40 @@ async function computeContainerDefintions(containers: cloud.Containers, ports: E
             // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
             repository = getOrCreateRepository(imageName);
         }
-        const { image, environment } = await computeImage(imageName, container, ports, repository);
+        const imageOptionsDep = await computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
-        const containerDefinition: ECSContainerDefinition = {
-            name: containerName,
-            image: image,
-            command: await container.command,
-            memory: await container.memory,
-            memoryReservation: await container.memoryReservation,
-            portMappings: portMappings,
-            environment: environment,
-            mountPoints: (container.volumes || []).map(v => ({
-                containerPath: v.containerPath,
-                sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
-            })),
-            logConfiguration: {
-                logDriver: "awslogs",
-                options: {
-                    "awslogs-group": (await logGroup.id)!,
-                    "awslogs-region": aws.config.requireRegion(),
-                    "awslogs-stream-prefix": containerName,
+
+        const combined = pulumi.combine(
+            imageOptionsDep,
+            pulumi.makeOpt(container.command),
+            pulumi.makeOpt(container.memory),
+            pulumi.makeOpt(container.memoryReservation),
+            logGroup.id);
+
+        return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+            const containerDefinition: ECSContainerDefinition = {
+                name: containerName,
+                image: imageOpts.image,
+                command: command,
+                memory: memory,
+                memoryReservation: memoryReservation,
+                portMappings: portMappings,
+                environment: imageOpts.environment,
+                mountPoints: (container.volumes || []).map(v => ({
+                    containerPath: v.containerPath,
+                    sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
+                })),
+                logConfiguration: {
+                    logDriver: "awslogs",
+                    options: {
+                        "awslogs-group": logGroupId,
+                        "awslogs-region": aws.config.requireRegion(),
+                        "awslogs-stream-prefix": containerName,
+                    },
                 },
-            },
-        };
-        return containerDefinition;
+            };
+            return containerDefinition;
+        });
     }));
 }
 
