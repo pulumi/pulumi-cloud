@@ -272,22 +272,23 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
             let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
             if (typeof route.target !== "string") {
-                async function getTargetArn() {
-                    const endpoint = (await route.target) as Endpoint;
+                const targetArn = route.target.apply(t => {
+                    const endpoint = t as Endpoint;
                     if (!endpoint.loadBalancer) {
                         throw new Error("AWS endpoint proxy requires an AWS Endpoint");
                     }
-                    const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
-                    if (loadBalancerType === "application") {
-                        // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
-                        // case for cloud.Service ports exposed as type "tcp".
-                        throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
-                    }
-                    return endpoint.loadBalancer.arn;
-                }
+                    return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
+                        if (loadBalancerType === "application") {
+                            // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
+                            // case for cloud.Service ports exposed as type "tcp".
+                            throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                        }
+                        return endpoint.loadBalancer.arn;
+                    });
+                });
                 const name = apiName + sha1hash(route.path);
                 vpcLink = new aws.apigateway.VpcLink(name, {
-                    targetArn: getTargetArn(),
+                    targetArn: targetArn,
                 });
             }
 
@@ -508,21 +509,19 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
     });
 
     // local functions
-    function resolveOperationPromises(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
-        return resolveIntegrationPromises(op["x-amazon-apigateway-integration"]).apply(
-            integration => {
-                return {
+    function resolveOperationDependencies(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
+        return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
+            integration => ({
                     parameters: op.parameters,
                     responses: op.responses,
                     "x-amazon-apigateway-integration": integration,
-                };
-            });
+                }));
     }
 
-    function resolveIntegrationPromises(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
+    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
         return pulumi.combine(op.uri, op.credentials, op.connectionId)
-                     .apply(([uri, credentials, connectionId]) => {
-            return {
+                     .apply(([uri, credentials, connectionId]) =>
+            ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
                 httpMethod: op.httpMethod,
@@ -532,8 +531,7 @@ async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
                 uri: uri,
                 credentials: credentials,
                 connectionId: connectionId,
-            };
-        });
+            }));
     }
 }
 
