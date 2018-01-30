@@ -4,6 +4,7 @@
 // typescript itself uses to determine the shape of this module.
 
 export * from "./httpEndpoint";
+export { addLogSink, LogSink } from "./logs";
 export * from "./table";
 export * from "./topic";
 export * from "./service";

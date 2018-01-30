@@ -7,6 +7,7 @@
 import "./config";
 
 export * from "./httpEndpoint";
+export { addLogSink } from "./logs";
 export * from "./table";
 export { Topic } from "./topic";
 export * from "./service";
