@@ -34,11 +34,11 @@ export interface Container {
      */
     image?: string;
     /**
-     * A path to a folder within the current program directory where a Docker build should be run to
-     * construct the image for this Container.  If `image` is also specified, the built container will
-     * be tagged with that name, but otherwise will get an auto-generated image name.
+     * Either a path to a folder in which a Docker build should be run to construct the image for this
+     * Container, or a ContainerBuild object with more detailed build instructions.  If `image` is also specified, the
+     * built container will be tagged with that name, but otherwise will get an auto-generated image name.
      */
-    build?: string;
+    build?: string | ContainerBuild;
     /**
      * The function code to use as the implementation of the contaner.  If `function` is specified,
      * neither `image` nor `build` are legal.
@@ -89,6 +89,29 @@ export interface Container {
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
     command?: pulumi.ComputedValue<string[]>;
+}
+
+/**
+ * ContainerBuild may be used to specify detailed instructions about how to build a container.
+ */
+export interface ContainerBuild {
+    /**
+     * context is a path to a directory to use for the Docker build context, usually the directory in which the
+     * Dockerfile resides (although dockerfile may be used to choose a custom location independent of this choice).
+     * If not specified, the context defaults to the current working directory; if a relative path is used, it
+     * is relative to the current working directory that Pulumi is evaluating.
+     */
+    context?: string;
+    /**
+     * dockerfile may be used to override the default Dockerfile name and/or location.  By default, it is assumed
+     * to be a file named Dockerfile in the root of the build context.
+     */
+    dockerfile?: string;
+    /**
+     * An optional map of named build-time argument variables to set during the Docker build.  This flag allows you
+     * to pass built-time variables that can be accessed like environment variables inside the `RUN` instruction.
+     */
+    args?: {[key: string]: string};
 }
 
 export interface ContainerPort {
