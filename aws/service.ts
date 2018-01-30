@@ -1030,29 +1030,20 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const environment: ECSContainerEnvironment = [];
+            const env: ECSContainerEnvironment = [];
             if (container.environment) {
                 for (const key of Object.keys(container.environment)) {
-                    environment.push({ name: key, value: unwrapComputedValue(container.environment[key]) });
+                    env.push({ name: key, value: unwrapComputedValue(container.environment[key]) });
                 }
             }
 
             if (options && options.environment) {
                 for (const key of Object.keys(options.environment)) {
-                    // We're on the inside, so we know options.environment has been completely
-                    // realized.  So we can just blindly cast to string
                     const envVal = unwrapComputedValue(options.environment[key]);
                     if (envVal) {
-                        environment.push({ name: key, value: envVal });
+                        env.push({ name: key, value: envVal });
                     }
                 }
-            }
-
-            // Ensure all environment entries are accessible.  These can contain promises, so we'll need to await.
-            const env: {name: string; value: string}[] = [];
-            for (const entry of environment) {
-                // TODO[pulumi/pulumi#459]: we will eventually need to reenable the await, rather than casting.
-                env.push({ name: entry.name, value: <string><any>/*await*/entry.value });
             }
 
             // Run the task
