@@ -294,18 +294,19 @@ interface ImageOptions {
     environment: ECSContainerEnvironment;
 }
 
-async function ecsEnvironmentFromMap(
-        environment: {[name: string]: pulumi.ComputedValue<string>} | undefined): Promise<ECSContainerEnvironment> {
-    const result: ECSContainerEnvironment = [];
-    if (environment) {
-        for (const name of Object.keys(environment)) {
-            const env = await unwrapComputedValue(environment[name]);
-            if (env) {
-                result.push({ name: name, value: env });
-            }
-        }
-    }
-    return result;
+function ecsEnvironmentFromMap(
+        environment: Record<string, pulumi.ComputedValue<string>> = {}): pulumi.Dependency<ECSContainerEnvironment> {
+
+    environment = environment || {};
+    const array = Object.keys(environment).map(name => {
+        return pulumi.convertToDependency(environment[name]).apply(v => ({
+            name: name,
+            value: v,
+        }));
+    });
+
+    return pulumi.combine(...array)
+                 .apply(envValues => envValues.filter(kvp => kvp.value !== undefined));
 }
 
 interface CommandResult {
@@ -519,8 +520,10 @@ function makeServiceEnvName(service: string): string {
 
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(imageName: string, container: cloud.Container, ports: ExposedPorts | undefined,
-                            repository: aws.ecr.Repository | undefined): Promise<ImageOptions> {
+async function computeImage(
+        imageName: string, container: cloud.Container,
+        ports: ExposedPorts | undefined,
+        repository: aws.ecr.Repository | undefined): Promise<pulumi.Dependency<ImageOptions>> {
     // Start with a copy from the container specification.
     const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
         <any>Object.assign({}, container.environment || {});
@@ -555,7 +558,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
                 }
                 firstPort = false;
 
-                const fullHost: Promise<string> = hostname.then((h) => `${hostproto}://${h}:${hostport}`);
+                const fullHost = hostname.apply(h => `${hostproto}://${h}:${hostport}`);
                 preEnv[`${serviceEnv}_PORT`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
@@ -566,7 +569,7 @@ async function computeImage(imageName: string, container: cloud.Container, ports
     }
 
     // Now wait for any environment entries to settle before proceeding.
-    const env: ECSContainerEnvironment = await ecsEnvironmentFromMap(preEnv);
+    const env = ecsEnvironmentFromMap(preEnv);
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
@@ -594,20 +597,26 @@ async function computeImage(imageName: string, container: cloud.Container, ports
             pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
         }
 
-        env.push({ name: "IMAGE_DIGEST", value: await imageDigest! });
-        return { image: (await repository.repositoryUrl)!, environment: env };
+        const digest = await imageDigest!;
+        return pulumi.combine(repository.repositoryUrl, env)
+                     .apply(([url, e]) => {
+                        e.push({ name: "IMAGE_DIGEST", value: digest });
+                        return { image: url, environment: e };
+                    });
     }
     else if (container.image) {
         assert(!container.build);
-        return { image: imageName, environment: env };
+        return env.apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
         const closure = await pulumi.runtime.serializeClosure(container.function);
         const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        env.push({ name: "PULUMI_SRC", value: jsSrcText });
-        return { image: imageName, environment: env };
+        return env.apply(e => {
+            e.push({ name: "PULUMI_SRC", value: jsSrcText });
+            return { image: imageName, environment: e };
+        });
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -1010,7 +1019,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const environment: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
+            const environment = ecsEnvironmentFromMap(container.environment);
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
                     const envVal = await unwrapComputedValue(options.environment[envName]);
