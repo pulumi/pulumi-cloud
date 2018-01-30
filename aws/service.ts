@@ -883,16 +883,14 @@ async function getEndpoints(ports: ExposedPorts): Promise<Endpoints> {
         const portToEndpoint: { [port: number]: Endpoint } = {};
         result[containerName] = portToEndpoint;
 
-        for (const port in portInfo) {
-            if (portInfo[port]) {
-                const exposedPort = portInfo[port];
+        for (const port of Object.keys(portInfo)) {
+            const exposedPort = (<any>portInfo)[port];
 
-                portToEndpoint[port] = {
-                    port: exposedPort.hostPort,
-                    loadBalancer: exposedPort.host,
-                    hostname: <string>await exposedPort.host.dnsName,
-                };
-            }
+            (<any>portToEndpoint)[port] = {
+                port: exposedPort.hostPort,
+                loadBalancer: exposedPort.host,
+                hostname: <string>await exposedPort.host.dnsName,
+            };
         }
     }
 
