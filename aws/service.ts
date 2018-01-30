@@ -773,12 +773,16 @@ export interface Endpoint extends cloud.Endpoint {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
 }
 
+export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
     public readonly cluster: awsinfra.Cluster;
     public readonly ecsService: aws.ecs.Service;
+
+    public readonly endpoints: Promise<Endpoints>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -846,45 +850,51 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             placementConstraints: placementConstraintsForHost(args.host),
         }, { parent: this });
 
-        // getEndpoint returns the host and port info for a given containerName and exposed port.
-        this.getEndpoint =
-            async function (this: Service, containerName?: string, containerPort?: number): Promise<Endpoint> {
-                if (!containerName) {
-                    // If no container name provided, choose the first container
-                    containerName = Object.keys(ports)[0];
-                    if (!containerName) {
-                        throw new Error(`No containers available in this service`);
-                    }
-                }
+        this.endpoints = getEndpoints(ports);
 
-                const containerPorts = ports[containerName] || {};
-                if (!containerPort) {
-                    // If no port provided, choose the first exposed port on the container.
-                    containerPort = +Object.keys(containerPorts)[0];
-                    if (!containerPort) {
-                        throw new Error(`No ports available in service container ${containerName}`);
-                    }
-                }
+        this.getEndpoint = async (containerName, containerPort) => {
+            const endpoints = await this.endpoints;
 
-                const info = containerPorts[containerPort];
-                if (!info) {
-                    throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
-                }
+            containerName = containerName || Object.keys(endpoints)[0];
+            if (!containerName)  {
+                throw new Error(`No containers available in this service`);
+            }
 
-                // TODO [pulumi/pulumi#331] When we capture promise values, they get exposed on the inside as the
-                // unwrapped value inside the promise.  Because this function may be called at deployment or runtime
-                // the value of `info.host.dnsName` may be a Promise<string|undefined> or a string|undefined.  We
-                // can use `await` to turn either of these into a `string|undefined`, because `await` in JavaScript
-                // works fine on non-promise values. See
-                // https://github.com/pulumi/pulumi/issues/331#issuecomment-333280955.
-                const hostname = await info.host.dnsName;
-                return {
-                    hostname: hostname!,
-                    port: info.hostPort,
-                    loadBalancer: info.host,
-                };
-            };
+            const containerPorts = endpoints[containerName] || {};
+            containerPort = containerPort || +Object.keys(containerPorts)[0];
+            if (!containerPort) {
+                throw new Error(`No ports available in service container ${containerName}`);
+            }
+
+            const endpoint = containerPorts[containerPort];
+            if (!endpoint) {
+                throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
+            }
+
+            return endpoint;
+        };
     }
+}
+
+async function getEndpoints(ports: ExposedPorts): Promise<Endpoints> {
+    const result: Endpoints = {};
+    for (const containerName of Object.keys(ports)) {
+        const portInfo = ports[containerName];
+        const portToEndpoint: { [port: number]: Endpoint } = {};
+        result[containerName] = portToEndpoint;
+
+        for (const port of Object.keys(portInfo)) {
+            const exposedPort = (<any>portInfo)[port];
+
+            (<any>portToEndpoint)[port] = {
+                port: exposedPort.hostPort,
+                loadBalancer: exposedPort.host,
+                hostname: <string>await exposedPort.host.dnsName,
+            };
+        }
+    }
+
+    return result;
 }
 
 const volumeNames = new Set<string>();
