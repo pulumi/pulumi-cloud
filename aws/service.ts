@@ -14,6 +14,7 @@ import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
 import { Dependency } from "pulumi";
+import { PortInfo } from "aws-sdk/clients/lightsail";
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -783,7 +784,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: awsinfra.Cluster;
     public readonly ecsService: aws.ecs.Service;
 
-    public readonly endpoints: Promise<Endpoints>;
+    public readonly endpoints: pulumi.Computed<Endpoints>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -854,7 +855,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         this.endpoints = getEndpoints(ports);
 
         this.getEndpoint = async (containerName, containerPort) => {
-            const endpoints = await this.endpoints;
+            const endpoints = this.endpoints.get();
 
             containerName = containerName || Object.keys(endpoints)[0];
             if (!containerName)  {
@@ -877,25 +878,59 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 }
 
-async function getEndpoints(ports: ExposedPorts): Promise<Endpoints> {
-    const result: Endpoints = {};
-    for (const containerName of Object.keys(ports)) {
-        const portInfo = ports[containerName];
-        const portToEndpoint: { [port: number]: Endpoint } = {};
-        result[containerName] = portToEndpoint;
+function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
+    const unwrapped = unwrap();
+    const flat = flatten(unwrapped);
+    return pulumi.combine(...flat)
+                 .apply(array => {
+                    const result: Endpoints = {};
+                    for (const v of array) {
+                        const name = v.name;
+                        const exposed = result[name] || (result[name] = {});
 
-        for (const port of Object.keys(portInfo)) {
-            const exposedPort = (<any>portInfo)[port];
+                        exposed[v.port] = v.endpoint;
+                    }
 
-            (<any>portToEndpoint)[port] = {
-                port: exposedPort.hostPort,
-                loadBalancer: exposedPort.host,
-                hostname: <string>await exposedPort.host.dnsName,
-            };
-        }
+                    return result;
+                 });
+
+    function unwrap() {
+        return Object.keys(ports).map(n => Object.keys(ports[n]).map(p => {
+            const exposedPort = ports[n][+p];
+            return exposedPort.host.dnsName.apply(d => ({
+                name: n,
+                port: +p,
+                endpoint: { port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d }
+            }));
+        }));
     }
 
-    return result;
+    function flatten<T>(array: T[][]): T[] {
+        const result: T[] = [];
+        for (const arr of array) {
+            result.push(...arr);
+        }
+        return result;
+    }
+
+    // const result: Endpoints = {};
+    // for (const containerName of Object.keys(ports)) {
+    //     const portInfo = ports[containerName];
+    //     const portToEndpoint: { [port: number]: Endpoint } = {};
+    //     result[containerName] = portToEndpoint;
+
+    //     for (const port of Object.keys(portInfo)) {
+    //         const exposedPort: ExposedPort = (<any>portInfo)[port];
+
+    //         (<any>portToEndpoint)[port] = {
+    //             port: exposedPort.hostPort,
+    //             loadBalancer: exposedPort.host,
+    //             hostname: <string>await exposedPort.host.dnsName,
+    //         };
+    //     }
+    // }
+
+    // return result;
 }
 
 const volumeNames = new Set<string>();
