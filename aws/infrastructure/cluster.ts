@@ -301,7 +301,7 @@ async function getEcsAmiId(name?: string) {
 // ours seems inspired by:
 // https://github.com/convox/rack/blob/023831d8/provider/aws/dist/rack.json#L1669
 // https://github.com/awslabs/amazon-ecs-amazon-efs/blob/d92791f3/amazon-efs-ecs.json#L655
-async function getInstanceUserData(
+function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
     mountPath: string | undefined,
