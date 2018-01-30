@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Dependency } from "pulumi";
 import * as harness from "./harness";
 import * as httpEndpointTests from "./httpEndpointTests";
 import * as tableTests from "./tableTests";
@@ -19,4 +20,4 @@ endpoint.get("/unittests", async (req, res) => {
 });
 
 const deployment = endpoint.publish();
-export let url = deployment.url;
+export let url: Dependency<string> = deployment.url;

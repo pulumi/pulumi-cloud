@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Dependency } from "pulumi";
 import * as metrics from "datadog-metrics";
 
 // Harness and tests for measuring perf of the @pulumi/cloud-aws implementation of the @pulumi/cloud
@@ -196,4 +197,4 @@ function errorJSON(err: any) {
 }
 
 const deployment = endpoint.publish();
-export let url = deployment.url;
+export let url: Dependency<string> = deployment.url;
