@@ -13,6 +13,7 @@ import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
+import { Dependency } from "pulumi";
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -988,7 +989,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const environment: ECSContainerEnvironment = await ecsEnvironmentFromMap(container.environment);
             if (options && options.environment) {
                 for (const envName of Object.keys(options.environment)) {
-                    const envVal: string | undefined = await options.environment[envName];
+                    const envVal = await unwrapComputedValue(options.environment[envName]);
                     if (envVal) {
                         environment.push({ name: envName, value: envVal });
                     }
@@ -1004,7 +1005,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Run the task
             await ecs.runTask({
-                cluster: clusterARN.get(),
+                cluster: await unwrapComputedValue(clusterARN),
                 taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
@@ -1016,6 +1017,16 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     ],
                 },
             }).promise();
+
+            // local functions
+            async function unwrapComputedValue(val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
+                if (val === undefined) {
+                    return undefined;
+                }
+
+                const unpromised = await val;
+                return typeof unpromised === "string" ? unpromised : unpromised.get();
+            }
         };
     }
 }
