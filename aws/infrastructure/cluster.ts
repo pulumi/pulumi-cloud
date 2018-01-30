@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 
 import { awsAccountId, awsRegion } from "./aws";
 import { Network } from "./network";
@@ -306,10 +307,10 @@ function getInstanceUserData(
     mountPath: string | undefined,
     cloudFormationStackName: pulumi.Dependency<string>) {
 
-    const fsIdDep = pulumi.resolve(fileSystem ? fileSystem.id : undefined);
+    const fsIdDep = Dependency.resolve(fileSystem ? fileSystem.id : undefined);
 
-    const combined = pulumi.combine(fsIdDep, cluster.id, cloudFormationStackName);
-    return combined.apply(([fsId, clusterId, stackName]) => {
+    const all = Dependency.all(fsIdDep, cluster.id, cloudFormationStackName);
+    return all.apply(([fsId, clusterId, stackName]) => {
         let fileSystemRuncmdBlock = "";
         if (fileSystem && mountPath) {
             // This string must be indented exactly as much as the block of commands it's inserted into below!
@@ -380,9 +381,9 @@ function getCloudFormationAsgTemplate(
     instanceLaunchConfigurationId: pulumi.Computed<string>,
     subnetIds: pulumi.ComputedValue<string>[]): pulumi.Computed<string> {
 
-    const subnetsIdsArray = pulumi.combine(...subnetIds);
-    return pulumi.combine(subnetsIdsArray, instanceLaunchConfigurationId)
-                 .apply(([array, configId]) => {
+    const subnetsIdsArray = Dependency.all(...subnetIds);
+    return Dependency.all(subnetsIdsArray, instanceLaunchConfigurationId)
+                     .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'
     Outputs:

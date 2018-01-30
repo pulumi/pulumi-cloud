@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 import { functionMemorySize } from "./config";
 import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
@@ -34,8 +35,8 @@ export class Function extends pulumi.ComponentResource {
             //     add VPC access will currently fail due to an issue in the Terraform provider.
             options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
             options.vpcConfig = {
-                securityGroupIds: pulumi.combine(...network!.securityGroupIds),
-                subnetIds: pulumi.combine(...network!.subnetIds),
+                securityGroupIds: Dependency.all(...network!.securityGroupIds),
+                subnetIds: Dependency.all(...network!.subnetIds),
             };
         }
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;

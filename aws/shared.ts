@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
@@ -102,11 +103,11 @@ export function getNetwork(): Network | undefined {
             // Use an exsting VPC for this private network
             network = {
                 numberOfAvailabilityZones: config.externalSubnets.length,
-                vpcId: pulumi.resolve(config.externalVpcId),
+                vpcId: Dependency.resolve(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => pulumi.resolve(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.resolve(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.resolve(s)),
+                subnetIds: config.externalSubnets.map(s => Dependency.resolve(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => Dependency.resolve(s)),
+                securityGroupIds: config.externalSecurityGroups.map(s => Dependency.resolve(s)),
             };
         }
     }

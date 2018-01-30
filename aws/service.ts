@@ -5,6 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
@@ -299,14 +300,14 @@ function ecsEnvironmentFromMap(
 
     environment = environment || {};
     const array = Object.keys(environment).map(name => {
-        return pulumi.resolve(environment[name]).apply(v => ({
+        return Dependency.resolve(environment[name]).apply(v => ({
             name: name,
             value: v,
         }));
     });
 
-    return pulumi.combine(...array)
-                 .apply(envValues => envValues.filter(kvp => kvp.value !== undefined));
+    return Dependency.all(...array)
+                     .apply(envValues => envValues.filter(kvp => kvp.value !== undefined));
 }
 
 interface CommandResult {
@@ -598,11 +599,11 @@ async function computeImage(
         }
 
         const digest = await imageDigest!;
-        return pulumi.combine(repository.repositoryUrl, env)
-                     .apply(([url, e]) => {
-                        e.push({ name: "IMAGE_DIGEST", value: digest });
-                        return { image: url, environment: e };
-                    });
+        return Dependency.all(repository.repositoryUrl, env)
+                         .apply(([url, e]) => {
+                            e.push({ name: "IMAGE_DIGEST", value: digest });
+                            return { image: url, environment: e };
+                         });
     }
     else if (container.image) {
         assert(!container.build);
@@ -642,11 +643,11 @@ async function computeContainerDefintions(
         const imageOptionsDep = await computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
-        const combined = pulumi.combine(
+        const combined = Dependency.all(
             imageOptionsDep,
-            pulumi.resolve(container.command),
-            pulumi.resolve(container.memory),
-            pulumi.resolve(container.memoryReservation),
+            Dependency.resolve(container.command),
+            Dependency.resolve(container.memory),
+            Dependency.resolve(container.memoryReservation),
             logGroup.id);
 
         return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
@@ -899,18 +900,18 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 function getEndpoints(ports: ExposedPorts): pulumi.Dependency<Endpoints> {
     const unwrapped = unwrap();
     const flat = flatten(unwrapped);
-    return pulumi.combine(...flat)
-                 .apply(array => {
-                    const result: Endpoints = {};
-                    for (const v of array) {
-                        const name = v.name;
-                        const exposed = result[name] || (result[name] = {});
+    return Dependency.all(...flat)
+                     .apply(array => {
+                        const result: Endpoints = {};
+                        for (const v of array) {
+                            const name = v.name;
+                            const exposed = result[name] || (result[name] = {});
 
-                        exposed[v.port] = v.endpoint;
-                    }
+                            exposed[v.port] = v.endpoint;
+                        }
 
-                    return result;
-                 });
+                        return result;
+                     });
 
     function unwrap() {
         return Object.keys(ports).map(n => Object.keys(ports[n]).map(p => {

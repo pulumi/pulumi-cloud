@@ -522,9 +522,8 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
             pulumi.Computed<Record<string, Record<string, SwaggerOperation>>> {
 
         const temp = Object.keys(rec).map(k => rec[k].apply(op => ({k: k, op: op})));
-        const result =
-            pulumi.combine(...temp)
-                  .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
+        const result = Dependency.all(...temp)
+                                 .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
 
         return result;
     }
@@ -533,9 +532,8 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
             pulumi.Computed<Record<string, SwaggerOperation>> {
 
         const temp = Object.keys(rec).map(k => resolveOperationDependencies(rec[k]).apply(o => ({k: k, op: o})));
-        const result =
-            pulumi.combine(...temp)
-                  .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
+        const result = Dependency.all(...temp)
+                                 .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
 
         return result;
     }
@@ -551,9 +549,8 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return pulumi.combine(op.uri, op.credentials, op.connectionId)
-                     .apply(([uri, credentials, connectionId]) =>
-            ({
+        return Dependency.all(op.uri, op.credentials, op.connectionId)
+                         .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
                 httpMethod: op.httpMethod,
@@ -669,8 +666,8 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
-            credentials: pulumi.resolve<string>(),
-            connectionId: pulumi.resolve<string>(),
+            credentials: Dependency.resolve<string>(),
+            connectionId: Dependency.resolve<string>(),
         },
     };
 }
@@ -681,26 +678,26 @@ function createPathSpecProxy(
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
     const uri =
-        pulumi.combine(<string>target, <pulumi.Computed<cloud.Endpoint>>target)
-              .apply(([targetStr, targetEndpoint]) => {
-                let url = "";
-                if (typeof targetStr === "string") {
-                    // For URL target, ensure there is a trailing `/`
-                    url = targetStr;
-                    if (!url.endsWith("/")) {
-                        url = url + "/";
+        Dependency.all(<string>target, <pulumi.Computed<cloud.Endpoint>>target)
+                  .apply(([targetStr, targetEndpoint]) => {
+                    let url = "";
+                    if (typeof targetStr === "string") {
+                        // For URL target, ensure there is a trailing `/`
+                        url = targetStr;
+                        if (!url.endsWith("/")) {
+                            url = url + "/";
+                        }
+                    } else {
+                        // For Endpoint target, construct an HTTP URL from the hostname and port
+                        url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
                     }
-                } else {
-                    // For Endpoint target, construct an HTTP URL from the hostname and port
-                    url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
-                }
 
-                if (useProxyPathParameter) {
-                    return `${url}{proxy}`;
-                } else {
-                    return url;
-                }
-              });
+                    if (useProxyPathParameter) {
+                        return `${url}{proxy}`;
+                    } else {
+                        return url;
+                    }
+                });
 
     const result: SwaggerOperationAsync = {
         "x-amazon-apigateway-integration": {
@@ -713,8 +710,8 @@ function createPathSpecProxy(
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: pulumi.resolve(vpcLink ? vpcLink.id : undefined),
-            credentials: pulumi.resolve<string>(),
+            connectionId: Dependency.resolve(vpcLink ? vpcLink.id : undefined),
+            credentials: Dependency.resolve<string>(),
             type: "http_proxy",
         },
     };
@@ -763,7 +760,7 @@ function createPathSpecObject(
         "x-amazon-apigateway-integration": {
             credentials: role.arn,
             uri: uri,
-            connectionId: pulumi.resolve<string>(),
+            connectionId: Dependency.resolve<string>(),
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",

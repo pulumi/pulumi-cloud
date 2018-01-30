@@ -6,6 +6,7 @@ import * as express from "express";
 import * as http from "http";
 import * as httpProxy from "http-proxy-middleware";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 import * as serveStatic from "serve-static";
 import * as utils from "./utils";
 
@@ -171,7 +172,7 @@ class HttpDeployment implements cloud.HttpDeployment {
 
     constructor(app: express.Application, port?: number) {
         const server: http.Server = app.listen(port || 0);
-        this.url = pulumi.resolve(`http://localhost:${server.address().port}`);
+        this.url = Dependency.resolve(`http://localhost:${server.address().port}`);
         this.customDomainNames = [];
     }
 }
