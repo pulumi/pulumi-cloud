@@ -206,7 +206,7 @@ export interface Service {
      * container in the service is used.  If containerPort is not provided, the
      * first exposed port is used.
      *
-     * Only usable on the inside.s
+     * Only usable on the inside.
       */
     getEndpoint(containerName?: string, containerPort?: number): Promise<Endpoint>;
 }

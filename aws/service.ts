@@ -861,13 +861,13 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     throw new Error(`No containers available in this service`);
                 }
 
-                const containerPorts = ports[containerName] || {};
+                const containerPorts = endpoints[containerName] || {};
                 containerPort = containerPort || +Object.keys(containerPorts)[0];
                 if (!containerPort) {
                     throw new Error(`No ports available in service container ${containerName}`);
                 }
 
-                const endpoint = endpoints[containerName][containerPort];
+                const endpoint = containerPorts[containerPort];
                 if (!endpoint) {
                     throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
                 }
