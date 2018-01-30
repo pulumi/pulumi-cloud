@@ -475,38 +475,69 @@ interface SwaggerSpec {
 
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
-async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
-    const paths: {[path: string]: {[method: string]: SwaggerOperation} } = {};
+function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
+    const resolved: Record<string, Dependency<Record<string, SwaggerOperation>>> = {};
     for (const path of Object.keys(spec.paths)) {
-        paths[path] = {};
-        for (const method of Object.keys(spec.paths[path])) {
-            paths[path][method] = await resolveOperationPromises(spec.paths[path][method]);
-        }
+        resolved[path] = resolveMethodDependencies(spec.paths[path]);
     }
 
     // After all values have settled, we can produce the resulting string.
-    return JSON.stringify({
-        swagger: spec.swagger,
-        info: spec.info,
-        paths: paths,
-        "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
-        // Map paths the user doesn't have access to as 404.
-        // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
-        "x-amazon-apigateway-gateway-responses": {
-            "MISSING_AUTHENTICATION_TOKEN": {
-                "statusCode": 404,
-                "responseTemplates": {
-                    "application/json": "{\"message\": \"404 Not found\" }",
+    const pathsDeps = resolvePathDependencies(resolved);
+    return pathsDeps.apply(paths =>
+        JSON.stringify({
+            swagger: spec.swagger,
+            info: spec.info,
+            paths: paths,
+            "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+            // Map paths the user doesn't have access to as 404.
+            // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
+            "x-amazon-apigateway-gateway-responses": {
+                "MISSING_AUTHENTICATION_TOKEN": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
+                },
+                "ACCESS_DENIED": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
                 },
             },
-            "ACCESS_DENIED": {
-                "statusCode": 404,
-                "responseTemplates": {
-                    "application/json": "{\"message\": \"404 Not found\" }",
-                },
-            },
-        },
-    });
+        }));
+
+    // local functions
+    function convertArrayToObject<T>(arr: { k: string, op: T }[]): Record<string, T> {
+        const result: Record<string, T> = {};
+        for (const {k: k, op: op} of arr) {
+            result[k] = op;
+        }
+
+        return result;
+    }
+
+    function resolvePathDependencies(rec: Record<string, pulumi.Computed<Record<string, SwaggerOperation>>>):
+            pulumi.Computed<Record<string, Record<string, SwaggerOperation>>> {
+
+        const temp = Object.keys(rec).map(k => rec[k].apply(op => ({k: k, op: op})));
+        const result =
+            pulumi.combine(...temp)
+                  .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
+
+        return result;
+    }
+
+    function resolveMethodDependencies(rec: Record<string, SwaggerOperationAsync>):
+            pulumi.Computed<Record<string, SwaggerOperation>> {
+
+        const temp = Object.keys(rec).map(k => resolveOperationDependencies(rec[k]).apply(o => ({k: k, op: o})));
+        const result =
+            pulumi.combine(...temp)
+                  .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
+
+        return result;
+    }
 
     // local functions
     function resolveOperationDependencies(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
