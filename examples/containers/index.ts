@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Dependency } from "pulumi";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
@@ -196,4 +197,4 @@ api.get("/custom", async (req, res) => {
     }
 });
 api.proxy("/nginx", nginx.getEndpoint());
-export let frontendURL = api.publish().url;
+export let frontendURL: Dependency<string> = api.publish().url;

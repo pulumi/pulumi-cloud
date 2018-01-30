@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Dependency } from "pulumi";
 import { authMiddleware } from "./middleware";
 
 let todos = new cloud.Table("examples-todo");
@@ -40,5 +41,5 @@ api.get("/todo", async (req, res) => {
 });
 
 // Publish
-export let url = api.publish().url;
+export let url: Dependency<string> = api.publish().url;
 
