@@ -102,11 +102,11 @@ export function getNetwork(): Network | undefined {
             // Use an exsting VPC for this private network
             network = {
                 numberOfAvailabilityZones: config.externalSubnets.length,
-                vpcId: config.externalVpcId,
+                vpcId: pulumi.resolve(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets,
-                publicSubnetIds: config.externalPublicSubnets,
-                securityGroupIds: config.externalSecurityGroups,
+                subnetIds: config.externalSubnets.map(s => pulumi.resolve(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.resolve(s)),
+                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.resolve(s)),
             };
         }
     }
