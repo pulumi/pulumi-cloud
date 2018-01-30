@@ -433,7 +433,7 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         }
 
         // Tag and push the image to the remote repository.
-        const repositoryUrl = await repository.repositoryUrl;
+        const repositoryUrl = await (<any>repository.repositoryUrl).promise();
         if (!repositoryUrl) {
             throw new Error("Expected repository URL to be defined during push");
         }
@@ -1030,12 +1030,22 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const environment = ecsEnvironmentFromMap(container.environment);
+            const environment: ECSContainerEnvironment = [];
+            if (container.environment) {
+                for (const key of Object.keys(container.environment)) {
+                    // We're on the inside, so we know container.environment has been completely
+                    // realized.  So we can just blindly cast to string
+                    environment.push({ name: key, value: <string>container.environment[key] });
+                }
+            }
+
             if (options && options.environment) {
-                for (const envName of Object.keys(options.environment)) {
-                    const envVal = await unwrapComputedValue(options.environment[envName]);
+                for (const key of Object.keys(options.environment)) {
+                    // We're on the inside, so we know options.environment has been completely
+                    // realized.  So we can just blindly cast to string
+                    const envVal = <string>options.environment[key];
                     if (envVal) {
-                        environment.push({ name: envName, value: envVal });
+                        environment.push({ name: key, value: envVal });
                     }
                 }
             }
