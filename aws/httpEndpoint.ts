@@ -407,26 +407,29 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
+        const swaggerStr = createSwaggerString(swagger);
         const api = new aws.apigateway.RestApi(name, {
-            body: createSwaggerString(swagger),
+            body: swaggerStr,
         }, { parent: this });
 
-        const bodyHash = createSwaggerHash(swagger);
+        // bodyHash produces a hash that let's us know when any paths change in the swagger spec.
+        const bodyHash = swaggerStr.apply(s => sha1hash(s));
 
         // we need to ensure a fresh deployment any time our body changes. So include the hash as
         // part of the deployment urn.
         const deployment = new aws.apigateway.Deployment(name, {
             restApi: api,
             stageName: "",
-            // Note: We set `variables` here because it forces recreation of the Deployment object whenever the body
-            // hash changes.  Because we use a blank stage name above, there will not actually be any stage created in
-            // AWS, and thus these variables will not actually end up anywhere.  But this will still cause the right
-            // replacement of the Deployment when needed.  The Stage allocated below will be the stable stage that
-            // always points to the latest deployment of the API.
+            // Note: We set `variables` here because it forces recreation of the Deployment object
+            // whenever the body hash changes.  Because we use a blank stage name above, there will
+            // not actually be any stage created in AWS, and thus these variables will not actually
+            // end up anywhere.  But this will still cause the right replacement of the Deployment
+            // when needed.  The Stage allocated below will be the stable stage that always points
+            // to the latest deployment of the API.
             variables: {
                 version: bodyHash,
             },
-            description: bodyHash.then(hash => `Deployment of version ${hash || "<computed>"}`),
+            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
         }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
@@ -569,12 +572,6 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
                 connectionId: connectionId,
             }));
     }
-}
-
-// createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
-async function createSwaggerHash(spec: SwaggerSpec): Promise<string> {
-    const str = createSwaggerString(spec);
-    return sha1hash(await (<any>str).promise());
 }
 
 interface SwaggerInfo {
