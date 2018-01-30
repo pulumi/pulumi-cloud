@@ -13,8 +13,6 @@ import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import { sha1hash } from "./utils";
-import { Dependency } from "pulumi";
-import { PortInfo } from "aws-sdk/clients/lightsail";
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -878,7 +876,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 }
 
-function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
+function getEndpoints(ports: ExposedPorts): pulumi.Dependency<Endpoints> {
     const unwrapped = unwrap();
     const flat = flatten(unwrapped);
     return pulumi.combine(...flat)
@@ -900,7 +898,7 @@ function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
             return exposedPort.host.dnsName.apply(d => ({
                 name: n,
                 port: +p,
-                endpoint: { port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d }
+                endpoint: { port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d },
             }));
         }));
     }
@@ -912,25 +910,6 @@ function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
         }
         return result;
     }
-
-    // const result: Endpoints = {};
-    // for (const containerName of Object.keys(ports)) {
-    //     const portInfo = ports[containerName];
-    //     const portToEndpoint: { [port: number]: Endpoint } = {};
-    //     result[containerName] = portToEndpoint;
-
-    //     for (const port of Object.keys(portInfo)) {
-    //         const exposedPort: ExposedPort = (<any>portInfo)[port];
-
-    //         (<any>portToEndpoint)[port] = {
-    //             port: exposedPort.hostPort,
-    //             loadBalancer: exposedPort.host,
-    //             hostname: <string>await exposedPort.host.dnsName,
-    //         };
-    //     }
-    // }
-
-    // return result;
 }
 
 const volumeNames = new Set<string>();
@@ -1063,7 +1042,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 },
             }).promise();
 
-            async function unwrapComputedValue(val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
+            async function unwrapComputedValue(
+                    val: pulumi.ComputedValue<string> | undefined): Promise<string | undefined> {
                 if (val === undefined) {
                     return undefined;
                 }
