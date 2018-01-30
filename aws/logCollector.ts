@@ -1,7 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as pulumi from "@pulumi/pulumi";
+import * as cloud from "@pulumi/cloud";
+import * as pulumi from "pulumi";
 import * as shared from "./shared";
 
 // The type of the Lambda payload from Cloudwatch Logs subscriptions.
@@ -15,7 +16,7 @@ interface LogsPayload {
 
 // These interfaces are unused, but captured here to document the full type of the payload in case it is needed.
 interface LogsEvent {
-    messageType: string;
+    messageType: "CONTROL_MESSAGE" | "DATA_MESSAGE";
     owner: string;
     logGroup: string;
     logStream: string;
@@ -45,7 +46,17 @@ class LogCollector extends pulumi.ComponentResource {
                     const zlib = await import("zlib");
                     const payload = new Buffer(ev.awslogs.data, "base64");
                     const result = zlib.gunzipSync(payload);
-                    console.log(result.toString("utf8"));
+
+                    const logsMessage = <LogsEvent>JSON.parse(result.toString("utf8"));
+                    for (const log of logsMessage.logEvents) {
+                        await sendToAllLogSinks(log.message, {
+                            logGroup: logsMessage.logGroup,
+                            logStream: logsMessage.logStream,
+                            owner: logsMessage.owner,
+                            timestamp: log.timestamp,
+                        });
+                    }
+
                     cb(null, {});
                 } catch (err) {
                     cb(err);
@@ -75,4 +86,21 @@ export function getLogCollector(): aws.lambda.Function {
     }
 
     return logCollector.lambda;
+}
+
+let defaultLogSink: cloud.LogSink = async (message, _) => console.log(message);
+let logSinks: cloud.LogSink[] = [defaultLogSink];
+
+async function sendToAllLogSinks(message: string, metadata: any) {
+    for (const logSink of logSinks) {
+        await logSink(message, metadata);
+    }
+}
+
+export function addLogSink(name: string, handler: cloud.LogSink) {
+    // 'name' is ignored in this implementation.
+    if (logCollector) {
+        throw new Error("Can't add a log sink after a resource that writes logs has been created.");
+    }
+    logSinks.push(handler);
 }

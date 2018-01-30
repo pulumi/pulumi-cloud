@@ -9,7 +9,7 @@
 
 export * from "./function";
 export * from "./httpEndpoint";
-export { addLogSink } from "./logs";
+export { addLogSink } from "./logCollector";
 export * from "./table";
 export * from "./topic";
 export * from "./service";
