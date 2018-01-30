@@ -363,7 +363,7 @@ let dockerPasswordStdin: boolean = false;
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(imageName: string, container: cloud.Container,
-                                 repository: aws.ecr.Repository): Promise<string | undefined> {
+                                 repository: aws.ecr.Repository): Promise<string> {
     const buildPath: string | undefined = container.build;
     if (!buildPath) {
         throw new Error(`Cannot build a container with an empty build specification`);
@@ -590,7 +590,7 @@ async function computeImage(
             // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
             // then return the image name pointing to the ECT repository along with an environment variable for the
             // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync: Promise<string | undefined> = buildAndPushImage(imageName, container, repository!);
+            const imageDigestAsync = buildAndPushImage(imageName, container, repository!);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigestAsync);
             }
