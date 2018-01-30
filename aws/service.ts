@@ -852,28 +852,27 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         this.endpoints = getEndpoints(ports);
 
-        this.getEndpoint =
-            async function (containerName?: string, containerPort?: number): Promise<Endpoint> {
-                const endpoints = await this.endpoints;
+        this.getEndpoint = async (containerName, containerPort) => {
+            const endpoints = await this.endpoints;
 
-                containerName = containerName || Object.keys(endpoints)[0];
-                if (!containerName)  {
-                    throw new Error(`No containers available in this service`);
-                }
+            containerName = containerName || Object.keys(endpoints)[0];
+            if (!containerName)  {
+                throw new Error(`No containers available in this service`);
+            }
 
-                const containerPorts = endpoints[containerName] || {};
-                containerPort = containerPort || +Object.keys(containerPorts)[0];
-                if (!containerPort) {
-                    throw new Error(`No ports available in service container ${containerName}`);
-                }
+            const containerPorts = endpoints[containerName] || {};
+            containerPort = containerPort || +Object.keys(containerPorts)[0];
+            if (!containerPort) {
+                throw new Error(`No ports available in service container ${containerName}`);
+            }
 
-                const endpoint = containerPorts[containerPort];
-                if (!endpoint) {
-                    throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
-                }
+            const endpoint = containerPorts[containerPort];
+            if (!endpoint) {
+                throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
+            }
 
-                return endpoint;
-            };
+            return endpoint;
+        };
     }
 }
 
