@@ -196,5 +196,5 @@ api.get("/custom", async (req, res) => {
         res.status(500).end(`Pulumi proxy service error: ${err}`);
     }
 });
-api.proxy("/nginx", nginx.getEndpoint());
+api.proxy("/nginx", nginx.endpoints.apply(eps => eps.nginx[80]));
 export let frontendURL: Dependency<string> = api.publish().url;
