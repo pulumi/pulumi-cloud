@@ -10,6 +10,12 @@ export async function testPersistentTable() {
     }
 }
 
+var ep = new cloud.HttpEndpoint("ep");
+ep.get("/foo", async() => {
+    await testPersistentTable();
+});
+ep.publish();
+
 /*
     const table1 = new cloud.Table("tests-persistent-table");
     export async function testPersistentTable() {
