@@ -2,7 +2,6 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
-import { ComputedValue } from "pulumi";
 
 const config = new pulumi.Config("cloud-aws:config");
 
@@ -32,12 +31,12 @@ export let acmCertificateARN = config.get("acmCertificateARN");
  * Optional ECS cluster ARN.  If not provided, `Service`s and `Task`s are not available for the target
  * environment.
  */
-export let ecsClusterARN: ComputedValue<string> | undefined = config.get("ecsClusterARN");
+export let ecsClusterARN: pulumi.ComputedValue<string> | undefined = config.get("ecsClusterARN");
 
 /**
  * Optional ECS cluster security group that all ALBs for services within the cluster will use.
  */
-export let ecsClusterSecurityGroup: ComputedValue<string> | undefined = config.get("ecsClusterSecurityGroup");
+export let ecsClusterSecurityGroup: pulumi.ComputedValue<string> | undefined = config.get("ecsClusterSecurityGroup");
 
 /**
  * Optional EFS mount path on the cluster hosts.  If not provided, `Volumes` cannot be used in `Service`s and `Task`s.
