@@ -487,13 +487,13 @@ interface SwaggerSpec {
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
 function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
-    const resolved: Record<string, Dependency<Record<string, SwaggerOperation>>> = {};
-    for (const path of Object.keys(spec.paths)) {
-        resolved[path] = resolveMethodDependencies(spec.paths[path]);
-    }
+    const pathsDeps = Dependency.unwrap(spec.paths, p => {
+        var temp: Dependency<Record<string, SwaggerOperation>> =
+            Dependency.unwrap(p, x => resolveOperationDependencies(x));
+        return temp;
+    });
 
     // After all values have settled, we can produce the resulting string.
-    const pathsDeps = Dependency.unwrap(resolved);
     return pathsDeps.apply(paths =>
         JSON.stringify({
             swagger: spec.swagger,
@@ -524,16 +524,6 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
         for (const {k: k, op: op} of arr) {
             result[k] = op;
         }
-
-        return result;
-    }
-
-    function resolveMethodDependencies(rec: Record<string, SwaggerOperationAsync>):
-            pulumi.Computed<Record<string, SwaggerOperation>> {
-
-        const temp = Object.keys(rec).map(k => resolveOperationDependencies(rec[k]).apply(o => ({k: k, op: o})));
-        const result = Dependency.all(...temp)
-                                 .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
 
         return result;
     }
