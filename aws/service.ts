@@ -521,10 +521,10 @@ function makeServiceEnvName(service: string): string {
 
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name which can be used in an ECS TaskDefinition.
-async function computeImage(
+function computeImage(
         imageName: string, container: cloud.Container,
         ports: ExposedPorts | undefined,
-        repository: aws.ecr.Repository | undefined): Promise<pulumi.Dependency<ImageOptions>> {
+        repository: aws.ecr.Repository | undefined): pulumi.Dependency<ImageOptions> {
     // Start with a copy from the container specification.
     const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
         <any>Object.assign({}, container.environment || {});
@@ -579,28 +579,30 @@ async function computeImage(
             throw new Error("Expected a container repository for build image");
         }
 
-        // See if we've already built this.
-        let imageDigest: string | undefined;
-        if (imageName && buildImageCache.has(imageName)) {
-            // We got a cache hit, simply reuse the existing digest.
-            imageDigest = await buildImageCache.get(imageName);
-            pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
-        }
-        else {
-            // If we haven't, build and push the local build context to the ECR repository, wait for that to complete,
-            // then return the image name pointing to the ECT repository along with an environment variable for the
-            // image digest to ensure the TaskDefinition get's replaced IFF the built image changes.
-            const imageDigestAsync = buildAndPushImage(imageName, container, repository!);
-            if (imageName) {
-                buildImageCache.set(imageName, imageDigestAsync);
+        async function createImageDigest() {
+            // See if we've already built this.
+            if (imageName && buildImageCache.has(imageName)) {
+                // We got a cache hit, simply reuse the existing digest.
+                const imageDigest = <string>await buildImageCache.get(imageName);
+                pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
+                return imageDigest;
+            } else {
+                // If we haven't, build and push the local build context to the ECR repository, wait
+                // for that to complete, then return the image name pointing to the ECT repository
+                // along with an environment variable for the image digest to ensure the
+                // TaskDefinition get's replaced IFF the built image changes.
+                const imageDigestAsync = buildAndPushImage(imageName, container, repository!);
+                if (imageName) {
+                    buildImageCache.set(imageName, imageDigestAsync);
+                }
+                const imageDigest = await imageDigestAsync;
+                pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
+                return imageDigest;
             }
-            imageDigest = await imageDigestAsync;
-            pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
         }
 
-        const digest = await imageDigest!;
-        return Dependency.all(repository.repositoryUrl, env)
-                         .apply(([url, e]) => {
+        return Dependency.all(repository.repositoryUrl, env, createImageDigest())
+                         .apply(([url, e, digest]) => {
                             e.push({ name: "IMAGE_DIGEST", value: digest });
                             return { image: url, environment: e };
                          });
@@ -610,26 +612,30 @@ async function computeImage(
         return env.apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
-        const closure = await pulumi.runtime.serializeClosure(container.function);
-        const jsSrcText = pulumi.runtime.serializeJavaScriptText(closure);
-        // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+        const jsSrcText = Dependency.resolve(pulumi.runtime.serializeClosure(container.function))
+                                    .apply(closure => pulumi.runtime.serializeJavaScriptText(closure));
+
+                                    // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return env.apply(e => {
-            e.push({ name: "PULUMI_SRC", value: jsSrcText });
-            return { image: imageName, environment: e };
-        });
+        return Dependency.all(env, jsSrcText)
+                         .apply(([e, j]) => {
+                            e.push({ name: "PULUMI_SRC", value: j });
+                            return { image: imageName, environment: e };
+                        });
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
 }
 
-// computeContainerDefintions builds a ContainerDefinition for a provided Containers and LogGroup.  This is lifted over
-// a promise for the LogGroup and container image name generation - so should not allocate any Pulumi resources.
-async function computeContainerDefintions(
+// computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
+// This is lifted over a promise for the LogGroup and container image name generation - so should
+// not allocate any Pulumi resources.
+function computeContainerDefinitions(
         containers: cloud.Containers, ports: ExposedPorts | undefined,
-        logGroup: aws.cloudwatch.LogGroup): Promise<pulumi.Dependency<ECSContainerDefinition>[]> {
-    return Promise.all(Object.keys(containers).map(async (containerName) => {
+        logGroup: aws.cloudwatch.LogGroup): pulumi.Dependency<ECSContainerDefinition[]> {
+
+    const depArray = Object.keys(containers).map(containerName => {
         const container = containers[containerName];
         const imageName: string = getImageName(container);
         let repository: aws.ecr.Repository | undefined;
@@ -640,7 +646,7 @@ async function computeContainerDefintions(
             // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
             repository = getOrCreateRepository(imageName);
         }
-        const imageOptionsDep = await computeImage(imageName, container, ports, repository);
+        const imageOptionsDep = computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
         const combined = Dependency.all(
@@ -674,7 +680,9 @@ async function computeContainerDefintions(
             };
             return containerDefinition;
         });
-    }));
+    });
+
+    return Dependency.all(...depArray);
 }
 
 // The ECS Task assume role policy for Task Roles
@@ -754,10 +762,11 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefintions = computeContainerDefintions(containers, ports, logGroup).then(JSON.stringify);
+    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup)
+        .apply(arr => JSON.stringify(arr));
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
-        containerDefinitions: containerDefintions,
+        containerDefinitions: containerDefinitions,
         volume: volumes,
         taskRoleArn: getTaskRole().arn,
     }, { parent: parent });
