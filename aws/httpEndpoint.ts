@@ -456,7 +456,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
+                        sourceArn: deployment.executionArn.apply(arn => arn && (arn + stageName + "/" + method + path)),
                     }, { parent: this });
                 }
             }
