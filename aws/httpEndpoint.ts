@@ -559,7 +559,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return Dependency.all(op.uri, op.credentials, op.connectionId)
+        return Dependency.all(op.uri, Dependency.resolve(op.credentials), Dependency.resolve(op.connectionId))
                          .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
@@ -590,14 +590,14 @@ interface ApigatewayIntegrationBase {
 
 interface ApigatewayIntegration extends ApigatewayIntegrationBase {
     uri: string;
-    credentials: string | undefined;
-    connectionId: string | undefined;
+    credentials?: string;
+    connectionId?: string;
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
     uri: Dependency<string>;
-    credentials: Dependency<string | undefined>;
-    connectionId: Dependency<string | undefined>;
+    credentials?: Dependency<string>;
+    connectionId?: Dependency<string | undefined>;
 }
 
 interface SwaggerOperationAsync {
@@ -657,8 +657,6 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
-            credentials: Dependency.resolve<string>(),
-            connectionId: Dependency.resolve<string>(),
         },
     };
 }
@@ -702,7 +700,6 @@ function createPathSpecProxy(
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
             connectionId: Dependency.resolve(vpcLink ? vpcLink.id : undefined),
-            credentials: Dependency.resolve<string>(),
             type: "http_proxy",
         },
     };
@@ -751,7 +748,6 @@ function createPathSpecObject(
         "x-amazon-apigateway-integration": {
             credentials: role.arn,
             uri: uri,
-            connectionId: Dependency.resolve<string>(),
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",
