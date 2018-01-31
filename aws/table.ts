@@ -3,6 +3,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
+import { Dependency } from "pulumi";
 
 function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
@@ -16,8 +17,8 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
 const consistentRead = true;
 
 export class Table extends pulumi.ComponentResource implements cloud.Table {
-    public readonly primaryKey: string;
-    public readonly primaryKeyType: string;
+    public readonly primaryKey: pulumi.Computed<string>;
+    public readonly primaryKeyType: pulumi.Computed<string>;
     public readonly dynamodbTable: aws.dynamodb.Table;
 
     public get: (query: Object) => Promise<any>;
@@ -26,7 +27,9 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
     public delete: (query: Object) => Promise<void>;
     public update: (query: Object, updates: Object) => Promise<void>;
 
-    constructor(name: string, primaryKey?: string, primaryKeyType?: cloud.PrimaryKeyType,
+    constructor(name: string,
+                primaryKey?: pulumi.ComputedValue<string>,
+                primaryKeyType?: pulumi.ComputedValue<cloud.PrimaryKeyType>,
                 opts?: pulumi.ResourceOptions) {
         if (primaryKey === undefined) {
             primaryKey = "id";
@@ -44,7 +47,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             attribute: [
                 {
                     name: primaryKey,
-                    type: pulumiKeyTypeToDynamoKeyType(primaryKeyType!),
+                    type: Dependency.resolve(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
                 },
             ],
             hashKey: primaryKey,
