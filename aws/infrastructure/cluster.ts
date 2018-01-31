@@ -379,7 +379,7 @@ function getCloudFormationAsgTemplate(
     minSize: number,
     maxSize: number,
     instanceLaunchConfigurationId: pulumi.Computed<string>,
-    subnetIds: pulumi.ComputedValue<string>[]): pulumi.Computed<string> {
+    subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
 
     const subnetsIdsArray = Dependency.all(...subnetIds);
     return Dependency.all(subnetsIdsArray, instanceLaunchConfigurationId)
