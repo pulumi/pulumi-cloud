@@ -295,21 +295,6 @@ interface ImageOptions {
     environment: ECSContainerEnvironment;
 }
 
-function ecsEnvironmentFromMap(
-        environment: Record<string, pulumi.ComputedValue<string>> = {}): Dependency<ECSContainerEnvironment> {
-
-    environment = environment || {};
-    const array = Object.keys(environment).map(name => {
-        return Dependency.resolve(environment[name]).apply(v => ({
-            name: name,
-            value: v,
-        }));
-    });
-
-    return Dependency.all(...array)
-                     .apply(envValues => envValues.filter(kvp => kvp.value !== undefined));
-}
-
 interface CommandResult {
     code: number;
     stdout?: string;
@@ -569,8 +554,9 @@ function computeImage(
         }
     }
 
-    // Now wait for any environment entries to settle before proceeding.
-    const env = ecsEnvironmentFromMap(preEnv);
+    // Convert the environment map into array form AWS prefers.
+    const env = Dependency.unwrap(preEnv)
+                          .apply(u => Object.keys(u).map(k => ({name: k, value: u[k]})));
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
