@@ -1,7 +1,0 @@
-name: temptests
-runtime: nodejs
-config:
-  aws:config:region: us-east-2
-  cloud-aws:config:ecsAutoCluster: "false"
-  cloud-aws:config:ecsAutoClusterUseEFS: "false"
-  cloud-aws:config:usePrivateNetwork: "false"
