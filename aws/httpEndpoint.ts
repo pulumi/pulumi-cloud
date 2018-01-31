@@ -619,7 +619,8 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
     const region = aws.config.requireRegion();
     const uri = lambda.arn.apply(lambdaARN =>
-        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
+        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" +
+        (lambdaARN || "computed(lambda.arn)") + "/invocations");
 
     return {
         "x-amazon-apigateway-integration": {
