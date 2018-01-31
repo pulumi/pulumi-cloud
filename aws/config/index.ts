@@ -32,7 +32,7 @@ export let acmCertificateARN = config.get("acmCertificateARN");
  * Optional ECS cluster ARN.  If not provided, `Service`s and `Task`s are not available for the target
  * environment.
  */
-export let ecsClusterARN: ComputedValue<string | undefined> = config.get("ecsClusterARN");
+export let ecsClusterARN: ComputedValue<string> | undefined = config.get("ecsClusterARN");
 
 /**
  * Optional ECS cluster security group that all ALBs for services within the cluster will use.
