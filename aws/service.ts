@@ -775,7 +775,7 @@ function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
 
 interface ExposedPorts {
     [name: string]: {
-        [port: number]: ExposedPort;
+        [port: string]: ExposedPort;
     };
 }
 
@@ -894,39 +894,15 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 }
 
 function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
-    const unwrapped = unwrap();
-    const flat = flatten(unwrapped);
-    return Dependency.all(...flat)
-                     .apply(array => {
-                        const result: Endpoints = {};
-                        for (const v of array) {
-                            const name = v.name;
-                            const exposed = result[name] || (result[name] = {});
+    return Dependency.unwrap(ports, portToExposedPort => {
+        const inner: Dependency<{ [port: string]: Endpoint }> =
+            Dependency.unwrap(portToExposedPort, exposedPort =>
+                exposedPort.host.dnsName.apply(d => ({
+                    port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d,
+                })));
 
-                            exposed[v.port] = v.endpoint;
-                        }
-
-                        return result;
-                     });
-
-    function unwrap() {
-        return Object.keys(ports).map(n => Object.keys(ports[n]).map(p => {
-            const exposedPort = ports[n][+p];
-            return exposedPort.host.dnsName.apply(d => ({
-                name: n,
-                port: +p,
-                endpoint: { port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d },
-            }));
-        }));
-    }
-
-    function flatten<T>(array: T[][]): T[] {
-        const result: T[] = [];
-        for (const arr of array) {
-            result.push(...arr);
-        }
-        return result;
-    }
+        return inner;
+    });
 }
 
 const volumeNames = new Set<string>();
