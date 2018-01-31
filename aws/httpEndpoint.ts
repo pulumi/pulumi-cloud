@@ -529,7 +529,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return Dependency.all(op.uri, Dependency.from(op.credentials), Dependency.from(op.connectionId))
+        return Dependency.all(op.uri, op.credentials, op.connectionId)
                          .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,

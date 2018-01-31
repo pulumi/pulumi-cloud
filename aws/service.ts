@@ -618,14 +618,9 @@ function computeContainerDefinitions(
         const imageOptions = computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
-        const combined = Dependency.all(
-            imageOptions,
-            Dependency.from(container.command),
-            Dependency.from(container.memory),
-            Dependency.from(container.memoryReservation),
-            logGroup.id);
-
-        return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+        // tslint:disable-next-line:max-line-length
+        return Dependency.all(imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id)
+                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
             const keyValuePairs: { name: string, value: string }[] = [];
             for (const key of Object.keys(imageOpts.environment)) {
                 keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
