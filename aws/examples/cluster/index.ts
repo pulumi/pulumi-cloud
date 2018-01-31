@@ -20,9 +20,9 @@ const cluster = new awsinfra.Cluster(prefix, {
 });
 
 // Export details of the network and cluster
-export let vpcId = network.vpcId;
-export let privateSubnetIds = Promise.all(network.subnetIds).then(ids => ids.join(","));
-export let publicSubnetIds = Promise.all(network.publicSubnetIds).then(ids => ids.join(","));
-export let securityGroupIds = Promise.all(network.securityGroupIds).then(ids => ids.join(","));
+export let vpcId: Dependency<string> = network.vpcId;
+export let privateSubnetIds: Dependency<string> = Dependency.all(network.subnetIds).apply(ids => ids.join(","));
+export let publicSubnetIds: Dependency<string> = Dependency.all(network.publicSubnetIds).apply(ids => ids.join(","));
+export let securityGroupIds: Dependency<string> = Dependency.all(network.securityGroupIds).apply(ids => ids.join(","));
 export let ecsClusterARN = cluster.ecsClusterARN;
 export let ecsClusterSecurityGroup = cluster.securityGroupId;
