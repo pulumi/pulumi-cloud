@@ -59,14 +59,14 @@ func Test_Examples(t *testing.T) {
 					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 						hitUnitTestsEndpoint(t, stackInfo)
 					},
-					Verbose: true,
+					// Verbose: true,
 				},
 				{
 					Dir: cwd + "/tests/unit/variants/update2",
 					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 						hitUnitTestsEndpoint(t, stackInfo)
 					},
-					Verbose: true,
+					// Verbose: true,
 				},
 			},
 		},
