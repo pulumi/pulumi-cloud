@@ -429,7 +429,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             variables: {
                 version: bodyHash,
             },
-            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
+            description: bodyHash.apply(hash => `Deployment of version ${hash || "<computed>"}`),
         }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
