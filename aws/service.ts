@@ -179,7 +179,8 @@ function allocateListener(
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
-        securityGroups: application && cluster.securityGroupId ? [ cluster.securityGroupId ] : undefined,
+        securityGroups: Dependency.all(application, cluster.securityGroupId)
+                                  .apply(([app, groupId]) => app && groupId ? [ groupId ] : <string[]><any>undefined),
     });
 
     // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.
@@ -861,7 +862,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         this.ecsService = new aws.ecs.Service(name, {
             desiredCount: replicas,
             taskDefinition: taskDefinition.task.arn,
-            cluster: cluster!.ecsClusterARN,
+            cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
             iamRole: iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
@@ -1021,7 +1022,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Run the task
             await ecs.runTask({
-                cluster: unwrapComputedValue(clusterARN),
+                cluster: clusterARN.get(),
                 taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {

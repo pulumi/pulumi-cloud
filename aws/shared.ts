@@ -142,8 +142,8 @@ export function getCluster(): Cluster | undefined {
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
-                ecsClusterARN: config.ecsClusterARN,
-                securityGroupId: config.ecsClusterSecurityGroup,
+                ecsClusterARN: Dependency.resolve(config.ecsClusterARN),
+                securityGroupId: Dependency.resolve(config.ecsClusterSecurityGroup),
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }
