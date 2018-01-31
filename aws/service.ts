@@ -1007,13 +1007,18 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const env: ECSContainerEnvironment = [];
             if (container.environment) {
                 for (const key of Object.keys(container.environment)) {
-                    env.push({ name: key, value: unwrapComputedValue(container.environment[key]) });
+                    // Blindly casting to string it safe here.  closure serialization
+                    // will have collapsed all promises and dependencies
+                    env.push({ name: key, value: <string>container.environment[key] });
                 }
             }
 
             if (options && options.environment) {
                 for (const key of Object.keys(options.environment)) {
-                    const envVal = unwrapComputedValue(options.environment[key]);
+                    // Casting is safe here.  We should never have a Dependency at runtime
+                    // so this could only be a string or Promise<string>.  'awaiting' that
+                    // will ensure we only have a string.
+                    const envVal = <string>await options.environment[key];
                     if (envVal) {
                         env.push({ name: key, value: envVal });
                     }
@@ -1034,15 +1039,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     ],
                 },
             }).promise();
-
-            function unwrapComputedValue(
-                    val: pulumi.ComputedValue<string>): string {
-                // On the inside, we only ever have string or Dependency.  All promises will
-                // have been unwrapped.
-                return (<Dependency<string>>val).get
-                    ? (<Dependency<string>>val).get()
-                    : <string>val;
-            }
         };
     }
 }
