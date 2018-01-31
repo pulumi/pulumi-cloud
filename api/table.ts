@@ -17,7 +17,10 @@ export interface TableConstructor {
      * @param primaryKeyType An optional primary key type.
      * @param opts A bag of options that controls how this resource behaves.
      */
-    new (name: string, primaryKey?: pulumi.ComputedValue<string>, primaryKeyType?: pulumi.ComputedValue<PrimaryKeyType>, opts?: pulumi.ResourceOptions): Table;
+    new (name: string,
+         primaryKey?: pulumi.ComputedValue<string>,
+         primaryKeyType?: pulumi.ComputedValue<PrimaryKeyType>,
+         opts?: pulumi.ResourceOptions): Table;
 }
 
 export let Table: TableConstructor; // tslint:disable-line
