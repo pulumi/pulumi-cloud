@@ -519,16 +519,6 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
         }));
 
     // local functions
-    function convertArrayToObject<T>(arr: { k: string, op: T }[]): Record<string, T> {
-        const result: Record<string, T> = {};
-        for (const {k: k, op: op} of arr) {
-            result[k] = op;
-        }
-
-        return result;
-    }
-
-    // local functions
     function resolveOperationDependencies(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
         return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
             integration => ({
