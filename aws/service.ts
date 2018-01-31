@@ -296,7 +296,7 @@ interface ImageOptions {
 }
 
 function ecsEnvironmentFromMap(
-        environment: Record<string, pulumi.ComputedValue<string>> = {}): pulumi.Dependency<ECSContainerEnvironment> {
+        environment: Record<string, pulumi.ComputedValue<string>> = {}): Dependency<ECSContainerEnvironment> {
 
     environment = environment || {};
     const array = Object.keys(environment).map(name => {
@@ -524,7 +524,7 @@ function makeServiceEnvName(service: string): string {
 function computeImage(
         imageName: string, container: cloud.Container,
         ports: ExposedPorts | undefined,
-        repository: aws.ecr.Repository | undefined): pulumi.Dependency<ImageOptions> {
+        repository: aws.ecr.Repository | undefined): Dependency<ImageOptions> {
     // Start with a copy from the container specification.
     const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
         <any>Object.assign({}, container.environment || {});
@@ -633,7 +633,7 @@ function computeImage(
 // not allocate any Pulumi resources.
 function computeContainerDefinitions(
         containers: cloud.Containers, ports: ExposedPorts | undefined,
-        logGroup: aws.cloudwatch.LogGroup): pulumi.Dependency<ECSContainerDefinition[]> {
+        logGroup: aws.cloudwatch.LogGroup): Dependency<ECSContainerDefinition[]> {
 
     const depArray = Object.keys(containers).map(containerName => {
         const container = containers[containerName];
@@ -906,7 +906,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 }
 
-function getEndpoints(ports: ExposedPorts): pulumi.Dependency<Endpoints> {
+function getEndpoints(ports: ExposedPorts): Dependency<Endpoints> {
     const unwrapped = unwrap();
     const flat = flatten(unwrapped);
     return Dependency.all(...flat)
@@ -1075,8 +1075,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     val: pulumi.ComputedValue<string>): string {
                 // On the inside, we only ever have string or Dependency.  All promises will
                 // have been unwrapped.
-                return val instanceof pulumi.Dependency
-                    ? (<pulumi.Dependency<string>>val).get()
+                return (<Dependency<string>>val).get
+                    ? (<Dependency<string>>val).get()
                     : <string>val;
             }
         };

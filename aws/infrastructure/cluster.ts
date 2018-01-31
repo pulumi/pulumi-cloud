@@ -305,7 +305,7 @@ function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
     mountPath: string | undefined,
-    cloudFormationStackName: pulumi.Dependency<string>) {
+    cloudFormationStackName: Dependency<string>) {
 
     const fsIdDep = Dependency.resolve(fileSystem ? fileSystem.id : undefined);
 
