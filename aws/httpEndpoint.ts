@@ -488,7 +488,7 @@ interface SwaggerSpec {
 // an ordinary JSON.stringify because the spec contains computed values.
 function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     const pathsDeps = Dependency.unwrap(spec.paths, p => {
-        var temp: Dependency<Record<string, SwaggerOperation>> =
+        const temp: Dependency<Record<string, SwaggerOperation>> =
             Dependency.unwrap(p, x => resolveOperationDependencies(x));
         return temp;
     });
