@@ -615,11 +615,11 @@ function computeContainerDefinitions(
             // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
             repository = getOrCreateRepository(imageName);
         }
-        const imageOptionsDep = computeImage(imageName, container, ports, repository);
+        const imageOptions = computeImage(imageName, container, ports, repository);
         const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
         const combined = Dependency.all(
-            imageOptionsDep,
+            imageOptions,
             Dependency.from(container.command),
             Dependency.from(container.memory),
             Dependency.from(container.memoryReservation),
