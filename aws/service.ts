@@ -564,10 +564,10 @@ function computeImage(
             imageDigest = <Promise<string>>buildImageCache.get(imageName);
             pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
         } else {
-            // If we haven't, build and push the local build context to the ECR repository, wait
-            // for that to complete, then return the image name pointing to the ECT repository
-            // along with an environment variable for the image digest to ensure the
-            // TaskDefinition get's replaced IFF the built image changes.
+            // If we haven't, build and push the local build context to the ECR repository, wait for
+            // that to complete, then return the image name pointing to the ECT repository along
+            // with an environment variable for the image digest to ensure the TaskDefinition get's
+            // replaced IFF the built image changes.
             imageDigest = buildAndPushImage(imageName, container, repository!);
             if (imageName) {
                 buildImageCache.set(imageName, imageDigest);
