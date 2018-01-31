@@ -195,7 +195,6 @@ func Test_Examples(t *testing.T) {
 				"pulumi",
 				"@pulumi/cloud",
 			},
-			Verbose: true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
 				assert.True(t, ok, "expected a `frontendURL` output property of type string")
