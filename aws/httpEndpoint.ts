@@ -467,7 +467,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             HttpDeployment.registerCustomDomains(this, name, api, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
-        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
+        this.url = deployment.invokeUrl.apply(url => url && (url + stageName + "/"));
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
         super.registerOutputs({
