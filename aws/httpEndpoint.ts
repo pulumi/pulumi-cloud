@@ -697,7 +697,8 @@ function createPathSpecObject(
     const region = aws.config.requireRegion();
 
     const uri = bucket.bucket.apply(bucketName =>
-        `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${(pathParameter ? `/{${pathParameter}}` : ``)}`);
+        `arn:aws:apigateway:${region}:s3:path/${(bucketName || "computed(bucket.name)")}/${key}${
+            (pathParameter ? `/{${pathParameter}}` : ``)}`);
 
     const result: SwaggerOperationAsync = {
         responses: {
