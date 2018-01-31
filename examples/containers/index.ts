@@ -16,7 +16,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: Dependency<cloud.Endpoint> = nginx.endpoints.apply(eps => eps.nginx[80]);
+export let nginxEndpoint: Dependency<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
@@ -196,5 +196,5 @@ api.get("/custom", async (req, res) => {
         res.status(500).end(`Pulumi proxy service error: ${err}`);
     }
 });
-api.proxy("/nginx", nginx.endpoints.apply(eps => eps.nginx[80]));
+api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
 export let frontendURL: Dependency<string> = api.publish().url;
