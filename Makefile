@@ -1,5 +1,5 @@
 PROJECT_NAME := Pulumi Cloud Platform
-SUB_PROJECTS := api aws mock examples/integration
+SUB_PROJECTS := api mock aws examples/integration
 include build/common.mk
 
 .PHONY: publish

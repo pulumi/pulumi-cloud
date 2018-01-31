@@ -34,87 +34,87 @@ describe("Table", () => {
 
     describe("#get()", () => {
         it("should-throw-with-no-primary-key", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
             await assert.throwsAsync(async () => await table.get({}));
         });
 
         it("should-return-undefined-with-primary-key-not-present", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            const val = await table.get({[id]: "val"});
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            const val = await table.get({id: "val"});
             assert.strictEqual(val, undefined);
         });
 
         it("should-find-inserted-value", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val", value: 1});
-            assert.equal((await table.get({[id]: "val"})).value, 1);
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val", value: 1});
+            assert.equal((await table.get({id: "val"})).value, 1);
         });
 
         it("should-throw-if-query-does-not-match-schema", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val", value: 1});
-            await assert.throwsAsync(async () => await table.get({[id]: "val", value: 2}));
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val", value: 1});
+            await assert.throwsAsync(async () => await table.get({id: "val", value: 2}));
         });
 
         it("should-see-second insert", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val", value: 1});
-            await table.insert({[id]: "val", value: 2});
-            assert.equal((await table.get({[id]: "val" })).value, 2);
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val", value: 1});
+            await table.insert({id: "val", value: 2});
+            assert.equal((await table.get({id: "val" })).value, 2);
         });
 
         it("should-not-see-deleted-value", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val", value: 1});
-            await table.delete({[id]: "val" });
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val", value: 1});
+            await table.delete({id: "val" });
 
-            const val = await table.get({[id]: "val"});
+            const val = await table.get({id: "val"});
             assert.strictEqual(val, undefined);
         });
 
         it("should-not-see-inserts-to-other-table", async () => {
-            const id1 = "table" + uniqueId++;
-            const id2 = "table" + uniqueId++;
-            const table1 = new cloud.Table(id1);
-            const table2 = new cloud.Table(id2);
+            const name1 = "table" + uniqueId++;
+            const name2 = "table" + uniqueId++;
+            const table1 = new cloud.Table(name1);
+            const table2 = new cloud.Table(name2);
 
-            await table1.insert({[id1]: "val", value: 1});
+            await table1.insert({id: "val", value: 1});
 
-            const val = await table2.get({[id2]: "val"});
+            const val = await table2.get({id: "val"});
             assert.strictEqual(val, undefined);
         });
     });
 
     describe("#update()", () => {
         it("should-only-update-provided-keys", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val", value1: 1, value2: "2"});
-            await table.update({[id]: "val" }, {value1: 3});
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val", value1: 1, value2: "2"});
+            await table.update({id: "val" }, {value1: 3});
 
-            assert.equal((await table.get({[id]: "val"})).value1, 3);
-            assert.equal((await table.get({[id]: "val"})).value2, "2");
+            assert.equal((await table.get({id: "val"})).value1, 3);
+            assert.equal((await table.get({id: "val"})).value2, "2");
         });
     });
 
     describe("#scan()", () => {
         it("returns-all-values", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val1", value1: 1, value2: "1"});
-            await table.insert({[id]: "val2", value1: 2, value2: "2"});
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val1", value1: 1, value2: "1"});
+            await table.insert({id: "val2", value1: 2, value2: "2"});
 
             const values = await table.scan();
             assert.equal(values.length, 2);
 
-            const value1 = values.find(v => v[id] === "val1");
-            const value2 = values.find(v => v[id] === "val2");
+            const value1 = values.find(v => v.id === "val1");
+            const value2 = values.find(v => v.id === "val2");
 
             assert.notEqual(value1, value2);
             assert.equal(value1.value1, 1);
@@ -122,11 +122,11 @@ describe("Table", () => {
         });
 
         it("does-not-return-deleted-value", async () => {
-            const id = "table" + uniqueId++;
-            const table = new cloud.Table(id);
-            await table.insert({[id]: "val1", value1: 1, value2: "1"});
-            await table.insert({[id]: "val2", value1: 2, value2: "2"});
-            await table.delete({[id]: "val1"});
+            const name = "table" + uniqueId++;
+            const table = new cloud.Table(name);
+            await table.insert({id: "val1", value1: 1, value2: "1"});
+            await table.insert({id: "val2", value1: 2, value2: "2"});
+            await table.delete({id: "val1"});
 
             const values = await table.scan();
             assert.equal(values.length, 1);
