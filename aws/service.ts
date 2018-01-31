@@ -555,30 +555,27 @@ function computeImage(
             throw new Error("Expected a container repository for build image");
         }
 
-        async function createImageDigest() {
-            // See if we've already built this.
-            if (imageName && buildImageCache.has(imageName)) {
-                // We got a cache hit, simply reuse the existing digest.
-                // safe to blindly cast since we checked buildImageCache.has above.
-                const imageDigest = <string>await buildImageCache.get(imageName);
-                pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
-                return imageDigest;
-            } else {
-                // If we haven't, build and push the local build context to the ECR repository, wait
-                // for that to complete, then return the image name pointing to the ECT repository
-                // along with an environment variable for the image digest to ensure the
-                // TaskDefinition get's replaced IFF the built image changes.
-                const imageDigestAsync = buildAndPushImage(imageName, container, repository!);
-                if (imageName) {
-                    buildImageCache.set(imageName, imageDigestAsync);
-                }
-                const imageDigest = await imageDigestAsync;
-                pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
-                return imageDigest;
+        let imageDigest: Promise<string>;
+
+        // See if we've already built this.
+        if (imageName && buildImageCache.has(imageName)) {
+            // We got a cache hit, simply reuse the existing digest.
+            // safe to blindly cast since we checked buildImageCache.has above.
+            imageDigest = <Promise<string>>buildImageCache.get(imageName);
+            pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
+        } else {
+            // If we haven't, build and push the local build context to the ECR repository, wait
+            // for that to complete, then return the image name pointing to the ECT repository
+            // along with an environment variable for the image digest to ensure the
+            // TaskDefinition get's replaced IFF the built image changes.
+            imageDigest = buildAndPushImage(imageName, container, repository!);
+            if (imageName) {
+                buildImageCache.set(imageName, imageDigest);
             }
+            pulumi.log.debug(`    build complete: ${imageName} (${imageDigest})`);
         }
 
-        preEnv.IMAGE_DIGEST = createImageDigest();
+        preEnv.IMAGE_DIGEST = imageDigest;
 
         return Dependency.all(repository.repositoryUrl, Dependency.unwrap(preEnv))
                          .apply(([url, e]) => ({ image: url, environment: e }));
