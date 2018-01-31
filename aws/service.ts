@@ -512,7 +512,7 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
-const buildImageCache = new Map<string, Promise<string | undefined>>();
+const buildImageCache = new Map<string, Promise<string>>();
 
 // makeServiceEnvName turns a service name into something suitable for an environment variable.
 function makeServiceEnvName(service: string): string {
@@ -583,6 +583,7 @@ function computeImage(
             // See if we've already built this.
             if (imageName && buildImageCache.has(imageName)) {
                 // We got a cache hit, simply reuse the existing digest.
+                // safe to blindly cast since we checked buildImageCache.has above.
                 const imageDigest = <string>await buildImageCache.get(imageName);
                 pulumi.log.debug(`    already built: ${imageName} (${imageDigest})`);
                 return imageDigest;
