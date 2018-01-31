@@ -1,12 +1,15 @@
 package examples
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -178,164 +181,164 @@ func Test_Examples(t *testing.T) {
 		// 		assert.Equal(t, "25", (*logs)[0].Message)
 		// 	},
 		// },
-		// {
-		// 	Dir: path.Join(cwd, "../examples/containers"),
-		// 	Config: map[string]string{
-		// 		"aws:config:region":                                            region,
-		// 		"cloud-aws:config:ecsAutoCluster":                              "true",
-		// 		"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "2",
-		// 		"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
-		// 		"cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize": "100",
-		// 		"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
-		// 	},
-		// 	Dependencies: []string{
-		// 		"pulumi",
-		// 		"@pulumi/cloud",
-		// 	},
-		// 	Verbose: true,
-		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-		// 		baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
-		// 		assert.True(t, ok, "expected a `frontendURL` output property of type string")
+		{
+			Dir: path.Join(cwd, "../examples/containers"),
+			Config: map[string]string{
+				"aws:config:region":                                            region,
+				"cloud-aws:config:ecsAutoCluster":                              "true",
+				"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "2",
+				"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
+				"cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize": "100",
+				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
+			},
+			Dependencies: []string{
+				"pulumi",
+				"@pulumi/cloud",
+			},
+			Verbose: true,
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
+				assert.True(t, ok, "expected a `frontendURL` output property of type string")
 
-		// 		// Validate the GET /test endpoint
-		// 		{
-		// 			resp, err := http.Get(baseURL + "test")
-		// 			assert.NoError(t, err, "expected to be able to GET /test")
-		// 			assert.Equal(t, 200, resp.StatusCode, "expected 200")
-		// 			contentType := resp.Header.Get("Content-Type")
-		// 			assert.Equal(t, "application/json", contentType)
-		// 			bytes, err := ioutil.ReadAll(resp.Body)
-		// 			assert.NoError(t, err)
-		// 			var endpoints map[string]map[string]interface{}
-		// 			err = json.Unmarshal(bytes, &endpoints)
-		// 			assert.NoError(t, err)
-		// 			t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"test", resp.StatusCode, contentType, string(bytes), endpoints)
-		// 		}
+				// Validate the GET /test endpoint
+				{
+					resp, err := http.Get(baseURL + "test")
+					assert.NoError(t, err, "expected to be able to GET /test")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					var endpoints map[string]map[string]interface{}
+					err = json.Unmarshal(bytes, &endpoints)
+					assert.NoError(t, err)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"test", resp.StatusCode, contentType, string(bytes), endpoints)
+				}
 
-		// 		// Validate the GET / endpoint
-		// 		{
-		// 			resp, err := http.Get(baseURL)
-		// 			assert.NoError(t, err, "expected to be able to GET /")
-		// 			assert.Equal(t, 200, resp.StatusCode, "expected 200")
-		// 			contentType := resp.Header.Get("Content-Type")
-		// 			assert.Equal(t, "application/json", contentType)
-		// 			bytes, err := ioutil.ReadAll(resp.Body)
-		// 			assert.NoError(t, err)
-		// 			t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
-		// 		}
+				// Validate the GET / endpoint
+				{
+					resp, err := http.Get(baseURL)
+					assert.NoError(t, err, "expected to be able to GET /")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+				}
 
-		// 		// Validate the GET /nginx endpoint
-		// 		{
-		// 			{
-		// 				resp, err := http.Get(baseURL + "nginx")
-		// 				assert.NoError(t, err, "expected to be able to GET /nginx")
-		// 				assert.Equal(t, 200, resp.StatusCode, "expected 200")
-		// 				contentType := resp.Header.Get("Content-Type")
-		// 				assert.Equal(t, "text/html", contentType)
-		// 				bytes, err := ioutil.ReadAll(resp.Body)
-		// 				assert.NoError(t, err)
-		// 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
-		// 			}
-		// 			{
-		// 				resp, err := http.Get(baseURL + "nginx/doesnotexist")
-		// 				assert.NoError(t, err, "expected to be able to GET /nginx/doesnotexist")
-		// 				assert.Equal(t, 404, resp.StatusCode, "expected 404")
-		// 				contentType := resp.Header.Get("Content-Type")
-		// 				assert.Equal(t, "text/html", contentType)
-		// 				bytes, err := ioutil.ReadAll(resp.Body)
-		// 				assert.NoError(t, err)
-		// 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
-		// 			}
-		// 		}
+				// Validate the GET /nginx endpoint
+				{
+					{
+						resp, err := http.Get(baseURL + "nginx")
+						assert.NoError(t, err, "expected to be able to GET /nginx")
+						assert.Equal(t, 200, resp.StatusCode, "expected 200")
+						contentType := resp.Header.Get("Content-Type")
+						assert.Equal(t, "text/html", contentType)
+						bytes, err := ioutil.ReadAll(resp.Body)
+						assert.NoError(t, err)
+						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+					}
+					{
+						resp, err := http.Get(baseURL + "nginx/doesnotexist")
+						assert.NoError(t, err, "expected to be able to GET /nginx/doesnotexist")
+						assert.Equal(t, 404, resp.StatusCode, "expected 404")
+						contentType := resp.Header.Get("Content-Type")
+						assert.Equal(t, "text/html", contentType)
+						bytes, err := ioutil.ReadAll(resp.Body)
+						assert.NoError(t, err)
+						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+					}
+				}
 
-		// 		// Validate the GET /run endpoint
-		// 		{
-		// 			resp, err := http.Get(baseURL + "run")
-		// 			assert.NoError(t, err, "expected to be able to GET /run")
-		// 			assert.Equal(t, 200, resp.StatusCode, "expected 200")
-		// 			contentType := resp.Header.Get("Content-Type")
-		// 			assert.Equal(t, "application/json", contentType)
-		// 			bytes, err := ioutil.ReadAll(resp.Body)
-		// 			assert.NoError(t, err)
-		// 			var data map[string]bool
-		// 			err = json.Unmarshal(bytes, &data)
-		// 			assert.NoError(t, err)
-		// 			success, ok := data["success"]
-		// 			assert.Equal(t, true, ok)
-		// 			assert.Equal(t, true, success)
-		// 			t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"run", resp.StatusCode, contentType, string(bytes), data)
-		// 		}
+				// Validate the GET /run endpoint
+				{
+					resp, err := http.Get(baseURL + "run")
+					assert.NoError(t, err, "expected to be able to GET /run")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					var data map[string]bool
+					err = json.Unmarshal(bytes, &data)
+					assert.NoError(t, err)
+					success, ok := data["success"]
+					assert.Equal(t, true, ok)
+					assert.Equal(t, true, success)
+					t.Logf("GET %v [%v/%v]: %v - %v", baseURL+"run", resp.StatusCode, contentType, string(bytes), data)
+				}
 
-		// 		// Validate the GET /custom endpoint
-		// 		{
-		// 			resp, err := http.Get(baseURL + "custom")
-		// 			assert.NoError(t, err, "expected to be able to GET /custom")
-		// 			assert.Equal(t, 200, resp.StatusCode, "expected 200")
-		// 			contentType := resp.Header.Get("Content-Type")
-		// 			assert.Equal(t, "application/json", contentType)
-		// 			bytes, err := ioutil.ReadAll(resp.Body)
-		// 			assert.NoError(t, err)
-		// 			assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
-		// 			t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
-		// 		}
+				// Validate the GET /custom endpoint
+				{
+					resp, err := http.Get(baseURL + "custom")
+					assert.NoError(t, err, "expected to be able to GET /custom")
+					assert.Equal(t, 200, resp.StatusCode, "expected 200")
+					contentType := resp.Header.Get("Content-Type")
+					assert.Equal(t, "application/json", contentType)
+					bytes, err := ioutil.ReadAll(resp.Body)
+					assert.NoError(t, err)
+					assert.True(t, strings.HasPrefix(string(bytes), "Hello, world"))
+					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
+				}
 
-		// 		// Wait for a minute before getting logs
-		// 		time.Sleep(1 * time.Minute)
+				// Wait for a minute before getting logs
+				time.Sleep(1 * time.Minute)
 
-		// 		// Validate logs from example
-		// 		logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-		// 		if !assert.NotNil(t, logs, "expected logs to be produced") {
-		// 			return
-		// 		}
-		// 		if !assert.True(t, len(*logs) > 10) {
-		// 			return
-		// 		}
-		// 		logsByResource := map[string][]operations.LogEntry{}
-		// 		for _, l := range *logs {
-		// 			cur, _ := logsByResource[l.ID]
-		// 			logsByResource[l.ID] = append(cur, l)
-		// 		}
+				// Validate logs from example
+				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+				if !assert.NotNil(t, logs, "expected logs to be produced") {
+					return
+				}
+				if !assert.True(t, len(*logs) > 10) {
+					return
+				}
+				logsByResource := map[string][]operations.LogEntry{}
+				for _, l := range *logs {
+					cur, _ := logsByResource[l.ID]
+					logsByResource[l.ID] = append(cur, l)
+				}
 
-		// 		// NGINX logs
-		// 		//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
-		// 		{
-		// 			nginxLogs, exists := logsByResource["examples-nginx"]
-		// 			if !assert.True(t, exists) {
-		// 				return
-		// 			}
-		// 			if !assert.True(t, len(nginxLogs) > 0) {
-		// 				return
-		// 			}
-		// 			assert.Contains(t, nginxLogs[0].Message, "GET /")
-		// 		}
+				// NGINX logs
+				//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+				{
+					nginxLogs, exists := logsByResource["examples-nginx"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(nginxLogs) > 0) {
+						return
+					}
+					assert.Contains(t, nginxLogs[0].Message, "GET /")
+				}
 
-		// 		// Hello World container Task logs
-		// 		//  {examples-hello-world 1512871250458 Hello from Docker!}
-		// 		{
-		// 			hellowWorldLogs, exists := logsByResource["examples-hello-world"]
-		// 			if !assert.True(t, exists) {
-		// 				return
-		// 			}
-		// 			if !assert.True(t, len(hellowWorldLogs) > 16) {
-		// 				return
-		// 			}
-		// 			assert.Contains(t, hellowWorldLogs[0].Message, "Hello from Docker!")
-		// 		}
+				// Hello World container Task logs
+				//  {examples-hello-world 1512871250458 Hello from Docker!}
+				{
+					hellowWorldLogs, exists := logsByResource["examples-hello-world"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(hellowWorldLogs) > 16) {
+						return
+					}
+					assert.Contains(t, hellowWorldLogs[0].Message, "Hello from Docker!")
+				}
 
-		// 		// Cache Redis container  logs
-		// 		//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
-		// 		{
-		// 			redisLogs, exists := logsByResource["examples-mycache"]
-		// 			if !assert.True(t, exists) {
-		// 				return
-		// 			}
-		// 			if !assert.True(t, len(redisLogs) > 5) {
-		// 				return
-		// 			}
-		// 			assert.Contains(t, redisLogs[0].Message, "Redis is starting")
-		// 		}
-		// 	},
-		// },
+				// Cache Redis container  logs
+				//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
+				{
+					redisLogs, exists := logsByResource["examples-mycache"]
+					if !assert.True(t, exists) {
+						return
+					}
+					if !assert.True(t, len(redisLogs) > 5) {
+						return
+					}
+					assert.Contains(t, redisLogs[0].Message, "Redis is starting")
+				}
+			},
+		},
 		// {
 		// 	Dir: path.Join(cwd, "../examples/todo"),
 
