@@ -47,7 +47,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             attribute: [
                 {
                     name: primaryKey,
-                    type: Dependency.resolve(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
+                    type: Dependency.from(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
                 },
             ],
             hashKey: primaryKey,

@@ -35,8 +35,8 @@ export class Function extends pulumi.ComponentResource {
             //     add VPC access will currently fail due to an issue in the Terraform provider.
             options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
             options.vpcConfig = {
-                securityGroupIds: Dependency.all(...network!.securityGroupIds),
-                subnetIds: Dependency.all(...network!.subnetIds),
+                securityGroupIds: Dependency.all(network!.securityGroupIds),
+                subnetIds: Dependency.all(network!.subnetIds),
             };
         }
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;

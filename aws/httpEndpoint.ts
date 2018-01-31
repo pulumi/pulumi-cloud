@@ -529,7 +529,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return Dependency.all(op.uri, Dependency.resolve(op.credentials), Dependency.resolve(op.connectionId))
+        return Dependency.all(op.uri, Dependency.from(op.credentials), Dependency.from(op.connectionId))
                          .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
@@ -670,7 +670,7 @@ function createPathSpecProxy(
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: Dependency.resolve(vpcLink ? vpcLink.id : undefined),
+            connectionId: Dependency.from(vpcLink ? vpcLink.id : undefined),
             type: "http_proxy",
         },
     };

@@ -21,8 +21,8 @@ export class Table implements cloud.Table {
                 primaryKey: pulumi.ComputedValue<string> = "id",
                 primaryKeyType: pulumi.ComputedValue<string> = "string") {
 
-        this.primaryKey = Dependency.resolve(primaryKey);
-        this.primaryKeyType = Dependency.resolve(primaryKeyType);
+        this.primaryKey = Dependency.from(primaryKey);
+        this.primaryKeyType = Dependency.from(primaryKeyType);
         utils.ensureUnique(usedNames, name, "Table");
 
         const primaryKeyLocal = <string>primaryKey;

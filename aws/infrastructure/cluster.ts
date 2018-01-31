@@ -307,7 +307,7 @@ function getInstanceUserData(
     mountPath: string | undefined,
     cloudFormationStackName: Dependency<string>) {
 
-    const fsIdDep = Dependency.resolve(fileSystem ? fileSystem.id : undefined);
+    const fsIdDep = Dependency.from(fileSystem ? fileSystem.id : undefined);
 
     const all = Dependency.all(fsIdDep, cluster.id, cloudFormationStackName);
     return all.apply(([fsId, clusterId, stackName]) => {
@@ -381,7 +381,7 @@ function getCloudFormationAsgTemplate(
     instanceLaunchConfigurationId: pulumi.Computed<string>,
     subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
 
-    const subnetsIdsArray = Dependency.all(...subnetIds);
+    const subnetsIdsArray = Dependency.all(subnetIds);
     return Dependency.all(subnetsIdsArray, instanceLaunchConfigurationId)
                      .apply(([array, configId]) => {
     return `

@@ -172,7 +172,7 @@ class HttpDeployment implements cloud.HttpDeployment {
 
     constructor(app: express.Application, port?: number) {
         const server: http.Server = app.listen(port || 0);
-        this.url = Dependency.resolve(`http://localhost:${server.address().port}`);
+        this.url = Dependency.from(`http://localhost:${server.address().port}`);
         this.customDomainNames = [];
     }
 }

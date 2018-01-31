@@ -600,7 +600,7 @@ function computeImage(
         return env.apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
-        const jsSrcText = Dependency.resolve(pulumi.runtime.serializeClosure(container.function))
+        const jsSrcText = Dependency.from(pulumi.runtime.serializeClosure(container.function))
                                     .apply(closure => pulumi.runtime.serializeJavaScriptText(closure));
 
                                     // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
@@ -639,9 +639,9 @@ function computeContainerDefinitions(
 
         const combined = Dependency.all(
             imageOptionsDep,
-            Dependency.resolve(container.command),
-            Dependency.resolve(container.memory),
-            Dependency.resolve(container.memoryReservation),
+            Dependency.from(container.command),
+            Dependency.from(container.memory),
+            Dependency.from(container.memoryReservation),
             logGroup.id);
 
         return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
@@ -670,7 +670,7 @@ function computeContainerDefinitions(
         });
     });
 
-    return Dependency.all(...depArray);
+    return Dependency.all(depArray);
 }
 
 // The ECS Task assume role policy for Task Roles

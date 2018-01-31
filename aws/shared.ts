@@ -103,11 +103,11 @@ export function getNetwork(): Network | undefined {
             // Use an exsting VPC for this private network
             network = {
                 numberOfAvailabilityZones: config.externalSubnets.length,
-                vpcId: Dependency.resolve(config.externalVpcId),
+                vpcId: Dependency.from(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => Dependency.resolve(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => Dependency.resolve(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => Dependency.resolve(s)),
+                subnetIds: config.externalSubnets.map(s => Dependency.from(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => Dependency.from(s)),
+                securityGroupIds: config.externalSecurityGroups.map(s => Dependency.from(s)),
             };
         }
     }
@@ -142,8 +142,8 @@ export function getCluster(): Cluster | undefined {
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
-                ecsClusterARN: Dependency.resolve(config.ecsClusterARN),
-                securityGroupId: Dependency.resolve(config.ecsClusterSecurityGroup),
+                ecsClusterARN: Dependency.from(config.ecsClusterARN),
+                securityGroupId: Dependency.from(config.ecsClusterSecurityGroup),
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }
