@@ -16,7 +16,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: Promise<cloud.Endpoint> = nginx.getEndpoint();
+export let nginxEndpoint: Dependency<cloud.Endpoint> = nginx.endpoints.apply(eps => eps.nginx[80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.

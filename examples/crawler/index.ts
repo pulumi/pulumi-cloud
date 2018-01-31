@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Dependency } from "pulumi";
 import * as $ from "cheerio";
 import fetch, { Response } from "node-fetch";
 import { canonicalUrl, hostname} from "./support";
@@ -19,8 +20,10 @@ frontEnd.post("/queue", async (req, res) => {
     res.status(200).json("success");
 });
 frontEnd.get("/documents/stats", async (_, res) => res.json({count: (await documents.scan()).length}));
-let publicURL = frontEnd.publish().url;
-publicURL.then(url => console.log("Launched crawler front end @ " + url));
+export let publicURL: Dependency<string> = frontEnd.publish().url.apply(u => {
+    console.log("Launched crawler front end @ " + u);
+    return u;
+});
 
 // Processing of each newly discovered site
 sites.subscribe("foreachurl", async (url) => {
