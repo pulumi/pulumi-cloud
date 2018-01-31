@@ -40,7 +40,7 @@ interface ECSContainerDefinition {
     dockerLabels?: { [label: string]: string };
     dockerSecurityOptions?: string[];
     entryPoint?: string[];
-    environment?: ECSContainerEnvironment;
+    environment?: { name: string, value: string }[];
     essential?: boolean;
     extraHosts?: { hostname: string; ipAddress: string }[];
     hostname?: string;
@@ -59,13 +59,6 @@ interface ECSContainerDefinition {
     user?: string;
     volumesFrom?: { sourceContainer?: string; readOnly?: boolean }[];
     workingDirectory?: string;
-}
-
-type ECSContainerEnvironment = ECSContainerEnvironmentEntry[];
-
-interface ECSContainerEnvironmentEntry {
-    name: string;
-    value: string;
 }
 
 // The shared Load Balancer management role used across all Services.
@@ -293,7 +286,7 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.C
 
 interface ImageOptions {
     image: string;
-    environment: ECSContainerEnvironment;
+    environment: Record<string, string>;
 }
 
 interface CommandResult {
@@ -555,10 +548,6 @@ function computeImage(
         }
     }
 
-    // Convert the environment map into array form AWS prefers.
-    const env = Dependency.unwrap(preEnv)
-                          .apply(u => Object.keys(u).map(k => ({name: k, value: u[k]})));
-
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
         pulumi.log.debug(`Building container image at '${container.build}'`);
@@ -589,27 +578,22 @@ function computeImage(
             }
         }
 
-        return Dependency.all(repository.repositoryUrl, env, createImageDigest())
-                         .apply(([url, e, digest]) => {
-                            e.push({ name: "IMAGE_DIGEST", value: digest });
-                            return { image: url, environment: e };
-                         });
+        preEnv.IMAGE_DIGEST = createImageDigest();
+
+        return Dependency.all(repository.repositoryUrl, Dependency.unwrap(preEnv))
+                         .apply(([url, e]) => ({ image: url, environment: e }));
     }
     else if (container.image) {
         assert(!container.build);
-        return env.apply(e => ({ image: imageName, environment: e }));
+        return Dependency.unwrap(preEnv).apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
-        const jsSrcText = Dependency.from(pulumi.runtime.serializeClosure(container.function))
-                                    .apply(closure => pulumi.runtime.serializeJavaScriptText(closure));
+        preEnv.PULUMI_SRC = pulumi.runtime.serializeClosure(container.function)
+                                          .then(closure => pulumi.runtime.serializeJavaScriptText(closure));
 
-                                    // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+        // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return Dependency.all(env, jsSrcText)
-                         .apply(([e, j]) => {
-                            e.push({ name: "PULUMI_SRC", value: j });
-                            return { image: imageName, environment: e };
-                        });
+        return Dependency.unwrap(preEnv).apply(e => ({ image: imageName, environment: e }));
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -645,6 +629,11 @@ function computeContainerDefinitions(
             logGroup.id);
 
         return combined.apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+            const keyValuePairs: { name: string, value: string }[] = [];
+            for (const key of Object.keys(imageOpts.environment)) {
+                keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
+            }
+
             const containerDefinition: ECSContainerDefinition = {
                 name: containerName,
                 image: imageOpts.image,
@@ -652,7 +641,7 @@ function computeContainerDefinitions(
                 memory: memory,
                 memoryReservation: memoryReservation,
                 portMappings: portMappings,
-                environment: imageOpts.environment,
+                environment: keyValuePairs,
                 mountPoints: (container.volumes || []).map(v => ({
                     containerPath: v.containerPath,
                     sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
@@ -1004,7 +993,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             const ecs = new awssdk.ECS();
 
             // Extract the envrionment values from the options
-            const env: ECSContainerEnvironment = [];
+            const env: { name: string, value: string }[] = [];
             if (container.environment) {
                 for (const key of Object.keys(container.environment)) {
                     // Blindly casting to string it safe here.  closure serialization
