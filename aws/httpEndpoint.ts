@@ -493,7 +493,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     // After all values have settled, we can produce the resulting string.
-    const pathsDeps = resolvePathDependencies(resolved);
+    const pathsDeps = Dependency.unwrap(resolved);
     return pathsDeps.apply(paths =>
         JSON.stringify({
             swagger: spec.swagger,
@@ -524,16 +524,6 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
         for (const {k: k, op: op} of arr) {
             result[k] = op;
         }
-
-        return result;
-    }
-
-    function resolvePathDependencies(rec: Record<string, pulumi.Computed<Record<string, SwaggerOperation>>>):
-            pulumi.Computed<Record<string, Record<string, SwaggerOperation>>> {
-
-        const temp = Object.keys(rec).map(k => rec[k].apply(op => ({k: k, op: op})));
-        const result = Dependency.all(...temp)
-                                 .apply(keysAndOpsArray => convertArrayToObject(keysAndOpsArray));
 
         return result;
     }
