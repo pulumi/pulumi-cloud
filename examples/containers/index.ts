@@ -147,6 +147,19 @@ let builtNamedService = new cloud.Service("examples-pulumiNginx", {
     replicas: 2,
 });
 
+const builtNamedService2 = new cloud.Service("examples-pulumiNginx2", {
+    containers: {
+        nginx: {
+            build: {
+                dockerfile: "./app2/Dockerfile-alt",
+                args: { "FOO": "bar" },
+            },
+            memory: 128,
+            ports: [{ port: 80 }],
+        },
+    },
+});
+
 // use a pre-built nginx image, and expose it via a TCP network load balancer (the default).
 let nginxOverNetLB = new cloud.Service("examples-nginxOverNetLB", {
     containers: {
