@@ -20,9 +20,9 @@ frontEnd.post("/queue", async (req, res) => {
     res.status(200).json("success");
 });
 frontEnd.get("/documents/stats", async (_, res) => res.json({count: (await documents.scan()).length}));
-export let publicURL: Dependency<string> = frontEnd.publish().url.apply(u => {
+export let publicURL: Dependency<string> = frontEnd.publish().url;
+publicURL.apply(u => {
     console.log("Launched crawler front end @ " + u);
-    return u;
 });
 
 // Processing of each newly discovered site

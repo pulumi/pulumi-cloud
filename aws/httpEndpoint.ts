@@ -429,7 +429,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             variables: {
                 version: bodyHash,
             },
-            description: bodyHash.apply(hash => `Deployment of version ${hash || "<computed>"}`),
+            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
         }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
@@ -456,7 +456,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: deployment.executionArn.apply(arn => arn && (arn + stageName + "/" + method + path)),
+                        sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
                     }, { parent: this });
                 }
             }
@@ -467,7 +467,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             HttpDeployment.registerCustomDomains(this, name, api, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
-        this.url = deployment.invokeUrl.apply(url => url && (url + stageName + "/"));
+        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
         super.registerOutputs({
@@ -619,8 +619,7 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
     const region = aws.config.requireRegion();
     const uri = lambda.arn.apply(lambdaARN =>
-        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" +
-        (lambdaARN || "computed(lambda.arn)") + "/invocations");
+        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
 
     return {
         "x-amazon-apigateway-integration": {
@@ -697,8 +696,7 @@ function createPathSpecObject(
     const region = aws.config.requireRegion();
 
     const uri = bucket.bucket.apply(bucketName =>
-        `arn:aws:apigateway:${region}:s3:path/${(bucketName || "computed(bucket.name)")}/${key}${
-            (pathParameter ? `/{${pathParameter}}` : ``)}`);
+        `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${(pathParameter ? `/{${pathParameter}}` : ``)}`);
 
     const result: SwaggerOperationAsync = {
         responses: {
