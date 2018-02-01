@@ -138,12 +138,23 @@ let builtService = new cloud.Service("examples-nginx2", {
 // expose some APIs meant for testing purposes.
 let api = new cloud.HttpEndpoint("examples-containers");
 api.get("/test", async (req, res) => {
-    res.json({
-        nginx: await nginx.getEndpoint(),
-        mongodb: await mongodb.getEndpoint(),
-        nginx2: await builtService.getEndpoint(),
-    });
+    try {
+        res.json({
+            nginx: await nginx.getEndpoint(),
+            mongodb: await mongodb.getEndpoint(),
+            nginx2: await builtService.getEndpoint(),
+        });
+    } catch (err) {
+        res.status(500).json(errorJSON(err));
+    }
 });
+
+function errorJSON(err: any) {
+    const result: any = Object.create(null);
+    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
+    return result;
+}
+
 api.get("/", async (req, res) => {
     try {
         // Use the NGINX or Redis Services to respond to the request.
