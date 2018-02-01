@@ -145,6 +145,7 @@ api.get("/test", async (req, res) => {
             nginx2: await builtService.getEndpoint(),
         });
     } catch (err) {
+        console.error(errorJSON(err));
         res.status(500).json(errorJSON(err));
     }
 });
@@ -174,8 +175,8 @@ api.get("/", async (req, res) => {
         res.setHeader("X-Powered-By", "nginx");
         res.end(buffer);
     } catch (err) {
-        console.error(err);
-        res.status(500).end(`Pulumi proxy service error: ${err}`);
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
 api.get("/run", async (req, res) => {
@@ -188,8 +189,8 @@ api.get("/run", async (req, res) => {
         await Promise.all(tasks);
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Error running task." });
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
 api.get("/custom", async (req, res) => {
@@ -203,8 +204,8 @@ api.get("/custom", async (req, res) => {
         res.setHeader("X-Powered-By", "custom web server");
         res.end(buffer);
     } catch (err) {
-        console.error(err);
-        res.status(500).end(`Pulumi proxy service error: ${err}`);
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
 api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
