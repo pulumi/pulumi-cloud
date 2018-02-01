@@ -172,8 +172,8 @@ function allocateListener(
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
-        securityGroups: Dependency.all(application, cluster.securityGroupId)
-                                  .apply(([app, groupId]) => app && groupId ? [ groupId ] : <string[]><any>undefined),
+        securityGroups: Dependency.all(cluster.securityGroupId.apply(groupId =>
+            application && groupId ?  groupId : <string><any>undefined)),
     });
 
     // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.
