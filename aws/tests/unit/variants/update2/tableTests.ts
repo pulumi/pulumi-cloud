@@ -14,6 +14,9 @@ namespace updateProgramTests {
                 assert.equal(undefined, result);
             }
             else {
+                if (!result) {
+                    throw new Error(`Didn't retrieve result.  PrimaryKey is '${table1.primaryKey.get()}' i='${i}'`)
+                }
                 assert.equal(result.value1, i);
             }
         }
