@@ -1,14 +1,12 @@
 package examples
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -73,112 +71,112 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 
-		{
-			Dir: path.Join(cwd, "/tests/performance"),
-			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
-			},
-			Dependencies: []string{
-				"pulumi",
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output property of type string")
+		// {
+		// 	Dir: path.Join(cwd, "/tests/performance"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region":     region,
+		// 		"cloud:config:provider": "aws",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"pulumi",
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		baseURL, ok := stackInfo.Outputs["url"].(string)
+		// 		assert.True(t, ok, "expected a `url` output property of type string")
 
-				// Validate the GET /perf endpoint
-				// values url.Values := {}
+		// 		// Validate the GET /perf endpoint
+		// 		// values url.Values := {}
 
-				dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
-				dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
+		// 		dataDogAPIKey := os.Getenv("DATADOG_API_KEY")
+		// 		dataDogAppKey := os.Getenv("DATADOG_APP_KEY")
 
-				resp, err := http.Get(baseURL + "/start-performance-tests?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
-				assert.NoError(t, err, "expected to be able to GET /start-performance-tests")
+		// 		resp, err := http.Get(baseURL + "/start-performance-tests?DATADOG_API_KEY=" + dataDogAPIKey + "&DATADOG_APP_KEY=" + dataDogAppKey)
+		// 		assert.NoError(t, err, "expected to be able to GET /start-performance-tests")
 
-				contentType := resp.Header.Get("Content-Type")
-				assert.Equal(t, "text/html", contentType)
+		// 		contentType := resp.Header.Get("Content-Type")
+		// 		assert.Equal(t, "text/html", contentType)
 
-				_, err = ioutil.ReadAll(resp.Body)
-				assert.NoError(t, err)
-				assert.Equal(t, 200, resp.StatusCode)
+		// 		_, err = ioutil.ReadAll(resp.Body)
+		// 		assert.NoError(t, err)
+		// 		assert.Equal(t, 200, resp.StatusCode)
 
-				start := time.Now()
-				for true {
-					elapsed := time.Now().Sub(start)
+		// 		start := time.Now()
+		// 		for true {
+		// 			elapsed := time.Now().Sub(start)
 
-					// lambdas can ony run up to 5 minutes.  So if we go to 6, then there's no point
-					// continuing.
-					if elapsed.Minutes() >= 6 {
-						assert.Fail(t, "Performance tests did not finish")
-						break
-					}
+		// 			// lambdas can ony run up to 5 minutes.  So if we go to 6, then there's no point
+		// 			// continuing.
+		// 			if elapsed.Minutes() >= 6 {
+		// 				assert.Fail(t, "Performance tests did not finish")
+		// 				break
+		// 			}
 
-					resp, err := http.Get(baseURL + "/check-performance-tests")
-					assert.NoError(t, err, "expected to be able to GET /check-performance-tests")
+		// 			resp, err := http.Get(baseURL + "/check-performance-tests")
+		// 			assert.NoError(t, err, "expected to be able to GET /check-performance-tests")
 
-					contentType := resp.Header.Get("Content-Type")
-					assert.Equal(t, "application/json", contentType)
+		// 			contentType := resp.Header.Get("Content-Type")
+		// 			assert.Equal(t, "application/json", contentType)
 
-					bytes, err := ioutil.ReadAll(resp.Body)
-					assert.NoError(t, err)
-					assert.Equal(t, 200, resp.StatusCode)
-					t.Logf("GET %v [%v/%v]: %v", baseURL+"/check-performance-tests", resp.StatusCode, contentType, string(bytes))
+		// 			bytes, err := ioutil.ReadAll(resp.Body)
+		// 			assert.NoError(t, err)
+		// 			assert.Equal(t, 200, resp.StatusCode)
+		// 			t.Logf("GET %v [%v/%v]: %v", baseURL+"/check-performance-tests", resp.StatusCode, contentType, string(bytes))
 
-					var v struct {
-						Status string `json:"status"`
-					}
-					err = json.Unmarshal(bytes, &v)
-					assert.NoError(t, err)
-					if v.Status == "complete" {
-						break
-					}
+		// 			var v struct {
+		// 				Status string `json:"status"`
+		// 			}
+		// 			err = json.Unmarshal(bytes, &v)
+		// 			assert.NoError(t, err)
+		// 			if v.Status == "complete" {
+		// 				break
+		// 			}
 
-					time.Sleep(5 * time.Second)
-				}
-			},
-		},
+		// 			time.Sleep(5 * time.Second)
+		// 		}
+		// 	},
+		// },
 
-		{
-			Dir: path.Join(cwd, "../examples/crawler"),
-			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
-			},
-			Dependencies: []string{
-				"pulumi",
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
-		{
-			Dir: path.Join(cwd, "../examples/countdown"),
-			Config: map[string]string{
-				"aws:config:region":                  region,
-				"cloud-aws:config:usePrivateNetwork": "true",
-			},
-			Dependencies: []string{
-				"pulumi",
-				"@pulumi/cloud",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
-				time.Sleep(6 * time.Minute)
+		// {
+		// 	Dir: path.Join(cwd, "../examples/crawler"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region":     region,
+		// 		"cloud:config:provider": "aws",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"pulumi",
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(cwd, "../examples/countdown"),
+		// 	Config: map[string]string{
+		// 		"aws:config:region":                  region,
+		// 		"cloud-aws:config:usePrivateNetwork": "true",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"pulumi",
+		// 		"@pulumi/cloud",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
+		// 		time.Sleep(6 * time.Minute)
 
-				// Validate logs from example
-				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-				if !assert.NotNil(t, logs, "expected logs to be produced") {
-					return
-				}
-				if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown") {
-					return
-				}
-				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
-					"expected ID of logs to match the topic+subscription name")
-				assert.Equal(t, "25", (*logs)[0].Message)
-			},
-		},
+		// 		// Validate logs from example
+		// 		logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+		// 		if !assert.NotNil(t, logs, "expected logs to be produced") {
+		// 			return
+		// 		}
+		// 		if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown") {
+		// 			return
+		// 		}
+		// 		assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
+		// 			"expected ID of logs to match the topic+subscription name")
+		// 		assert.Equal(t, "25", (*logs)[0].Message)
+		// 	},
+		// },
 		// {
 		// 	Dir: path.Join(cwd, "../examples/containers"),
 		// 	Config: map[string]string{
