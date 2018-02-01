@@ -151,5 +151,5 @@ export function exampleSendSESEmail() {
         }
     });
 
-    // api.publish().url.then((url: string) => { console.log(`URL: ${url}`); });
+    api.publish().url.apply(url => console.log(`URL: ${url}`));
 }
