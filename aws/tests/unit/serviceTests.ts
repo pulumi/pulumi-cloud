@@ -8,7 +8,6 @@ import * as supertest from "supertest";
 let uniqueId = 0;
 
 namespace basicTests {
-    
     // Use pre-built Dockerhub image
     const nginx = new cloud.Service("examples-nginx-" + uniqueId++, {
         containers: {
@@ -20,7 +19,7 @@ namespace basicTests {
         },
         replicas: 2,
     });
-    
+
     // Build and name the resulting image:
     const nginxBuilt = new cloud.Service("examples-pulumiNginx", {
         containers: {
@@ -32,6 +31,20 @@ namespace basicTests {
             },
         },
         replicas: 2,
+    });
+
+    // build some images with custom dockerfiles/args/etc.
+    const nginxBuilt2 = new cloud.Service("examples-pulumiNginx2", {
+        containers: {
+            nginx: {
+                build: {
+                    dockerfile: "./app2/Dockerfile-alt",
+                    args: { "FOO": "bar" },
+                },
+                memory: 128,
+                ports: [{ port: 80 }],
+            },
+        },
     });
 
     // Use a pre-built nginx image, and expose it externally via an HTTP application load balancer.

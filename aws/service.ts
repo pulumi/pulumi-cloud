@@ -320,11 +320,10 @@ interface CommandResult {
 async function runCLICommand(
     cmd: string,
     args: string[],
-    cwd: string,
     returnStdout?: boolean,
     stdin?: string): Promise<CommandResult> {
     return new Promise<CommandResult>((resolve, reject) => {
-        const p = child_process.spawn(cmd, args, {cwd: cwd});
+        const p = child_process.spawn(cmd, args);
         let result: string | undefined;
         if (returnStdout) {
             // We store the results from stdout in memory and will return them as a string.
@@ -362,17 +361,32 @@ let dockerPasswordStdin: boolean = false;
 // [repository].  It returns the digest of the built image.
 async function buildAndPushImage(imageName: string, container: cloud.Container,
                                  repository: aws.ecr.Repository): Promise<string | undefined> {
-    const buildPath: string | undefined = container.build;
-    if (!buildPath) {
+    let build: cloud.ContainerBuild;
+    if (typeof container.build === "string") {
+        build = {
+            context: container.build,
+        };
+    } else if (container.build) {
+        build = container.build;
+    } else {
         throw new Error(`Cannot build a container with an empty build specification`);
     }
 
-    console.log(`Building container image '${imageName}' from ${buildPath}`);
+    // If the build context is missing, default it to the working directory.
+    if (!build.context) {
+        build.context = ".";
+    }
+
+    console.log(
+        `Building container image '${imageName}': context=${build.context}` +
+            (build.dockerfile ? `, dockerfile=${build.dockerfile}` : "") +
+                (build.args ? `, args=${JSON.stringify(build.args)}` : ""),
+    );
 
     // Verify that 'docker' is on the PATH and get the client/server versions
     if (!cachedDockerVersionString) {
         try {
-            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], ".", true);
+            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
@@ -393,8 +407,21 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         }
     }
 
-    // Invoke Docker CLI commands to build and push
-    const buildResult = await runCLICommand("docker", ["build", "-t", imageName, "."], buildPath);
+    // Prepare the build arguments.
+    const buildArgs: string[] = [ "build" ];
+    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
+    if (build.dockerfile) {
+        buildArgs.push(...[ "-f", build.dockerfile ]); // add a custom Dockerfile location.
+    }
+    if (build.args) {
+        for (const arg of Object.keys(build.args)) {
+            buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
+        }
+    }
+    buildArgs.push(build.context); // push the docker build context onto the path.
+
+    // Invoke Docker CLI commands to build and push.
+    const buildResult = await runCLICommand("docker", buildArgs);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
@@ -422,10 +449,10 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         let loginResult: CommandResult;
         if (!dockerPasswordStdin) {
             loginResult = await runCLICommand(
-                "docker", ["login", "-u", username, "-p", password, registry], buildPath);
+                "docker", ["login", "-u", username, "-p", password, registry]);
         } else {
             loginResult = await runCLICommand(
-                "docker", ["login", "-u", username, "--password-stdin", registry], buildPath, false, password);
+                "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
         }
         if (loginResult.code) {
             throw new Error(`Failed to login to Docker registry ${registry}`);
@@ -436,23 +463,18 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         if (!repositoryUrl) {
             throw new Error("Expected repository URL to be defined during push");
         }
-        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl], buildPath);
+        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
         if (tagResult.code) {
             throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
         }
-        const pushResult = await runCLICommand("docker", ["push", repositoryUrl], buildPath);
+        const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
         if (pushResult.code) {
             throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
         }
     }
 
     // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand(
-        "docker",
-        ["image", "inspect", "-f", "{{.Id}}", imageName],
-        buildPath,
-        true,
-    );
+    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
     }
@@ -488,7 +510,22 @@ function getImageName(container: cloud.Container): string {
     }
     else if (container.build) {
         // Produce a hash of the build context and use that for the image name.
-        return createNameWithStackInfo(`${sha1hash(container.build)}-container`);
+        let buildSig: string;
+        if (typeof container.build === "string") {
+            buildSig = container.build;
+        }
+        else {
+            buildSig = container.build.context || ".";
+            if (container.build.dockerfile ) {
+                buildSig += `;dockerfile=${container.build.dockerfile}`;
+            }
+            if (container.build.args) {
+                for (const arg of Object.keys(container.build.args)) {
+                    buildSig += `;arg[${arg}]=${container.build.args[arg]}`;
+                }
+            }
+        }
+        return createNameWithStackInfo(`${sha1hash(buildSig)}-container`);
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
@@ -598,7 +635,6 @@ async function computeImage(imageName: string, container: cloud.Container, ports
         return { image: (await repository.repositoryUrl)!, environment: env };
     }
     else if (container.image) {
-        assert(!container.build);
         return { image: imageName, environment: env };
     }
     else if (container.function) {
