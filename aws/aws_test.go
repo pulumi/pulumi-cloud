@@ -235,7 +235,7 @@ func Test_Examples(t *testing.T) {
 						assert.Equal(t, "text/html", contentType)
 						bytes, err := ioutil.ReadAll(resp.Body)
 						assert.NoError(t, err)
-						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+						t.Logf("GET %v [%v/%v]: %v", baseURL+"nginx", resp.StatusCode, contentType, string(bytes))
 					}
 					{
 						resp, err := http.Get(baseURL + "nginx/doesnotexist")
@@ -245,7 +245,7 @@ func Test_Examples(t *testing.T) {
 						assert.Equal(t, "text/html", contentType)
 						bytes, err := ioutil.ReadAll(resp.Body)
 						assert.NoError(t, err)
-						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+						t.Logf("GET %v [%v/%v]: %v", baseURL+"nginx/doesnotexist", resp.StatusCode, contentType, string(bytes))
 					}
 				}
 
