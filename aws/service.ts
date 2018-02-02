@@ -600,7 +600,7 @@ function computeImage(
         // See if we've already built this.
         if (imageName && buildImageCache.has(imageName)) {
             // We got a cache hit, simply reuse the existing digest.
-            // safe to blindly cast since we checked buildImageCache.has above.
+            // Safe to ! the result since we checked buildImageCache.has above.
             imageDigest = buildImageCache.get(imageName)!;
             imageDigest.apply(d =>
                 pulumi.log.debug(`    already built: ${imageName} (${d})`));
