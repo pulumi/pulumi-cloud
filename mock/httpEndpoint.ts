@@ -46,9 +46,10 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             if (typeof target === "string") {
                 url = target;
             } else {
-                throw new Error("Endpoint targets not currently supported in the mock impl.");
-                // const targetEndpoint = await target;
-                // url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
+                // We're in tests, so the endpoint won't be closure serialized.  Just grab out its
+                // value here directly.
+                const targetEndpoint = await (<any>target).promise();
+                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
             }
             app.use(path, httpProxy({target: url}));
         };
