@@ -48,8 +48,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             } else {
                 // We're in tests, so the endpoint won't be closure serialized.  Just grab out its
                 // value here directly.
-                const targetEndpoint = await (<any>target).promise();
-                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
+                const targetEndpoint = await utils.serialize(target);
+                url = `http://${targetEndpoint.get().hostname}:${targetEndpoint.get().port}`;
             }
             app.use(path, httpProxy({target: url}));
         };

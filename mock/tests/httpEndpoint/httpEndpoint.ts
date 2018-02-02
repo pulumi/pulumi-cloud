@@ -7,6 +7,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as chai from "chai";
 import * as supertest from "supertest";
+import * as utils from "../../utils";
 
 declare module "assert" {
     function throwsAsync(body: () => Promise<void>): Promise<void>;
@@ -34,35 +35,35 @@ describe("HttpEndpoint", () => {
     });
 
     describe("#get()", () => {
-        it("Is get method", function () {
+        it("Is get method", async function () {
             const app = new cloud.HttpEndpoint("" + uniqueId++);
             app.get("/", function (req, res) {
                 assert.equal(req.method, "GET");
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect(200);
         });
 
-        it("Responds to /", function () {
+        it("Responds to /", async function () {
             const app = new cloud.HttpEndpoint("" + uniqueId++);
             app.get("/", function (req, res) {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect(200);
         });
 
-        it("404 for anything else", () => {
+        it("404 for anything else", async () => {
             const app = new cloud.HttpEndpoint("" + uniqueId++);
             app.get("/", function (req, res) {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/frob").expect(404));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/frob").expect(404);
         });
 
         it("Does not call second handler unless requested", async () => {
@@ -74,8 +75,8 @@ describe("HttpEndpoint", () => {
                 throw new Error("Should not have been called");
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect(200);
         });
 
         it("Does call second handler when requested", async () => {
@@ -87,8 +88,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect(200);
         });
 
         it("Can call into default handler", async () => {
@@ -98,8 +99,8 @@ describe("HttpEndpoint", () => {
                 next();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect(200);
         });
 
         it("Can get parameters", async () => {
@@ -110,8 +111,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/goo?name=baz&color=purple").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/goo?name=baz&color=purple").expect(200);
         });
 
         it("Can get array parameters", async () => {
@@ -121,8 +122,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/goo?name[]=baz&name[]=quux").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/goo?name[]=baz&name[]=quux").expect(200);
         });
 
         it("Can get body", async () => {
@@ -131,8 +132,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").expect("ok"));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").expect("ok");
         });
 
         it("Can get headers", async () => {
@@ -142,8 +143,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).get("/").set({ customheader: "value" }).expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).get("/").set({ customheader: "value" }).expect(200);
         });
     });
 
@@ -155,8 +156,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).post("/").send("body-content").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).post("/").send("body-content").expect(200);
         });
 
         it ("Can get post body", async () => {
@@ -166,8 +167,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).post("/").send("body-content").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).post("/").send("body-content").expect(200);
         });
     });
 
@@ -179,8 +180,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).delete("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).delete("/").expect(200);
         });
     });
 
@@ -192,8 +193,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).put("/").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).put("/").expect(200);
         });
 
         it ("Can get put body", async () => {
@@ -203,8 +204,8 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            app.publish().url.apply(async address =>
-                await supertest(address).put("/").send("body-content").expect(200));
+            const address = (await utils.serialize(app.publish().url)).get();
+            await supertest(address).put("/").send("body-content").expect(200);
         });
     });
 });
