@@ -596,7 +596,6 @@ function computeImage(
         }
 
         let imageDigest: Dependency<string>;
-
         // See if we've already built this.
         if (imageName && buildImageCache.has(imageName)) {
             // We got a cache hit, simply reuse the existing digest.
@@ -645,54 +644,55 @@ function computeContainerDefinitions(
         containers: cloud.Containers, ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): Dependency<ECSContainerDefinition[]> {
 
-    const depArray = Object.keys(containers).map(containerName => {
-        const container = containers[containerName];
-        const imageName: string = getImageName(container);
-        let repository: aws.ecr.Repository | undefined;
-        if (container.build) {
-            // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
-            // The reason is subtle; however, if we do not, we end up with a circular reference between the
-            // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
-            // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
-            repository = getOrCreateRepository(imageName);
-        }
-        const imageOptions = computeImage(imageName, container, ports, repository);
-        const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
-
-        // tslint:disable-next-line:max-line-length
-        return Dependency.all(imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id)
-                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
-            const keyValuePairs: { name: string, value: string }[] = [];
-            for (const key of Object.keys(imageOpts.environment)) {
-                keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
+    const containerDefinitions: Dependency<ECSContainerDefinition>[] =
+        Object.keys(containers).map(containerName => {
+            const container = containers[containerName];
+            const imageName: string = getImageName(container);
+            let repository: aws.ecr.Repository | undefined;
+            if (container.build) {
+                // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
+                // The reason is subtle; however, if we do not, we end up with a circular reference between the
+                // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
+                // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
+                repository = getOrCreateRepository(imageName);
             }
+            const imageOptions = computeImage(imageName, container, ports, repository);
+            const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
-            const containerDefinition: ECSContainerDefinition = {
-                name: containerName,
-                image: imageOpts.image,
-                command: command,
-                memory: memory,
-                memoryReservation: memoryReservation,
-                portMappings: portMappings,
-                environment: keyValuePairs,
-                mountPoints: (container.volumes || []).map(v => ({
-                    containerPath: v.containerPath,
-                    sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
-                })),
-                logConfiguration: {
-                    logDriver: "awslogs",
-                    options: {
-                        "awslogs-group": logGroupId,
-                        "awslogs-region": aws.config.requireRegion(),
-                        "awslogs-stream-prefix": containerName,
+            // tslint:disable-next-line:max-line-length
+            return Dependency.all(imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id)
+                            .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+                const keyValuePairs: { name: string, value: string }[] = [];
+                for (const key of Object.keys(imageOpts.environment)) {
+                    keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
+                }
+
+                const containerDefinition: ECSContainerDefinition = {
+                    name: containerName,
+                    image: imageOpts.image,
+                    command: command,
+                    memory: memory,
+                    memoryReservation: memoryReservation,
+                    portMappings: portMappings,
+                    environment: keyValuePairs,
+                    mountPoints: (container.volumes || []).map(v => ({
+                        containerPath: v.containerPath,
+                        sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
+                    })),
+                    logConfiguration: {
+                        logDriver: "awslogs",
+                        options: {
+                            "awslogs-group": logGroupId,
+                            "awslogs-region": aws.config.requireRegion(),
+                            "awslogs-stream-prefix": containerName,
+                        },
                     },
-                },
-            };
-            return containerDefinition;
+                };
+                return containerDefinition;
+            });
         });
-    });
 
-    return Dependency.all(depArray);
+    return Dependency.all(containerDefinitions);
 }
 
 // The ECS Task assume role policy for Task Roles
