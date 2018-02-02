@@ -1,4 +1,4 @@
-# Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+# Copyright 2016-2018, Pulumi Corporation.  All rights reserved.
 
 # common.mk provides most of the scalfholding for our build system. It
 # provides default targets for each project we want to build.
@@ -106,6 +106,9 @@ PULUMI_NODE_MODULES := $(PULUMI_ROOT)/node_modules
 
 .PHONY: default all ensure only_build only_test build lint install test_fast test_all core
 
+# ensure that `default` is the target that is run when no arguments are passed to make
+default::
+
 # If there are sub projects, our default, all, and ensure targets will
 # recurse into them.
 ifneq ($(SUB_PROJECTS),)
@@ -162,6 +165,7 @@ install::
 	[ ! -e "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)" ] || rm -rf "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
 	mkdir -p "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
 	cp -r bin/. "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
+	cp package.json "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
 	cp yarn.lock "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)"
 	rm -rf "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)/node_modules"
 	cd "$(PULUMI_NODE_MODULES)/$(NODE_MODULE_NAME)" && \

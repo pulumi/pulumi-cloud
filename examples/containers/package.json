@@ -6,17 +6,15 @@
     "scripts": {
         "build": "tsc"
     },
-    "devDependencies": {
-        "@types/node": "^8.0.27",
-        "typescript": "^2.1.4"
-    },
-    "peerDependencies": {
-        "pulumi": "*",
-        "@pulumi/cloud": "*"
-    },
     "dependencies": {
-        "@types/node-fetch": "^1.6.7",
+        "pulumi": "latest",
+        "@pulumi/cloud": "latest",
         "node-fetch": "^1.7.3",
         "redis": "^2.8.0"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "@types/node-fetch": "^1.6.7",
+        "typescript": "^2.1.4"
     }
 }

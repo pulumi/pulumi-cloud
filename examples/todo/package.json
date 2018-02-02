@@ -6,13 +6,13 @@
     "scripts": {
         "build": "tsc"
     },
+    "dependencies": {
+        "pulumi": "latest",
+        "@pulumi/cloud": "latest"
+    },
     "devDependencies": {
         "@types/node": "^8.0.27",
         "typescript": "^2.1.4"
-    },
-    "peerDependencies": {
-        "pulumi": "*",
-        "@pulumi/cloud": "*"
     }
 }
 

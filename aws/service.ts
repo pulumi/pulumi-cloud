@@ -1030,7 +1030,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             await addEnvironmentVariables(options && options.environment);
 
             // Run the task
-            await ecs.runTask({
+            const res = await ecs.runTask({
                 cluster: clusterARN.get(),
                 taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
@@ -1043,6 +1043,10 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     ],
                 },
             }).promise();
+
+            if (res.failures && res.failures.length > 0) {
+                throw new Error("Failed to start task:" + JSON.stringify(res.failures, null, ""));
+            }
 
             return;
 
