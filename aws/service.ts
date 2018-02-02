@@ -772,8 +772,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup)
-        .apply(arr => JSON.stringify(arr));
+    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup).apply(JSON.stringify);
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefinitions,
