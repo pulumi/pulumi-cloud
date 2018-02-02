@@ -669,7 +669,7 @@ function createPathSpecProxy(
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: Dependency.from(vpcLink ? vpcLink.id : undefined),
+            connectionId: vpcLink ? vpcLink.id : undefined,
             type: "http_proxy",
         },
     };
