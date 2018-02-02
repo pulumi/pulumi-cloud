@@ -5,7 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
-import { Dependency, ComputedValue } from "pulumi";
+import { ComputedValue, Dependency } from "pulumi";
 import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
