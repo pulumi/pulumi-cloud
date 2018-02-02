@@ -2,9 +2,28 @@
 # yarn lockfile v1
 
 
+"@pulumi/cloud-aws@latest":
+  version "0.9.11-17-gfabef2c"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud-aws/-/cloud-aws-0.9.11-17-gfabef2c.tgz#5d78c8deca83b409a3cbb568e6176c63c4e99086"
+  dependencies:
+    mime "^2.0.3"
+    semver "^5.4.0"
+
+"@pulumi/cloud@latest":
+  version "0.9.11-17-gfabef2c"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
+
 "@types/node@^8.0.27":
   version "8.5.8"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.8.tgz#92509422653f10e9c0ac18d87e0610b39f9821c7"
+
+mime@^2.0.3:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/mime/-/mime-2.2.0.tgz#161e541965551d3b549fa1114391e3a3d55b923b"
+
+semver@^5.4.0:
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.0.tgz#dc4bbc7a6ca9d916dee5d43516f0092b58f7b8ab"
 
 typescript@^2.1.4:
   version "2.6.2"

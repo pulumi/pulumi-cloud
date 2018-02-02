@@ -10,9 +10,12 @@ TESTPARALLELISM := 10
 
 build::
 	yarn install
-	yarn link pulumi @pulumi/aws @pulumi/cloud
+	yarn link pulumi @pulumi/cloud
 	tsc
-	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
+	cat package.json | \
+		sed -e 's/\$${VERSION}/$(VERSION)/g' | \
+		sed -e 's/"@pulumi\/cloud": "latest"/"@pulumi\/cloud": "$(VERSION)"/g' > \
+		bin/package.json
 	cp ../README.md ../LICENSE bin/
 
 lint::
