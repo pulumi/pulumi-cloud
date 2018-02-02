@@ -5,7 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as child_process from "child_process";
 import * as pulumi from "pulumi";
-import { Dependency } from "pulumi";
+import { Dependency, ComputedValue } from "pulumi";
 import * as semver from "semver";
 import * as stream from "stream";
 import * as config from "./config";
@@ -1026,25 +1026,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Extract the envrionment values from the options
             const env: { name: string, value: string }[] = [];
-            if (container.environment) {
-                for (const key of Object.keys(container.environment)) {
-                    // Blindly casting to string it safe here.  closure serialization
-                    // will have collapsed all promises and dependencies
-                    env.push({ name: key, value: <string>container.environment[key] });
-                }
-            }
-
-            if (options && options.environment) {
-                for (const key of Object.keys(options.environment)) {
-                    // Casting is safe here.  We should never have a Dependency at runtime
-                    // so this could only be a string or Promise<string>.  'awaiting' that
-                    // will ensure we only have a string.
-                    const envVal = <string>await options.environment[key];
-                    if (envVal) {
-                        env.push({ name: key, value: envVal });
-                    }
-                }
-            }
+            await addEnvironmentVariables(container.environment);
+            await addEnvironmentVariables(options && options.environment);
 
             // Run the task
             await ecs.runTask({
@@ -1060,6 +1043,35 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     ],
                 },
             }).promise();
+
+            return;
+
+            // Local functions
+            async function addEnvironmentVariables(e: Record<string, ComputedValue<string>> | undefined) {
+                if (e) {
+                    for (const key of Object.keys(e)) {
+                        const envVal = await extract(e[key]);
+                        if (envVal) {
+                            env.push({ name: key, value: envVal });
+                        }
+                    }
+                }
+            }
+
+            async function extract<T>(t?: ComputedValue<T>): Promise<T | undefined> {
+                if (t === undefined) {
+                    return undefined;
+                }
+
+                const unwrapped = await t;
+                if (unwrapped instanceof Dependency) {
+                    // We're on the inside.  so it's safe to directly extract the value
+                    // of a dependency here.
+                    return unwrapped.get();
+                }
+
+                return unwrapped;
+            }
         };
     }
 }
