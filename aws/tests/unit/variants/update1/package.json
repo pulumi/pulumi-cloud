@@ -13,7 +13,7 @@
         "supertest": "^3.0.0"
     },
     "peerDependencies": {
-        "pulumi": "*",
+        "pulumi": "latest",
         "@pulumi/cloud": "*",
         "@pulumi/cloud-aws": "*"
     },
