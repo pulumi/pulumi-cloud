@@ -6,10 +6,10 @@
   version "0.9.11-17-gfabef2c"
   resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
 
-"@types/node@^8.0.26":
-  version "8.0.46"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.46.tgz#6e1766b2d0ed06631d5b5f87bb8e72c8dbb6888e"
+"@types/node@^8.0.27":
+  version "8.5.9"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.9.tgz#7155cfb4ae405bca4dd8df1a214c339e939109bf"
 
 typescript@^2.1.4:
-  version "2.5.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.5.3.tgz#df3dcdc38f3beb800d4bc322646b04a3f6ca7f0d"
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.1.tgz#bb3682c2c791ac90e7c6210b26478a8da085c359"

@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@pulumi/cloud@latest":
+  version "0.9.11-17-gfabef2c"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
+
 "@types/cheerio@^0.22.2":
   version "0.22.2"
   resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.2.tgz#539625874bc856086ad491c2fdc9b10c05ae308e"

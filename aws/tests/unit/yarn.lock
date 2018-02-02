@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@pulumi/cloud@latest":
+  version "0.9.11-17-gfabef2c"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
+
 "@types/chai@^4.0.4":
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.1.2.tgz#f1af664769cfb50af805431c407425ed619daa21"
