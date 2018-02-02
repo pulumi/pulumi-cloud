@@ -309,7 +309,7 @@ function getInstanceUserData(
 
     const fsIdDep = Dependency.from(fileSystem ? fileSystem.id : undefined);
 
-    const all = Dependency.all(fsIdDep, cluster.id, cloudFormationStackName);
+    const all = Dependency.all([fsIdDep, cluster.id, cloudFormationStackName]);
     return all.apply(([fsId, clusterId, stackName]) => {
         let fileSystemRuncmdBlock = "";
         if (fileSystem && mountPath) {
@@ -382,7 +382,7 @@ function getCloudFormationAsgTemplate(
     subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
 
     const subnetsIdsArray = Dependency.all(subnetIds);
-    return Dependency.all(subnetsIdsArray, instanceLaunchConfigurationId)
+    return Dependency.all([subnetsIdsArray, instanceLaunchConfigurationId])
                      .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'

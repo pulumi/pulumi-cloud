@@ -529,7 +529,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
     }
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return Dependency.all(op.uri, op.credentials, op.connectionId)
+        return Dependency.all([op.uri, op.credentials, op.connectionId])
                          .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
@@ -567,7 +567,7 @@ interface ApigatewayIntegration extends ApigatewayIntegrationBase {
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
     uri: Dependency<string>;
     credentials?: Dependency<string>;
-    connectionId?: Dependency<string | undefined>;
+    connectionId?: Dependency<string>;
 }
 
 interface SwaggerOperationAsync {
@@ -637,7 +637,7 @@ function createPathSpecProxy(
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
     const uri =
-        Dependency.all(<string>target, <pulumi.Computed<cloud.Endpoint>>target)
+        Dependency.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
                   .apply(([targetStr, targetEndpoint]) => {
                     let url = "";
                     if (typeof targetStr === "string") {

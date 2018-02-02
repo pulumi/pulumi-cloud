@@ -618,7 +618,7 @@ function computeImage(
 
         preEnv.IMAGE_DIGEST = imageDigest;
 
-        return Dependency.all(repository.repositoryUrl, Dependency.unwrap(preEnv))
+        return Dependency.all([repository.repositoryUrl, Dependency.unwrap(preEnv)])
                          .apply(([url, e]) => ({ image: url, environment: e }));
     }
     else if (container.image) {
@@ -660,7 +660,7 @@ function computeContainerDefinitions(
             const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
 
             // tslint:disable-next-line:max-line-length
-            return Dependency.all(imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id)
+            return Dependency.all([imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id])
                             .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOpts.environment)) {
