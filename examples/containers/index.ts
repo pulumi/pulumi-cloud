@@ -141,8 +141,8 @@ api.get("/test", async (req, res) => {
     try {
         res.json({
             nginx: await nginx.getEndpoint(),
-            // mongodb: await mongodb.getEndpoint(),
-            // nginx2: await builtService.getEndpoint(),
+            mongodb: await mongodb.getEndpoint(),
+            nginx2: await builtService.getEndpoint(),
         });
     } catch (err) {
         console.error(errorJSON(err));
