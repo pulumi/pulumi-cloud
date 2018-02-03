@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import { Dependency } from "pulumi";
+import * as pulumi from "pulumi";
 
 const endpoint = new cloud.HttpEndpoint("examples-test");
 endpoint.get("/test1.txt", (req, res) => {

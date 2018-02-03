@@ -2,7 +2,6 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { Dependency } from "pulumi";
 import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
@@ -21,8 +20,8 @@ export class Table implements cloud.Table {
                 primaryKey: pulumi.ComputedValue<string> = "id",
                 primaryKeyType: pulumi.ComputedValue<string> = "string") {
 
-        this.primaryKey = Dependency.from(primaryKey);
-        this.primaryKeyType = Dependency.from(primaryKeyType);
+        this.primaryKey = pulumi.output(primaryKey);
+        this.primaryKeyType = pulumi.output(primaryKeyType);
         utils.ensureUnique(usedNames, name, "Table");
 
         const primaryKeyLocal = <string>primaryKey;

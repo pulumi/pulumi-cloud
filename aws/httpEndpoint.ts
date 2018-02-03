@@ -8,7 +8,6 @@ import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
 
-import { Dependency } from "pulumi";
 import { Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
@@ -486,10 +485,10 @@ interface SwaggerSpec {
 
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
-function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
-    const pathsDeps = Dependency.unwrap(spec.paths, p => {
-        const temp: Dependency<Record<string, SwaggerOperation>> =
-            Dependency.unwrap(p, x => resolveOperationDependencies(x));
+function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
+    const pathsDeps = pulumi.unwrap(spec.paths, p => {
+        const temp: pulumi.Output<Record<string, SwaggerOperation>> =
+            pulumi.unwrap(p, x => resolveOperationDependencies(x));
         return temp;
     });
 
@@ -519,7 +518,7 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
         }));
 
     // local functions
-    function resolveOperationDependencies(op: SwaggerOperationAsync): Dependency<SwaggerOperation> {
+    function resolveOperationDependencies(op: SwaggerOperationAsync): pulumi.Output<SwaggerOperation> {
         return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
             integration => ({
                     parameters: op.parameters,
@@ -528,8 +527,8 @@ function createSwaggerString(spec: SwaggerSpec): Dependency<string> {
                 }));
     }
 
-    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): Dependency<ApigatewayIntegration> {
-        return Dependency.all([op.uri, op.credentials, op.connectionId])
+    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): pulumi.Output<ApigatewayIntegration> {
+        return pulumi.all([op.uri, op.credentials, op.connectionId])
                          .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
@@ -565,9 +564,9 @@ interface ApigatewayIntegration extends ApigatewayIntegrationBase {
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
-    uri: Dependency<string>;
-    credentials?: Dependency<string>;
-    connectionId?: Dependency<string>;
+    uri: pulumi.Output<string>;
+    credentials?: pulumi.Output<string>;
+    connectionId?: pulumi.Output<string>;
 }
 
 interface SwaggerOperationAsync {
@@ -637,7 +636,7 @@ function createPathSpecProxy(
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
     const uri =
-        Dependency.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
+        pulumi.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
                   .apply(([targetStr, targetEndpoint]) => {
                     let url = "";
                     if (typeof targetStr === "string") {

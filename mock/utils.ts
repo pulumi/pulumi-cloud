@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import { Dependency } from "pulumi";
+import * as pulumi from "pulumi";
 
 export function ensureUnique(values: { [name: string]: string }, name: string, typeName: string) {
     if (values[name]) {
@@ -10,7 +10,7 @@ export function ensureUnique(values: { [name: string]: string }, name: string, t
     values[name] = "-";
 }
 
-export async function serialize<T>(dep: Dependency<T>): Promise<Dependency<T>>;
+export async function serialize<T>(dep: pulumi.Output<T>): Promise<pulumi.Output<T>>;
 export async function serialize(prop: any): Promise<any>;
 export async function serialize(prop: any): Promise<any> {
     if (prop === undefined) {
@@ -32,7 +32,7 @@ export async function serialize(prop: any): Promise<any> {
     else if (prop instanceof Promise) {
         return await prop;
     }
-    else if (prop instanceof Dependency) {
+    else if (prop instanceof pulumi.Output) {
         const val = await serialize((<any>prop).promise());
         return { get: () => val };
     } else {

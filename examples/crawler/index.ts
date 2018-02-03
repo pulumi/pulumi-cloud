@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import { Dependency } from "pulumi";
+import * as pulumi from "pulumi";
 import * as $ from "cheerio";
 import fetch, { Response } from "node-fetch";
 import { canonicalUrl, hostname} from "./support";

@@ -2,7 +2,6 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
-import { Dependency } from "pulumi";
 
 import { awsAccountId, awsRegion } from "./aws";
 import { Network } from "./network";
@@ -89,7 +88,7 @@ export class Cluster {
     /**
      * The ECS Cluster's Security Group ID.
      */
-    public readonly securityGroupId: pulumi.Computed<string>;
+    public readonly securityGroupId?: pulumi.Computed<string>;
     /**
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
@@ -305,11 +304,11 @@ function getInstanceUserData(
     cluster: aws.ecs.Cluster,
     fileSystem: aws.efs.FileSystem | undefined,
     mountPath: string | undefined,
-    cloudFormationStackName: Dependency<string>) {
+    cloudFormationStackName: pulumi.Output<string>) {
 
-    const fsIdDep = Dependency.from(fileSystem ? fileSystem.id : undefined);
+    const fsIdDep = pulumi.output(fileSystem ? fileSystem.id : undefined);
 
-    const all = Dependency.all([fsIdDep, cluster.id, cloudFormationStackName]);
+    const all = pulumi.all([fsIdDep, cluster.id, cloudFormationStackName]);
     return all.apply(([fsId, clusterId, stackName]) => {
         let fileSystemRuncmdBlock = "";
         if (fileSystem && mountPath) {
@@ -381,8 +380,8 @@ function getCloudFormationAsgTemplate(
     instanceLaunchConfigurationId: pulumi.Computed<string>,
     subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
 
-    const subnetsIdsArray = Dependency.all(subnetIds);
-    return Dependency.all([subnetsIdsArray, instanceLaunchConfigurationId])
+    const subnetsIdsArray = pulumi.all(subnetIds);
+    return pulumi.all([subnetsIdsArray, instanceLaunchConfigurationId])
                      .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'

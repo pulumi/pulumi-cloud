@@ -2,7 +2,6 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "pulumi";
-import { Dependency } from "pulumi";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
@@ -103,11 +102,11 @@ export function getNetwork(): Network | undefined {
             // Use an exsting VPC for this private network
             network = {
                 numberOfAvailabilityZones: config.externalSubnets.length,
-                vpcId: Dependency.from(config.externalVpcId),
+                vpcId: pulumi.output(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => Dependency.from(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => Dependency.from(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => Dependency.from(s)),
+                subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
+                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
             };
         }
     }
@@ -142,8 +141,9 @@ export function getCluster(): Cluster | undefined {
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
-                ecsClusterARN: Dependency.from(config.ecsClusterARN),
-                securityGroupId: Dependency.from(config.ecsClusterSecurityGroup),
+                ecsClusterARN: pulumi.output(config.ecsClusterARN),
+                securityGroupId: config.ecsClusterSecurityGroup
+                    ? pulumi.output(config.ecsClusterSecurityGroup) : undefined,
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }

@@ -3,7 +3,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "pulumi";
-import { Dependency } from "pulumi";
 
 function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
@@ -47,7 +46,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             attribute: [
                 {
                     name: primaryKey,
-                    type: Dependency.from(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
+                    type: pulumi.output(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
                 },
             ],
             hashKey: primaryKey,
