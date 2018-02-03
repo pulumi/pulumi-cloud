@@ -172,9 +172,7 @@ function allocateListener(
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
-        securityGroups: pulumi.runtime.options.dryRun
-            ? []
-            : cluster.securityGroupId.apply(groupId => (application && groupId) ? [ groupId ] : []),
+        securityGroups: (application && cluster.securityGroupId) ? [ cluster.securityGroupId ] : undefined,
     });
 
     // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.

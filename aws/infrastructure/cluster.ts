@@ -89,7 +89,7 @@ export class Cluster {
     /**
      * The ECS Cluster's Security Group ID.
      */
-    public readonly securityGroupId: pulumi.Computed<string | undefined>;
+    public readonly securityGroupId: pulumi.Computed<string>;
     /**
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
