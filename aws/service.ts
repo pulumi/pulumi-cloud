@@ -1019,6 +1019,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
+        const containerEnv = Dependency.unwrap(container.environment || {});
 
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = await import("aws-sdk");
@@ -1026,7 +1027,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Extract the envrionment values from the options
             const env: { name: string, value: string }[] = [];
-            await addEnvironmentVariables(container.environment);
+            await addEnvironmentVariables(containerEnv.get());
             await addEnvironmentVariables(options && options.environment);
 
             // Run the task
@@ -1051,31 +1052,15 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             return;
 
             // Local functions
-            async function addEnvironmentVariables(e: Record<string, ComputedValue<string>> | undefined) {
+            async function addEnvironmentVariables(e: Record<string, string> | undefined) {
                 if (e) {
                     for (const key of Object.keys(e)) {
-                        const envVal = await extract(e[key]);
+                        const envVal = e[key];
                         if (envVal) {
                             env.push({ name: key, value: envVal });
                         }
                     }
                 }
-            }
-
-            async function extract<T>(t?: ComputedValue<T>): Promise<T | undefined> {
-                const unwrapped = await t;
-                if (unwrapped === undefined) {
-                    return undefined;
-                }
-
-                const possibleDependency = <Dependency<T>>unwrapped;
-                if ({}.toString.call(possibleDependency.get) === "[object Function]") {
-                    // We're on the inside.  so it's safe to directly extract the value
-                    // of a dependency here.
-                    return possibleDependency.get();
-                }
-
-                return <T>unwrapped;
             }
         };
     }

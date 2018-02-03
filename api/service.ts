@@ -254,7 +254,7 @@ export interface TaskRunOptions {
     /**
      * Optional environment variables to override those set in the container definition.
      */
-    environment?: {[name: string]: pulumi.ComputedValue<string>};
+    environment?: Record<string, string>;
     /**
      * The properties of the host where this task can run.
      */
