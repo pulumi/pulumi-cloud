@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import { Output } from "pulumi";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
@@ -16,7 +16,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: pulumi.Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
+export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
