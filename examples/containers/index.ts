@@ -209,4 +209,4 @@ api.get("/custom", async (req, res) => {
     }
 });
 api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
-export let frontendURL: Dependency<string> = api.publish().url;
+export let frontendURL = api.publish().url;

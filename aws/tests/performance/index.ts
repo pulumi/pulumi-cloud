@@ -197,4 +197,4 @@ function errorJSON(err: any) {
 }
 
 const deployment = endpoint.publish();
-export let url: Dependency<string> = deployment.url;
+export let url = deployment.url;

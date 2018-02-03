@@ -20,4 +20,4 @@ endpoint.get("/unittests", async (req, res) => {
 });
 
 const deployment = endpoint.publish();
-export let url: Dependency<string> = deployment.url;
+export let url = deployment.url;

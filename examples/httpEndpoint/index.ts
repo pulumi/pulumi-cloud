@@ -10,4 +10,4 @@ endpoint.get("/test1.txt", (req, res) => {
 });
 endpoint.proxy("/google", "http://www.google.com/")
 
-export let url: Dependency<string> = endpoint.publish().url;
+export let url = endpoint.publish().url;

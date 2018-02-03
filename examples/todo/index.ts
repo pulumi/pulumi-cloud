@@ -41,5 +41,5 @@ api.get("/todo", async (req, res) => {
 });
 
 // Publish
-export let url: Dependency<string> = api.publish().url;
+export let url = api.publish().url;
 
