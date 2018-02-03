@@ -306,9 +306,9 @@ function getInstanceUserData(
     mountPath: string | undefined,
     cloudFormationStackName: pulumi.Output<string>) {
 
-    const fsIdDep = pulumi.output(fileSystem ? fileSystem.id : undefined);
+    const fileSystemId = fileSystem ? fileSystem.id : undefined;
 
-    const all = pulumi.all([fsIdDep, cluster.id, cloudFormationStackName]);
+    const all = pulumi.all([fileSystemId, cluster.id, cloudFormationStackName]);
     return all.apply(([fsId, clusterId, stackName]) => {
         let fileSystemRuncmdBlock = "";
         if (fileSystem && mountPath) {
