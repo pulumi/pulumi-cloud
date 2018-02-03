@@ -1063,18 +1063,19 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
 
             async function extract<T>(t?: ComputedValue<T>): Promise<T | undefined> {
-                if (t === undefined) {
+                const unwrapped = await t;
+                if (unwrapped === undefined) {
                     return undefined;
                 }
 
-                const unwrapped = await t;
-                if (unwrapped instanceof Dependency) {
+                const possibleDependency = <Dependency<T>>unwrapped;
+                if ({}.toString.call(possibleDependency.get) === "[object Function]") {
                     // We're on the inside.  so it's safe to directly extract the value
                     // of a dependency here.
-                    return unwrapped.get();
+                    return possibleDependency.get();
                 }
 
-                return unwrapped;
+                return <T>unwrapped;
             }
         };
     }
