@@ -2,6 +2,7 @@
 
 import * as awsinfra from "@pulumi/cloud-aws/infrastructure";
 import * as pulumi from "pulumi";
+import { Output } from "pulumi";
 
 const prefix = "infratest";
 const numAvailabilityZones = 2;
