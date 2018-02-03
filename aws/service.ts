@@ -616,7 +616,7 @@ function computeImage(
         preEnv.IMAGE_DIGEST = imageDigest;
 
         return pulumi.all([repository.repositoryUrl, pulumi.unwrap(preEnv)])
-                         .apply(([url, e]) => ({ image: url, environment: e }));
+                     .apply(([url, e]) => ({ image: url, environment: e }));
     }
     else if (container.image) {
         return pulumi.unwrap(preEnv).apply(e => ({ image: imageName, environment: e }));
@@ -658,7 +658,7 @@ function computeContainerDefinitions(
 
             // tslint:disable-next-line:max-line-length
             return pulumi.all([imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id])
-                            .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOpts.environment)) {
                     keyValuePairs.push({ name: key, value: imageOpts.environment[key] });

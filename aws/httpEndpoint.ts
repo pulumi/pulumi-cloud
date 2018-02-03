@@ -529,7 +529,7 @@ function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
 
     function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): pulumi.Output<ApigatewayIntegration> {
         return pulumi.all([op.uri, op.credentials, op.connectionId])
-                         .apply(([uri, credentials, connectionId]) => ({
+                     .apply(([uri, credentials, connectionId]) => ({
                 requestParameters: op.requestParameters,
                 passthroughBehavior: op.passthroughBehavior,
                 httpMethod: op.httpMethod,
@@ -637,25 +637,25 @@ function createPathSpecProxy(
 
     const uri =
         pulumi.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
-                  .apply(([targetStr, targetEndpoint]) => {
-                    let url = "";
-                    if (typeof targetStr === "string") {
-                        // For URL target, ensure there is a trailing `/`
-                        url = targetStr;
-                        if (!url.endsWith("/")) {
-                            url = url + "/";
-                        }
-                    } else {
-                        // For Endpoint target, construct an HTTP URL from the hostname and port
-                        url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
-                    }
+              .apply(([targetStr, targetEndpoint]) => {
+                  let url = "";
+                  if (typeof targetStr === "string") {
+                      // For URL target, ensure there is a trailing `/`
+                      url = targetStr;
+                      if (!url.endsWith("/")) {
+                          url = url + "/";
+                      }
+                  } else {
+                      // For Endpoint target, construct an HTTP URL from the hostname and port
+                      url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
+                  }
 
-                    if (useProxyPathParameter) {
-                        return `${url}{proxy}`;
-                    } else {
-                        return url;
-                    }
-                });
+                  if (useProxyPathParameter) {
+                      return `${url}{proxy}`;
+                  } else {
+                      return url;
+                  }
+              });
 
     const result: SwaggerOperationAsync = {
         "x-amazon-apigateway-integration": {

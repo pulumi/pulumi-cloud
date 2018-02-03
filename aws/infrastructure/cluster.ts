@@ -382,7 +382,7 @@ function getCloudFormationAsgTemplate(
 
     const subnetsIdsArray = pulumi.all(subnetIds);
     return pulumi.all([subnetsIdsArray, instanceLaunchConfigurationId])
-                     .apply(([array, configId]) => {
+                 .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'
     Outputs:
