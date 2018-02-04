@@ -325,7 +325,7 @@ function runCLICommand(
 
     const result = child_process.spawnSync(cmd, args, {
         input: stdin,
-        maxBuffer: (1 << 31),
+        maxBuffer: (1 << 30),
     });
 
     return { code: result.status, stdout: result.stdout.toString() };
