@@ -317,40 +317,18 @@ interface CommandResult {
 // Both stdout and stderr are redirected to process.stdout and process.stder by default.
 // If the [returnStdout] argument is `true`, stdout is not redirected and is instead returned with the promise.
 // If the [stdin] argument is defined, it's contents are piped into stdin for the child process.
-async function runCLICommand(
+function runCLICommand(
     cmd: string,
     args: string[],
     returnStdout?: boolean,
-    stdin?: string): Promise<CommandResult> {
-    return new Promise<CommandResult>((resolve, reject) => {
-        const p = child_process.spawn(cmd, args);
-        let result: string | undefined;
-        if (returnStdout) {
-            // We store the results from stdout in memory and will return them as a string.
-            const chunks: Buffer[] = [];
-            p.stdout.on("data", (chunk: Buffer) => {
-                chunks.push(chunk);
-            });
-            p.stdout.on("end", () => {
-                result = Buffer.concat(chunks).toString();
-            });
-        } else {
-            p.stdout.pipe(process.stdout);
-        }
-        p.stderr.pipe(process.stderr);
-        p.on("error", (err) => {
-            reject(err);
-        });
-        p.on("close", (code) => {
-            resolve({
-                code: code,
-                stdout: result,
-            });
-        });
-        if (stdin) {
-            p.stdin.end(stdin);
-        }
+    stdin?: string): CommandResult {
+
+    const result = child_process.spawnSync(cmd, args, {
+        input: stdin,
+        maxBuffer: (1 << 30),
     });
+
+    return { code: result.status, stdout: result.stdout.toString() };
 }
 
 // Store this so we can verify `docker` command is available only once per deployment.
@@ -386,7 +364,7 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
     // Verify that 'docker' is on the PATH and get the client/server versions
     if (!cachedDockerVersionString) {
         try {
-            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
+            const versionResult = runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
@@ -421,7 +399,7 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
     buildArgs.push(build.context); // push the docker build context onto the path.
 
     // Invoke Docker CLI commands to build and push.
-    const buildResult = await runCLICommand("docker", buildArgs);
+    const buildResult = runCLICommand("docker", buildArgs);
     if (buildResult.code) {
         throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
@@ -448,10 +426,10 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
 
         let loginResult: CommandResult;
         if (!dockerPasswordStdin) {
-            loginResult = await runCLICommand(
+            loginResult = runCLICommand(
                 "docker", ["login", "-u", username, "-p", password, registry]);
         } else {
-            loginResult = await runCLICommand(
+            loginResult = runCLICommand(
                 "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
         }
         if (loginResult.code) {
@@ -463,18 +441,18 @@ async function buildAndPushImage(imageName: string, container: cloud.Container,
         if (!repositoryUrl) {
             throw new Error("Expected repository URL to be defined during push");
         }
-        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
+        const tagResult = runCLICommand("docker", ["tag", imageName, repositoryUrl]);
         if (tagResult.code) {
             throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
         }
-        const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
+        const pushResult = runCLICommand("docker", ["push", repositoryUrl]);
         if (pushResult.code) {
             throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
         }
     }
 
     // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
+    const inspectResult = runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new Error(`No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
     }
