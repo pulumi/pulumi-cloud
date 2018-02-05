@@ -6,9 +6,6 @@
     "scripts": {
         "build": "tsc"
     },
-    "dependencies": {
-        "@pulumi/cloud": "latest"
-    },
     "devDependencies": {
         "@types/node": "^8.0.26",
         "@types/datadog-metrics": "^0.4.0",
@@ -16,5 +13,8 @@
         "typescript": "^2.1.4",
         "datadog-metrics": "^0.6.1",
         "debug": "^3.1.0"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest"
     }
 }

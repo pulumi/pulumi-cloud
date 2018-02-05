@@ -7,7 +7,6 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/cloud": "latest",
         "node-fetch": "^1.7.3",
         "redis": "^2.8.0"
     },
@@ -15,5 +14,8 @@
         "@types/node": "^8.0.27",
         "@types/node-fetch": "^1.6.7",
         "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest"
     }
 }

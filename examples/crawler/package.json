@@ -7,7 +7,6 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/cloud": "latest",
         "cheerio": "^1.0.0-rc.2",
         "node-fetch": "^1.7.3"
     },

@@ -2,10 +2,6 @@
 # yarn lockfile v1
 
 
-"@pulumi/cloud@latest":
-  version "0.9.11-17-gfabef2c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
-
 "@types/datadog-metrics@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@types/datadog-metrics/-/datadog-metrics-0.4.0.tgz#abbf0d3cef273981127debb5a7e099ffdd29b535"
