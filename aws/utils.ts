@@ -11,3 +11,11 @@ export function sha1hash(s: string): string {
     return shasum.digest("hex").substring(0, 8);
 }
 
+export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<string, U> {
+    const result: Record<string, U> = {};
+    for (const k of Object.keys(val)) {
+        result[k] = func(val[k]);
+    }
+
+    return result;
+}

@@ -12,7 +12,7 @@ import * as awsinfra from "./infrastructure";
 import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
-import { sha1hash } from "./utils";
+import * as utils from "./utils";
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -506,7 +506,7 @@ function getImageName(container: cloud.Container): string {
                 }
             }
         }
-        return createNameWithStackInfo(`${sha1hash(buildSig)}-container`);
+        return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
@@ -615,11 +615,11 @@ function computeImage(
 
         preEnv.IMAGE_DIGEST = imageDigest;
 
-        return pulumi.all([repository.repositoryUrl, pulumi.unwrap(preEnv)])
+        return pulumi.all([repository.repositoryUrl, pulumi.all(preEnv)])
                      .apply(([url, e]) => ({ image: url, environment: e }));
     }
     else if (container.image) {
-        return pulumi.unwrap(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
         preEnv.PULUMI_SRC = pulumi.runtime.serializeClosure(container.function)
@@ -627,7 +627,7 @@ function computeImage(
 
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return pulumi.unwrap(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -720,7 +720,7 @@ function getTaskRole(): aws.iam.Role {
         for (let i = 0; i < policies.length; i++) {
             const policyArn = policies[i];
             const _ = new aws.iam.RolePolicyAttachment(
-                createNameWithStackInfo(`task-${sha1hash(policyArn)}`), {
+                createNameWithStackInfo(`task-${utils.sha1hash(policyArn)}`), {
                     role: taskRole,
                     policyArn: policyArn,
                 }, { parent: getGlobalInfrastructureResource() });
@@ -913,15 +913,15 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 }
 
 function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
-    return pulumi.unwrap(ports, portToExposedPort => {
+    return pulumi.all(utils.apply(ports, portToExposedPort => {
         const inner: pulumi.Output<{ [port: string]: Endpoint }> =
-            pulumi.unwrap(portToExposedPort, exposedPort =>
+            pulumi.all(utils.apply(portToExposedPort, exposedPort =>
                 exposedPort.host.dnsName.apply(d => ({
                     port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d,
-                })));
+                }))));
 
         return inner;
-    });
+    }));
 }
 
 const volumeNames = new Set<string>();
@@ -956,7 +956,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     getVolumeName() {
         // Ensure this is unique to avoid conflicts both in EFS and in the
         // TaskDefinition we pass to ECS.
-        return sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${this.kind}:${this.name}`);
+        return utils.sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${this.kind}:${this.name}`);
     }
 
     getHostPath() {
@@ -982,7 +982,7 @@ export class HostPathVolume implements cloud.HostPathVolume {
     }
 
     getVolumeName() {
-        return sha1hash(`${this.kind}:${this.path}`);
+        return utils.sha1hash(`${this.kind}:${this.path}`);
     }
 
     getHostPath() {
@@ -1016,7 +1016,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
-        const containerEnv = pulumi.unwrap(container.environment || {});
+        const containerEnv = pulumi.all(container.environment || {});
 
         this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
             const awssdk = await import("aws-sdk");

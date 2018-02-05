@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
+import * as utils from "./utils";
 
 import { Function } from "./function";
 import { Endpoint } from "./service";
@@ -486,11 +487,11 @@ interface SwaggerSpec {
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
 function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
-    const pathsDeps = pulumi.unwrap(spec.paths, p => {
+    const pathsDeps = pulumi.all(utils.apply(spec.paths, p => {
         const temp: pulumi.Output<Record<string, SwaggerOperation>> =
-            pulumi.unwrap(p, x => resolveOperationDependencies(x));
+            pulumi.all(utils.apply(p, x => resolveOperationDependencies(x)));
         return temp;
-    });
+    }));
 
     // After all values have settled, we can produce the resulting string.
     return pathsDeps.apply(paths =>
