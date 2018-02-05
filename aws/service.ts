@@ -342,10 +342,15 @@ function buildAndPushImage(
     imageName: string, container: cloud.Container,
     repository: aws.ecr.Repository): pulumi.Output<string> {
 
+    // First build the image, collect its output digest as well as hte repo url and repo
+    // registry id.
     const outputs = pulumi.all([
         buildImageAsync(imageName, container, repository),
         repository.repositoryUrl, repository.registryId]);
 
+    // Use those then push the image (note: this will only happen during a normal update,
+    // not a preview).  Then just return the digest as the final result for our caller to
+    // use.
     return outputs.apply(([digest, repositoryUrl, registryId]) =>
         pushImageAsync(imageName, repositoryUrl, registryId).then(() => digest));
 }
