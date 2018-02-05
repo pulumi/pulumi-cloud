@@ -352,6 +352,9 @@ function buildAndPushImageSync(
         registryId: string, repositoryUrl: string): string {
 
     const deasynced = deasync(buildAndPushImageCB);
+
+    // We're about to block on async code by using the deasync library to pump. Because that pumping
+    // may can other code to run that creates resources, we have to reallow resource creation.
     try {
         (<any>pulumi).enableResourceCreation();
         return deasynced(imageName, container, registryId, repositoryUrl);
