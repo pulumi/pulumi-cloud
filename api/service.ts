@@ -49,13 +49,13 @@ export interface Container {
      * Optional environment variables to set and make available to the container
      * as it is running.
      */
-    environment?: {[name: string]: pulumi.ComputedValue<string>};
+    environment?: {[name: string]: pulumi.Input<string>};
     /**
      * The maximum amount of memory the container will be allowed to use. Maps to the Docker
      * `--memory` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    memory?: pulumi.ComputedValue<number>;
+    memory?: pulumi.Input<number>;
     /**
      * The amount of memory to reserve for the container, but the container will
      * be allowed to use more memory if it's available.  At least one of
@@ -63,7 +63,7 @@ export interface Container {
      * `--memory-reservation` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
-    memoryReservation?: pulumi.ComputedValue<number>;
+    memoryReservation?: pulumi.Input<number>;
     /**
      * An array of ports to publish from the container.  Ports are exposed using the TCP protocol.  If the [external]
      * flag is true, the port will be exposed to the Internet even if the service is running in a private network.
@@ -88,7 +88,7 @@ export interface Container {
      * information about the Docker `CMD` parameter, go to
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
-    command?: pulumi.ComputedValue<string[]>;
+    command?: pulumi.Input<string[]>;
 }
 
 /**
@@ -221,7 +221,7 @@ export interface Service {
      * The exposed hostname and port for connecting to the given containerName
      * on the given containerPort.
      */
-    endpoints: pulumi.Computed<{ [containerName: string]: { [port: number]: Endpoint } }>;
+    endpoints: pulumi.Output<{ [containerName: string]: { [port: number]: Endpoint } }>;
 
     /**
       * The exposed hostname and port for connecting to the given containerName
