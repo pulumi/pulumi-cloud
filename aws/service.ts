@@ -13,6 +13,7 @@ import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
          getGlobalInfrastructureResource, getNetwork } from "./shared";
 import * as utils from "./utils";
+import { String } from "aws-sdk/clients/marketplacemetering";
 
 // See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
 type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
@@ -338,127 +339,138 @@ let dockerPasswordStdin: boolean = false;
 
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
-function buildAndPushImage(imageName: string, container: cloud.Container,
-                           repository: aws.ecr.Repository): pulumi.Output<string> {
-    return repository.repositoryUrl.apply(async repositoryUrl => {
-        let build: cloud.ContainerBuild;
-        if (typeof container.build === "string") {
-            build = {
-                context: container.build,
-            };
-        } else if (container.build) {
-            build = container.build;
+function buildAndPushImage(
+    imageName: string, container: cloud.Container,
+    repository: aws.ecr.Repository): pulumi.Output<String> {
+
+    const outputs = pulumi.all([
+        pulumi.output(buildImageAsync(imageName, container, repository)),
+        pushImage(imageName, container, repository)]);
+
+    return outputs.apply(([digest, _]) => digest);
+}
+
+async function buildImageAsync(
+        imageName: string, container: cloud.Container,
+        repository: aws.ecr.Repository): Promise<String> {
+    let build: cloud.ContainerBuild;
+    if (typeof container.build === "string") {
+        build = {
+            context: container.build,
+        };
+    } else if (container.build) {
+        build = container.build;
+    } else {
+        throw new Error(`Cannot build a container with an empty build specification`);
+    }
+
+    // If the build context is missing, default it to the working directory.
+    if (!build.context) {
+        build.context = ".";
+    }
+
+    console.log(
+        `Building container image '${imageName}': context=${build.context}` +
+            (build.dockerfile ? `, dockerfile=${build.dockerfile}` : "") +
+                (build.args ? `, args=${JSON.stringify(build.args)}` : ""),
+    );
+
+    // Verify that 'docker' is on the PATH and get the client/server versions
+    if (!cachedDockerVersionString) {
+        try {
+            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
+            // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
+            // features we want to use.
+            cachedDockerVersionString = versionResult.stdout;
+            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
+        } catch (err) {
+            throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
+        }
+
+        // Decide whether to use --password or --password-stdin based on the client version.
+        try {
+            const versionData: any = JSON.parse(cachedDockerVersionString!);
+            const clientVersion: string = versionData.Client.Version;
+            if (semver.gte(clientVersion, "17.07.0", true)) {
+                dockerPasswordStdin = true;
+            }
+        } catch (err) {
+            console.log(`Could not process Docker version (${err})`);
+        }
+    }
+
+    // Prepare the build arguments.
+    const buildArgs: string[] = [ "build" ];
+    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
+    if (build.dockerfile) {
+        buildArgs.push(...[ "-f", build.dockerfile ]); // add a custom Dockerfile location.
+    }
+    if (build.args) {
+        for (const arg of Object.keys(build.args)) {
+            buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
+        }
+    }
+    buildArgs.push(build.context); // push the docker build context onto the path.
+
+    // Invoke Docker CLI commands to build and push.
+    const buildResult = await runCLICommand("docker", buildArgs);
+    if (buildResult.code) {
+        throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
+    }
+
+    // Finally, inspect the image so we can return the SHA digest.
+    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
+    if (inspectResult.code || !inspectResult.stdout) {
+        throw new Error(
+            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+    }
+    return inspectResult.stdout.trim();
+}
+
+function pushImage(
+    imageName: string, container: cloud.Container,
+    repository: aws.ecr.Repository): pulumi.Output<void> {
+
+    return pulumi.all([repository.repositoryUrl, repository.registryId])
+                 .apply(async ([repositoryUrl, registryId]) => {
+        // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
+        // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
+        // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+        if (!registryId) {
+            throw new Error("Expected registry ID to be defined during push");
+        }
+        const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+        const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+        const [username, password] = decodedCredentials.split(":");
+        if (!password || !username) {
+            throw new Error("Invalid credentials");
+        }
+        const registry = credentials.proxyEndpoint;
+
+        let loginResult: CommandResult;
+        if (!dockerPasswordStdin) {
+            loginResult = await runCLICommand(
+                "docker", ["login", "-u", username, "-p", password, registry]);
         } else {
-            throw new Error(`Cannot build a container with an empty build specification`);
+            loginResult = await runCLICommand(
+                "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
+        }
+        if (loginResult.code) {
+            throw new Error(`Failed to login to Docker registry ${registry}`);
         }
 
-        // If the build context is missing, default it to the working directory.
-        if (!build.context) {
-            build.context = ".";
+        // Tag and push the image to the remote repository.
+        if (!repositoryUrl) {
+            throw new Error("Expected repository URL to be defined during push");
         }
-
-        console.log(
-            `Building container image '${imageName}': context=${build.context}` +
-                (build.dockerfile ? `, dockerfile=${build.dockerfile}` : "") +
-                    (build.args ? `, args=${JSON.stringify(build.args)}` : ""),
-        );
-
-        // Verify that 'docker' is on the PATH and get the client/server versions
-        if (!cachedDockerVersionString) {
-            try {
-                const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
-                // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
-                // features we want to use.
-                cachedDockerVersionString = versionResult.stdout;
-                pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
-            } catch (err) {
-                throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
-            }
-
-            // Decide whether to use --password or --password-stdin based on the client version.
-            try {
-                const versionData: any = JSON.parse(cachedDockerVersionString!);
-                const clientVersion: string = versionData.Client.Version;
-                if (semver.gte(clientVersion, "17.07.0", true)) {
-                    dockerPasswordStdin = true;
-                }
-            } catch (err) {
-                console.log(`Could not process Docker version (${err})`);
-            }
+        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
+        if (tagResult.code) {
+            throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
         }
-
-        // Prepare the build arguments.
-        const buildArgs: string[] = [ "build" ];
-        buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
-        if (build.dockerfile) {
-            buildArgs.push(...[ "-f", build.dockerfile ]); // add a custom Dockerfile location.
+        const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
+        if (pushResult.code) {
+            throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
         }
-        if (build.args) {
-            for (const arg of Object.keys(build.args)) {
-                buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
-            }
-        }
-        buildArgs.push(build.context); // push the docker build context onto the path.
-
-        // Invoke Docker CLI commands to build and push.
-        const buildResult = await runCLICommand("docker", buildArgs);
-        if (buildResult.code) {
-            throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
-        }
-
-        // Skip the publication of the image if we're only planning.
-        if (pulumi.runtime.options.dryRun) {
-            console.log(`Skipping image publish during preview: ${imageName}`);
-        }
-        else {
-            // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
-            // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
-            // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-            const registryId = await repository.registryId;
-            if (!registryId) {
-                throw new Error("Expected registry ID to be defined during push");
-            }
-            const credentials = await aws.ecr.getCredentials({ registryId: registryId });
-            const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-            const [username, password] = decodedCredentials.split(":");
-            if (!password || !username) {
-                throw new Error("Invalid credentials");
-            }
-            const registry = credentials.proxyEndpoint;
-
-            let loginResult: CommandResult;
-            if (!dockerPasswordStdin) {
-                loginResult = await runCLICommand(
-                    "docker", ["login", "-u", username, "-p", password, registry]);
-            } else {
-                loginResult = await runCLICommand(
-                    "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
-            }
-            if (loginResult.code) {
-                throw new Error(`Failed to login to Docker registry ${registry}`);
-            }
-
-            // Tag and push the image to the remote repository.
-            if (!repositoryUrl) {
-                throw new Error("Expected repository URL to be defined during push");
-            }
-            const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
-            if (tagResult.code) {
-                throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
-            }
-            const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
-            if (pushResult.code) {
-                throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
-            }
-        }
-
-        // Finally, inspect the image so we can return the SHA digest.
-        const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
-        if (inspectResult.code || !inspectResult.stdout) {
-            throw new Error(
-                `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
-        }
-        return inspectResult.stdout.trim();
     });
 }
 
