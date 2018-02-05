@@ -340,18 +340,19 @@ let dockerPasswordStdin: boolean = false;
 // [repository].  It returns the digest of the built image.
 function buildAndPushImage(
     imageName: string, container: cloud.Container,
-    repository: aws.ecr.Repository): pulumi.Output<String> {
+    repository: aws.ecr.Repository): pulumi.Output<string> {
 
     const outputs = pulumi.all([
-        pulumi.output(buildImageAsync(imageName, container, repository)),
-        pushImage(imageName, container, repository)]);
+        buildImageAsync(imageName, container, repository),
+        repository.repositoryUrl, repository.registryId]);
 
-    return outputs.apply(([digest, _]) => digest);
+    return outputs.apply(([digest, repositoryUrl, registryId]) =>
+        pushImageAsync(imageName, repositoryUrl, registryId).then(() => digest));
 }
 
 async function buildImageAsync(
         imageName: string, container: cloud.Container,
-        repository: aws.ecr.Repository): Promise<String> {
+        repository: aws.ecr.Repository): Promise<string> {
     let build: cloud.ContainerBuild;
     if (typeof container.build === "string") {
         build = {
@@ -426,51 +427,47 @@ async function buildImageAsync(
     return inspectResult.stdout.trim();
 }
 
-function pushImage(
-    imageName: string, container: cloud.Container,
-    repository: aws.ecr.Repository): pulumi.Output<void> {
+async function pushImageAsync(
+    imageName: string, repositoryUrl: string, registryId: string) {
 
-    return pulumi.all([repository.repositoryUrl, repository.registryId])
-                 .apply(async ([repositoryUrl, registryId]) => {
-        // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
-        // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
-        // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-        if (!registryId) {
-            throw new Error("Expected registry ID to be defined during push");
-        }
-        const credentials = await aws.ecr.getCredentials({ registryId: registryId });
-        const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-        const [username, password] = decodedCredentials.split(":");
-        if (!password || !username) {
-            throw new Error("Invalid credentials");
-        }
-        const registry = credentials.proxyEndpoint;
+    // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
+    // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
+    // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+    if (!registryId) {
+        throw new Error("Expected registry ID to be defined during push");
+    }
+    const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+    const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+    const [username, password] = decodedCredentials.split(":");
+    if (!password || !username) {
+        throw new Error("Invalid credentials");
+    }
+    const registry = credentials.proxyEndpoint;
 
-        let loginResult: CommandResult;
-        if (!dockerPasswordStdin) {
-            loginResult = await runCLICommand(
-                "docker", ["login", "-u", username, "-p", password, registry]);
-        } else {
-            loginResult = await runCLICommand(
-                "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
-        }
-        if (loginResult.code) {
-            throw new Error(`Failed to login to Docker registry ${registry}`);
-        }
+    let loginResult: CommandResult;
+    if (!dockerPasswordStdin) {
+        loginResult = await runCLICommand(
+            "docker", ["login", "-u", username, "-p", password, registry]);
+    } else {
+        loginResult = await runCLICommand(
+            "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
+    }
+    if (loginResult.code) {
+        throw new Error(`Failed to login to Docker registry ${registry}`);
+    }
 
-        // Tag and push the image to the remote repository.
-        if (!repositoryUrl) {
-            throw new Error("Expected repository URL to be defined during push");
-        }
-        const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
-        if (tagResult.code) {
-            throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
-        }
-        const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
-        if (pushResult.code) {
-            throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
-        }
-    });
+    // Tag and push the image to the remote repository.
+    if (!repositoryUrl) {
+        throw new Error("Expected repository URL to be defined during push");
+    }
+    const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
+    if (tagResult.code) {
+        throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
+    }
+    const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
+    if (pushResult.code) {
+        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+    }
 }
 
 // parseDockerEngineUpdatesFromBuffer extracts messages from the Docker engine
