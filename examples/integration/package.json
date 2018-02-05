@@ -8,7 +8,6 @@
         "lint": "tslint -c ../tslint.json -p tsconfig.json"
     },
     "dependencies": {
-        "@pulumi/cloud": "latest",
         "jsforce": "^1.8.0",
         "request": "^2.81.0",
         "request-promise-native": "^1.0.4",
@@ -18,5 +17,8 @@
         "@types/node": "^8.0.27",
         "typescript": "^2.1.4",
         "tslint": "^5.7.0"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest"
     }
 }
