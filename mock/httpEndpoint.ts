@@ -45,8 +45,10 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
             if (typeof target === "string") {
                 url = target;
             } else {
-                const targetEndpoint = await target;
-                url = `http://${targetEndpoint!.hostname}:${targetEndpoint!.port}`;
+                // We're in tests, so the endpoint won't be closure serialized.  Just grab out its
+                // value here directly.
+                const targetEndpoint = await utils.serialize(target);
+                url = `http://${targetEndpoint.get().hostname}:${targetEndpoint.get().port}`;
             }
             app.use(path, httpProxy({target: url}));
         };
@@ -170,7 +172,7 @@ class HttpDeployment implements cloud.HttpDeployment {
 
     constructor(app: express.Application, port?: number) {
         const server: http.Server = app.listen(port || 0);
-        this.url = Promise.resolve(`http://localhost:${server.address().port}`);
+        this.url = pulumi.output(`http://localhost:${server.address().port}`);
         this.customDomainNames = [];
     }
 }

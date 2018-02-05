@@ -7,6 +7,7 @@ import * as cloud from "@pulumi/cloud";
 import * as assert from "assert";
 import * as chai from "chai";
 import * as supertest from "supertest";
+import * as utils from "../../utils";
 
 declare module "assert" {
     function throwsAsync(body: () => Promise<void>): Promise<void>;
@@ -41,7 +42,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect(200);
         });
 
@@ -51,7 +52,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect(200);
         });
 
@@ -61,7 +62,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/frob").expect(404);
         });
 
@@ -74,7 +75,7 @@ describe("HttpEndpoint", () => {
                 throw new Error("Should not have been called");
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect(200);
         });
 
@@ -87,7 +88,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect(200);
         });
 
@@ -98,7 +99,7 @@ describe("HttpEndpoint", () => {
                 next();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect(200);
         });
 
@@ -110,7 +111,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/goo?name=baz&color=purple").expect(200);
         });
 
@@ -121,7 +122,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/goo?name[]=baz&name[]=quux").expect(200);
         });
 
@@ -131,7 +132,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").expect("ok");
         });
 
@@ -142,7 +143,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).get("/").set({ customheader: "value" }).expect(200);
         });
     });
@@ -155,7 +156,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).post("/").send("body-content").expect(200);
         });
 
@@ -166,7 +167,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).post("/").send("body-content").expect(200);
         });
     });
@@ -179,7 +180,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).delete("/").expect(200);
         });
     });
@@ -192,7 +193,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).put("/").expect(200);
         });
 
@@ -203,7 +204,7 @@ describe("HttpEndpoint", () => {
                 res.status(200).write("ok").end();
             });
 
-            const address = await app.publish().url;
+            const address = (await utils.serialize(app.publish().url)).get();
             await supertest(address).put("/").send("body-content").expect(200);
         });
     });

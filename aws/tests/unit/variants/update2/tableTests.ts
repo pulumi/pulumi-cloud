@@ -9,11 +9,14 @@ namespace updateProgramTests {
     export async function testPersistentTable() {
         // in v2 of the program make sure only half the data is still there.
         for (let i = 0; i < 10; i++) {
-            const result = await table1.get({[table1.primaryKey]: "" + i });
+            const result = await table1.get({[table1.primaryKey.get()]: "" + i });
             if (i % 2 === 0) {
                 assert.equal(undefined, result);
             }
             else {
+                if (!result) {
+                    throw new Error(`Didn't retrieve result.  PrimaryKey is '${table1.primaryKey.get()}' i='${i}'`)
+                }
                 assert.equal(result.value1, i);
             }
         }

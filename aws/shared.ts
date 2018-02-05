@@ -102,11 +102,11 @@ export function getNetwork(): Network | undefined {
             // Use an exsting VPC for this private network
             network = {
                 numberOfAvailabilityZones: config.externalSubnets.length,
-                vpcId: Promise.resolve(config.externalVpcId),
+                vpcId: pulumi.output(config.externalVpcId),
                 privateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => Promise.resolve(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => Promise.resolve(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => Promise.resolve(s)),
+                subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
+                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
+                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
             };
         }
     }
@@ -141,8 +141,9 @@ export function getCluster(): Cluster | undefined {
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
             cluster = {
-                ecsClusterARN: Promise.resolve(config.ecsClusterARN),
-                securityGroupId: Promise.resolve(config.ecsClusterSecurityGroup),
+                ecsClusterARN: pulumi.output(config.ecsClusterARN),
+                securityGroupId: config.ecsClusterSecurityGroup
+                    ? pulumi.output(config.ecsClusterSecurityGroup) : undefined,
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }
