@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@pulumi/aws@0.9.11-15-g5afd996":
-  version "0.9.11-15-g5afd996"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.9.11-15-g5afd996.tgz#590fa35db744d1ea75e69e2f3b3c5bc9835fcbd4"
+"@pulumi/aws@0.9.12":
+  version "0.9.12"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.9.12.tgz#762de6e75f306f426529a6fd786ab503f7c66f79"
 
 "@pulumi/cloud@latest":
   version "0.9.11-17-gfabef2c"
