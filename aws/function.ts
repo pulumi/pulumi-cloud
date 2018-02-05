@@ -34,8 +34,8 @@ export class Function extends pulumi.ComponentResource {
             //     add VPC access will currently fail due to an issue in the Terraform provider.
             options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
             options.vpcConfig = {
-                securityGroupIds: <Promise<string[]>>Promise.all(network!.securityGroupIds),
-                subnetIds: <Promise<string[]>>Promise.all(network!.subnetIds),
+                securityGroupIds: pulumi.all(network!.securityGroupIds),
+                subnetIds: pulumi.all(network!.subnetIds),
             };
         }
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
@@ -43,7 +43,7 @@ export class Function extends pulumi.ComponentResource {
         // And then a log group and subscription filter for that lambda.
         const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
             logGroup: new aws.cloudwatch.LogGroup(name, {
-                name: this.lambda.name.then((n: string | undefined) => n && ("/aws/lambda/" + n)),
+                name: this.lambda.name.apply(n => "/aws/lambda/" + n),
                 retentionInDays: 1,
             }, { parent: this }),
             destinationArn: getLogCollector().arn,

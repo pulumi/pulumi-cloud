@@ -9,13 +9,16 @@ namespace updateProgramTests {
     export async function testPersistentTable() {
         // in v1 of the program make sure the data is still there.
         for (let i = 0; i < 10; i++) {
-            const result = await table1.get({[table1.primaryKey]: "" + i });
+            const result = await table1.get({[table1.primaryKey.get()]: "" + i });
+            if (!result) {
+                throw new Error(`Didn't retrieve result.  PrimaryKey is '${table1.primaryKey.get()}' i='${i}'`)
+            }
             assert.equal(result.value1, i);
         }
 
         // now delete half the data.
         for (let i = 0; i < 10; i += 2) {
-            await table1.delete({[table1.primaryKey]: "" + i });
+            await table1.delete({[table1.primaryKey.get()]: "" + i });
         }
     }
 }

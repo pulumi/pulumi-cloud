@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as mime from "mime";
 import * as fspath from "path";
 import * as pulumi from "pulumi";
+import * as utils from "./utils";
 
 import { Function } from "./function";
 import { Endpoint } from "./service";
@@ -271,22 +272,24 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
             let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
             if (typeof route.target !== "string") {
-                async function getTargetArn() {
-                    const endpoint = (await route.target) as Endpoint;
+                const targetArn = route.target.apply(t => {
+                    const endpoint = t as Endpoint;
                     if (!endpoint.loadBalancer) {
                         throw new Error("AWS endpoint proxy requires an AWS Endpoint");
                     }
-                    const loadBalancerType = await endpoint.loadBalancer.loadBalancerType;
-                    if (loadBalancerType === "application") {
-                        // We can only support proxying to an Endpoint if it is backed by an NLB, which will only be the
-                        // case for cloud.Service ports exposed as type "tcp".
-                        throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
-                    }
-                    return endpoint.loadBalancer.arn;
-                }
+                    return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
+                        if (loadBalancerType === "application") {
+                            // We can only support proxying to an Endpoint if it is backed by an
+                            // NLB, which will only be the case for cloud.Service ports exposed as
+                            // type "tcp".
+                            throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                        }
+                        return endpoint.loadBalancer.arn;
+                    });
+                });
                 const name = apiName + sha1hash(route.path);
                 vpcLink = new aws.apigateway.VpcLink(name, {
-                    targetArn: getTargetArn(),
+                    targetArn: targetArn,
                 });
             }
 
@@ -404,26 +407,29 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
+        const swaggerStr = createSwaggerString(swagger);
         const api = new aws.apigateway.RestApi(name, {
-            body: createSwaggerString(swagger),
+            body: swaggerStr,
         }, { parent: this });
 
-        const bodyHash = createSwaggerHash(swagger);
+        // bodyHash produces a hash that let's us know when any paths change in the swagger spec.
+        const bodyHash = swaggerStr.apply(s => sha1hash(s));
 
         // we need to ensure a fresh deployment any time our body changes. So include the hash as
         // part of the deployment urn.
         const deployment = new aws.apigateway.Deployment(name, {
             restApi: api,
             stageName: "",
-            // Note: We set `variables` here because it forces recreation of the Deployment object whenever the body
-            // hash changes.  Because we use a blank stage name above, there will not actually be any stage created in
-            // AWS, and thus these variables will not actually end up anywhere.  But this will still cause the right
-            // replacement of the Deployment when needed.  The Stage allocated below will be the stable stage that
-            // always points to the latest deployment of the API.
+            // Note: We set `variables` here because it forces recreation of the Deployment object
+            // whenever the body hash changes.  Because we use a blank stage name above, there will
+            // not actually be any stage created in AWS, and thus these variables will not actually
+            // end up anywhere.  But this will still cause the right replacement of the Deployment
+            // when needed.  The Stage allocated below will be the stable stage that always points
+            // to the latest deployment of the API.
             variables: {
                 version: bodyHash,
             },
-            description: bodyHash.then(hash => `Deployment of version ${hash || "<computed>"}`),
+            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
         }, { parent: this });
 
         const stage = new aws.apigateway.Stage(name, {
@@ -450,8 +456,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                         action: "lambda:invokeFunction",
                         function: lambda.lambda,
                         principal: "apigateway.amazonaws.com",
-                        sourceArn: deployment.executionArn.then((arn: aws.ARN | undefined) =>
-                            arn && (arn + stageName + "/" + method + path)),
+                        sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
                     }, { parent: this });
                 }
             }
@@ -462,7 +467,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             HttpDeployment.registerCustomDomains(this, name, api, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
-        this.url = deployment.invokeUrl.then(url => url ? (url + stageName + "/") : undefined);
+        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
         super.registerOutputs({
@@ -481,67 +486,62 @@ interface SwaggerSpec {
 
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
-async function createSwaggerString(spec: SwaggerSpec): Promise<string> {
-    const paths: {[path: string]: {[method: string]: SwaggerOperation} } = {};
-    for (const path of Object.keys(spec.paths)) {
-        paths[path] = {};
-        for (const method of Object.keys(spec.paths[path])) {
-            paths[path][method] = await resolveOperationPromises(spec.paths[path][method]);
-        }
-    }
+function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
+    const pathsDeps = pulumi.all(utils.apply(spec.paths, p => {
+        const temp: pulumi.Output<Record<string, SwaggerOperation>> =
+            pulumi.all(utils.apply(p, x => resolveOperationDependencies(x)));
+        return temp;
+    }));
 
     // After all values have settled, we can produce the resulting string.
-    return JSON.stringify({
-        swagger: spec.swagger,
-        info: spec.info,
-        paths: paths,
-        "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
-        // Map paths the user doesn't have access to as 404.
-        // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
-        "x-amazon-apigateway-gateway-responses": {
-            "MISSING_AUTHENTICATION_TOKEN": {
-                "statusCode": 404,
-                "responseTemplates": {
-                    "application/json": "{\"message\": \"404 Not found\" }",
+    return pathsDeps.apply(paths =>
+        JSON.stringify({
+            swagger: spec.swagger,
+            info: spec.info,
+            paths: paths,
+            "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+            // Map paths the user doesn't have access to as 404.
+            // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
+            "x-amazon-apigateway-gateway-responses": {
+                "MISSING_AUTHENTICATION_TOKEN": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
+                },
+                "ACCESS_DENIED": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
                 },
             },
-            "ACCESS_DENIED": {
-                "statusCode": 404,
-                "responseTemplates": {
-                    "application/json": "{\"message\": \"404 Not found\" }",
-                },
-            },
-        },
-    });
+        }));
 
     // local functions
-    async function resolveOperationPromises(op: SwaggerOperationAsync): Promise<SwaggerOperation> {
-        return {
-            parameters: op.parameters,
-            responses: op.responses,
-            "x-amazon-apigateway-integration": await resolveIntegrationPromises(op["x-amazon-apigateway-integration"]),
-        };
+    function resolveOperationDependencies(op: SwaggerOperationAsync): pulumi.Output<SwaggerOperation> {
+        return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
+            integration => ({
+                    parameters: op.parameters,
+                    responses: op.responses,
+                    "x-amazon-apigateway-integration": integration,
+                }));
     }
 
-    async function resolveIntegrationPromises(op: ApigatewayIntegrationAsync): Promise<ApigatewayIntegration> {
-        return {
-            requestParameters: op.requestParameters,
-            passthroughBehavior: op.passthroughBehavior,
-            httpMethod: op.httpMethod,
-            type: op.type,
-            responses: op.responses,
-            connectionType: op.connectionType,
-            uri: await op.uri,
-            credentials: await op.credentials,
-            connectionId: await op.connectionId,
-        };
+    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): pulumi.Output<ApigatewayIntegration> {
+        return pulumi.all([op.uri, op.credentials, op.connectionId])
+                     .apply(([uri, credentials, connectionId]) => ({
+                requestParameters: op.requestParameters,
+                passthroughBehavior: op.passthroughBehavior,
+                httpMethod: op.httpMethod,
+                type: op.type,
+                responses: op.responses,
+                connectionType: op.connectionType,
+                uri: uri,
+                credentials: credentials,
+                connectionId: connectionId,
+            }));
     }
-}
-
-// createSwaggerHash produces a hash that let's us know when any paths change in the swagger spec.
-async function createSwaggerHash(spec: SwaggerSpec): Promise<string> {
-    const str = await createSwaggerString(spec);
-    return sha1hash(str);
 }
 
 interface SwaggerInfo {
@@ -565,9 +565,9 @@ interface ApigatewayIntegration extends ApigatewayIntegrationBase {
 }
 
 interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
-    uri: Promise<string>;
-    credentials?: Promise<string>;
-    connectionId?: Promise<string>;
+    uri: pulumi.Output<string>;
+    credentials?: pulumi.Output<string>;
+    connectionId?: pulumi.Output<string>;
 }
 
 interface SwaggerOperationAsync {
@@ -618,15 +618,12 @@ function createBaseSpec(apiName: string): SwaggerSpec {
 
 function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
     const region = aws.config.requireRegion();
-
-    async function computeUri() {
-        const lambdaARN: aws.ARN = await lambda.arn || "computed(lambda.arn)";
-        return "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations";
-    }
+    const uri = lambda.arn.apply(lambdaARN =>
+        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
 
     return {
         "x-amazon-apigateway-integration": {
-            uri: computeUri(),
+            uri: uri,
             passthroughBehavior: "when_no_match",
             httpMethod: "POST",
             type: "aws_proxy",
@@ -639,28 +636,28 @@ function createPathSpecProxy(
     vpcLink: aws.apigateway.VpcLink | undefined,
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
-    async function computeUri() {
-        const targetValue = await target;
-        let url = "";
-        if (targetValue === undefined) {
-            // Use an invlaid dummy URL during preview
-            url = "<computed>";
-        } else if (typeof targetValue === "string") {
-            // For URL target, ensure there is a trailing `/`
-            url = targetValue;
-            if (!url.endsWith("/")) {
-                url = url + "/";
-            }
-        } else {
-            // For Endpoint target, construct an HTTP URL from the hostname and port
-            url = `http://${targetValue.hostname}:${targetValue.port}/`;
-        }
-        if (useProxyPathParameter) {
-            return `${url}{proxy}`;
-        } else {
-            return url;
-        }
-    }
+    const uri =
+        pulumi.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
+              .apply(([targetStr, targetEndpoint]) => {
+                  let url = "";
+                  if (typeof targetStr === "string") {
+                      // For URL target, ensure there is a trailing `/`
+                      url = targetStr;
+                      if (!url.endsWith("/")) {
+                          url = url + "/";
+                      }
+                  } else {
+                      // For Endpoint target, construct an HTTP URL from the hostname and port
+                      url = `http://${targetEndpoint.hostname}:${targetEndpoint.port}/`;
+                  }
+
+                  if (useProxyPathParameter) {
+                      return `${url}{proxy}`;
+                  } else {
+                      return url;
+                  }
+              });
+
     const result: SwaggerOperationAsync = {
         "x-amazon-apigateway-integration": {
             responses: {
@@ -668,11 +665,11 @@ function createPathSpecProxy(
                     statusCode: "200",
                 },
             },
-            uri: computeUri(),
+            uri: uri,
             passthroughBehavior: "when_no_match",
             httpMethod: "ANY",
             connectionType: vpcLink ? "VPC_LINK" : undefined,
-            connectionId: vpcLink ? vpcLink.id.then(s => s || "<undefined>") : undefined,
+            connectionId: vpcLink ? vpcLink.id : undefined,
             type: "http_proxy",
         },
     };
@@ -698,19 +695,8 @@ function createPathSpecObject(
 
     const region = aws.config.requireRegion();
 
-    async function computeCredentials() {
-        const roleARN: aws.ARN = await role.arn || "computed(role.arn)";
-        return roleARN;
-    }
-
-    async function computeUri() {
-        const bucketName: string = await bucket.bucket || "computed(bucket.name)";
-
-        const uri = `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${
-            (pathParameter ? `/{${pathParameter}}` : ``)}`;
-
-        return uri;
-    }
+    const uri = bucket.bucket.apply(bucketName =>
+        `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${(pathParameter ? `/{${pathParameter}}` : ``)}`);
 
     const result: SwaggerOperationAsync = {
         responses: {
@@ -730,8 +716,8 @@ function createPathSpecObject(
             },
         },
         "x-amazon-apigateway-integration": {
-            credentials: computeCredentials(),
-            uri: computeUri(),
+            credentials: role.arn,
+            uri: uri,
             passthroughBehavior: "when_no_match",
             httpMethod: "GET",
             type: "aws",

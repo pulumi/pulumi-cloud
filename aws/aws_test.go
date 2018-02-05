@@ -37,6 +37,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud-aws",
 			},
 		},
@@ -48,6 +49,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -77,6 +79,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -143,6 +146,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -154,6 +158,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
@@ -184,6 +189,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
@@ -227,7 +233,7 @@ func Test_Examples(t *testing.T) {
 						assert.Equal(t, "text/html", contentType)
 						bytes, err := ioutil.ReadAll(resp.Body)
 						assert.NoError(t, err)
-						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+						t.Logf("GET %v [%v/%v]: %v", baseURL+"nginx", resp.StatusCode, contentType, string(bytes))
 					}
 					{
 						resp, err := http.Get(baseURL + "nginx/doesnotexist")
@@ -237,7 +243,7 @@ func Test_Examples(t *testing.T) {
 						assert.Equal(t, "text/html", contentType)
 						bytes, err := ioutil.ReadAll(resp.Body)
 						assert.NoError(t, err)
-						t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+						t.Logf("GET %v [%v/%v]: %v", baseURL+"nginx/doesnotexist", resp.StatusCode, contentType, string(bytes))
 					}
 				}
 
@@ -337,6 +343,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -425,6 +432,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "aws",
 			},
 			Dependencies: []string{
+				"pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},

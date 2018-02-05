@@ -1,6 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import { Output } from "pulumi";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
@@ -15,7 +16,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: Promise<cloud.Endpoint> = nginx.getEndpoint();
+export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
@@ -137,12 +138,24 @@ let builtService = new cloud.Service("examples-nginx2", {
 // expose some APIs meant for testing purposes.
 let api = new cloud.HttpEndpoint("examples-containers");
 api.get("/test", async (req, res) => {
-    res.json({
-        nginx: await nginx.getEndpoint(),
-        mongodb: await mongodb.getEndpoint(),
-        nginx2: await builtService.getEndpoint(),
-    });
+    try {
+        res.json({
+            nginx: await nginx.getEndpoint(),
+            mongodb: await mongodb.getEndpoint(),
+            nginx2: await builtService.getEndpoint(),
+        });
+    } catch (err) {
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
+    }
 });
+
+function errorJSON(err: any) {
+    const result: any = Object.create(null);
+    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
+    return result;
+}
+
 api.get("/", async (req, res) => {
     try {
         // Use the NGINX or Redis Services to respond to the request.
@@ -162,8 +175,8 @@ api.get("/", async (req, res) => {
         res.setHeader("X-Powered-By", "nginx");
         res.end(buffer);
     } catch (err) {
-        console.error(err);
-        res.status(500).end(`Pulumi proxy service error: ${err}`);
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
 api.get("/run", async (req, res) => {
@@ -176,8 +189,8 @@ api.get("/run", async (req, res) => {
         await Promise.all(tasks);
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Error running task." });
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
 api.get("/custom", async (req, res) => {
@@ -191,9 +204,9 @@ api.get("/custom", async (req, res) => {
         res.setHeader("X-Powered-By", "custom web server");
         res.end(buffer);
     } catch (err) {
-        console.error(err);
-        res.status(500).end(`Pulumi proxy service error: ${err}`);
+        console.error(errorJSON(err));
+        res.status(500).json(errorJSON(err));
     }
 });
-api.proxy("/nginx", nginx.getEndpoint());
+api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
 export let frontendURL = api.publish().url;

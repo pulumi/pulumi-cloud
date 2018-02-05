@@ -686,6 +686,10 @@ proxy-addr@~2.0.2:
     forwarded "~0.1.2"
     ipaddr.js "1.5.2"
 
+pulumi@latest:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/pulumi/-/pulumi-0.0.1.tgz#7d28a3949b98c1729c769851cbe96dc24c5bf882"
+
 qs@6.5.1:
   version "6.5.1"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.1.tgz#349cdf6eef89ec45c12d7d5eb3fc0c870343a6d8"

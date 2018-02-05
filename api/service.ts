@@ -221,7 +221,7 @@ export interface Service {
      * The exposed hostname and port for connecting to the given containerName
      * on the given containerPort.
      */
-    endpoints: Promise<{ [containerName: string]: { [port: number]: Endpoint } }>;
+    endpoints: pulumi.Computed<{ [containerName: string]: { [port: number]: Endpoint } }>;
 
     /**
       * The exposed hostname and port for connecting to the given containerName
@@ -254,7 +254,7 @@ export interface TaskRunOptions {
     /**
      * Optional environment variables to override those set in the container definition.
      */
-    environment?: {[name: string]: pulumi.ComputedValue<string>};
+    environment?: Record<string, string>;
     /**
      * The properties of the host where this task can run.
      */

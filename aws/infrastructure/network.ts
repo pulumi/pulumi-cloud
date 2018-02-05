@@ -64,6 +64,7 @@ export class Network {
         });
 
         this.natGateways = [];
+
         this.subnetIds = [];
         this.publicSubnetIds = [];
 
