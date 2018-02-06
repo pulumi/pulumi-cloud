@@ -24,8 +24,19 @@ if (!provider) {
     // console.log(`Warning: Provider not given.  Falling back to ${provider} provider.`);
 }
 
-const frameworkModule = `@pulumi/cloud-${provider}`;
+// Load the implementation of @pulumi/cloud for the target provider.
+function loadFrameworkModule(provider: string) {
+    const frameworkModule = `@pulumi/cloud-${provider}`;
+    pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
+    try {
+        return require(frameworkModule);
+    } catch {
+        throw new Error(`
+Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no ${frameworkModule} module is installed.  
+Install it now or select another provider implementation with the "cloud:config:provider" setting.`
+        );
+    }
+}
 
-pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
-module.exports = require(frameworkModule);
+module.exports = loadFrameworkModule(provider);
 
