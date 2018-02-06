@@ -6,10 +6,6 @@
   version "0.9.12-3-gf56031a"
   resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.9.12-3-gf56031a.tgz#95fb0fdd9d7fc7fe6f06ada866d997e875604a1d"
 
-"@pulumi/cloud@latest":
-  version "0.9.11-17-gfabef2c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
-
 "@types/aws-sdk@^2.7.0":
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/@types/aws-sdk/-/aws-sdk-2.7.0.tgz#83588b3d14ebdca1d4ce5e023387577568ce82f3"
@@ -239,10 +235,6 @@ path-is-absolute@^1.0.0:
 path-parse@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.5.tgz#3c1adf871ea9cd6c9431b6ea2bd74a0ff055c4c1"
-
-pulumi@latest:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/pulumi/-/pulumi-0.0.1.tgz#7d28a3949b98c1729c769851cbe96dc24c5bf882"
 
 punycode@1.3.2:
   version "1.3.2"
