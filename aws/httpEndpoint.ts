@@ -23,7 +23,7 @@ export interface StaticRoute {
 // ProxyRoute is a registered proxy route, proxying to either a URL or cloud.Endpoint.
 export interface ProxyRoute {
     path: string;
-    target: string | pulumi.Computed<cloud.Endpoint>;
+    target: string | pulumi.Output<cloud.Endpoint>;
 }
 
 // Route is a registered dynamic route, backed by a serverless Lambda.
@@ -36,7 +36,7 @@ export interface Route {
 // AWSDomain represents a domain with an SSL/TLS certificate available in AWS.
 export interface AWSDomain {
     domainName: string;
-    certificateArn: pulumi.ComputedValue<string>;
+    certificateArn: pulumi.Input<string>;
 }
 
 // Domain represents a hosted domain and associated SSL/TLS certificates.
@@ -70,7 +70,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
         this.staticRoutes.push({ path, localPath, options: options || {} });
     }
 
-    public proxy(path: string, target: string | pulumi.Computed<cloud.Endpoint>) {
+    public proxy(path: string, target: string | pulumi.Output<cloud.Endpoint>) {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
@@ -127,8 +127,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
     public routes: Route[];
     public staticRoutes: StaticRoute[];
-    public /*out*/ readonly url: pulumi.Computed<string>; // the URL for this deployment.
-    public /*out*/ readonly customDomainNames: pulumi.Computed<string>[]; // any custom domain names.
+    public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
+    public /*out*/ readonly customDomainNames: pulumi.Output<string>[]; // any custom domain names.
     public /*out*/ readonly customDomains: aws.apigateway.DomainName[]; // AWS DomainName objects for custom domains.
 
     private static registerStaticRoutes(parent: pulumi.Resource, apiName: string,
@@ -632,12 +632,12 @@ function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsyn
 }
 
 function createPathSpecProxy(
-    target: string | pulumi.Computed<cloud.Endpoint>,
+    target: string | pulumi.Output<cloud.Endpoint>,
     vpcLink: aws.apigateway.VpcLink | undefined,
     useProxyPathParameter: boolean): SwaggerOperationAsync {
 
     const uri =
-        pulumi.all([<string>target, <pulumi.Computed<cloud.Endpoint>>target])
+        pulumi.all([<string>target, <pulumi.Output<cloud.Endpoint>>target])
               .apply(([targetStr, targetEndpoint]) => {
                   let url = "";
                   if (typeof targetStr === "string") {

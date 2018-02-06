@@ -84,11 +84,11 @@ export class Cluster {
     /**
      * The ECS Cluster ARN.
      */
-    public readonly ecsClusterARN: pulumi.Computed<string>;
+    public readonly ecsClusterARN: pulumi.Output<string>;
     /**
      * The ECS Cluster's Security Group ID.
      */
-    public readonly securityGroupId?: pulumi.Computed<string>;
+    public readonly securityGroupId?: pulumi.Output<string>;
     /**
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
@@ -205,7 +205,7 @@ export class Cluster {
         }
 
         // If requested, add a new EC2 KeyPair for SSH access to the instances.
-        let keyName: pulumi.Computed<string> | undefined;
+        let keyName: pulumi.Output<string> | undefined;
         if (args.publicKey) {
             const key = new aws.ec2.KeyPair(name, {
                 publicKey: args.publicKey,
@@ -377,8 +377,8 @@ function getCloudFormationAsgTemplate(
     instanceName: string,
     minSize: number,
     maxSize: number,
-    instanceLaunchConfigurationId: pulumi.Computed<string>,
-    subnetIds: pulumi.Computed<string>[]): pulumi.Computed<string> {
+    instanceLaunchConfigurationId: pulumi.Output<string>,
+    subnetIds: pulumi.Output<string>[]): pulumi.Output<string> {
 
     const subnetsIdsArray = pulumi.all(subnetIds);
     return pulumi.all([subnetsIdsArray, instanceLaunchConfigurationId])

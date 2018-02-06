@@ -555,7 +555,7 @@ function computeImage(
         ports: ExposedPorts | undefined,
         repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
     // Start with a copy from the container specification.
-    const preEnv: {[key: string]: pulumi.ComputedValue<string>} =
+    const preEnv: {[key: string]: pulumi.Input<string>} =
         <any>Object.assign({}, container.environment || {});
 
     // Now add entries for service discovery amongst containers exposing endpoints.
@@ -831,7 +831,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: awsinfra.Cluster;
     public readonly ecsService: aws.ecs.Service;
 
-    public readonly endpoints: pulumi.Computed<Endpoints>;
+    public readonly endpoints: pulumi.Output<Endpoints>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 

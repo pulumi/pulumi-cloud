@@ -7,8 +7,8 @@ import * as utils from "./utils";
 const usedNames: { [name: string]: string } = Object.create(null);
 
 export class Table implements cloud.Table {
-    public readonly primaryKey: pulumi.Computed<string>;
-    public readonly primaryKeyType: pulumi.Computed<string>;
+    public readonly primaryKey: pulumi.Output<string>;
+    public readonly primaryKeyType: pulumi.Output<string>;
 
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
@@ -17,8 +17,8 @@ export class Table implements cloud.Table {
     public update: (query: Object, updates: Object) => Promise<void>;
 
     constructor(name: string,
-                primaryKey: pulumi.ComputedValue<string> = "id",
-                primaryKeyType: pulumi.ComputedValue<string> = "string") {
+                primaryKey: pulumi.Input<string> = "id",
+                primaryKeyType: pulumi.Input<string> = "string") {
 
         this.primaryKey = pulumi.output(primaryKey);
         this.primaryKeyType = pulumi.output(primaryKeyType);

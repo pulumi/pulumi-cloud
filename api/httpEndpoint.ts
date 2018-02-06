@@ -153,7 +153,7 @@ export interface HttpEndpoint {
      *               URL.  If an Endpoint is provided, it can be any endpoint exposed by the stack, including endpoints
      *               which are not exposed directly to the Internet.
      */
-    proxy(path: string, target: string | pulumi.Computed<Endpoint>): void;
+    proxy(path: string, target: string | pulumi.Output<Endpoint>): void;
 
     /**
      * Routes any requests with given HTTP method on the given path to the
@@ -238,13 +238,13 @@ export interface HttpDeployment {
     /**
      * The URL at which the HttpDeployment is available to the Internet.
      */
-    url: pulumi.Computed<string>;
+    url: pulumi.Output<string>;
     /**
      * An optional list of custom domain names, each corresponding to a
      * previous call to attachCustomDomain on the HttpEndpoint.  Each name
      * should be mapped using a DNS A record.
      */
-    customDomainNames: pulumi.Computed<string>[];
+    customDomainNames: pulumi.Output<string>[];
 }
 
 /**

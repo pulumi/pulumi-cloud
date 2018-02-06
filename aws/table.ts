@@ -16,8 +16,8 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
 const consistentRead = true;
 
 export class Table extends pulumi.ComponentResource implements cloud.Table {
-    public readonly primaryKey: pulumi.Computed<string>;
-    public readonly primaryKeyType: pulumi.Computed<string>;
+    public readonly primaryKey: pulumi.Output<string>;
+    public readonly primaryKeyType: pulumi.Output<string>;
     public readonly dynamodbTable: aws.dynamodb.Table;
 
     public get: (query: Object) => Promise<any>;
@@ -27,8 +27,8 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
     public update: (query: Object, updates: Object) => Promise<void>;
 
     constructor(name: string,
-                primaryKey?: pulumi.ComputedValue<string>,
-                primaryKeyType?: pulumi.ComputedValue<cloud.PrimaryKeyType>,
+                primaryKey?: pulumi.Input<string>,
+                primaryKeyType?: pulumi.Input<cloud.PrimaryKeyType>,
                 opts?: pulumi.ResourceOptions) {
         if (primaryKey === undefined) {
             primaryKey = "id";

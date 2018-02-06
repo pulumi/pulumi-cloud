@@ -13,7 +13,7 @@ const usedNames: { [name: string]: string } = Object.create(null);
 
 export class HttpEndpoint implements cloud.HttpEndpoint {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
-    public proxy: (path: string, target: string | pulumi.Computed<cloud.Endpoint>) => void;
+    public proxy: (path: string, target: string | pulumi.Output<cloud.Endpoint>) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
     public get: (path: string, ...handlers: cloud.RouteHandler[]) => void;
     public put: (path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -167,8 +167,8 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 }
 
 class HttpDeployment implements cloud.HttpDeployment {
-    public readonly url: pulumi.Computed<string>;
-    public readonly customDomainNames: pulumi.Computed<string>[];
+    public readonly url: pulumi.Output<string>;
+    public readonly customDomainNames: pulumi.Output<string>[];
 
     constructor(app: express.Application, port?: number) {
         const server: http.Server = app.listen(port || 0);
