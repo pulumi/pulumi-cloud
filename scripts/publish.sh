@@ -29,8 +29,23 @@ done
 echo "Publishing NPM packages to NPMjs.com:"
 for PACK in "api/bin" "aws/bin"
 do
-    pushd ${ROOT}/${PACK} && \
-        npm publish && \
-        npm info 2>/dev/null || true && \
-        popd
+    pushd ${ROOT}/${PACK}
+
+    # If there's an alternative publishing package.json, use that instead.  This is necessary for some packages
+    # because of the way we use symlinks in the ordinary package.json files for local development.
+    if [ -f "package.json.publish" ]; then
+        mv package.json package.json.dev
+        mv package.json.publish package.json
+    fi
+
+    npm publish
+    npm info 2>/dev/null
+
+    # Restore the original package.json structure if needed.
+    if [ -f "package.json.dev" ]; then
+        mv package.json package.json.publish
+        mv package.json.dev package.json
+    fi
+
+    popd
 done

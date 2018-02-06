@@ -212,7 +212,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-cleanhttp"
   packages = ["."]
-  revision = "06c9ea3a335b7443026f8124b22619524420291b"
+  revision = "d5fe4b57a186c716b0e00b8c301cbd9b4182694d"
 
 [[projects]]
   branch = "master"
@@ -221,7 +221,7 @@
     ".",
     "helper/url"
   ]
-  revision = "994f50a6f071b07cfbea9eca9618c9674091ca51"
+  revision = "285374cdfad63de2c43d7562f49ced6dde5a7ba0"
 
 [[projects]]
   branch = "master"
@@ -268,7 +268,7 @@
     "hcldec",
     "hclparse"
   ]
-  revision = "44bad6dbf5490f5da17ec991e664df3d017b706f"
+  revision = "5ca9713bf06addcefc0a4e16f779e43a2c88570c"
 
 [[projects]]
   branch = "master"
@@ -308,6 +308,7 @@
     "helper/validation",
     "moduledeps",
     "plugin/discovery",
+    "registry",
     "registry/regsrc",
     "registry/response",
     "svchost",
@@ -317,8 +318,8 @@
     "tfdiags",
     "version"
   ]
-  revision = "a42fdb08a43c7fabb8898fe8c286b793bbaa4835"
-  version = "v0.11.1"
+  revision = "3802b14260603f90c7a1faf55994dcc8933e2069"
+  version = "v0.11.3"
 
 [[projects]]
   name = "github.com/hashicorp/vault"
@@ -327,8 +328,8 @@
     "helper/jsonutil",
     "helper/pgpkeys"
   ]
-  revision = "bdac1854478538052ba5b7ec9a9ec688d35a3335"
-  version = "v0.9.0"
+  revision = "5acd6a21d5a69ab49d0f7c0bf540123a9b2c696d"
+  version = "v0.9.3"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -365,7 +366,7 @@
     "openpgp/s2k",
     "rsa"
   ]
-  revision = "80dd18f19f35c6b2e3b56254e397c36d07d9d285"
+  revision = "8bab6ce2ea76875dcf28c287110f9cdf17fee30c"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -377,7 +378,7 @@
   branch = "master"
   name = "github.com/mitchellh/cli"
   packages = ["."]
-  revision = "33edc47170b5df54d2588696d590c5e20ee583fe"
+  revision = "518dc677a1e1222682f4e7db06721942cb8e9e4c"
 
 [[projects]]
   branch = "master"
@@ -419,7 +420,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "06020f85339e21b2478f756a78e295255ffa4d6a"
+  revision = "a4e142e9c047c904fa2f1e144d9a84e6133024bc"
 
 [[projects]]
   branch = "master"
@@ -493,7 +494,7 @@
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "cb200316ff90671caa9466d19c9b69807e45ad13"
+  revision = "f56031a8bba021f00cabc46ae517d63b4349b8f7"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -510,8 +511,8 @@
 [[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -589,7 +590,7 @@
     "cty/json",
     "cty/set"
   ]
-  revision = "8bf222d6d03b7b336d013978f3acbfd877da428f"
+  revision = "709e4033eeb037dc543dbc2048065dfb814ce316"
 
 [[projects]]
   branch = "master"
@@ -696,6 +697,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "20e0d9853325413b1c90812eee0bf4c395fab056e706e1b28f959ca4c06f5435"
+  inputs-digest = "1b789bf152dbfcc7f1e5651a707edf3ff920553d5a0197d14a9485d3befe6bdb"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -23,7 +23,7 @@ copy_package() {
     fi
 }
 
-# Copy the two packages
+# Copy the three packages
 copy_package "${ROOT}/api/bin/." "@pulumi/cloud"
 copy_package "${ROOT}/aws/bin/." "@pulumi/cloud-aws"
 copy_package "${ROOT}/mock/bin/." "@pulumi/cloud-mock"

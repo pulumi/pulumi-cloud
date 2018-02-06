@@ -9,13 +9,10 @@ export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 TESTPARALLELISM := 10
 
 build::
-	yarn install
-	yarn link pulumi @pulumi/cloud
+	yarn link pulumi @pulumi/cloud @pulumi/aws
 	tsc
-	cat package.json | \
-		sed -e 's/\$${VERSION}/$(VERSION)/g' | \
-		sed -e 's/"@pulumi\/cloud": "latest"/"@pulumi\/cloud": "$(VERSION)"/g' > \
-		bin/package.json
+	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
+	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json.publish > bin/package.json.publish
 	cp ../README.md ../LICENSE bin/
 
 lint::
