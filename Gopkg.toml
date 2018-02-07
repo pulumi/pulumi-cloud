@@ -4,6 +4,10 @@ required = ["github.com/pulumi/pulumi-aws"]
   name = "github.com/pulumi/pulumi"
   revision = "71beb2a51f976a82344b8c08a999369f7a5c1fef"
 
+[[override]]
+  name = "github.com/pulumi/pulumi-aws"
+  revision = "f56031a8bba021f00cabc46ae517d63b4349b8f7"
+
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.1.4"

@@ -2,10 +2,6 @@
 # yarn lockfile v1
 
 
-"@pulumi/cloud@latest":
-  version "0.9.11-17-gfabef2c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.9.11-17-gfabef2c.tgz#207071d5a78d372892a01bab224cfdccf038607f"
-
 "@types/body-parser@*", "@types/body-parser@^1.16.5":
   version "1.16.8"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.16.8.tgz#687ec34140624a3bec2b1a8ea9268478ae8f3be3"
@@ -685,10 +681,6 @@ proxy-addr@~2.0.2:
   dependencies:
     forwarded "~0.1.2"
     ipaddr.js "1.5.2"
-
-pulumi@latest:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/pulumi/-/pulumi-0.0.1.tgz#7d28a3949b98c1729c769851cbe96dc24c5bf882"
 
 qs@6.5.1:
   version "6.5.1"

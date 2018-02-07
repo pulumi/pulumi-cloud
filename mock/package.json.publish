@@ -19,6 +19,6 @@
     },
     "peerDependencies": {
         "pulumi": "latest",
-        "@pulumi/cloud": "latest"
+        "@pulumi/cloud": "${VERSION}"
     }
 }
