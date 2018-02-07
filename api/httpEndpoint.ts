@@ -90,7 +90,7 @@ export interface Response {
     json(obj: any): void;
     /**
      * Mark the response to redirect the client to the provided URL with
-     * the optional status code, defualting to 302.
+     * the optional status code, defaulting to 302.
      */
     redirect(url: string): void;
     redirect(status: number, url: string): void;
