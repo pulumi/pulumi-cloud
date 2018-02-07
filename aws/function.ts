@@ -27,7 +27,7 @@ export class Function extends pulumi.ComponentResource {
 
         // First allocate a function.
         const options: aws.serverless.FunctionOptions = {
-            policies: pulumi.all(policies),
+            policies: policies,
             deadLetterConfig: {
                 targetArn: getUnhandledErrorTopic().arn,
             },
