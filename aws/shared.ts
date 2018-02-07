@@ -61,9 +61,9 @@ const defaultComputePolicies = [
     aws.iam.AWSLambdaFullAccess,                 // Provides wide access to "serverless" services (Dynamo, S3, etc.)
     aws.iam.AmazonEC2ContainerServiceFullAccess, // Required for lambda compute to be able to run Tasks
 ];
-let computePolicies: pulumi.Input<aws.ARN>[] = config.computeIAMRolePolicyARNs
+let computePolicies = (config.computeIAMRolePolicyARNs
     ? config.computeIAMRolePolicyARNs.split(",")
-    : defaultComputePolicies;
+    : defaultComputePolicies).map(a => pulumi.output(a));
 let computePoliciesAccessed = false;
 
 // Set the IAM policies to use for compute.
@@ -72,11 +72,11 @@ export function setComputeIAMRolePolicies(policyARNs: pulumi.Input<string>[]) {
         throw new Error(
             "The compute policies have already been used, make sure you are setting IAM policies early enough.");
     }
-    computePolicies = policyARNs;
+    computePolicies = policyARNs.map(i => pulumi.output(i));
 }
 
 // Get the IAM policies to use for compute.
-export function getComputeIAMRolePolicies(): pulumi.Input<aws.ARN>[] {
+export function getComputeIAMRolePolicies(): pulumi.Output<aws.ARN>[] {
     computePoliciesAccessed = true;
     return computePolicies;
 }
