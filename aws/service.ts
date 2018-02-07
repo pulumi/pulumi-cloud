@@ -727,13 +727,15 @@ function getTaskRole(): aws.iam.Role {
         taskRole = new aws.iam.Role(createNameWithStackInfo("task"), {
             assumeRolePolicy: JSON.stringify(taskRolePolicy),
         }, { parent: getGlobalInfrastructureResource() });
-        // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS compute.
-        // We need to audit these permissions and potentially provide ways for users to directly configure these.
+
+        // TODO[pulumi/pulumi-cloud#145]: These permissions are used for both Lambda and ECS
+        // compute. We need to audit these permissions and potentially provide ways for users to
+        // directly configure these.
         const policies = getComputeIAMRolePolicies();
         for (let i = 0; i < policies.length; i++) {
             const policyArn = policies[i];
             const _ = new aws.iam.RolePolicyAttachment(
-                createNameWithStackInfo(`task-${utils.sha1hash(policyArn)}`), {
+                createNameWithStackInfo(`task-${i}`), {
                     role: taskRole,
                     policyArn: policyArn,
                 }, { parent: getGlobalInfrastructureResource() });

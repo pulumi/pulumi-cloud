@@ -20,9 +20,14 @@ export class Function extends pulumi.ComponentResource {
     constructor(name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
+        const policies = getComputeIAMRolePolicies();
+        if (runLambdaInVPC) {
+            policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+        }
+
         // First allocate a function.
         const options: aws.serverless.FunctionOptions = {
-            policies: [...getComputeIAMRolePolicies()],
+            policies: pulumi.all(policies),
             deadLetterConfig: {
                 targetArn: getUnhandledErrorTopic().arn,
             },
@@ -32,7 +37,6 @@ export class Function extends pulumi.ComponentResource {
             const network: Network | undefined = getNetwork();
             // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
             //     add VPC access will currently fail due to an issue in the Terraform provider.
-            options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
             options.vpcConfig = {
                 securityGroupIds: pulumi.all(network!.securityGroupIds),
                 subnetIds: pulumi.all(network!.subnetIds),
