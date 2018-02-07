@@ -909,6 +909,12 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: Buffer,
             res.setHeader("content-type", "application/json");
             res.end(JSON.stringify(obj));
         },
+        redirect: (url: string, status?: number) => {
+            this.status(status || 302);
+            this.setHeader("Location", url);
+            this.end();
+        },
+        locals: {},
     };
     return { req, res };
 }
