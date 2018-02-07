@@ -78,7 +78,7 @@ export function setComputeIAMRolePolicies(policyARNs: pulumi.Input<string>[]) {
 // Get the IAM policies to use for compute.
 export function getComputeIAMRolePolicies(): pulumi.Output<aws.ARN>[] {
     computePoliciesAccessed = true;
-    return computePolicies;
+    return computePolicies.slice();
 }
 
 // The network to use for container (and possibly lambda) compute or undefined if containers are unsupported and

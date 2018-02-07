@@ -20,7 +20,7 @@ export class Function extends pulumi.ComponentResource {
     constructor(name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
-        const policies = getComputeIAMRolePolicies().slice();
+        const policies = getComputeIAMRolePolicies();
         if (runLambdaInVPC) {
             policies.push(pulumi.output(aws.iam.AWSLambdaVPCAccessExecutionRole));
         }
