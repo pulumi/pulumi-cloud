@@ -143,6 +143,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
         function convertResponse(expressResponse: express.Response): cloud.Response {
             return {
+                locals: expressResponse.locals,
                 status: (code: number) => convertResponse(expressResponse.status(code)),
                 end: (data?: string, encoding?: string) => expressResponse.end(data, encoding),
                 json: (obj: any) => expressResponse.json(obj),
@@ -156,6 +157,13 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
                 write(data: string, encoding?: string) {
                     expressResponse.write(data, encoding);
                     return this;
+                },
+                redirect: (arg1: number | string, arg2?: string) => {
+                    if (typeof arg1 === "string") {
+                        expressResponse.redirect(302, arg1);
+                    } else {
+                        expressResponse.redirect(arg1, arg2!);
+                    }
                 },
             };
         }

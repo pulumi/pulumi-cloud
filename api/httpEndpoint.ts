@@ -55,6 +55,11 @@ export interface Request {
  */
 export interface Response {
     /**
+     * Object containing local variables scoped to a single request. Useful for
+     * exposing request-level information such as user settings.
+     */
+    locals: any;
+    /**
      * Sets the HTTP response status code and returns a `Response` for chaining
      * operations.
      */
@@ -83,6 +88,12 @@ export interface Response {
      * the HTTP response.
      */
     json(obj: any): void;
+    /**
+     * Mark the response to redirect the client to the provided URL with
+     * the optional status code, defaulting to 302.
+     */
+    redirect(url: string): void;
+    redirect(status: number, url: string): void;
 }
 
 /**

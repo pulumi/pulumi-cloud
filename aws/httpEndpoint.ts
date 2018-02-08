@@ -873,6 +873,7 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: Buffer,
         protocol: ev.headers["X-Forwarded-Proto"],
     };
     const res: cloud.Response = {
+        locals: {},
         status: (code: number) => {
             response.statusCode = code;
             return res;
@@ -908,6 +909,23 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: Buffer,
         json: (obj: any) => {
             res.setHeader("content-type", "application/json");
             res.end(JSON.stringify(obj));
+        },
+        redirect: (arg1: string | number, arg2?: string) => {
+            // Support two overloads:
+            // - redirect(url: string): void;
+            // - redirect(status: number, url: string): void;
+            let code: number;
+            let url: string;
+            if (typeof arg1 === "string") {
+                code = 302;
+                url = arg1;
+            } else {
+                code = arg1;
+                url = arg2!;
+            }
+            res.status(code);
+            res.setHeader("Location", url);
+            res.end();
         },
     };
     return { req, res };
