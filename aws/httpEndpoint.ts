@@ -914,14 +914,14 @@ function apiGatewayToRequestResponse(ev: APIGatewayRequest, body: Buffer,
             // Support two overloads:
             // - redirect(url: string): void;
             // - redirect(status: number, url: string): void;
-            let url = "";
-            let code = 0;
-            if (!arg2) {
-                url = arg2!;
-                code = arg1 as number;
-            } else {
-                url = arg1 as string;
+            let code: number;
+            let url: string;
+            if (typeof arg1 === "string") {
                 code = 302;
+                url = arg1;
+            } else {
+                code = arg1;
+                url = arg2!;
             }
             res.status(code);
             res.setHeader("Location", url);
