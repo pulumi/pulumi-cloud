@@ -10,7 +10,7 @@
     "homepage": "https://pulumi.io/cloud-aws",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/aws": "^0.10.0-rc1",
+        "@pulumi/aws": "^0.11.0-dev-2-gb87bc48",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
     },
@@ -23,7 +23,7 @@
         "typescript": "^2.6.2"
     },
     "peerDependencies": {
-        "pulumi": "latest",
+        "@pulumi/pulumi": "latest",
         "@pulumi/cloud": "${VERSION}"
     }
 }

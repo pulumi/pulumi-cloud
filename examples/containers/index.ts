@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import { Output } from "pulumi";
+import { Output } from "@pulumi/pulumi";
 import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.

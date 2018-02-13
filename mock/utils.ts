@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 export function ensureUnique(values: { [name: string]: string }, name: string, typeName: string) {
     if (values[name]) {

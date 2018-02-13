@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 pulumi.runtime.setConfig("cloud:config:provider", "mock");
 
 import * as cloud from "@pulumi/cloud";

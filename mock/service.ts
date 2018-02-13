@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 export class Service implements cloud.Service {
     name: string;

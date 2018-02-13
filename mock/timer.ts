@@ -1,8 +1,8 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import { timer } from "@pulumi/cloud";
+import * as pulumi from "@pulumi/pulumi";
 import * as node_cron from "cron";
-import * as pulumi from "pulumi";
 import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);

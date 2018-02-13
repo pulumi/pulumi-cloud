@@ -11,7 +11,7 @@
         "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "pulumi": "latest",
+        "@pulumi/pulumi": "latest",
         "@pulumi/cloud": "latest"
     }
 }

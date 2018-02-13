@@ -2,7 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import { Function } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,

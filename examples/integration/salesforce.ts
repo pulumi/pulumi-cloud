@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 /* tslint:disable */
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import * as cloud from "@pulumi/cloud";
 import { poll } from "./poll";
 

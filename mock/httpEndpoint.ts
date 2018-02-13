@@ -1,11 +1,11 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
+import * as pulumi from "@pulumi/pulumi";
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as http from "http";
 import * as httpProxy from "http-proxy-middleware";
-import * as pulumi from "pulumi";
 import * as serveStatic from "serve-static";
 import * as utils from "./utils";
 
