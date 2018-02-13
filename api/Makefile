@@ -7,7 +7,7 @@ VERSION := $(shell git describe --tags --dirty 2>/dev/null)
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 build::
-	yarn link pulumi
+	yarn link @pulumi/pulumi
 	tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/

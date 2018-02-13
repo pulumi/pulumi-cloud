@@ -4,7 +4,7 @@
 // use.  We are effectively reflecting over the user's current environment and using that to switch
 // in the actual platform implementation appropriate for them.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 declare let module: any;
 declare function require(name: string): any;

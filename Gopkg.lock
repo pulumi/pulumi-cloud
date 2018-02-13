@@ -484,17 +484,18 @@
     "pkg/util/contract",
     "pkg/util/fsutil",
     "pkg/util/mapper",
+    "pkg/util/retry",
     "pkg/util/rpcutil",
     "pkg/version",
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "71beb2a51f976a82344b8c08a999369f7a5c1fef"
+  revision = "0cb112b984a0f8bdb075a669142d78794a08e8d0"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "b7c3a0ef31217810bb9508770ff61efee233a334"
+  revision = "b87bc482bfc9e9c6ee7f810d341b39750998e68d"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -697,6 +698,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dd75e86cd5b5f6a0739a59a18733de6c76a68f06a6b0411b207dd9f7c8705e3c"
+  inputs-digest = "47aea6564e8f625baa1f698f9bd09e65f235ecb7ef82a166647b6228cea7c6e1"
   solver-name = "gps-cdcl"
   solver-version = 1

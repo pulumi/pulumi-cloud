@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 let config = new pulumi.Config("timers:config");
 let message = config.require("message");

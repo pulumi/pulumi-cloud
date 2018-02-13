@@ -24,6 +24,6 @@
     "peerDependencies": {
         "@pulumi/aws": "latest",
         "@pulumi/cloud": "latest",
-        "pulumi": "latest"
+        "@pulumi/pulumi": "latest"
     }
 }
