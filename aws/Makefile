@@ -12,7 +12,6 @@ build::
 	yarn link @pulumi/pulumi @pulumi/cloud @pulumi/aws
 	tsc
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
-	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json.publish > bin/package.json.publish
 	cp ../README.md ../LICENSE bin/
 
 lint::

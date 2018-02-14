@@ -27,25 +27,27 @@ do
 done
 
 echo "Publishing NPM packages to NPMjs.com:"
-for PACK in "api/bin" "aws/bin"
-do
-    pushd ${ROOT}/${PACK}
 
-    # If there's an alternative publishing package.json, use that instead.  This is necessary for some packages
-    # because of the way we use symlinks in the ordinary package.json files for local development.
-    if [ -f "package.json.publish" ]; then
-        mv package.json package.json.dev
-        mv package.json.publish package.json
-    fi
+# For each package, first create the package.json to publish.  This must be different than the one we use for
+# development and testing the SDK, since we use symlinking for those workflows.  Namely, we must promote the SDK
+# dependencies from peerDependencies that are resolved via those links, to real installable dependencies.
+publish() {
+    node $(dirname $0)/promote.js ${@:2} < \
+        ${ROOT}/$1/bin/package.json > \
+        ${ROOT}/$1/bin/package.json.publish
+    pushd ${ROOT}/$1/bin
+    mv package.json package.json.dev
+    mv package.json.publish package.json
 
+    # Now, perform the publish.
     npm publish
     npm info 2>/dev/null
 
-    # Restore the original package.json structure if needed.
-    if [ -f "package.json.dev" ]; then
-        mv package.json package.json.publish
-        mv package.json.dev package.json
-    fi
-
+    # And finally restore the original package.json.
+    mv package.json package.json.publish
+    mv package.json.dev package.json
     popd
-done
+}
+
+publish api @pulumi/pulumi
+publish aws @pulumi/pulumi @pulumi/aws

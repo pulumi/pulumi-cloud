@@ -11,7 +11,6 @@ build::
 	yarn link @pulumi/pulumi @pulumi/cloud
 	tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
-	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json.publish > bin/package.json.publish
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
