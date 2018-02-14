@@ -11,17 +11,6 @@ build::
 	yarn link @pulumi/pulumi @pulumi/cloud
 	tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
-	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json.publish > bin/package.json.publish
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
-
-TEST_PROJECTS := table topic httpEndpoint
-
-test_fast:: $(TEST_PROJECTS:%=test_fast_%)
-
-$(TEST_PROJECTS:%=test_fast_%):
-	cd tests/$(@:test_fast_%=%) && yarn install
-	cd tests/$(@:test_fast_%=%) && yarn link @pulumi/pulumi @pulumi/cloud @pulumi/cloud-mock
-	cd tests/$(@:test_fast_%=%) && yarn run build
-	cd tests/$(@:test_fast_%=%) && yarn run test

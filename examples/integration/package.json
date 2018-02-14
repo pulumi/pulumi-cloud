@@ -19,7 +19,7 @@
         "tslint": "^5.7.0"
     },
     "peerDependencies": {
-        "@pulumi/pulumi": "latest",
+        "@pulumi/pulumi": "^0.11.0-dev-23-g444ebdd1",
         "@pulumi/cloud": "latest"
     }
 }
