@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 /**
  * The available types for primary keys. The default primary key type is

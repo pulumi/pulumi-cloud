@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 import { externalSecurityGroups, externalSubnets, externalVpcId, usePrivateNetwork } from "../config";
 import { getAwsAz } from "./aws";

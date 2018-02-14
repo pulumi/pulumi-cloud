@@ -2,7 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import * as sns from "./sns";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {

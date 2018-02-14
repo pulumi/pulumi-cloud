@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 // Configuration for the local integration example can be provided in two ways.  The first is as an
 // environment variable of the form:

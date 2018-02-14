@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 // AWS IAM credentials for making calls agaisnt AWS resources.
 // See http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html

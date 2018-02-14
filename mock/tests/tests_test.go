@@ -22,7 +22,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:config:provider": "mock",
 			},
 			Dependencies: []string{
-				"pulumi",
+				"@pulumi/pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-mock",
 			},

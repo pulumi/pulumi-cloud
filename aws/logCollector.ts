@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import * as shared from "./shared";
 
 // The type of the Lambda payload from Cloudwatch Logs subscriptions.

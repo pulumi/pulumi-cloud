@@ -2,7 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
-import * as pulumi from "pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import { createNameWithStackInfo, getGlobalInfrastructureResource } from "./shared";
 import * as sns from "./sns";
 

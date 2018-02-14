@@ -2,11 +2,11 @@
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
+import * as pulumi from "@pulumi/pulumi";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mime from "mime";
 import * as fspath from "path";
-import * as pulumi from "pulumi";
 import * as utils from "./utils";
 
 import { Function } from "./function";

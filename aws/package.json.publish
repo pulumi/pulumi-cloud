@@ -23,7 +23,7 @@
         "typescript": "^2.6.2"
     },
     "peerDependencies": {
-        "pulumi": "latest",
+        "@pulumi/pulumi": "latest",
         "@pulumi/cloud": "${VERSION}"
     }
 }

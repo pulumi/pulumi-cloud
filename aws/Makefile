@@ -9,7 +9,7 @@ export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 TESTPARALLELISM := 10
 
 build::
-	yarn link pulumi @pulumi/cloud @pulumi/aws
+	yarn link @pulumi/pulumi @pulumi/cloud @pulumi/aws
 	tsc
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json.publish > bin/package.json.publish
