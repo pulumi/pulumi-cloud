@@ -164,6 +164,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/djherbis/times"
+  packages = ["."]
+  revision = "95292e44976d1217cf3611dc7c8d9466877d3ed5"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
   revision = "32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a"
@@ -464,13 +470,15 @@
 [[projects]]
   name = "github.com/pulumi/pulumi"
   packages = [
+    "pkg/backend",
+    "pkg/backend/local",
+    "pkg/backend/state",
     "pkg/compiler/errors",
     "pkg/diag",
     "pkg/diag/colors",
     "pkg/encoding",
     "pkg/engine",
     "pkg/operations",
-    "pkg/pack",
     "pkg/resource",
     "pkg/resource/config",
     "pkg/resource/deploy",
@@ -490,14 +498,14 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "8a2188b190c833e2fb4e53f74c24e85be0428cae"
-  version = "v0.10.0-rc4"
+  revision = "10a610adba8d6f87a23ac116bd07992bf0f44230"
+  version = "v0.10.0-rc5"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "68195056c9442f7ea4ce498850c39d1627a85347"
-  version = "v0.10.0-rc4"
+  revision = "bb20002cccfb58f627c20ae1766dfd110f05059f"
+  version = "v0.10.0-rc5"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
