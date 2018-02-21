@@ -116,9 +116,9 @@ interface ContainerPortLoadBalancer {
     protocol: cloud.ContainerProtocol;
 }
 
-// createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
-// pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(
+// createLoadBalancer allocates a new Load Balancer and TargetGroup that can be attached to a Service container and port
+// pair.
+function createLoadBalancer(
         parent: pulumi.Resource,
         cluster: awsinfra.Cluster,
         serviceName: string,
@@ -134,8 +134,8 @@ function newLoadBalancerTargetGroup(
     // Note: Technically, we can only support one LB per service, so only the service name is needed here, but we
     // anticipate this will not always be the case, so we include a set of values which must be unique.
     const longName = `${serviceName}-${containerName}-${portMapping.port}`;
-    // We include the VPC ID in the hash to ensure this name is globally unique, not just unique within the stack.
-    const shortName = utils.sha1hash(`${network.vpcId}-${longName}`);
+    // We include the ECS Cluster ARN in the hash to make the name globally unique, not just unique within the stack.
+    const shortName = utils.sha1hash(`${cluster.ecsClusterARN}-${longName}`);
 
     // Create an internal load balancer if requested.
     const internal: boolean = (network.privateSubnets && !portMapping.external);
@@ -811,7 +811,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     if (loadBalancers.length > 0) {
                         throw new Error("Only one port can currently be exposed per Service.");
                     }
-                    const info = newLoadBalancerTargetGroup(this, cluster, name, containerName, portMapping);
+                    const info = createLoadBalancer(this, cluster, name, containerName, portMapping);
                     ports[containerName][portMapping.port] = {
                         host: info.loadBalancer,
                         hostPort: portMapping.port,
