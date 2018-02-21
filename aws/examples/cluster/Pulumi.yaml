@@ -1,4 +1,13 @@
 name: cluster
-description: A simple example of using the `Network` and `Cluster` APIs.
 runtime: nodejs
-
+description: A simple example of using the `Network` and `Cluster` APIs.
+stacks:
+  luke-cloud:
+    config:
+      aws:config:accessKey: AKIAIMPDRH344PYOCNMQ
+      aws:config:region: us-west-2
+      aws:config:secretKey:
+        secure: AAABAAEsuQJZjwzjL8rJUmRd094fkTMCEU2o2z0SsNXKVXUsxqjAWDhI6oCJt69O1nnsPSR6NIfOMJAqNxickU65PkBTvnX5
+  luke-local:
+    config:
+      aws:config:region: us-west-2

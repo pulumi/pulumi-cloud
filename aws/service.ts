@@ -110,103 +110,30 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
     return serviceLoadBalancerRole;
 }
 
-function getMaxListenersPerLb(network: awsinfra.Network): number {
-    // If we are single-AZ, we can share load balancers, and cut down on costs.  Otherwise, we cannot.
-    if (network.numberOfAvailabilityZones === 1) {
-        return 50;
-    }
-    return 1;
-}
-
-// We may allocate both internal-facing and internet-facing load balancers, and we may want to combine multiple
-// listeners on a single load balancer. So we track the currently allocated load balancers to use for both internal and
-// external load balancing, and the index of the next slot to use within that load balancers listeners.
-let internalAppLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let internalAppListenerIndex = 0;
-let externalAppLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let externalAppListenerIndex = 0;
-let internalNetLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let internalNetListenerIndex = 0;
-let externalNetLoadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
-let externalNetListenerIndex = 0;
-
-// loadBalancerPrefixLength is a prefix length to avoid generating names that are too long.
-const loadBalancerPrefixLength =
-    32   /* max load balancer name */
-    - 16 /* random hex added to ID */
-    - 4  /* room for up to 9999 load balancers */
-    - 3  /* for -[a|n][i|e], where a = application, n = network; i = internal, e = external */;
-
-function getLoadBalancerPrefix(internal: boolean, application: boolean): string {
-    return createNameWithStackInfo("").substring(0, loadBalancerPrefixLength) + "-" +
-        (application ? "a" : "n") + (internal ? "i" : "e");
-}
-
-function allocateListener(
-    cluster: awsinfra.Cluster, network: awsinfra.Network, internal: boolean, application: boolean): {
-        loadBalancer: aws.elasticloadbalancingv2.LoadBalancer, listenerIndex: number, listenerPort: number} {
-    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every getMaxListeners.
-    const maxListeners: number = getMaxListenersPerLb(network);
-    const listenerIndex: number = internal ?
-        (application ? internalAppListenerIndex++ : internalNetListenerIndex++) :
-        (application ? externalAppListenerIndex++ : externalNetListenerIndex++);
-    const listenerPort = 34567 + listenerIndex % maxListeners;
-    if (listenerIndex % maxListeners !== 0) {
-        // Reuse an existing load balancer.
-        return {
-            loadBalancer: internal ?
-                (application ? internalAppLoadBalancer! : internalNetLoadBalancer!) :
-                (application ? externalAppLoadBalancer! : externalNetLoadBalancer!),
-            listenerIndex: listenerIndex,
-            listenerPort: listenerPort,
-        };
-    }
-
-    // Otherwise, if we've exhausted the cache, allocate a new LB with a sufficiently unique name.
-    const lbNumber = listenerIndex / maxListeners + 1;
-    const lbName = getLoadBalancerPrefix(internal, application) + lbNumber;
-    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(lbName, {
-        loadBalancerType: application ? "application" : "network",
-        subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
-        internal: internal,
-        // If this is an application LB, we need to associate it with the ECS cluster's security group, so
-        // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
-        securityGroups: (application && cluster.securityGroupId) ? [ cluster.securityGroupId ] : undefined,
-    });
-
-    // Store the new load balancer in the corresponding slot, based on whether it's internal/app/etc.
-    if (internal) {
-        if (application) {
-            internalAppLoadBalancer = loadBalancer;
-        } else {
-            internalNetLoadBalancer = loadBalancer;
-        }
-    } else {
-        if (application) {
-            externalAppLoadBalancer = loadBalancer;
-        } else {
-            externalNetLoadBalancer = loadBalancer;
-        }
-    }
-
-    return { loadBalancer: loadBalancer, listenerIndex: listenerIndex, listenerPort: listenerPort };
-}
-
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
     targetGroup: aws.elasticloadbalancingv2.TargetGroup;
     protocol: cloud.ContainerProtocol;
-    listenerPort: number;
 }
 
 // createLoadBalancer allocates a new Load Balancer TargetGroup that can be attached to a Service container and port
 // pair. Allocates a new NLB is needed (currently 50 ports can be exposed on a single NLB).
-function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.Cluster,
-                                    portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
+function newLoadBalancerTargetGroup(
+        parent: pulumi.Resource,
+        cluster: awsinfra.Cluster,
+        serviceName: string,
+        containerName: string,
+        portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
     const network: awsinfra.Network | undefined = getNetwork();
     if (!network) {
         throw new Error("Cannot create 'Service'. No VPC configured.");
     }
+
+    // Load balancers need *very* short names, so we unforutnately have to hash here.
+    //
+    // Note: Technically, we can only support one LB per service, so only the service name is needed here, but we
+    // anticipate this will not always be the case, so we include a set of values which must be unique.
+    const shortName = utils.sha1hash(`${serviceName}:${containerName}:${portMapping.port}`);
 
     // Create an internal load balancer if requested.
     const internal: boolean = (network.privateSubnets && !portMapping.external);
@@ -246,13 +173,17 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.C
             throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
 
-    // Get or create the right kind of load balancer.  We try to cache LBs, but create a new one every 50 requests.
-    const { loadBalancer, listenerIndex, listenerPort } =
-        allocateListener(cluster, network, internal, useAppLoadBalancer);
+    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
+        loadBalancerType: useAppLoadBalancer ? "application" : "network",
+        subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
+        internal: internal,
+        // If this is an application LB, we need to associate it with the ECS cluster's security group, so
+        // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
+        securityGroups: (useAppLoadBalancer && cluster.securityGroupId) ? [ cluster.securityGroupId ] : undefined,
+    });
 
     // Create the target group for the new container/port pair.
-    const targetListenerName = getLoadBalancerPrefix(internal, useAppLoadBalancer) + listenerIndex;
-    const target = new aws.elasticloadbalancingv2.TargetGroup(targetListenerName, {
+    const target = new aws.elasticloadbalancingv2.TargetGroup(shortName, {
         port: portMapping.port,
         protocol: targetProtocol,
         vpcId: network.vpcId,
@@ -260,11 +191,11 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.C
     }, { parent: parent });
 
     // Listen on a new port on the NLB and forward to the target.
-    const listener = new aws.elasticloadbalancingv2.Listener(targetListenerName, {
+    const listener = new aws.elasticloadbalancingv2.Listener(shortName, {
         loadBalancerArn: loadBalancer!.arn,
         protocol: protocol,
         certificateArn: useCertificateARN,
-        port: listenerPort,
+        port: portMapping.port,
         defaultActions: [{
             type: "forward",
             targetGroupArn: target.arn,
@@ -278,7 +209,6 @@ function newLoadBalancerTargetGroup(parent: pulumi.Resource, cluster: awsinfra.C
         loadBalancer: loadBalancer,
         targetGroup: target,
         protocol: portMappingProtocol,
-        listenerPort: listenerPort,
     };
 }
 
@@ -868,10 +798,13 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             ports[containerName] = {};
             if (container.ports) {
                 for (const portMapping of container.ports) {
-                    const info = newLoadBalancerTargetGroup(this, cluster, portMapping);
+                    if (loadBalancers.length > 0) {
+                        throw new Error("Only one port can currently be exposed per Service.");
+                    }
+                    const info = newLoadBalancerTargetGroup(this, cluster, name, containerName, portMapping);
                     ports[containerName][portMapping.port] = {
                         host: info.loadBalancer,
-                        hostPort: info.listenerPort,
+                        hostPort: portMapping.port,
                         hostProtocol: info.protocol,
                     };
                     loadBalancers.push({
