@@ -186,7 +186,7 @@ function newLoadBalancerTargetGroup(
         tags: {
             Name: longName,
         },
-    });
+    }, {parent: parent});
 
     // Create the target group for the new container/port pair.
     const target = new aws.elasticloadbalancingv2.TargetGroup(longName, {
