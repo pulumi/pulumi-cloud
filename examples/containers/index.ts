@@ -2,7 +2,6 @@
 
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
-import fetch from "node-fetch";
 
 // A simple NGINX service, scaled out over two containers.
 let nginx = new cloud.Service("examples-nginx", {
@@ -36,13 +35,13 @@ let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
         webserver: {
             memory: 128,
-            ports: [{ port: 80 }],
+            ports: [{ port: 80, targetPort: 8080 }],
             function: () => {
                 let rand = Math.random();
                 let http = require("http");
                 http.createServer((req: any, res: any) => {
                     res.end(`Hello, world! (from ${rand})`);
-                }).listen(80);
+                }).listen(8080);
             },
         },
     },
@@ -158,6 +157,7 @@ function errorJSON(err: any) {
 
 api.get("/", async (req, res) => {
     try {
+        const fetch = (await import("node-fetch")).default;
         // Use the NGINX or Redis Services to respond to the request.
         console.log("handling /");
         let page = await cache.get("page");
@@ -195,6 +195,7 @@ api.get("/run", async (req, res) => {
 });
 api.get("/custom", async (req, res) => {
     try {
+        const fetch = (await import("node-fetch")).default;
         let endpoint = await customWebServer.getEndpoint();
         console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);

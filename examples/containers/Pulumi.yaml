@@ -1,10 +1,10 @@
 name: containers
-description: A simple containers demo.
 runtime: nodejs
+description: A simple containers demo.
 config:
   aws:config:region: us-east-2
   cloud-aws:config:ecsAutoCluster: "true"
-  cloud-aws:config:ecsAutoClusterNumberOfAZs: "2"
-  cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize: "80"
   cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize: "100"
+  cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize: "80"
   cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize: "1"
+  cloud-aws:config:ecsAutoClusterNumberOfAZs: "2"
