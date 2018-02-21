@@ -818,7 +818,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     };
                     loadBalancers.push({
                         containerName: containerName,
-                        containerPort: portMapping.port,
+                        containerPort: portMapping.targetPort || portMapping.port,
                         targetGroupArn: info.targetGroup.arn,
                     });
                 }
