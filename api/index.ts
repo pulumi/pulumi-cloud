@@ -11,21 +11,21 @@ declare function require(name: string): any;
 
 const config = new pulumi.Config("cloud:config");
 
-// TODO(cyrusn): We probably want to move to a model where there is no fallback. It's probably best
-// that if the appropriate provider is not set by the runtime environment, we just want to fail-fast
-// so that that problem is addressed immediately.
-//
-// However, for now, it's fine to fall back to aws as that's the only provider we initially support
-// and there's no need to force all consumers to have to set pulumi:config:provider.
-let provider = config.get("provider");
-if (!provider) {
-    provider = "aws";
+const provider = config.require("provider");
 
-    // console.log(`Warning: Provider not given.  Falling back to ${provider} provider.`);
+// Load the implementation of @pulumi/cloud for the target provider.
+function loadFrameworkModule() {
+    const frameworkModule = `@pulumi/cloud-${provider}`;
+    pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
+    try {
+        return require(frameworkModule);
+    } catch {
+        throw new Error(`
+Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no ${frameworkModule} module is \
+installed. Install it now or select another provider implementation with the "cloud:config:provider" setting.`,
+        );
+    }
 }
 
-const frameworkModule = `@pulumi/cloud-${provider}`;
-
-pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
-module.exports = require(frameworkModule);
+module.exports = loadFrameworkModule();
 

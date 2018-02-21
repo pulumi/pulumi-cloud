@@ -155,6 +155,7 @@ func Test_Examples(t *testing.T) {
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
 				"aws:config:region":                  region,
+				"cloud:config:provider":              "aws",
 				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
@@ -182,6 +183,7 @@ func Test_Examples(t *testing.T) {
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
 				"aws:config:region":                                            region,
+				"cloud:config:provider":                                        "aws",
 				"cloud-aws:config:ecsAutoCluster":                              "true",
 				"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "2",
 				"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
