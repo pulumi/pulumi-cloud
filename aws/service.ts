@@ -134,8 +134,7 @@ function createLoadBalancer(
     // Note: Technically, we can only support one LB per service, so only the service name is needed here, but we
     // anticipate this will not always be the case, so we include a set of values which must be unique.
     const longName = `${serviceName}-${containerName}-${portMapping.port}`;
-    // We include the ECS Cluster ARN in the hash to make the name globally unique, not just unique within the stack.
-    const shortName = utils.sha1hash(`${cluster.ecsClusterARN}-${longName}`);
+    const shortName = utils.sha1hash(`${longName}`);
 
     // Create an internal load balancer if requested.
     const internal: boolean = (network.privateSubnets && !portMapping.external);
@@ -175,8 +174,7 @@ function createLoadBalancer(
             throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
 
-    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(longName, {
-        name: shortName,
+    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
         subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
         internal: internal,
@@ -189,9 +187,8 @@ function createLoadBalancer(
     }, {parent: parent});
 
     // Create the target group for the new container/port pair.
-    const target = new aws.elasticloadbalancingv2.TargetGroup(longName, {
-        name: shortName,
-        port: portMapping.port,
+    const target = new aws.elasticloadbalancingv2.TargetGroup(shortName, {
+        port: portMapping.targetPort || portMapping.port,
         protocol: targetProtocol,
         vpcId: network.vpcId,
         deregistrationDelay: 180, // 3 minutes
@@ -200,7 +197,7 @@ function createLoadBalancer(
         },
     }, { parent: parent });
 
-    // Listen on a new port on the NLB and forward to the target.
+    // Listen on the requested port on the LB and forward to the target.
     const listener = new aws.elasticloadbalancingv2.Listener(longName, {
         loadBalancerArn: loadBalancer!.arn,
         protocol: protocol,
@@ -607,7 +604,9 @@ function computeContainerDefinitions(
                 repository = getOrCreateRepository(imageName);
             }
             const imageOptions = computeImage(imageName, container, ports, repository);
-            const portMappings = (container.ports || []).map(p => ({containerPort: p.port}));
+            const portMappings = (container.ports || []).map(p => ({
+                containerPort: p.targetPort || p.port,
+            }));
 
             // tslint:disable-next-line:max-line-length
             return pulumi.all([imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id])

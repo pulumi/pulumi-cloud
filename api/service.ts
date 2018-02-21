@@ -113,10 +113,29 @@ export interface ContainerBuild {
      */
     args?: {[key: string]: string};
 }
-
+/**
+ * ContainerPort represents the information about how to expose a container port on a [Service].
+*/
 export interface ContainerPort {
+    /**
+     * The incoming port where the service exposes the endpoint.
+    */
     port: number;
+    /**
+     * The target port on the backing container.  Defaults to the value of [port].
+    */
+    targetPort?: number;
+    /**
+     * Whether the port should be exposed externally.  Defaults to `false`.
+    */
     external?: boolean;
+    /**
+     * The protocol to use for exposing the service:
+     * * `tcp`: Expose TCP externaly and to the container.
+     * * `udp`: Expose UDP externally and to the container.
+     * * `http`: Expose HTTP externally and to the container.
+     * * `https`: Expose HTTPS externally and HTTP to the container.
+     */
     protocol?: ContainerProtocol;
 }
 
@@ -151,10 +170,6 @@ export interface SharedVolumeConstructor {
      * @param opts A bag of options that controls how this resource behaves.
      */
     new (name: string, opts?: pulumi.ResourceOptions): SharedVolume;
-
-    // TODO[pulumi/pulumi-cloud#84] - Likely important features:
-    // backupToBucket(bucket: Bucket): Promise<void>
-    // restoreFromBucket(bucket: Bucket): Promise<void>
 }
 
 export let SharedVolume: SharedVolumeConstructor; // tslint:disable-line

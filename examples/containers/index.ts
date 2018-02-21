@@ -35,13 +35,13 @@ let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
         webserver: {
             memory: 128,
-            ports: [{ port: 80 }],
+            ports: [{ port: 80, targetPort: 8080 }],
             function: () => {
                 let rand = Math.random();
                 let http = require("http");
                 http.createServer((req: any, res: any) => {
                     res.end(`Hello, world! (from ${rand})`);
-                }).listen(80);
+                }).listen(8080);
             },
         },
     },
