@@ -839,6 +839,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             loadBalancers: loadBalancers,
             iamRole: iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
+            waitForSteadyState: true,
         }, { parent: this });
 
         this.endpoints = getEndpoints(ports);
