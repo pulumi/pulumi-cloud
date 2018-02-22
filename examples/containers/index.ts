@@ -12,7 +12,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
+export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints["examples-nginx"][80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
@@ -193,5 +193,5 @@ api.get("/custom", async (req, res) => {
         res.status(500).json(errorJSON(err));
     }
 });
-api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
+api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints["examples-nginx"][80]));
 export let frontendURL = api.publish().url;
