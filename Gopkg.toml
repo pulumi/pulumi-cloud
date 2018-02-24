@@ -6,7 +6,7 @@ required = ["github.com/pulumi/pulumi-aws"]
 
 [[override]]
   name = "github.com/pulumi/pulumi-aws"
-  revision = "7321b8ba728c3fde3676d6d484c3fc8b67a4c9d9"
+  revision = "4d40e5051077ae59a9821e59e3f5502c660719bd"
 
 [[constraint]]
   name = "github.com/stretchr/testify"

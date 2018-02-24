@@ -226,11 +226,11 @@ export class Cluster {
             iamInstanceProfile: instanceProfile.id,
             enableMonitoring: true,  // default is true
             placementTenancy: "default",  // default is "default"
-            rootBlockDevice: [{
+            rootBlockDevice: {
                 volumeSize: args.instanceRootVolumeSize || 8, // GiB
                 volumeType: "gp2", // default is "standard"
                 deleteOnTermination: true,
-            }],
+            },
             ebsBlockDevices: [
                 {
                     // Swap volume
@@ -281,7 +281,7 @@ export class Cluster {
 // http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_agent_versions.html
 async function getEcsAmiId(name?: string) {
     const result: aws.GetAmiResult = await aws.getAmi({
-        filter: [
+        filters: [
             {
                 name: "name",
                 values: [ name || "amzn-ami-2017.09.a-amazon-ecs-optimized" ],

@@ -43,12 +43,10 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         }, opts);
 
         this.dynamodbTable = new aws.dynamodb.Table(name, {
-            attribute: [
-                {
-                    name: primaryKey,
-                    type: pulumi.output(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
-                },
-            ],
+            attributes: [{
+                name: primaryKey,
+                type: pulumi.output(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
+            }],
             hashKey: primaryKey,
             readCapacity: 5,
             writeCapacity: 5,

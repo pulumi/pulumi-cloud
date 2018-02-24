@@ -52,7 +52,7 @@ export class Network {
 
         const publicRouteTable = new aws.ec2.RouteTable(name, {
             vpcId: vpc.id,
-            route: [
+            routes: [
                 {
                     cidrBlock: "0.0.0.0/0",
                     gatewayId: this.internetGateway.id,
@@ -121,12 +121,10 @@ export class Network {
 
                 const natRouteTable = new aws.ec2.RouteTable(natName, {
                     vpcId: vpc.id,
-                    route: [
-                        {
-                            cidrBlock: "0.0.0.0/0",
-                            natGatewayId: natGateway.id,
-                        },
-                    ],
+                    routes: [{
+                        cidrBlock: "0.0.0.0/0",
+                        natGatewayId: natGateway.id,
+                    }],
                     tags: {
                         Name: natName,
                     },

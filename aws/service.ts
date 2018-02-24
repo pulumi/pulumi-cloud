@@ -176,7 +176,7 @@ function createLoadBalancer(
 
     const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
-        subnetMapping: network.publicSubnetIds.map(s => ({ subnetId: s })),
+        subnetMappings: network.publicSubnetIds.map(s => ({ subnetId: s })),
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
@@ -725,7 +725,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefinitions,
-        volume: volumes,
+        volumes: volumes,
         taskRoleArn: getTaskRole().arn,
     }, { parent: parent });
 
@@ -836,7 +836,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             desiredCount: replicas,
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster.ecsClusterARN,
-            loadBalancers: loadBalancers,
+            // TODO: Fix the naming of this in AWS projection.
+            loadBalancers: loadBalancers[0],
             iamRole: iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: true,
