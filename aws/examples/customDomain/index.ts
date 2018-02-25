@@ -1,5 +1,6 @@
 // Copyright 2016-2018, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "@pulumi/pulumi";
 import * as cloud from "@pulumi/cloud";
 import * as awscloud from "@pulumi/cloud-aws";
 import * as aws from "@pulumi/aws";
@@ -38,7 +39,7 @@ let recordSet = new aws.route53.Record(subdomain, {
     name: subdomain,
     zoneId: hostedZoneId,
     type: "A",
-    alias: [{
+    aliases: [{
         name: deployment.customDomains[0].cloudfrontDomainName,
         zoneId: deployment.customDomains[0].cloudfrontZoneId,
         evaluateTargetHealth: false,
@@ -46,4 +47,4 @@ let recordSet = new aws.route53.Record(subdomain, {
 });
 
 // Export the custom domain URL for the HTTP Endpoint.
-export let url = recordSet.fqdn.then(fqdn => `https://${fqdn}/`);
+export let url = recordSet.fqdn.apply(fqdn => `https://${fqdn}/`);
