@@ -836,8 +836,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             desiredCount: replicas,
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster.ecsClusterARN,
-            // TODO: Fix the naming of this in AWS projection.
-            loadBalancers: loadBalancers[0],
+            loadBalancers: loadBalancers,
             iamRole: iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: true,
