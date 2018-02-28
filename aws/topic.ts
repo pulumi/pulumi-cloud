@@ -8,7 +8,7 @@ import * as sns from "./sns";
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
-    public readonly subscriptions: aws.sns.TopicSubscription[];
+    // public readonly subscriptions: aws.sns.TopicSubscription[];
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -19,7 +19,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
 
         this.name = name;
         this.topic = new aws.sns.Topic(name, {}, { parent: this });
-        this.subscriptions = [];
+        // this.subscriptions = [];
         const topicId = this.topic.id;
 
         this.publish = async (item) => {
@@ -38,6 +38,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             const item = JSON.parse(snsItem.Message);
             await handler(item);
         });
-        this.subscriptions.push(subscription);
+
+        // this.subscriptions.push(subscription);
     }
 }
