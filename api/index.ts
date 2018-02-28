@@ -19,11 +19,16 @@ function loadFrameworkModule() {
     pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
     try {
         return require(frameworkModule);
-    } catch {
-        throw new Error(`
-Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no ${frameworkModule} module is \
-installed. Install it now or select another provider implementation with the "cloud:config:provider" setting.`,
-        );
+    } catch (e) {
+        // If the module was not found, return a useful error message.
+        if ((e instanceof Error) && (e as any).code === "MODULE_NOT_FOUND") {
+            throw new Error(`
+Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no '${frameworkModule}' module is installed.\
+ Install it now or select another provider implementation with the "cloud:config:provider" setting.`,
+            );
+        }
+        // Else, just return the error as is.
+        throw e;
     }
 }
 
