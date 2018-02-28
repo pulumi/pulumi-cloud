@@ -80,7 +80,6 @@ export class Network {
                     Name: subnetName,
                 },
             });
-            this.subnetIds.push(subnet.id);
 
             // We will use a different route table for this subnet depending on
             // whether we are in a public or private subnet
@@ -143,6 +142,12 @@ export class Network {
                 subnetId: subnet.id,
                 routeTableId: subnetRouteTable.id,
             });
+
+            // RouteTableAssociations implicitly modify the Subnet with which they are associated, but
+            // there is no direct dependency in the Pulumi object model between the two. By combining
+            // the two Output properties in this manner, we ensure that the dependency graph stays intact.
+            const subnetId = pulumi.all([subnet.id, routTableAssociation.id]).apply(([id, _]) => id);
+            this.subnetIds.push(subnetId);
         }
     }
 }
