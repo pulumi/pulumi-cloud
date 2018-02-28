@@ -171,7 +171,8 @@ func Test_Examples(t *testing.T) {
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
-				if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown") {
+				t.Logf("Got %v logs", len(*logs))
+				if !assert.True(t, len(*logs) >= 26, "expected at least 26 logs entries from countdown, got") {
 					return
 				}
 				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
