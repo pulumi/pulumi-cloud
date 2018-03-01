@@ -1,5 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "@pulumi/pulumi";
 import * as crypto from "crypto";
 
 // sha1hash returns a partial SHA1 hash of the input string.
@@ -18,4 +19,30 @@ export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<s
     }
 
     return result;
+}
+
+export function combineDependencies<T extends pulumi.Resource>(
+    source: T,
+    ...resources: pulumi.Resource[]): pulumi.Output<T> {
+    const outputs: pulumi.Output<pulumi.Resource>[] = [];
+    outputs.push(liftResource(source));
+    for (const res of resources) {
+        outputs.push(liftResource(res));
+    }
+
+    return pulumi.all([source, ...resources]).apply(_ => source);
+}
+
+export function combineOutput<T>(source: pulumi.Output<T>, ...dependencies: pulumi.Resource[]): pulumi.Output<T> {
+    const [first, ...rest] = dependencies;
+    const deps = combineDependencies(first, ...rest);
+    return pulumi.all([source, deps]).apply(([s, _]) => source);
+}
+
+export function composeOutput<T, U>(first: pulumi.Output<T>, second: pulumi.Output<U>): pulumi.Output<T> {
+    return pulumi.all([first, second]).apply(([f, _]) => f);
+}
+
+export function liftResource<T extends pulumi.Resource>(resource: T): pulumi.Output<T> {
+    return resource.urn.apply(_ => resource);
 }
