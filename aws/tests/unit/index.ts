@@ -12,7 +12,7 @@ const endpoint = new cloud.HttpEndpoint("tests-unittests");
 const testFunctions = [
     tableTests.runAllTests,
     httpEndpointTests.runAllTests,
-    // serviceTests.runAllTests,
+    serviceTests.runAllTests,
 ];
 
 endpoint.get("/unittests", async (req, res) => {
