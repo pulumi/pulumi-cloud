@@ -38,6 +38,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             const item = JSON.parse(snsItem.Message);
             await handler(item);
         });
+
         this.subscriptions.push(subscription);
     }
 }
