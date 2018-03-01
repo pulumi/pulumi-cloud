@@ -572,8 +572,8 @@ function computeImage(
         return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
     }
     else if (container.function) {
-        preEnv.PULUMI_SRC = pulumi.runtime.serializeClosureAsync(container.function)
-                                          .then(closure => pulumi.runtime.serializeJavaScriptTextAsync(closure));
+        const func = container.function;
+        preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
 
         // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
         // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
