@@ -256,13 +256,14 @@ export class Cluster {
         if (args.network.internetGateway) {
             // TODO[pulumi/pulumi#991]: It is currently not possible for us to get at our Output<Resource>'s list
             // of dependencies in order to correctly pass it on to `dependsOn`. This next line
-            // of code is not correct in that it only correctly records the dependency of the
-            // output Resource and not that resource's dependencies.
-            args.network.internetGateway.apply(ig => dependsOn.push(ig));
+            // hacks around TypeScript a bit to make it happen, but we should still make this first-class.
+            const resources: Set<pulumi.Resource> = (<any>args.network.internetGateway).resources();
+            dependsOn.push(...Array.from(resources));
         }
         if (args.network.natGateways) {
             for (const natGateway of args.network.natGateways) {
-                natGateway.apply(nat => dependsOn.push(nat));
+                const resources: Set<pulumi.Resource> = (<any>natGateway).resources();
+                dependsOn.push(...Array.from(resources));
             }
         }
         this.autoScalingGroupStack = liftResource(new aws.cloudformation.Stack(
