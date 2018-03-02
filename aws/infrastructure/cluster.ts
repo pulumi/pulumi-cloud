@@ -254,7 +254,7 @@ export class Cluster {
         // Finally, create the AutoScaling Group.
         const dependsOn: pulumi.Resource[] = [];
         if (args.network.internetGateway) {
-            // TODO: It is currently not possible for us to get at our Output<Resource>'s list
+            // TODO[pulumi/pulumi#991]: It is currently not possible for us to get at our Output<Resource>'s list
             // of dependencies in order to correctly pass it on to `dependsOn`. This next line
             // of code is not correct in that it only correctly records the dependency of the
             // output Resource and not that resource's dependencies.

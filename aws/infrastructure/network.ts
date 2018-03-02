@@ -96,7 +96,7 @@ export class Network {
                         Name: natName,
                     },
                 });
-                this.publicSubnetIds.push(natGatewayPublicSubnet.id);
+                publicSubnetIds.push(natGatewayPublicSubnet.id);
 
                 // And we need to route traffic from that public subnet to the Internet Gateway
                 const natGatewayRoutes = new aws.ec2.RouteTableAssociation(natName, {
