@@ -252,20 +252,6 @@ export class Cluster {
         });
 
         // Finally, create the AutoScaling Group.
-        const dependsOn: pulumi.Resource[] = [];
-        if (args.network.internetGateway) {
-            // TODO[pulumi/pulumi#991]: It is currently not possible for us to get at our Output<Resource>'s list
-            // of dependencies in order to correctly pass it on to `dependsOn`. This next line
-            // hacks around TypeScript a bit to make it happen, but we should still make this first-class.
-            const resources: Set<pulumi.Resource> = (<any>args.network.internetGateway).resources();
-            dependsOn.push(...Array.from(resources));
-        }
-        if (args.network.natGateways) {
-            for (const natGateway of args.network.natGateways) {
-                const resources: Set<pulumi.Resource> = (<any>natGateway).resources();
-                dependsOn.push(...Array.from(resources));
-            }
-        }
         this.autoScalingGroupStack = liftResource(new aws.cloudformation.Stack(
             name,
             {
@@ -278,7 +264,6 @@ export class Cluster {
                     args.network.subnetIds,
                 ),
             },
-            { dependsOn: dependsOn },
         ));
     }
 }

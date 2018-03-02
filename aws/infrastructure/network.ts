@@ -4,7 +4,6 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
 import { externalSecurityGroups, externalSubnets, externalVpcId, usePrivateNetwork } from "../config";
-import { combineDependencies, combineOutput } from "../utils";
 import { getAwsAz } from "./aws";
 
 export interface NetworkArgs {
@@ -19,8 +18,6 @@ export class Network {
     public readonly securityGroupIds: pulumi.Output<string>[];
     public readonly subnetIds: pulumi.Output<string>[];
     public readonly publicSubnetIds: pulumi.Output<string>[];
-    public readonly internetGateway?: pulumi.Output<aws.ec2.InternetGateway>;
-    public readonly natGateways?: pulumi.Output<aws.ec2.NatGateway>[];
 
     constructor(name: string, args: NetworkArgs) {
         // IDEA: default to the number of availability zones in this region, rather than 2.  To do this requires
@@ -41,6 +38,8 @@ export class Network {
                 Name: name,
             },
         });
+        this.vpcId = vpc.id;
+        this.securityGroupIds = [ vpc.defaultSecurityGroupId ];
 
         const internetGateway = new aws.ec2.InternetGateway(name, {
             vpcId: vpc.id,
@@ -62,10 +61,9 @@ export class Network {
             },
         });
 
-        const subnetIds: pulumi.Output<string>[] = [];
-        const natGateways: aws.ec2.NatGateway[] = [];
-        const publicSubnetIds: pulumi.Output<string>[] = [];
-        const routeTableAssocations: aws.ec2.RouteTableAssociation[] = [];
+        this.subnetIds = [];
+        this.publicSubnetIds = [];
+
         for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
             const subnetName = `${name}-${i}`;
             // Create the subnet for this AZ - either - either public or private
@@ -78,7 +76,6 @@ export class Network {
                     Name: subnetName,
                 },
             });
-            subnetIds.push(subnet.id);
 
             // We will use a different route table for this subnet depending on
             // whether we are in a public or private subnet
@@ -96,14 +93,17 @@ export class Network {
                         Name: natName,
                     },
                 });
-                publicSubnetIds.push(natGatewayPublicSubnet.id);
 
                 // And we need to route traffic from that public subnet to the Internet Gateway
                 const natGatewayRoutes = new aws.ec2.RouteTableAssociation(natName, {
                     subnetId: natGatewayPublicSubnet.id,
                     routeTableId: publicRouteTable.id,
                 });
-                routeTableAssocations.push(natGatewayRoutes);
+
+                // Record the subnet id, but depend on the RouteTableAssociation
+                const natGatewayPublicSubnetId =
+                    pulumi.all([natGatewayPublicSubnet.id, natGatewayRoutes.id]).apply(([id, _]) => id);
+                this.publicSubnetIds.push(natGatewayPublicSubnetId);
 
                 // We need an Elastic IP for the NAT Gateway
                 const eip = new aws.ec2.Eip(natName);
@@ -116,7 +116,6 @@ export class Network {
                         Name: natName,
                     },
                 });
-                natGateways.push(natGateway);
 
                 const natRouteTable = new aws.ec2.RouteTable(natName, {
                     vpcId: vpc.id,
@@ -135,22 +134,17 @@ export class Network {
                 // Route directly to the Internet Gateway for the public subnet
                 subnetRouteTable = publicRouteTable;
                 // The subnet is public, so register it as our public subnet
-                publicSubnetIds.push(subnet.id);
+                this.publicSubnetIds.push(subnet.id);
             }
 
-            const routTableAssociation = new aws.ec2.RouteTableAssociation(`${name}-${i}`, {
+            const routeTableAssociation = new aws.ec2.RouteTableAssociation(`${name}-${i}`, {
                 subnetId: subnet.id,
                 routeTableId: subnetRouteTable.id,
             });
-            routeTableAssocations.push(routTableAssociation);
-        }
 
-        this.vpcId = combineOutput(vpc.id, ...routeTableAssocations, internetGateway);
-        this.securityGroupIds = [combineOutput(vpc.defaultSecurityGroupId, ...routeTableAssocations, internetGateway)];
-        this.subnetIds = subnetIds.map(subnetId => combineOutput(subnetId, ...routeTableAssocations, internetGateway));
-        this.publicSubnetIds = publicSubnetIds.map(subnetId =>
-            combineOutput(subnetId, ...routeTableAssocations, internetGateway));
-        this.internetGateway = combineDependencies(internetGateway, ...routeTableAssocations);
-        this.natGateways = natGateways.map(nat => combineDependencies(nat, ...routeTableAssocations));
+            // Record the subnet id, but depend on the RouteTableAssociation
+            const subnetId = pulumi.all([subnet.id, routeTableAssociation.id]).apply(([id, _]) => id);
+            this.subnetIds.push(subnetId);
+        }
     }
 }
