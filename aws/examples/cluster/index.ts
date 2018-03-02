@@ -8,7 +8,7 @@ const prefix = "infratest";
 const numAvailabilityZones = 2;
 const instanceType = "t2.small";
 
-let network = new awsinfra.Network(`${prefix}-net`, {
+const network = new awsinfra.Network(`${prefix}-net`, {
     numberOfAvailabilityZones: numAvailabilityZones, // Create subnets in many AZs
     privateSubnets: true,                            // Run compute inside private subnets in each AZ
 });

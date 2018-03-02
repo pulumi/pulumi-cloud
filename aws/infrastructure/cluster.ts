@@ -12,6 +12,15 @@ import { sha1hash } from "../utils";
 // The default path to use for mounting EFS inside ECS container instances.
 const efsMountPath = "/mnt/efs";
 
+/** 
+ * ScalingStrategy describes a generic strategy for scaling a Cluster.  Supported options are "MemoryReservationBasic"
+ * to scale the cluster instances based on memory reservation in the cluster, and "Manual" to not automatically scale
+ * (allowing operators to control scaling manually via the AWS console or APIs).
+ */
+export type ScalingStrategy = 
+    "None" |     
+    "MemoryReservationBasic";
+
 /**
  * Arguments bag for creating infrastrcture for a new Cluster.
  */
@@ -62,6 +71,10 @@ export interface ClusterArgs {
      */
     maxSize?: number;
     /**
+     * The scaling strategy to use for the cluster.  Defaults to "None".
+     */
+    scaling?: ScalingStrategy;
+    /**
      * Public key material for SSH access. See allowed formats at:
      * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
      * If not provided, no SSH access is enabled on VMs.
@@ -93,7 +106,7 @@ export class Cluster {
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
      */
-    public readonly autoScalingGroupStack?: pulumi.Resource;
+    public readonly autoScalingGroupStack?: aws.cloudformation.Stack;
     /**
      * The EFS host mount path if EFS is enabled on this Cluster.
      */
@@ -275,6 +288,53 @@ export class Cluster {
             },
             { dependsOn: dependsOn },
         );
+
+        if (args.scaling == "MemoryReservationBasic") {
+            const autoscalingGroupName = this.autoScalingGroupStack.outputs.apply(outputs => <string>outputs["Instances"]);
+
+            const scaleUpPolicy = new aws.autoscaling.Policy(`${name}-up`, {
+                adjustmentType: "PercentChangeInCapacity",
+                autoscalingGroupName: autoscalingGroupName,
+                scalingAdjustment: 100,
+            });
+
+            const scaleDownPolicy = new aws.autoscaling.Policy(`${name}-down`, {
+                adjustmentType: "PercentChangeInCapacity",
+                autoscalingGroupName: autoscalingGroupName,
+                scalingAdjustment: -50,
+            });
+
+            const metricAlarmMemoryHigh = new aws.cloudwatch.MetricAlarm(`${name}-memoryhigh`, {
+                comparisonOperator: "GreaterThanOrEqualToThreshold",
+                metricName: "MemoryReservation",
+                namespace: "AWS/ECS",
+                period: 60,
+                evaluationPeriods: 1,
+                threshold: 75,
+                statistic: "Maximum",
+                dimensions: {
+                    "ClusterName": cluster.name,
+                },
+                alarmDescription: "Scale up if the memory reservation is above 75% for 2 minutes",
+                alarmActions: [scaleUpPolicy.arn],
+            });
+
+            const metricAlarmMemoryLow = new aws.cloudwatch.MetricAlarm(`${name}-memorylow`, {
+                comparisonOperator: "LessThanOrEqualToThreshold",
+                metricName: "MemoryReservation",
+                namespace: "AWS/ECS",
+                period: 60,
+                evaluationPeriods: 1,
+                threshold: 25,
+                statistic: "Maximum",
+                dimensions: {
+                    "ClusterName": cluster.name,
+                },
+                alarmDescription: "Scale down if the memory reservation is below 25% for 2 minute",
+                alarmActions: [scaleDownPolicy.arn],
+            });
+        }
+
     }
 }
 
