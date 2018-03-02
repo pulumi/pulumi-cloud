@@ -1,5 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
+import * as pulumi from "@pulumi/pulumi";
 import * as crypto from "crypto";
 
 // sha1hash returns a partial SHA1 hash of the input string.
@@ -18,4 +19,10 @@ export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<s
     }
 
     return result;
+}
+
+// TODO: Replace this with `pulumi.output(Resource)` being able to create an Output with a dependency on the argument
+// Resource.
+export function liftResource<T extends pulumi.Resource>(resource: T): pulumi.Output<T> {
+    return resource.urn.apply(_ => resource);
 }

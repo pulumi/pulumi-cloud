@@ -7,7 +7,7 @@ import { awsAccountId, awsRegion } from "./aws";
 import { Network } from "./network";
 
 import * as config from "../config";
-import { sha1hash } from "../utils";
+import { liftResource, sha1hash } from "../utils";
 
 // The default path to use for mounting EFS inside ECS container instances.
 const efsMountPath = "/mnt/efs";
@@ -93,7 +93,7 @@ export class Cluster {
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
      */
-    public readonly autoScalingGroupStack?: pulumi.Resource;
+    public readonly autoScalingGroupStack?: pulumi.Output<pulumi.Resource>;
     /**
      * The EFS host mount path if EFS is enabled on this Cluster.
      */
@@ -252,16 +252,7 @@ export class Cluster {
         });
 
         // Finally, create the AutoScaling Group.
-        const dependsOn: pulumi.Resource[] = [];
-        if (args.network.internetGateway) {
-            dependsOn.push(args.network.internetGateway);
-        }
-        if (args.network.natGateways) {
-            for (const natGateway of args.network.natGateways) {
-                dependsOn.push(natGateway);
-            }
-        }
-        this.autoScalingGroupStack = new aws.cloudformation.Stack(
+        this.autoScalingGroupStack = liftResource(new aws.cloudformation.Stack(
             name,
             {
                 name: cloudFormationStackName,
@@ -273,8 +264,7 @@ export class Cluster {
                     args.network.subnetIds,
                 ),
             },
-            { dependsOn: dependsOn },
-        );
+        ));
     }
 }
 
