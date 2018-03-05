@@ -4,66 +4,20 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as assert from "assert";
-import * as child_process from "child_process";
-import * as semver from "semver";
 import * as stream from "stream";
+
 import * as config from "./config";
+import * as docker from "./docker";
 import * as awsinfra from "./infrastructure";
 import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
-         getGlobalInfrastructureResource, getNetwork } from "./shared";
+    getGlobalInfrastructureResource, getNetwork } from "./shared";
 import * as utils from "./utils";
 
-// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_KernelCapabilities.html
-type ECSKernelCapability = "ALL" | "AUDIT_CONTROL" | "AUDIT_WRITE" | "BLOCK_SUSPEND" | "CHOWN" | "DAC_OVERRIDE" |
-    "DAC_READ_SEARCH" | "FOWNER" | "FSETID" | "IPC_LOCK" | "IPC_OWNER" | "KILL" | "LEASE" | "LINUX_IMMUTABLE" |
-    "MAC_ADMIN" | "MAC_OVERRIDE" | "MKNOD" | "NET_ADMIN" | "NET_BIND_SERVICE" | "NET_BROADCAST" | "NET_RAW" |
-    "SETFCAP" | "SETGID" | "SETPCAP" | "SETUID" | "SYS_ADMIN" | "SYS_BOOT" | "SYS_CHROOT" | "SYS_MODULE" |
-    "SYS_NICE" | "SYS_PACCT" | "SYS_PTRACE" | "SYS_RAWIO" | "SYS_RESOURCE" | "SYS_TIME" | "SYS_TTY_CONFIG" |
-    "SYSLOG" | "WAKE_ALARM";
-
-// See `logdriver` at http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
-type ECSLogDriver = "json-file" | "syslog" | "journald" | "gelf" | "fluentd" | "awslogs" | "splunk";
-
-// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Ulimit.html
-type ECSUlimitName = "core" | "cpu" | "data" | "fsize" | "locks" | "memlock" | "msgqueue" | "nice" |
-    "nofile" | "nproc" | "rss" | "rtprio" | "rttime" | "sigpending" | "stack";
-
-// See http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html
-interface ECSContainerDefinition {
-    command?: string[];
-    cpu?: number;
-    disableNetworking?: boolean;
-    dnsSearchDomains?: boolean;
-    dnsServers?: string[];
-    dockerLabels?: { [label: string]: string };
-    dockerSecurityOptions?: string[];
-    entryPoint?: string[];
-    environment?: { name: string, value: string }[];
-    essential?: boolean;
-    extraHosts?: { hostname: string; ipAddress: string }[];
-    hostname?: string;
-    image?: string;
-    links?: string[];
-    linuxParameters?: { capabilities?: { add?: ECSKernelCapability[]; drop?: ECSKernelCapability[] } };
-    logConfiguration?: { logDriver: ECSLogDriver; options?: { [key: string]: string } };
-    memory?: number;
-    memoryReservation?: number;
-    mountPoints?: { containerPath?: string; readOnly?: boolean; sourceVolume?: string }[];
-    name: string;
-    portMappings?: { containerPort?: number; hostPort?: number; protocol?: string; }[];
-    privileged?: boolean;
-    readonlyRootFilesystem?: boolean;
-    ulimits?: { name: ECSUlimitName; hardLimit: number; softLimit: number }[];
-    user?: string;
-    volumesFrom?: { sourceContainer?: string; readOnly?: boolean }[];
-    workingDirectory?: string;
-}
-
 // The shared Load Balancer management role used across all Services.
-let serviceLoadBalancerRole: aws.iam.Role | undefined;
-function getServiceLoadBalancerRole(): aws.iam.Role {
-    if (!serviceLoadBalancerRole) {
+let serviceLoadBalancerRoleARN: pulumi.Output<string> | undefined;
+function getServiceLoadBalancerRoleARN(): pulumi.Output<string> {
+    if (!serviceLoadBalancerRoleARN) {
         const assumeRolePolicy = {
             "Version": "2012-10-17",
             "Statement": [
@@ -97,7 +51,7 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
         };
 
         const roleName = createNameWithStackInfo("load-balancer");
-        serviceLoadBalancerRole = new aws.iam.Role(roleName, {
+        const serviceLoadBalancerRole = new aws.iam.Role(roleName, {
             assumeRolePolicy: JSON.stringify(assumeRolePolicy),
         }, { parent: getGlobalInfrastructureResource() });
 
@@ -105,9 +59,11 @@ function getServiceLoadBalancerRole(): aws.iam.Role {
             role: serviceLoadBalancerRole.name,
             policy: JSON.stringify(policy),
         }, { parent: getGlobalInfrastructureResource() });
+
+        serviceLoadBalancerRoleARN = pulumi.all([serviceLoadBalancerRole.arn, rolePolicy.id]).apply(([arn, _]) => arn);
     }
 
-    return serviceLoadBalancerRole;
+    return serviceLoadBalancerRoleARN;
 }
 
 interface ContainerPortLoadBalancer {
@@ -219,218 +175,6 @@ function createLoadBalancer(
     };
 }
 
-interface ImageOptions {
-    image: string;
-    environment: Record<string, string>;
-}
-
-interface CommandResult {
-    code: number;
-    stdout?: string;
-}
-
-// Runs a CLI command in a child process, returning a promise for the process's exit.
-// Both stdout and stderr are redirected to process.stdout and process.stder by default.
-// If the [returnStdout] argument is `true`, stdout is not redirected and is instead returned with the promise.
-// If the [stdin] argument is defined, it's contents are piped into stdin for the child process.
-async function runCLICommand(
-    cmd: string,
-    args: string[],
-    returnStdout?: boolean,
-    stdin?: string): Promise<CommandResult> {
-    return new Promise<CommandResult>((resolve, reject) => {
-        const p = child_process.spawn(cmd, args);
-        let result: string | undefined;
-        if (returnStdout) {
-            // We store the results from stdout in memory and will return them as a string.
-            const chunks: Buffer[] = [];
-            p.stdout.on("data", (chunk: Buffer) => {
-                chunks.push(chunk);
-            });
-            p.stdout.on("end", () => {
-                result = Buffer.concat(chunks).toString();
-            });
-        } else {
-            p.stdout.pipe(process.stdout);
-        }
-        p.stderr.pipe(process.stderr);
-        p.on("error", (err) => {
-            reject(err);
-        });
-        p.on("close", (code) => {
-            resolve({
-                code: code,
-                stdout: result,
-            });
-        });
-        if (stdin) {
-            p.stdin.end(stdin);
-        }
-    });
-}
-
-// Store this so we can verify `docker` command is available only once per deployment.
-let cachedDockerVersionString: string|undefined;
-let dockerPasswordStdin: boolean = false;
-
-// buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
-// [repository].  It returns the digest of the built image.
-function buildAndPushImage(
-    imageName: string, container: cloud.Container,
-    repository: aws.ecr.Repository): pulumi.Output<string> {
-
-    // First build the image, collect its output digest as well as hte repo url and repo
-    // registry id.
-    const outputs = pulumi.all([
-        buildImageAsync(imageName, container, repository),
-        repository.repositoryUrl, repository.registryId]);
-
-    // Use those then push the image (note: this will only happen during a normal update,
-    // not a preview).  Then just return the digest as the final result for our caller to
-    // use.
-    return outputs.apply(([digest, repositoryUrl, registryId]) =>
-        pushImageAsync(imageName, repositoryUrl, registryId).then(() => digest));
-}
-
-async function buildImageAsync(
-        imageName: string, container: cloud.Container,
-        repository: aws.ecr.Repository): Promise<string> {
-    let build: cloud.ContainerBuild;
-    if (typeof container.build === "string") {
-        build = {
-            context: container.build,
-        };
-    } else if (container.build) {
-        build = container.build;
-    } else {
-        throw new Error(`Cannot build a container with an empty build specification`);
-    }
-
-    // If the build context is missing, default it to the working directory.
-    if (!build.context) {
-        build.context = ".";
-    }
-
-    console.log(
-        `Building container image '${imageName}': context=${build.context}` +
-            (build.dockerfile ? `, dockerfile=${build.dockerfile}` : "") +
-                (build.args ? `, args=${JSON.stringify(build.args)}` : ""),
-    );
-
-    // Verify that 'docker' is on the PATH and get the client/server versions
-    if (!cachedDockerVersionString) {
-        try {
-            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
-            // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
-            // features we want to use.
-            cachedDockerVersionString = versionResult.stdout;
-            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
-        } catch (err) {
-            throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
-        }
-
-        // Decide whether to use --password or --password-stdin based on the client version.
-        try {
-            const versionData: any = JSON.parse(cachedDockerVersionString!);
-            const clientVersion: string = versionData.Client.Version;
-            if (semver.gte(clientVersion, "17.07.0", true)) {
-                dockerPasswordStdin = true;
-            }
-        } catch (err) {
-            console.log(`Could not process Docker version (${err})`);
-        }
-    }
-
-    // Prepare the build arguments.
-    const buildArgs: string[] = [ "build" ];
-    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
-    if (build.dockerfile) {
-        buildArgs.push(...[ "-f", build.dockerfile ]); // add a custom Dockerfile location.
-    }
-    if (build.args) {
-        for (const arg of Object.keys(build.args)) {
-            buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
-        }
-    }
-    buildArgs.push(build.context); // push the docker build context onto the path.
-
-    // Invoke Docker CLI commands to build and push.
-    const buildResult = await runCLICommand("docker", buildArgs);
-    if (buildResult.code) {
-        throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
-    }
-
-    // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
-    if (inspectResult.code || !inspectResult.stdout) {
-        throw new Error(
-            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
-    }
-    return inspectResult.stdout.trim();
-}
-
-async function pushImageAsync(
-    imageName: string, repositoryUrl: string, registryId: string) {
-
-    // Next, login to the repository.  Construct Docker registry auth data by getting the short-lived
-    // authorizationToken from ECR, and extracting the username/password pair after base64-decoding the token.
-    // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-    if (!registryId) {
-        throw new Error("Expected registry ID to be defined during push");
-    }
-    const credentials = await aws.ecr.getCredentials({ registryId: registryId });
-    const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-    const [username, password] = decodedCredentials.split(":");
-    if (!password || !username) {
-        throw new Error("Invalid credentials");
-    }
-    const registry = credentials.proxyEndpoint;
-
-    let loginResult: CommandResult;
-    if (!dockerPasswordStdin) {
-        loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "-p", password, registry]);
-    } else {
-        loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "--password-stdin", registry], false, password);
-    }
-    if (loginResult.code) {
-        throw new Error(`Failed to login to Docker registry ${registry}`);
-    }
-
-    // Tag and push the image to the remote repository.
-    if (!repositoryUrl) {
-        throw new Error("Expected repository URL to be defined during push");
-    }
-    const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
-    if (tagResult.code) {
-        throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
-    }
-    const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
-    if (pushResult.code) {
-        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
-    }
-}
-
-// parseDockerEngineUpdatesFromBuffer extracts messages from the Docker engine
-// that are communicated over the stream returned from a Build or Push
-// operation.
-function parseDockerEngineUpdatesFromBuffer(buffer: Buffer): any[] {
-    const str = buffer.toString();
-    const lines = str.split("\n");
-    const results = [];
-    for (const line of lines) {
-        if (line.length === 0) {
-            continue;
-        }
-        results.push(JSON.parse(line));
-    }
-    return results;
-}
-
-// repositories contains a cache of already created ECR repositories.
-const repositories = new Map<string, aws.ecr.Repository>();
-
 // getImageName generates an image name from a container definition.  It uses a combination of the container's name and
 // container specification to normalize the names of resulting repositories.  Notably, this leads to better caching in
 // the event that multiple container specifications exist that build the same location on disk.
@@ -467,6 +211,9 @@ function getImageName(container: cloud.Container): string {
     }
 }
 
+// repositories contains a cache of already created ECR repositories.
+const repositories = new Map<string, aws.ecr.Repository>();
+
 // getOrCreateRepository returns the ECR repository for this image, lazily allocating if necessary.
 function getOrCreateRepository(imageName: string): aws.ecr.Repository {
     let repository: aws.ecr.Repository | undefined = repositories.get(imageName);
@@ -485,12 +232,19 @@ function makeServiceEnvName(service: string): string {
     return service.toUpperCase().replace(/-/g, "_");
 }
 
+interface ImageOptions {
+    image: string;
+    environment: Record<string, string>;
+}
+
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
-// name which can be used in an ECS TaskDefinition.
+// name and environment which can be used in an ECS TaskDefinition.
 function computeImage(
-        imageName: string, container: cloud.Container,
+        imageName: string,
+        container: cloud.Container,
         ports: ExposedPorts | undefined,
         repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
+
     // Start with a copy from the container specification.
     const preEnv: {[key: string]: pulumi.Input<string>} =
         <any>Object.assign({}, container.environment || {});
@@ -555,7 +309,27 @@ function computeImage(
             // that to complete, then return the image name pointing to the ECT repository along
             // with an environment variable for the image digest to ensure the TaskDefinition get's
             // replaced IFF the built image changes.
-            imageDigest = buildAndPushImage(imageName, container, repository!);
+            const {repositoryUrl, registryId} = repository!;
+            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, async () => {
+                // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
+                // extracting the username/password pair after base64-decoding the token.
+                //
+                // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+                if (!registryId) {
+                    throw new Error("Expected registry ID to be defined during push");
+                }
+                const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+                const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+                const [username, password] = decodedCredentials.split(":");
+                if (!password || !username) {
+                    throw new Error("Invalid credentials");
+                }
+                return {
+                    registry: credentials.proxyEndpoint,
+                    username: username,
+                    password: password,
+                };
+            });
             if (imageName) {
                 buildImageCache.set(imageName, imageDigest);
             }
@@ -585,13 +359,12 @@ function computeImage(
 }
 
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
-// This is lifted over a promise for the LogGroup and container image name generation - so should
-// not allocate any Pulumi resources.
 function computeContainerDefinitions(
-        containers: cloud.Containers, ports: ExposedPorts | undefined,
-        logGroup: aws.cloudwatch.LogGroup): pulumi.Output<ECSContainerDefinition[]> {
+        containers: cloud.Containers,
+        ports: ExposedPorts | undefined,
+        logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
 
-    const containerDefinitions: pulumi.Output<ECSContainerDefinition>[] =
+    const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] =
         Object.keys(containers).map(containerName => {
             const container = containers[containerName];
             const imageName: string = getImageName(container);
@@ -616,7 +389,7 @@ function computeContainerDefinitions(
                     keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
                 }
 
-                const containerDefinition: ECSContainerDefinition = {
+                const containerDefinition: aws.ecs.ContainerDefinition = {
                     name: containerName,
                     image: imageOpts.image,
                     command: command,
@@ -826,7 +599,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         }
 
         // Only provide a role if the service is attached to a load balancer.
-        const iamRole = loadBalancers.length ? getServiceLoadBalancerRole().arn : undefined;
+        const iamRole = loadBalancers.length ? getServiceLoadBalancerRoleARN() : undefined;
 
         // Create the task definition, parented to this component.
         const taskDefinition = createTaskDefinition(this, name, containers, ports);
