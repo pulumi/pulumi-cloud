@@ -5,46 +5,37 @@ import { Output } from "@pulumi/pulumi";
 
 // A simple NGINX service, scaled out over two containers.
 let nginx = new cloud.Service("examples-nginx", {
-    containers: {
-        nginx: {
-            image: "nginx",
-            memory: 128,
-            ports: [{ port: 80 }],
-        },
-    },
+    image: "nginx",
+    memory: 128,
+    ports: [{ port: 80 }],
+}, {
     replicas: 2,
 });
 
-export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
+export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints["examples-nginx"][80]);
 
 // A simple MongoDB service, using a data volume which persists on the backing
 // storage beyond the lifetime of the deployment.
 let dataVolume = new cloud.SharedVolume("examples-mymongodb-data");
 let mongodb = new cloud.Service("examples-mymongodb", {
-    containers: {
-        mongodb: {
-            image: "mongo",
-            memory: 128,
-            ports: [{ port: 27017, external: true }],
-            volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
-        },
-    },
+    image: "mongo",
+    memory: 128,
+    ports: [{ port: 27017, external: true }],
+    volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
 });
 
 let customWebServer = new cloud.Service("mycustomservice", {
-    containers: {
-        webserver: {
-            memory: 128,
-            ports: [{ port: 80, targetPort: 8080 }],
-            function: () => {
-                let rand = Math.random();
-                let http = require("http");
-                http.createServer((req: any, res: any) => {
-                    res.end(`Hello, world! (from ${rand})`);
-                }).listen(8080);
-            },
-        },
+    memory: 128,
+    ports: [{ port: 80, targetPort: 8080 }],
+    function: () => {
+        let rand = Math.random();
+        let http = require("http");
+        http.createServer((req: any, res: any) => {
+            res.end(`Hello, world! (from ${rand})`);
+        }).listen(8080);
+
     },
+}, {
     replicas: 2,
 });
 
@@ -63,17 +54,13 @@ class Cache {
 
     constructor(name: string, memory: number = 128) {
         let redis = new cloud.Service(name, {
-            containers: {
-                redis: {
-                    image: "redis:alpine",
-                    memory: memory,
-                    ports: [{ port: 6379 }],
-                    command: ["redis-server", "--requirepass", redisPassword],
-                },
-            },
+            image: "redis:alpine",
+            memory: memory,
+            ports: [{ port: 6379 }],
+            command: ["redis-server", "--requirepass", redisPassword],
         });
         this.get = (key: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
+            return redis.getEndpoint().then(endpoint => {
                 console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
@@ -93,7 +80,7 @@ class Cache {
             });
         };
         this.set = (key: string, value: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
+            return redis.getEndpoint().then(endpoint => {
                 console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
@@ -124,13 +111,10 @@ let helloTask = new cloud.Task("examples-hello-world", {
 
 // build an anonymous image:
 let builtService = new cloud.Service("examples-nginx2", {
-    containers: {
-        nginx: {
-            build: "./app",
-            memory: 128,
-            ports: [{ port: 80 }],
-        },
-    },
+    build: "./app",
+    memory: 128,
+    ports: [{ port: 80 }],
+}, {
     replicas: 2,
 });
 
@@ -166,7 +150,7 @@ api.get("/", async (req, res) => {
             res.end(page);
             return;
         }
-        let endpoint = await nginx.getEndpoint("nginx", 80);
+        let endpoint = await nginx.getEndpoint();
         console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
@@ -209,5 +193,5 @@ api.get("/custom", async (req, res) => {
         res.status(500).json(errorJSON(err));
     }
 });
-api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
+api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints["examples-nginx"][80]));
 export let frontendURL = api.publish().url;
