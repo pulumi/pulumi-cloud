@@ -12,7 +12,7 @@ import * as docker from "./docker";
 import * as awsinfra from "./infrastructure";
 import { getLogCollector } from "./logCollector";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
-    getGlobalInfrastructureResource, getNetwork } from "./shared";
+    getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
 
 // The shared Load Balancer management role used across all Services.
@@ -80,11 +80,8 @@ function createLoadBalancer(
         cluster: awsinfra.Cluster,
         serviceName: string,
         containerName: string,
-        portMapping: cloud.ContainerPort): ContainerPortLoadBalancer {
-    const network: awsinfra.Network | undefined = getNetwork();
-    if (!network) {
-        throw new RunError("Cannot create 'Service'. No VPC configured.");
-    }
+        portMapping: cloud.ContainerPort,
+        network: awsinfra.Network): ContainerPortLoadBalancer {
 
     // Load balancers need *very* short names, so we unforutnately have to hash here.
     //
@@ -152,6 +149,7 @@ function createLoadBalancer(
         tags: {
             Name: longName,
         },
+        targetType: config.useFargate ? "ip" : undefined,
     }, { parent: parent });
 
     // Listen on the requested port on the LB and forward to the target.
@@ -476,9 +474,8 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
         filterPattern: "",
     }, { parent: parent });
 
-    // Find all referenced Volumes and any `build` containers.
+    // Find all referenced Volumes.
     const volumes: { hostPath?: string; name: string }[] = [];
-    const repos = new Map<string, aws.ecr.Repository>();
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
 
@@ -495,12 +492,30 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup).apply(JSON.stringify);
+    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup);
+
+    // Compute the memory and CPU requirements of the task for Fargate
+    const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
+
+    // Find the ECS task execution role to use.  See
+    // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html.
+    let executionRoleArn: Promise<string> | undefined;
+    if (config.useFargate) {
+        executionRoleArn = aws.iam.getRole({
+            name: "ecsTaskExecutionRole",
+        }).then(role => role.arn);
+    }
+
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
-        containerDefinitions: containerDefinitions,
+        containerDefinitions: containerDefinitions.apply(JSON.stringify),
         volumes: volumes,
         taskRoleArn: getTaskRole().arn,
+        requiresCompatibilities: config.useFargate ? ["FARGATE"] : undefined,
+        memory: config.useFargate ? taskMemoryAndCPU.apply(t => t.memory): undefined,
+        cpu: config.useFargate ? taskMemoryAndCPU.apply(t => t.cpu): undefined,
+        networkMode: "awsvpc",
+        executionRoleArn: executionRoleArn,
     }, { parent: parent });
 
     return {
@@ -509,13 +524,66 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     };
 }
 
-function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
-    const os = (host && host.os) || "linux";
+// Compute the memory and CPU requirements of the task for Fargate. See
+// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size.
+function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
+    // Sum the requested memory and CPU for each container in the task.
+    let minTaskMemory = 0;
+    let minTaskCPU = 0;
+    for (const containerDef of defs) {
+        if (containerDef.memoryReservation) {
+            minTaskMemory += containerDef.memoryReservation;
+        } else if (containerDef.memory) {
+            minTaskMemory += containerDef.memory;
+        }
+        if (containerDef.cpu) {
+            minTaskCPU += containerDef.cpu;
+        }
+    }
 
-    return [{
-        type: "memberOf",
-        expression: `attribute:ecs.os-type == ${os}`,
-    }];
+    // Compute the smallest allowed Fargate memory value compatible with the requested minimum memory.
+    let taskMemory: number;
+    let taskMemoryString: string;
+    if (minTaskMemory <= 512) {
+        taskMemory = 512;
+        taskMemoryString = "0.5GB";
+    } else {
+        const taskMemGB = minTaskMemory / 1024;
+        const taskMemWholeGB = Math.ceil(taskMemGB);
+        taskMemory = taskMemWholeGB * 1024;
+        taskMemoryString = `${taskMemWholeGB}GB`;
+    }
+
+    // Allowed CPU values are powers of 2 between 256 and 4096.  We just ensure it's a power of 2 that is at least
+    // 256. We leave the error case for requiring more CPU than is supported to ECS.
+    let taskCPU = Math.pow(2, Math.ceil(Math.log2(Math.max(minTaskCPU, 256))));
+
+    // Make sure we select an allowed CPU value for the specified memory.
+    if (taskMemory > 2048) {
+        taskCPU = Math.max(taskCPU, 512);
+    } else if (taskMemory > 4096) {
+        taskCPU = Math.max(taskCPU, 1024);
+    } else if (taskMemory > 8192) {
+        taskCPU = Math.max(taskCPU, 2048);
+    } else if (taskMemory > 16384) {
+        taskCPU = Math.max(taskCPU, 4096);
+    }
+
+    // Return the computed task memory and CPU values
+    return {
+        memory: taskMemoryString,
+        cpu: `${taskCPU}`,
+    };
+}
+
+function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
+    if (host && host.os) {
+        return [{
+            type: "memberOf",
+            expression: `attribute:ecs.os-type == ${host.os}`,
+        }];
+    }
+    return undefined;
 }
 
 interface ExposedPorts {
@@ -559,7 +627,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
             throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
-                " or 'cloud-aws:config:ecsAutoCluster'");
+                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
         }
 
         const containers = args.containers;
@@ -574,6 +642,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         this.name = name;
         this.cluster = cluster;
 
+        // Get the network to create the Service within.
+        const network = getOrCreateNetwork();
+
         // Create load balancer listeners/targets for each exposed port.
         const loadBalancers = [];
         for (const containerName of Object.keys(containers)) {
@@ -584,7 +655,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     if (loadBalancers.length > 0) {
                         throw new RunError("Only one port can currently be exposed per Service.");
                     }
-                    const info = createLoadBalancer(this, cluster, name, containerName, portMapping);
+                    const info = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
                     ports[containerName][portMapping.port] = {
                         host: info.loadBalancer,
                         hostPort: portMapping.port,
@@ -611,9 +682,15 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
-            iamRole: iamRole,
+            iamRole: config.useFargate ? undefined : iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: true,
+            launchType: config.useFargate ? "FARGATE" : "EC2",
+            networkConfiguration: {
+                assignPublicIp: false,
+                securityGroups: [ cluster.securityGroupId!],
+                subnets: network.subnetIds,
+            },
         }, { parent: this });
 
         const localEndpoints = getEndpoints(ports);
@@ -740,7 +817,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
+                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
         }
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;

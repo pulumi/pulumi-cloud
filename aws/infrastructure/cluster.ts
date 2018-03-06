@@ -23,6 +23,10 @@ export interface ClusterArgs {
      */
     addEFS: boolean;
     /**
+     * Optionally suppress creating any EC2 instances in this cluster (only Fargate tasks will be supported).
+     */
+    noEC2Instances?: boolean;
+    /**
      * The EC2 instance type to use for the Cluster.  Defaults to `t2-micro`.
      */
     instanceType?: string;
@@ -91,7 +95,7 @@ export class Cluster {
      * The auto-scaling group that ECS Service's should add to their
      * `dependsOn`.
      */
-    public readonly autoScalingGroupStack?: pulumi.Output<pulumi.Resource>;
+    public readonly autoScalingGroupStack?: pulumi.Resource;
     /**
      * The EFS host mount path if EFS is enabled on this Cluster.
      */
@@ -105,35 +109,6 @@ export class Cluster {
         // First create an ECS cluster.
         const cluster = new aws.ecs.Cluster(name);
         this.ecsClusterARN = cluster.id;
-
-        // Next create all of the IAM/security resources.
-        const assumeInstanceRolePolicyDoc: aws.iam.PolicyDocument = {
-            Version: "2012-10-17",
-            Statement: [{
-                Action: [
-                    "sts:AssumeRole",
-                ],
-                Effect: "Allow",
-                Principal: {
-                    Service: [ "ec2.amazonaws.com" ],
-                },
-            }],
-        };
-        const instanceRole = new aws.iam.Role(name, {
-            assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
-        });
-        const policyARNs = args.instanceRolePolicyARNs
-            || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
-        for (let i = 0; i < policyARNs.length; i++) {
-            const policyARN = policyARNs[i];
-            const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${sha1hash(policyARN)}`, {
-                role: instanceRole,
-                policyArn: policyARN,
-            });
-        }
-        const instanceProfile = new aws.iam.InstanceProfile(name, {
-            role: instanceRole,
-        });
 
         // Create the EC2 instance security group
         const ALL = {
@@ -202,68 +177,115 @@ export class Cluster {
             this.efsMountPath = efsMountPath;
         }
 
-        // If requested, add a new EC2 KeyPair for SSH access to the instances.
-        let keyName: pulumi.Output<string> | undefined;
-        if (args.publicKey) {
-            const key = new aws.ec2.KeyPair(name, {
-                publicKey: args.publicKey,
-            });
-            keyName = key.keyName;
+        // If we were asked to not create any EC2 instances, then we are done.
+        if (!args.noEC2Instances) {
+            this.autoScalingGroupStack = createAutoScalingGroup(name, args, instanceSecurityGroup, cluster, filesystem);
         }
 
-        // Create the full name of our CloudFormation stack here explicitly. Since the CFN stack references the
-        // launch configuration and vice-versa, we use this to break the cycle.
-        // TODO[pulumi/pulumi#381]: Creating an S3 bucket is an inelegant way to get a durable, unique name.
-        const cloudFormationStackName = new aws.s3.Bucket(name).id;
+    }
+}
 
-        // Specify the intance configuration for the cluster.
-        const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(name, {
-            imageId: getEcsAmiId(args.ecsOptimizedAMIName),
-            instanceType: args.instanceType || "t2.micro",
-            keyName: keyName,
-            iamInstanceProfile: instanceProfile.id,
-            enableMonitoring: true,  // default is true
-            placementTenancy: "default",  // default is "default"
-            rootBlockDevice: {
-                volumeSize: args.instanceRootVolumeSize || 8, // GiB
+// Create an AutoScalingGroup for the EC2 container instances specified by the cluster arguments, registered with the
+// provided cluster and mounting the provided filesystem
+function createAutoScalingGroup(
+        name: string,
+        args: ClusterArgs,
+        securityGroup: aws.ec2.SecurityGroup,
+        cluster: aws.ecs.Cluster,
+        filesystem?: aws.efs.FileSystem): aws.cloudformation.Stack {
+
+    // Next create all of the IAM/security resources.
+    const assumeInstanceRolePolicyDoc: aws.iam.PolicyDocument = {
+        Version: "2012-10-17",
+        Statement: [{
+            Action: [
+                "sts:AssumeRole",
+            ],
+            Effect: "Allow",
+            Principal: {
+                Service: [ "ec2.amazonaws.com" ],
+            },
+        }],
+    };
+    const instanceRole = new aws.iam.Role(name, {
+        assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
+    });
+    const policyARNs = args.instanceRolePolicyARNs
+        || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
+    const instanceRolePolicies: aws.iam.RolePolicyAttachment[] = [];
+    for (let i = 0; i < policyARNs.length; i++) {
+        const policyARN = policyARNs[i];
+        const instanceRolePolicy = new aws.iam.RolePolicyAttachment(`${name}-${sha1hash(policyARN)}`, {
+            role: instanceRole,
+            policyArn: policyARN,
+        });
+        instanceRolePolicies.push(instanceRolePolicy);
+    }
+    const instanceProfile = new aws.iam.InstanceProfile(name, {
+        role: instanceRole,
+    }, { dependsOn: instanceRolePolicies });
+
+    // If requested, add a new EC2 KeyPair for SSH access to the instances.
+    let keyName: pulumi.Output<string> | undefined;
+    if (args.publicKey) {
+        const key = new aws.ec2.KeyPair(name, {
+            publicKey: args.publicKey,
+        });
+        keyName = key.keyName;
+    }
+
+    // Create the full name of our CloudFormation stack here explicitly. Since the CFN stack references the
+    // launch configuration and vice-versa, we use this to break the cycle.
+    // TODO[pulumi/pulumi#381]: Creating an S3 bucket is an inelegant way to get a durable, unique name.
+    const cloudFormationStackName = new aws.s3.Bucket(name).id;
+
+    // Specify the intance configuration for the cluster.
+    const instanceLaunchConfiguration = new aws.ec2.LaunchConfiguration(name, {
+        imageId: getEcsAmiId(args.ecsOptimizedAMIName),
+        instanceType: args.instanceType || "t2.micro",
+        keyName: keyName,
+        iamInstanceProfile: instanceProfile.id,
+        enableMonitoring: true,  // default is true
+        placementTenancy: "default",  // default is "default"
+        rootBlockDevice: {
+            volumeSize: args.instanceRootVolumeSize || 8, // GiB
+            volumeType: "gp2", // default is "standard"
+            deleteOnTermination: true,
+        },
+        ebsBlockDevices: [
+            {
+                // Swap volume
+                deviceName: "/dev/xvdb",
+                volumeSize: args.instanceSwapVolumeSize || 5, // GiB
                 volumeType: "gp2", // default is "standard"
                 deleteOnTermination: true,
             },
-            ebsBlockDevices: [
-                {
-                    // Swap volume
-                    deviceName: "/dev/xvdb",
-                    volumeSize: args.instanceSwapVolumeSize || 5, // GiB
-                    volumeType: "gp2", // default is "standard"
-                    deleteOnTermination: true,
-                },
-                {
-                    // Docker image and metadata volume
-                    deviceName: "/dev/xvdcz",
-                    volumeSize: args.instanceDockerImageVolumeSize || 50, // GiB
-                    volumeType: "gp2",
-                    deleteOnTermination: true,
-                },
-            ],
-            securityGroups: [ instanceSecurityGroup.id ],
-            userData: getInstanceUserData(cluster, filesystem, this.efsMountPath, cloudFormationStackName),
-        });
-
-        // Finally, create the AutoScaling Group.
-        this.autoScalingGroupStack = liftResource(new aws.cloudformation.Stack(
-            name,
             {
-                name: cloudFormationStackName,
-                templateBody: getCloudFormationAsgTemplate(
-                    name,
-                    args.minSize || 2,
-                    args.maxSize || 100,
-                    instanceLaunchConfiguration.id,
-                    args.network.subnetIds,
-                ),
+                // Docker image and metadata volume
+                deviceName: "/dev/xvdcz",
+                volumeSize: args.instanceDockerImageVolumeSize || 50, // GiB
+                volumeType: "gp2",
+                deleteOnTermination: true,
             },
-        ));
-    }
+        ],
+        securityGroups: [ securityGroup.id ],
+        userData: getInstanceUserData(cluster, filesystem, this.efsMountPath, cloudFormationStackName),
+    });
+
+    // Finally, create the AutoScaling Group.
+    return new aws.cloudformation.Stack(
+        name,
+        {
+            name: cloudFormationStackName,
+            templateBody: getCloudFormationAsgTemplate(
+                name,
+                args.minSize || 2,
+                args.maxSize || 100,
+                instanceLaunchConfiguration.id,
+                args.network.subnetIds,
+            ),
+        },
+    );
 }
 
 (<any>Cluster).doNotCapture = true;

@@ -186,7 +186,8 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
-				"aws:config:region":                                            region,
+				// TODO: Fargate only in us-east-1.
+				"aws:config:region":                                            "us-east-1",
 				"cloud:config:provider":                                        "aws",
 				"cloud-aws:config:ecsAutoCluster":                              "true",
 				"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "2",

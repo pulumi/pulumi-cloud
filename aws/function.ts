@@ -5,7 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { functionMemorySize } from "./config";
 import { Network } from "./infrastructure/network";
 import { getLogCollector } from "./logCollector";
-import { getComputeIAMRolePolicies, getNetwork, runLambdaInVPC } from "./shared";
+import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -32,13 +32,13 @@ export class Function extends pulumi.ComponentResource {
             memorySize: functionMemorySize,
         };
         if (runLambdaInVPC) {
-            const network: Network | undefined = getNetwork();
+            const network: Network | undefined = getOrCreateNetwork();
             // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
             //     add VPC access will currently fail due to an issue in the Terraform provider.
             options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
             options.vpcConfig = {
-                securityGroupIds: pulumi.all(network!.securityGroupIds),
-                subnetIds: pulumi.all(network!.subnetIds),
+                securityGroupIds: pulumi.all(network.securityGroupIds),
+                subnetIds: pulumi.all(network.subnetIds),
             };
         }
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }, serialize).lambda;

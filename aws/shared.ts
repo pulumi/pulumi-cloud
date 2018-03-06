@@ -82,19 +82,22 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
     return computePolicies;
 }
 
-// The network to use for container (and possibly lambda) compute or undefined if containers are unsupported and
-// lambdas are being run outsie a VPC.
-let network: Network | undefined;
-export function getNetwork(): Network | undefined {
+let network: Network;
+
+/**
+ * Get or create the network to use for container (and possibly lambda) compute or undefined if containers are
+ * unsupported and lambdas are being run outsie a VPC.
+ */
+export function getOrCreateNetwork(): Network {
     // If no network has been initialized, see if we must lazily allocate one.
     if (!network) {
-        if (config.usePrivateNetwork || config.ecsAutoCluster) {
+        if (!config.externalVpcId) {
             // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
             network = new Network(createNameWithStackInfo("global"), {
                 privateSubnets: config.usePrivateNetwork,
                 numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
             });
-        } else if (config.externalVpcId) {
+        } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
                 throw new RunError(
                     "If providing 'externalVpcId', must provide 'externalSubnets', " +
@@ -115,6 +118,13 @@ export function getNetwork(): Network | undefined {
     return network;
 }
 
+/**
+ * @deprecated
+ */
+export function getNetwork(): Network | undefined {
+    return getOrCreateNetwork();
+}
+
 // The cluster to use for container compute or undefined if containers are unsupported.
 let cluster: Cluster | undefined;
 export function getCluster(): Cluster | undefined {
@@ -129,7 +139,7 @@ export function getCluster(): Cluster | undefined {
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new Cluster(createNameWithStackInfo("global"), {
-                network: getNetwork()!,
+                network: getOrCreateNetwork(),
                 addEFS: config.ecsAutoClusterUseEFS === undefined ? true : config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
@@ -148,6 +158,13 @@ export function getCluster(): Cluster | undefined {
                     ? pulumi.output(config.ecsClusterSecurityGroup) : undefined,
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
+        } else if (config.useFargate) {
+            // Else, allocate a Fargate-only cluster.
+            cluster = new Cluster(createNameWithStackInfo("global"), {
+                network: getOrCreateNetwork(),
+                noEC2Instances: true,
+                addEFS: false,
+            });
         }
     }
     return cluster;
