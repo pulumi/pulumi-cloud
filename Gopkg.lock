@@ -473,7 +473,6 @@
     "pkg/apitype",
     "pkg/backend",
     "pkg/backend/local",
-    "pkg/backend/state",
     "pkg/diag",
     "pkg/diag/colors",
     "pkg/encoding",
@@ -498,7 +497,7 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "f295a5ca6619341e6ef57f7cae42cc4fd12491af"
+  revision = "bde69dce1a4b5906ed455fdea8de5842be64e5db"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
@@ -706,6 +705,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "20411386b76fb9179c392f6cfaa5c09ae3e026797e4e8a65d524da830e9a929a"
+  inputs-digest = "baa2a32cf8256a94e73e06986b6b5a56c214e79f4014e318a8c7ac6ec9a0b56a"
   solver-name = "gps-cdcl"
   solver-version = 1
