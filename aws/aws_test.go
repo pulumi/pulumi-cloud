@@ -45,8 +45,11 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
+				"aws:config:region":                     region,
+				"cloud:config:provider":                 "aws",
+				"cloud-aws:config:ecsAutoCluster":       "true",
+				"cloud-aws:config:ecsAutoClusterUseEFS": "false",
+				"cloud-aws:config:usePrivateNetwork":    "true",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
