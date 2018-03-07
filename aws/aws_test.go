@@ -44,9 +44,9 @@ func Test_Examples(t *testing.T) {
 			Config: map[string]string{
 				"aws:config:region":                     region,
 				"cloud:config:provider":                 "aws",
-				"cloud-aws:config:ecsAutoCluster":       "true",
+				"cloud-aws:config:ecsAutoCluster":       "false",
 				"cloud-aws:config:ecsAutoClusterUseEFS": "false",
-				"cloud-aws:config:usePrivateNetwork":    "true",
+				"cloud-aws:config:usePrivateNetwork":    "false",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -56,20 +56,20 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				hitUnitTestsEndpoint(t, stackInfo)
 			},
-			// EditDirs: []integration.EditDir{
-			// 	{
-			// 		Dir: cwd + "/tests/unit/variants/update1",
-			// 		ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-			// 			hitUnitTestsEndpoint(t, stackInfo)
-			// 		},
-			// 	},
-			// 	{
-			// 		Dir: cwd + "/tests/unit/variants/update2",
-			// 		ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-			// 			hitUnitTestsEndpoint(t, stackInfo)
-			// 		},
-			// 	},
-			// },
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/tests/unit/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+				{
+					Dir: cwd + "/tests/unit/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+			},
 		},
 
 		// {
