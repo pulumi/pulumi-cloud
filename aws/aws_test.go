@@ -35,9 +35,9 @@ func Test_Examples(t *testing.T) {
 			Config: map[string]string{
 				"aws:config:region":                     region,
 				"cloud:config:provider":                 "aws",
-				"cloud-aws:config:ecsAutoCluster":       "false",
+				"cloud-aws:config:ecsAutoCluster":       "true",
 				"cloud-aws:config:ecsAutoClusterUseEFS": "false",
-				"cloud-aws:config:usePrivateNetwork":    "false",
+				"cloud-aws:config:usePrivateNetwork":    "true",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
