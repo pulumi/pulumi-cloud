@@ -33,11 +33,11 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
-				"aws:config:region":                     region,
-				"cloud:config:provider":                 "aws",
-				"cloud-aws:config:ecsAutoCluster":       "true",
-				"cloud-aws:config:ecsAutoClusterUseEFS": "false",
-				"cloud-aws:config:usePrivateNetwork":    "true",
+				// TODO: Fargate only in us-east-1.
+				"aws:config:region":                  "us-east-1",
+				"cloud:config:provider":              "aws",
+				"cloud-aws:config:useFargate":        "true",
+				"cloud-aws:config:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
@@ -187,14 +187,11 @@ func Test_Examples(t *testing.T) {
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
 				// TODO: Fargate only in us-east-1.
-				"aws:config:region":                                            "us-east-1",
-				"cloud:config:provider":                                        "aws",
-				"cloud-aws:config:ecsAutoCluster":                              "true",
-				"cloud-aws:config:ecsAutoClusterNumberOfAZs":                   "2",
-				"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
-				"cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize": "100",
-				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
-				"containers:config:redisPassword":                              "SECRETPASSWORD",
+				"aws:config:region":                  "us-east-1",
+				"cloud:config:provider":              "aws",
+				"cloud-aws:config:useFargate":        "true",
+				"cloud-aws:config:usePrivateNetwork": "true",
+				"containers:config:redisPassword":    "SECRETPASSWORD",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
