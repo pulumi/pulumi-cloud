@@ -47,7 +47,6 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				hitUnitTestsEndpoint(t, stackInfo)
 			},
-			DebugUpdates: true,
 			EditDirs: []integration.EditDir{
 				{
 					Dir: cwd + "/tests/unit/variants/update1",
