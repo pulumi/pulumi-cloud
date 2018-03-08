@@ -31,18 +31,6 @@ func Test_Examples(t *testing.T) {
 	}
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "./examples/cluster"),
-			Config: map[string]string{
-				"aws:config:region":     region,
-				"cloud:config:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/pulumi",
-				"@pulumi/cloud-aws",
-			},
-		},
-
-		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
 				"aws:config:region":                     region,
@@ -72,6 +60,18 @@ func Test_Examples(t *testing.T) {
 						hitUnitTestsEndpoint(t, stackInfo)
 					},
 				},
+			},
+		},
+
+		{
+			Dir: path.Join(cwd, "./examples/cluster"),
+			Config: map[string]string{
+				"aws:config:region":     region,
+				"cloud:config:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/pulumi",
+				"@pulumi/cloud-aws",
 			},
 		},
 

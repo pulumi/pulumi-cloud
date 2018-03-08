@@ -4,8 +4,8 @@ import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
 import * as harness from "./harness";
 import * as httpEndpointTests from "./httpEndpointTests";
-import * as tableTests from "./tableTests";
 import * as serviceTests from "./serviceTests";
+import * as tableTests from "./tableTests";
 
 const endpoint = new cloud.HttpEndpoint("tests-unittests");
 
