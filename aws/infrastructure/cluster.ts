@@ -8,7 +8,7 @@ import { Network } from "./network";
 import { liftResource, sha1hash } from "../utils";
 
 // The default path to use for mounting EFS inside ECS container instances.
-const efsMountPath = "/mnt/efs";
+const defaultEfsMountPath = "/mnt/efs";
 
 /**
  * Arguments bag for creating infrastrcture for a new Cluster.
@@ -174,12 +174,13 @@ export class Cluster {
                     securityGroups: [ efsSecurityGroup.id ],
                 });
             }
-            this.efsMountPath = efsMountPath;
+            this.efsMountPath = defaultEfsMountPath;
         }
 
         // If we were asked to not create any EC2 instances, then we are done.
         if (!args.noEC2Instances) {
-            this.autoScalingGroupStack = createAutoScalingGroup(name, args, instanceSecurityGroup, cluster, filesystem);
+            this.autoScalingGroupStack = createAutoScalingGroup(
+                name, args, instanceSecurityGroup, cluster, filesystem, this.efsMountPath);
         }
 
     }
@@ -192,7 +193,8 @@ function createAutoScalingGroup(
         args: ClusterArgs,
         securityGroup: aws.ec2.SecurityGroup,
         cluster: aws.ecs.Cluster,
-        filesystem?: aws.efs.FileSystem): aws.cloudformation.Stack {
+        filesystem?: aws.efs.FileSystem,
+        efsMountPath?: string): aws.cloudformation.Stack {
 
     // Next create all of the IAM/security resources.
     const assumeInstanceRolePolicyDoc: aws.iam.PolicyDocument = {
@@ -269,7 +271,7 @@ function createAutoScalingGroup(
             },
         ],
         securityGroups: [ securityGroup.id ],
-        userData: getInstanceUserData(cluster, filesystem, this.efsMountPath, cloudFormationStackName),
+        userData: getInstanceUserData(cluster, filesystem, efsMountPath, cloudFormationStackName),
     });
 
     // Finally, create the AutoScaling Group.
