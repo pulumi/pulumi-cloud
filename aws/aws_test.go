@@ -193,6 +193,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:config:ecsAutoClusterInstanceRootVolumeSize":        "80",
 				"cloud-aws:config:ecsAutoClusterInstanceDockerImageVolumeSize": "100",
 				"cloud-aws:config:ecsAutoClusterInstanceSwapVolumeSize":        "1",
+				"containers:config:redisPassword":                              "SECRETPASSWORD",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
