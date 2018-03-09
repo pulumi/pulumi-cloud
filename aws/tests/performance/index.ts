@@ -2,7 +2,6 @@
 
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
-import * as metrics from "datadog-metrics";
 
 // Harness and tests for measuring perf of the @pulumi/cloud-aws implementation of the @pulumi/cloud
 // api.  The harness works by exposing two http endpoints for our travis build to hit when running
@@ -36,7 +35,7 @@ const table = new cloud.Table("tests-table");
 
 // The set of tests we want to run.  It maps from the name of the test to the test function to call
 // and the number of times to call it.
-const tests: {[name: string]: [(record: boolean) => Promise<number>, number]} = {
+const tests: {[name: string]: [(metrics: any, record: boolean) => Promise<number>, number]} = {
     tableTests: [testTablePerformance, /*repeat*/ 20],
     httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
 };
@@ -44,13 +43,14 @@ const tests: {[name: string]: [(record: boolean) => Promise<number>, number]} = 
 // The topic we use to push all the tests we want to run to.  Each test will then run in its own
 // AWS lambda.
 const topic = new cloud.Topic<TestInfo>("tests-topic");
-topic.subscribe("performance", async(info: TestInfo) => {
+topic.subscribe("performance", async (info: TestInfo) => {
     // We've been asked to run a test.  Get the test function to call and the number of times to
     // call it.
     const testName = info.name;
     const testFunction = tests[testName][0];
     const repeat = tests[testName][1];
 
+    const metrics = await import("datadog-metrics");
     // Initialize the metrics object that will collect the perf data.
     metrics.init({
         apiKey: info.apiKey,
@@ -59,11 +59,11 @@ topic.subscribe("performance", async(info: TestInfo) => {
     });
 
     // Warm things up first.
-    await testFunction(false);
+    await testFunction(metrics, false);
 
     let totalTime = 0;
     for (let i = 0; i < repeat; i++) {
-        totalTime += await testFunction(true);
+        totalTime += await testFunction(metrics, true);
     }
 
     // Ensure all our perf metrics are uploaded.
@@ -75,7 +75,8 @@ topic.subscribe("performance", async(info: TestInfo) => {
     testResultTable.update(testResultKey, { [testName]: [true, totalTime] });
 });
 
-async function recordAndReportTime(record: boolean, name: string, code: () => Promise<void>) {
+async function recordAndReportTime(
+        metrics: any, record: boolean, name: string, code: () => Promise<void>) {
     const start = process.hrtime();
 
     await code();
@@ -91,47 +92,47 @@ async function recordAndReportTime(record: boolean, name: string, code: () => Pr
     return ms;
 }
 
-async function testTablePerformance(record: boolean) {
-    return await recordAndReportTime(record, "table-all", async() => {
-        await testTableInsertPerformance(record);
-        await testTableGetPerformance(record);
-        await testTableScanPerformance(record);
+async function testTablePerformance(metrics: any, record: boolean) {
+    return await recordAndReportTime(metrics, record, "table-all", async() => {
+        await testTableInsertPerformance(metrics, record);
+        await testTableGetPerformance(metrics, record);
+        await testTableScanPerformance(metrics, record);
     });
 }
 
-async function testTableScanPerformance(record: boolean) {
-    await recordAndReportTime(record, "table-scan", async() => {
+async function testTableScanPerformance(metrics: any, record: boolean) {
+    await recordAndReportTime(metrics, record, "table-scan", async() => {
         for (let i = 0; i < 20; i++) {
             await table.scan();
         }
     });
 }
 
-async function testTableInsertPerformance(record: boolean) {
-    await recordAndReportTime(record, "table-insert", async() => {
+async function testTableInsertPerformance(metrics: any, record: boolean) {
+    await recordAndReportTime(metrics, record, "table-insert", async() => {
         for (let i = 0; i < 20; i++) {
             await table.insert({id: "" + i, value: i});
         }
     });
 }
 
-async function testTableGetPerformance(record: boolean) {
-    await recordAndReportTime(record, "table-get-existing", async() => {
+async function testTableGetPerformance(metrics: any, record: boolean) {
+    await recordAndReportTime(metrics, record, "table-get-existing", async() => {
         for (let i = 0; i < 20; i++) {
             await table.get({id: "" + i});
         }
     });
 
-    await recordAndReportTime(record, "table-get-missing", async() => {
+    await recordAndReportTime(metrics, record, "table-get-missing", async() => {
         for (let i = 0; i < 20; i++) {
             await table.get({id: "-1"});
         }
     });
 }
 
-async function testHttpEndpointPerformance(record: boolean) {
+async function testHttpEndpointPerformance(metrics: any, record: boolean) {
     // todo: actually provide http endpoint tests.
-    return await recordAndReportTime(record, "httpEndpoint-all", () => Promise.resolve());
+    return await recordAndReportTime(metrics, record, "httpEndpoint-all", () => Promise.resolve());
 }
 
 // Expose two endpoints for our test harness to interact with.  One to kick off the tests.
