@@ -4,14 +4,11 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
 import * as assertModule from "assert";
-type AssertType = typeof assertModule;
-
 import * as harnessModule from "./harness";
-type HarnessType = typeof harnessModule;
 
 import * as httpEndpointTests from "./httpEndpointTests";
-// import * as serviceTests from "./serviceTests";
 import * as tableTests from "./tableTests";
+//  import * as serviceTests from "./serviceTests";
 
 const endpoint = new cloud.HttpEndpoint("tests-unittests");
 
@@ -21,7 +18,7 @@ const testFunctions = [
     // serviceTests.runAllTests,
 ];
 
-async function testModulesWorker(arg: { assert: AssertType, harness: HarnessType }): Promise<[boolean, any]> {
+async function testModulesWorker(arg: any): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
@@ -37,7 +34,9 @@ async function testModules(res: cloud.Response) {
     try {
         const assert = require("assert");
         const harness = require("./bin/harness");
-        const arg = { assert, harness };
+        const supertest = require("supertest");
+
+        const arg = { assert, harness, supertest };
         const [passed, json] = await testModulesWorker(arg);
         if (passed) {
             res.json(json);

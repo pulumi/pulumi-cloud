@@ -3,15 +3,14 @@
 import * as cloud from "@pulumi/cloud";
 
 import * as assertModule from "assert";
-export type AssertType = typeof assertModule;
-
-import * as harnessModule from "./harness";
-export type HarnessType = typeof harnessModule;
-
 import * as supertestModule from "supertest";
-export type SupertestType = typeof supertestModule;
+import * as harnessModule from "./harness";
 
-export type TestArgs = { assert: AssertType, harness: HarnessType, supertest: SupertestType };
+export type TestArgs = {
+    assert: typeof assertModule,
+    harness: typeof harnessModule,
+    supertest: typeof supertestModule,
+};
 
 const endpoint = new cloud.HttpEndpoint("tests-endpoint");
 
@@ -214,9 +213,7 @@ namespace updateProgramTests {
 
 const deployment = endpoint.publish();
 
-export async function runAllTests(args: TestArgs, result: any): Promise<boolean>{
-    args.supertest = require("supertest");
-
+export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
     return await args.harness.testModule(args, result, {
         ["httpEndpointTests.getApiTests"]: getApiTests,
         ["httpEndpointTests.deleteApiTests"]: deleteApiTests,

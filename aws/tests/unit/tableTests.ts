@@ -3,14 +3,10 @@
 import * as cloud from "@pulumi/cloud";
 
 import * as assertModule from "assert";
-export type AssertType = typeof assertModule;
-
 import * as harnessModule from "./harness";
-export type HarnessType = typeof harnessModule;
+export type TestArgs = { assert: typeof assertModule, harness: typeof harnessModule };
 
 let uniqueId = 0;
-
-export type TestArgs = { assert: AssertType, harness: HarnessType };
 
 namespace basicApiTests {
     const table1 = new cloud.Table("tests-table" + uniqueId++);
