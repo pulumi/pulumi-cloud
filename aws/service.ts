@@ -820,6 +820,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
         super("cloud:task:Task", name, { container: container }, opts);
 
+        const network = getOrCreateNetwork();
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
@@ -831,6 +832,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
         const containerEnv = pulumi.all(container.environment || {});
+        const subnetIds = pulumi.all(network.subnetIds);
+        const securityGroups =  cluster.securityGroupId!;
+        const useFargate = config.useFargate;
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {
@@ -847,6 +851,14 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 cluster: clusterARN.get(),
                 taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
+                launchType: useFargate ? "FARGATE" : "EC2",
+                networkConfiguration: {
+                    awsvpcConfiguration: {
+                        assignPublicIp: "DISABLED",
+                        securityGroups: [ securityGroups.get() ],
+                        subnets: subnetIds.get(),
+                    },
+                },
                 overrides: {
                     containerOverrides: [
                         {
