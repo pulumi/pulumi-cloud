@@ -162,7 +162,7 @@ export function getCluster(): Cluster | undefined {
             // Else, allocate a Fargate-only cluster.
             cluster = new Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
-                noEC2Instances: true,
+                maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,
             });
         }

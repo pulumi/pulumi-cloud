@@ -517,8 +517,8 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
         volumes: volumes,
         taskRoleArn: getTaskRole().arn,
         requiresCompatibilities: config.useFargate ? ["FARGATE"] : undefined,
-        memory: config.useFargate ? taskMemoryAndCPU.apply(t => t.memory): undefined,
-        cpu: config.useFargate ? taskMemoryAndCPU.apply(t => t.cpu): undefined,
+        memory: config.useFargate ? taskMemoryAndCPU.apply(t => t.memory) : undefined,
+        cpu: config.useFargate ? taskMemoryAndCPU.apply(t => t.cpu) : undefined,
         networkMode: "awsvpc",
         executionRoleArn: getExecutionRole().arn,
     }, { parent: parent });
@@ -564,14 +564,14 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
     let taskCPU = Math.pow(2, Math.ceil(Math.log2(Math.max(minTaskCPU, 256))));
 
     // Make sure we select an allowed CPU value for the specified memory.
-    if (taskMemory > 2048) {
-        taskCPU = Math.max(taskCPU, 512);
-    } else if (taskMemory > 4096) {
-        taskCPU = Math.max(taskCPU, 1024);
+    if (taskMemory > 16384) {
+        taskCPU = Math.max(taskCPU, 4096);
     } else if (taskMemory > 8192) {
         taskCPU = Math.max(taskCPU, 2048);
-    } else if (taskMemory > 16384) {
-        taskCPU = Math.max(taskCPU, 4096);
+    } else if (taskMemory > 4096) {
+        taskCPU = Math.max(taskCPU, 1024);
+    } else if (taskMemory > 2048) {
+        taskCPU = Math.max(taskCPU, 512);
     }
 
     // Return the computed task memory and CPU values

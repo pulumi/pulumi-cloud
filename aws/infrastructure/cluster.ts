@@ -23,10 +23,6 @@ export interface ClusterArgs {
      */
     addEFS: boolean;
     /**
-     * Optionally suppress creating any EC2 instances in this cluster (only Fargate tasks will be supported).
-     */
-    noEC2Instances?: boolean;
-    /**
      * The EC2 instance type to use for the Cluster.  Defaults to `t2-micro`.
      */
     instanceType?: string;
@@ -60,7 +56,8 @@ export interface ClusterArgs {
      */
     minSize?: number;
     /**
-     * The maximum size of the cluster. Defaults to 100.
+     * The maximum size of the cluster. Setting to 0 will prevent an EC2 AutoScalingGroup from being created. Defaults
+     * to 100.
      */
     maxSize?: number;
     /**
@@ -177,8 +174,8 @@ export class Cluster {
             this.efsMountPath = defaultEfsMountPath;
         }
 
-        // If we were asked to not create any EC2 instances, then we are done.
-        if (!args.noEC2Instances) {
+        // If we were asked to not create any EC2 instances, then we are done, else create an AutoScalingGroup.
+        if (args.maxSize !== 0) {
             this.autoScalingGroupStack = createAutoScalingGroup(
                 name, args, instanceSecurityGroup, cluster, filesystem, this.efsMountPath);
         }
