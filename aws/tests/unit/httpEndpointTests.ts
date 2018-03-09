@@ -5,7 +5,6 @@ import * as assert from "assert";
 import * as supertest from "supertest";
 import * as harness from "./harness";
 
-
 const endpoint = new cloud.HttpEndpoint("tests-endpoint");
 
 namespace getApiTests {
@@ -40,7 +39,8 @@ namespace getApiTests {
 
             res.json(result);
         } catch (err) {
-            res.json(harness.errorJSON(err));
+            const localHarness = require("./bin/harness");
+            res.json(localHarness.errorJSON(err));
         }
     });
 
@@ -208,7 +208,9 @@ namespace updateProgramTests {
 const deployment = endpoint.publish();
 
 export async function runAllTests(result: any): Promise<boolean>{
-    return await harness.testModule(result, {
+    const localHarness = require("./bin/harness");
+
+    return await localHarness.testModule(result, {
         ["httpEndpointTests.getApiTests"]: getApiTests,
         ["httpEndpointTests.deleteApiTests"]: deleteApiTests,
         ["httpEndpointTests.postApiTests"]: postApiTests,
