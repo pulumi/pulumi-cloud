@@ -450,8 +450,22 @@ function getTaskRole(): aws.iam.Role {
                 }, { parent: getGlobalInfrastructureResource() });
         }
     }
+    return taskRole;
+}
 
-    return taskRole!;
+// Lazily initialize the role to use for ECS Task Execution
+let executionRole: aws.iam.Role | undefined;
+function getExecutionRole(): aws.iam.Role {
+    if (!executionRole) {
+        executionRole = new aws.iam.Role(createNameWithStackInfo("execution"), {
+            assumeRolePolicy: JSON.stringify(taskRolePolicy),
+        }, { parent: getGlobalInfrastructureResource() });
+        const _ = new aws.iam.RolePolicyAttachment(createNameWithStackInfo("execution"), {
+            role: executionRole,
+            policyArn: "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+        }, { parent: getGlobalInfrastructureResource() });
+    }
+    return executionRole;
 }
 
 interface TaskDefinition {
@@ -497,15 +511,6 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     // Compute the memory and CPU requirements of the task for Fargate
     const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
 
-    // Find the ECS task execution role to use.  See
-    // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html.
-    let executionRoleArn: Promise<string> | undefined;
-    if (config.useFargate) {
-        executionRoleArn = aws.iam.getRole({
-            name: "ecsTaskExecutionRole",
-        }).then(role => role.arn);
-    }
-
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
         containerDefinitions: containerDefinitions.apply(JSON.stringify),
@@ -515,7 +520,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
         memory: config.useFargate ? taskMemoryAndCPU.apply(t => t.memory): undefined,
         cpu: config.useFargate ? taskMemoryAndCPU.apply(t => t.cpu): undefined,
         networkMode: "awsvpc",
-        executionRoleArn: executionRoleArn,
+        executionRoleArn: getExecutionRole().arn,
     }, { parent: parent });
 
     return {
