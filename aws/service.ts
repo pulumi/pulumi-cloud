@@ -1,8 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-/* @internal */
-export const doNotCapture = true;
-
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
@@ -737,7 +734,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         return getTaskRole();
     }
 
-    // @ts-ignore
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
         super("cloud:task:Task", name, { container: container }, opts);
 
@@ -748,8 +744,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
 
-        const clusterARN = this.cluster ? this.cluster.ecsClusterARN : undefined;
-        const taskDefinitionArn = this.taskDefinition ? this.taskDefinition.arn : undefined;
+        const clusterARN = this.cluster.ecsClusterARN;
+        const taskDefinitionArn = this.taskDefinition.arn;
         const containerEnv = pulumi.all(container.environment || {});
 
         // tslint:disable-next-line:no-empty
