@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as assert from "assert"; 
+import * as assert from "assert";
 import * as harness from "./harness";
 import * as supertest from "supertest";
 
@@ -74,7 +74,6 @@ namespace basicTests {
             await testEndpointShouldExistAndReturn200(endpoint);
         }));
     }
-    
 
     const task = new cloud.Task("task-runfailure", {
         image: "nginx",

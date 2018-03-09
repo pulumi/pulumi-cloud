@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import { Output } from "@pulumi/pulumi";
+import * as pulumi from "@pulumi/pulumi";
 import * as harness from "./harness";
 import * as httpEndpointTests from "./httpEndpointTests";
 import * as serviceTests from "./serviceTests";
@@ -16,8 +16,9 @@ const testFunctions = [
 ];
 
 endpoint.get("/unittests", async (req, res) => {
-    await harness.testModules(res, testFunctions);
+    const localHarness = require("./bin/harness");
+    await localHarness.testModules(res, testFunctions);
 });
 
 const deployment = endpoint.publish();
-export let url = deployment.url;
+export let url: pulumi.Output<string> = deployment.url;
