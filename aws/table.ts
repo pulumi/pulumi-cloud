@@ -3,13 +3,14 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
         case "string": return "S";
         case "number": return "N";
         case "boolean": return "B";
-        default: throw new Error(`Unexpected key type ${keyType} - expected "string", "number" or "boolean"`);
+        default: throw new RunError(`Unsupported key type ${keyType} - expected "string", "number" or "boolean"`);
     }
 }
 

@@ -55,6 +55,12 @@ class LogCollector extends pulumi.ComponentResource {
         );
         this.lambda = collector.lambda;
 
+        // Although Lambda will create this on-demand, we create the log group explicitly so that we can delete it when
+        // the stack gets torn down.
+        const logGroup = new aws.cloudwatch.LogGroup(name, {
+            name: this.lambda.name.apply(n => "/aws/lambda/" + n),
+        }, { parent: this });
+
         const region = aws.config.requireRegion();
         const permission = new aws.lambda.Permission(name, {
             action: "lambda:invokeFunction",

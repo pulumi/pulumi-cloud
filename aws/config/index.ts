@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 const config = new pulumi.Config("cloud-aws:config");
 
@@ -13,7 +14,7 @@ const config = new pulumi.Config("cloud-aws:config");
  */
 export let functionMemorySize = config.getNumber("functionMemorySize") || 128;
 if (functionMemorySize % 64 !== 0 || functionMemorySize < 128 || functionMemorySize > 1536) {
-    throw new Error("Lambda memory size in MiB must be a multiple of 64 between 128 and 1536.");
+    throw new RunError("Lambda memory size in MiB must be a multiple of 64 between 128 and 1536.");
 }
 
 /**
@@ -82,7 +83,7 @@ if (externalSecurityGroupsString) {
 }
 
 if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
-    throw new Error(
+    throw new RunError(
         "Must configure 'cloud-aws:config:externalSubnets' and 'cloud-aws:config:externalSecurityGroups' " +
         "when setting 'cloud-asws:config:externalVpcId'",
     );

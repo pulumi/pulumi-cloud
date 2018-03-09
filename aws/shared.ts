@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 import { Cluster } from "./infrastructure/cluster";
 import { Network } from "./infrastructure/network";
@@ -15,7 +16,7 @@ export function createNameWithStackInfo(requiredInfo: string) {
     const maxLength = 24;
 
     if (requiredInfo.length > maxLength) {
-        throw new Error(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
+        throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
 
     // No required portion.  Just return the stack name.
@@ -69,7 +70,7 @@ let computePoliciesAccessed = false;
 // Set the IAM policies to use for compute.
 export function setComputeIAMRolePolicies(policyARNs: string[]) {
     if (computePoliciesAccessed) {
-        throw new Error(
+        throw new RunError(
             "The compute policies have already been used, make sure you are setting IAM policies early enough.");
     }
     computePolicies = policyARNs;
@@ -95,7 +96,7 @@ export function getNetwork(): Network | undefined {
             });
         } else if (config.externalVpcId) {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
-                throw new Error(
+                throw new RunError(
                     "If providing 'externalVpcId', must provide 'externalSubnets', " +
                     "'externalPublicSubnets' and 'externalSecurityGroups'");
             }

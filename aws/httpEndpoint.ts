@@ -3,6 +3,8 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
+
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mime from "mime";
@@ -114,7 +116,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
 
     public publish(): HttpDeployment {
         if (this.deployment) {
-            throw new Error("This endpoint is already published and cannot be re-published.");
+            throw new RunError("This endpoint is already published and cannot be re-published.");
         }
         // Create a unique name prefix that includes the name plus all the registered routes.
         this.deployment = new HttpDeployment(
@@ -275,14 +277,15 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 const targetArn = route.target.apply(t => {
                     const endpoint = t as Endpoint;
                     if (!endpoint.loadBalancer) {
-                        throw new Error("AWS endpoint proxy requires an AWS Endpoint");
+                        throw new RunError("AWS endpoint proxy requires an AWS Endpoint");
                     }
                     return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
                         if (loadBalancerType === "application") {
                             // We can only support proxying to an Endpoint if it is backed by an
                             // NLB, which will only be the case for cloud.Service ports exposed as
                             // type "tcp".
-                            throw new Error("AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+                            throw new RunError(
+                                "AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
                         }
                         return endpoint.loadBalancer.arn;
                     });
@@ -768,7 +771,7 @@ function swaggerMethod(method: string): string {
         case "any":
             return "x-amazon-apigateway-any-method";
         default:
-            throw new Error("Method not supported: " + method);
+            throw new RunError("Method not supported: " + method);
     }
 }
 
