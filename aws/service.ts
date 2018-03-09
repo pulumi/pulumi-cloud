@@ -733,10 +733,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     // See comment for Service.getTaskRole.
-    // public static getTaskRole(): aws.iam.Role {
-    //     // return getTaskRole();
-    //     return <any>undefined;
-    // }
+    public static getTaskRole(): aws.iam.Role {
+        return getTaskRole();
+    }
 
     // @ts-ignore
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
