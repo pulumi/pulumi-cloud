@@ -6,15 +6,23 @@ export type AssertType = typeof assertModule;
 import * as harnessModule from "./harness";
 export type HarnessType = typeof harnessModule;
 
-export async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
-    try {
-        await body();
-    }
-    catch (err) {
-        return;
-    }
+function errorJSON(err: any) {
+    const result: any = Object.create(null);
+    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
+    return result;
+}
 
-    throw new Error("Expected error to be thrown");
+export async function testModulesWorker(
+    testFunctions: { (arg: any, result: any): Promise<boolean>}[],
+    arg: any): Promise<[boolean, any]> {
+    let passed = true;
+    const result: any = Object.create(null);
+
+    await Promise.all(testFunctions.map(async (testFn) => {
+        passed = await testFn(arg, result) && passed;
+    }));
+
+    return [passed, result];
 }
 
 // Run tests in each submodule of `module` in parallel, writing results into `result`.
@@ -53,8 +61,13 @@ async function runTests(
     return passed;
 }
 
-function errorJSON(err: any) {
-    const result: any = Object.create(null);
-    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
-    return result;
+export async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
+    try {
+        await body();
+    }
+    catch (err) {
+        return;
+    }
+
+    throw new Error("Expected error to be thrown");
 }
