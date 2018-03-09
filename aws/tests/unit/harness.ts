@@ -6,6 +6,25 @@ export type AssertType = typeof assertModule;
 import * as harnessModule from "./harness";
 export type HarnessType = typeof harnessModule;
 
+function errorJSON(err: any) {
+    const result: any = Object.create(null);
+    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
+    return result;
+}
+
+export async function testModulesWorker(
+    testFunctions: { (arg: any, result: any): Promise<boolean>}[],
+    arg: any): Promise<[boolean, any]> {
+    let passed = true;
+    const result: any = Object.create(null);
+
+    await Promise.all(testFunctions.map(async (testFn) => {
+        passed = await testFn(arg, result) && passed;
+    }));
+
+    return [passed, result];
+}
+
 export async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
     try {
         await body();
@@ -51,10 +70,4 @@ async function runTests(
     }
 
     return passed;
-}
-
-function errorJSON(err: any) {
-    const result: any = Object.create(null);
-    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
-    return result;
 }

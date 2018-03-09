@@ -18,26 +18,15 @@ const testFunctions = [
     serviceTests.runAllTests,
 ];
 
-async function testModulesWorker(arg: any): Promise<[boolean, any]> {
-    let passed = true;
-    const result: any = Object.create(null);
-
-    await Promise.all(testFunctions.map(async (testFn) => {
-        passed = await testFn(arg, result) && passed;
-    }));
-
-    return [passed, result];
-}
-
 // Run each of the `testFunction`s in parallel, each writing their results into `result.
 async function testModules(res: cloud.Response) {
     try {
-        const assert = require("assert");
-        const harness = require("./bin/harness");
+        const assert: typeof assertModule = require("assert");
+        const harness: typeof harnessModule = require("./bin/harness");
         const supertest = require("supertest");
 
         const arg = { assert, harness, supertest };
-        const [passed, json] = await testModulesWorker(arg);
+        const [passed, json] = await harness.testModulesWorker(testFunctions, arg);
         if (passed) {
             res.json(json);
         }
