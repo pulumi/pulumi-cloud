@@ -732,14 +732,14 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
-    // See comment for Service.getTaskRole.
-    public static getTaskRole(): aws.iam.Role {
-        return getTaskRole();
-    }
+    // // See comment for Service.getTaskRole.
+    // public static getTaskRole(): aws.iam.Role {
+    //     return getTaskRole();
+    // }
 
     // @ts-ignore
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
-        super("cloud:task:Task", name, { /* container: container */ }, opts);
+        super("cloud:task:Task", name, { container: container }, opts);
 
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
@@ -748,51 +748,53 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         this.cluster = cluster;
         this.taskDefinition = <any>undefined; // createTaskDefinition(this, name, { container: container }).task;
 
-        // const clusterARN = this.cluster ? this.cluster.ecsClusterARN : undefined;
-        // const taskDefinitionArn = this.taskDefinition ? this.taskDefinition.arn : undefined;
-        // const containerEnv = pulumi.all(container.environment || {});
+        const clusterARN = this.cluster ? this.cluster.ecsClusterARN : undefined;
+        const taskDefinitionArn = this.taskDefinition ? this.taskDefinition.arn : undefined;
+        const containerEnv = pulumi.all(container.environment || {});
 
-        // // this.run = async function (options?: cloud.TaskRunOptions) {
-        // //     const awssdk = await import("aws-sdk");
-        // //     const ecs = new awssdk.ECS();
+        // tslint:disable-next-line:no-empty
+        this.run = <any>(async function () { });
+        // this.run = async function (options?: cloud.TaskRunOptions) {
+        //     // const awssdk = await import("aws-sdk");
+        //     // const ecs = new awssdk.ECS();
 
-        // //     // Extract the envrionment values from the options
-        // //     const env: { name: string, value: string }[] = [];
-        // //     await addEnvironmentVariables(containerEnv.get());
-        // //     await addEnvironmentVariables(options && options.environment);
+        //     // // Extract the envrionment values from the options
+        //     // const env: { name: string, value: string }[] = [];
+        //     // await addEnvironmentVariables(containerEnv.get());
+        //     // await addEnvironmentVariables(options && options.environment);
 
-        // //     // Run the task
-        // //     const res = await ecs.runTask({
-        // //         cluster: clusterARN!.get(),
-        // //         taskDefinition: taskDefinitionArn!.get(),
-        // //         placementConstraints: placementConstraintsForHost(options && options.host),
-        // //         overrides: {
-        // //             containerOverrides: [
-        // //                 {
-        // //                     name: "container",
-        // //                     environment: env,
-        // //                 },
-        // //             ],
-        // //         },
-        // //     }).promise();
+        //     // // Run the task
+        //     // const res = await ecs.runTask({
+        //     //     cluster: clusterARN!.get(),
+        //     //     taskDefinition: taskDefinitionArn!.get(),
+        //     //     placementConstraints: placementConstraintsForHost(options && options.host),
+        //     //     overrides: {
+        //     //         containerOverrides: [
+        //     //             {
+        //     //                 name: "container",
+        //     //                 environment: env,
+        //     //             },
+        //     //         ],
+        //     //     },
+        //     // }).promise();
 
-        // //     if (res.failures && res.failures.length > 0) {
-        // //         throw new Error("Failed to start task:" + JSON.stringify(res.failures, null, ""));
-        // //     }
+        //     // if (res.failures && res.failures.length > 0) {
+        //     //     throw new Error("Failed to start task:" + JSON.stringify(res.failures, null, ""));
+        //     // }
 
-        // //     return;
+        //     return;
 
-        // //     // Local functions
-        // //     async function addEnvironmentVariables(e: Record<string, string> | undefined) {
-        // //         if (e) {
-        // //             for (const key of Object.keys(e)) {
-        // //                 const envVal = e[key];
-        // //                 if (envVal) {
-        // //                     env.push({ name: key, value: envVal });
-        // //                 }
-        // //             }
-        // //         }
-        // //     }
-        // // };
+        //     // Local functions
+        //     // async function addEnvironmentVariables(e: Record<string, string> | undefined) {
+        //     //     if (e) {
+        //     //         for (const key of Object.keys(e)) {
+        //     //             const envVal = e[key];
+        //     //             if (envVal) {
+        //     //                 env.push({ name: key, value: envVal });
+        //     //             }
+        //     //         }
+        //     //     }
+        //     // }
+        // };
     }
 }
