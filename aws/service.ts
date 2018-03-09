@@ -623,18 +623,18 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
             containerName = containerName || Object.keys(endpoints)[0];
             if (!containerName)  {
-                throw new RunError(`No containers available in this service`);
+                throw new Error(`No containers available in this service`);
             }
 
             const containerPorts = endpoints[containerName] || {};
             containerPort = containerPort || +Object.keys(containerPorts)[0];
             if (!containerPort) {
-                throw new RunError(`No ports available in service container ${containerName}`);
+                throw new Error(`No ports available in service container ${containerName}`);
             }
 
             const endpoint = containerPorts[containerPort];
             if (!endpoint) {
-                throw new RunError(`No exposed port for ${containerName} port ${containerPort}`);
+                throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
             }
 
             return endpoint;
@@ -739,7 +739,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new RunError("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
+            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'");
         }
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
@@ -773,7 +773,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }).promise();
 
             if (res.failures && res.failures.length > 0) {
-                throw new RunError("Failed to start task:" + JSON.stringify(res.failures, null, ""));
+                throw new Error("Failed to start task:" + JSON.stringify(res.failures, null, ""));
             }
 
             return;
