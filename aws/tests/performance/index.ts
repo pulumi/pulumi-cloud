@@ -2,6 +2,8 @@
 
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
+import * as metricsModule from "datadog-metrics";
+type MetricsType = typeof metricsModule;
 
 // Harness and tests for measuring perf of the @pulumi/cloud-aws implementation of the @pulumi/cloud
 // api.  The harness works by exposing two http endpoints for our travis build to hit when running
@@ -35,7 +37,7 @@ const table = new cloud.Table("tests-table");
 
 // The set of tests we want to run.  It maps from the name of the test to the test function to call
 // and the number of times to call it.
-const tests: {[name: string]: [(metrics: any, record: boolean) => Promise<number>, number]} = {
+const tests: {[name: string]: [(metrics: MetricsType, record: boolean) => Promise<number>, number]} = {
     tableTests: [testTablePerformance, /*repeat*/ 20],
     httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
 };
@@ -76,7 +78,7 @@ topic.subscribe("performance", async (info: TestInfo) => {
 });
 
 async function recordAndReportTime(
-        metrics: any, record: boolean, name: string, code: () => Promise<void>) {
+        metrics: MetricsType, record: boolean, name: string, code: () => Promise<void>) {
     const start = process.hrtime();
 
     await code();
@@ -92,7 +94,7 @@ async function recordAndReportTime(
     return ms;
 }
 
-async function testTablePerformance(metrics: any, record: boolean) {
+async function testTablePerformance(metrics: MetricsType, record: boolean) {
     return await recordAndReportTime(metrics, record, "table-all", async() => {
         await testTableInsertPerformance(metrics, record);
         await testTableGetPerformance(metrics, record);
@@ -100,7 +102,7 @@ async function testTablePerformance(metrics: any, record: boolean) {
     });
 }
 
-async function testTableScanPerformance(metrics: any, record: boolean) {
+async function testTableScanPerformance(metrics: MetricsType, record: boolean) {
     await recordAndReportTime(metrics, record, "table-scan", async() => {
         for (let i = 0; i < 20; i++) {
             await table.scan();
@@ -108,7 +110,7 @@ async function testTableScanPerformance(metrics: any, record: boolean) {
     });
 }
 
-async function testTableInsertPerformance(metrics: any, record: boolean) {
+async function testTableInsertPerformance(metrics: MetricsType, record: boolean) {
     await recordAndReportTime(metrics, record, "table-insert", async() => {
         for (let i = 0; i < 20; i++) {
             await table.insert({id: "" + i, value: i});
@@ -116,7 +118,7 @@ async function testTableInsertPerformance(metrics: any, record: boolean) {
     });
 }
 
-async function testTableGetPerformance(metrics: any, record: boolean) {
+async function testTableGetPerformance(metrics: MetricsType, record: boolean) {
     await recordAndReportTime(metrics, record, "table-get-existing", async() => {
         for (let i = 0; i < 20; i++) {
             await table.get({id: "" + i});
@@ -130,7 +132,7 @@ async function testTableGetPerformance(metrics: any, record: boolean) {
     });
 }
 
-async function testHttpEndpointPerformance(metrics: any, record: boolean) {
+async function testHttpEndpointPerformance(metrics: MetricsType, record: boolean) {
     // todo: actually provide http endpoint tests.
     return await recordAndReportTime(metrics, record, "httpEndpoint-all", () => Promise.resolve());
 }
