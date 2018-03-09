@@ -15,72 +15,72 @@ export type TestArgs = {
 let uniqueId = 0;
 
 namespace basicTests {
-    // Use pre-built Dockerhub image
-    const nginx = new cloud.Service("examples-nginx-" + uniqueId++, {
-        containers: {
-            nginx: {
-                image: "nginx",
-                memory: 128,
-                ports: [{ port: 80 }],
-            },
-        },
-        replicas: 2,
-    });
+    // // Use pre-built Dockerhub image
+    // const nginx = new cloud.Service("examples-nginx-" + uniqueId++, {
+    //     containers: {
+    //         nginx: {
+    //             image: "nginx",
+    //             memory: 128,
+    //             ports: [{ port: 80 }],
+    //         },
+    //     },
+    //     replicas: 2,
+    // });
 
-    // Build and name the resulting image:
-    const nginxBuilt = new cloud.Service("examples-pulumiNginx", {
-        containers: {
-            nginx: {
-                build: "./app",
-                image: "pulumi/nginx",
-                memory: 128,
-                ports: [{ port: 80 }],
-            },
-        },
-        replicas: 2,
-    });
+    // // Build and name the resulting image:
+    // const nginxBuilt = new cloud.Service("examples-pulumiNginx", {
+    //     containers: {
+    //         nginx: {
+    //             build: "./app",
+    //             image: "pulumi/nginx",
+    //             memory: 128,
+    //             ports: [{ port: 80 }],
+    //         },
+    //     },
+    //     replicas: 2,
+    // });
 
-    // build some images with custom dockerfiles/args/etc.
-    const nginxBuilt2 = new cloud.Service("examples-pulumiNginx2", {
-        containers: {
-            nginx: {
-                build: {
-                    dockerfile: "./app2/Dockerfile-alt",
-                    args: { "FOO": "bar" },
-                },
-                memory: 128,
-                ports: [{ port: 80 }],
-            },
-        },
-    });
+    // // build some images with custom dockerfiles/args/etc.
+    // const nginxBuilt2 = new cloud.Service("examples-pulumiNginx2", {
+    //     containers: {
+    //         nginx: {
+    //             build: {
+    //                 dockerfile: "./app2/Dockerfile-alt",
+    //                 args: { "FOO": "bar" },
+    //             },
+    //             memory: 128,
+    //             ports: [{ port: 80 }],
+    //         },
+    //     },
+    // });
 
-    // Use a pre-built nginx image, and expose it externally via an HTTP application load balancer.
-    const nginxOverAppLB = new cloud.Service("examples-nginxOverAppLB", {
-        containers: {
-            nginx: {
-                image: "nginx",
-                memory: 128,
-                ports: [{ port: 80, external: true, protocol: "http" }],
-            },
-        },
-        replicas: 2,
-    });
+    // // Use a pre-built nginx image, and expose it externally via an HTTP application load balancer.
+    // const nginxOverAppLB = new cloud.Service("examples-nginxOverAppLB", {
+    //     containers: {
+    //         nginx: {
+    //             image: "nginx",
+    //             memory: 128,
+    //             ports: [{ port: 80, external: true, protocol: "http" }],
+    //         },
+    //     },
+    //     replicas: 2,
+    // });
 
-    const nginxs = [nginx, nginxBuilt, nginxOverAppLB];
+    // const nginxs = [nginx, nginxBuilt, nginxOverAppLB];
 
-    async function testEndpointShouldExistAndReturn200(args: TestArgs, endpoint: cloud.Endpoint) {
-        console.log(`Testing endpoint at ${endpoint.hostname}:${endpoint.port}`);
-        args.assert.notEqual(endpoint.hostname, undefined);
-        args.assert.notEqual(endpoint.port, undefined);
-        await args.supertest(`http://${endpoint.hostname}:${endpoint.port}/`).get("/").expect(200);
-    }
+    // async function testEndpointShouldExistAndReturn200(args: TestArgs, endpoint: cloud.Endpoint) {
+    //     console.log(`Testing endpoint at ${endpoint.hostname}:${endpoint.port}`);
+    //     args.assert.notEqual(endpoint.hostname, undefined);
+    //     args.assert.notEqual(endpoint.port, undefined);
+    //     await args.supertest(`http://${endpoint.hostname}:${endpoint.port}/`).get("/").expect(200);
+    // }
 
-    export async function testAllEndpoints(args: TestArgs) {
-        await Promise.all(nginxs.map(async (naginx) => {
-            const endpoint = await nginx.getEndpoint();
-            await testEndpointShouldExistAndReturn200(args, endpoint);
-        }));
-    }
+    // export async function testAllEndpoints(args: TestArgs) {
+    //     await Promise.all(nginxs.map(async (naginx) => {
+    //         const endpoint = await nginx.getEndpoint();
+    //         await testEndpointShouldExistAndReturn200(args, endpoint);
+    //     }));
+    // }
 
     const task = new cloud.Task("task-runfailure", {
         image: "nginx",
@@ -88,12 +88,14 @@ namespace basicTests {
     });
 
     export async function testTaskRunFailure(args: TestArgs) {
+        // console.log(task);
+        // await args.harness.assertThrowsAsync(async () => console.log(task));
         await args.harness.assertThrowsAsync(async () => await task.run());
     }
 
 }
 
-export async function runAllTests(args: TestArgs, result: any): Promise<boolean>{
+export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
     return await args.harness.testModule(args, result, {
         ["serviceTests.basicTests"]: basicTests,
     });

@@ -7,6 +7,9 @@
 // this package.  Instead things should only reference the @pulumi/cloud package.  That package
 // actually exports the API types.
 
+/* @internal */
+export const doNotCapture = true;
+
 export * from "./function";
 export * from "./httpEndpoint";
 export * from "./table";
