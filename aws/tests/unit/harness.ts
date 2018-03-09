@@ -18,18 +18,21 @@ export async function assertThrowsAsync(body: () => Promise<void>): Promise<void
 }
 
 // Run tests in each submodule of `module` in parallel, writing results into `result`.
-export async function testModule(assert: AssertType, harness: HarnessType, result: any, module: any): Promise<boolean> {
+export async function testModule(
+    arg: { assert: AssertType, harness: HarnessType }, result: any, module: any): Promise<boolean> {
     let passed = true;
 
     await Promise.all(Object.keys(module).map(async (moduleName) => {
-        passed = await runTests(assert, harness, moduleName, module[moduleName], result) && passed;
+        passed = await runTests(arg, moduleName, module[moduleName], result) && passed;
     }));
 
     return passed;
 }
 
 // Run each exported test function on `module` sequentially, writing results into `result`.
-async function runTests(assert: AssertType, harness: HarnessType, moduleName: string, module: any, result: any) {
+async function runTests(
+        arg: { assert: AssertType, harness: HarnessType },
+        moduleName: string, module: any, result: any) {
     let passed = true;
     for (const name of Object.keys(module)) {
         if (!name.startsWith("test")) {
@@ -38,7 +41,7 @@ async function runTests(assert: AssertType, harness: HarnessType, moduleName: st
 
         const fullName = `${moduleName}.${name}`;
         try {
-            await module[name](assert, harness);
+            await module[name](arg);
             result[fullName] = "passed";
         }
         catch (err) {

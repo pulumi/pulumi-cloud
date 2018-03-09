@@ -10,97 +10,99 @@ export type HarnessType = typeof harnessModule;
 
 let uniqueId = 0;
 
+export type TestArgs = { assert: AssertType, harness: HarnessType };
+
 namespace basicApiTests {
     const table1 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldThrowWithNoPrimaryKey(assert: AssertType, harness: HarnessType) {
-        await harness.assertThrowsAsync(async () => await table1.get({}));
+    export async function testShouldThrowWithNoPrimaryKey(args: TestArgs) {
+        await args.harness.assertThrowsAsync(async () => await table1.get({}));
     }
 
     const table2 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldReturnUndefinedWithPrimaryKeyNotPresent(assert: AssertType) {
+    export async function testShouldReturnUndefinedWithPrimaryKeyNotPresent(args: TestArgs) {
         const val = await table2.get({[table2.primaryKey.get()]: "val"});
-        assert.strictEqual(val, undefined);
+        args.assert.strictEqual(val, undefined);
     }
 
     const table3 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldFindInsertedValue(assert: AssertType, harness: HarnessType) {
+    export async function testShouldFindInsertedValue(args: TestArgs) {
         await table3.insert({[table3.primaryKey.get()]: "val", value: 1});
-        assert.equal((await table3.get({[table3.primaryKey.get()]: "val"})).value, 1);
+        args.assert.equal((await table3.get({[table3.primaryKey.get()]: "val"})).value, 1);
     }
 
     const table4 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldThrowIfQueryDoesNotMatchSchema(assert: AssertType, harness: HarnessType) {
+    export async function testShouldThrowIfQueryDoesNotMatchSchema(args: TestArgs) {
         await table4.insert({[table4.primaryKey.get()]: "val", value: 1});
-        await harness.assertThrowsAsync(
+        await args.harness.assertThrowsAsync(
             async () => await table4.get({[table4.primaryKey.get()]: "val", value: 2}));
     }
 
     const table5 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldSeeSecondInsert(assert: AssertType) {
+    export async function testShouldSeeSecondInsert(args: TestArgs) {
         await table5.insert({[table5.primaryKey.get()]: "val", value: 1});
         await table5.insert({[table5.primaryKey.get()]: "val", value: 2});
-        assert.equal((await table5.get({[table5.primaryKey.get()]: "val" })).value, 2);
+        args.assert.equal((await table5.get({[table5.primaryKey.get()]: "val" })).value, 2);
     }
 
     const table6 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldNotSeeDeletedValue(assert: AssertType) {
+    export async function testShouldNotSeeDeletedValue(args: TestArgs) {
         await table6.insert({[table6.primaryKey.get()]: "val", value: 1});
         await table6.delete({[table6.primaryKey.get()]: "val" });
 
         const val = await table6.get({[table6.primaryKey.get()]: "val"});
-        assert.strictEqual(val, undefined);
+        args.assert.strictEqual(val, undefined);
     }
 
     const table7 = new cloud.Table("tests-table" + uniqueId++);
     const table8 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldNotSeeInsertsToOtherTable(assert: AssertType) {
+    export async function testShouldNotSeeInsertsToOtherTable(args: TestArgs) {
         await table7.insert({[table7.primaryKey.get()]: "val", value: 1});
 
         const val = await table8.get({[table8.primaryKey.get()]: "val"});
-        assert.strictEqual(val, undefined);
+        args.assert.strictEqual(val, undefined);
     }
 }
 
 namespace updateApiTests {
     const table1 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testShouldOnlyUpdateProvidedKeys(assert: AssertType) {
+    export async function testShouldOnlyUpdateProvidedKeys(args: TestArgs) {
         await table1.insert({[table1.primaryKey.get()]: "val", value1: 1, value2: "2"});
         await table1.update({[table1.primaryKey.get()]: "val" }, {value1: 3});
 
-        assert.equal((await table1.get({[table1.primaryKey.get()]: "val"})).value1, 3);
-        assert.equal((await table1.get({[table1.primaryKey.get()]: "val"})).value2, "2");
+        args.assert.equal((await table1.get({[table1.primaryKey.get()]: "val"})).value1, 3);
+        args.assert.equal((await table1.get({[table1.primaryKey.get()]: "val"})).value2, "2");
     }
 }
 
 namespace scanApiTests {
     const table1 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testScanReturnsAllValues(assert: AssertType) {
+    export async function testScanReturnsAllValues(args: TestArgs) {
         await table1.insert({[table1.primaryKey.get()]: "val1", value1: 1, value2: "1"});
         await table1.insert({[table1.primaryKey.get()]: "val2", value1: 2, value2: "2"});
 
         const values = await table1.scan();
-        assert.equal(values.length, 2);
+        args.assert.equal(values.length, 2);
 
         const value1 = values.find(v => v[table1.primaryKey.get()] === "val1");
         const value2 = values.find(v => v[table1.primaryKey.get()] === "val2");
 
-        assert.notEqual(value1, value2);
-        assert.equal(value1.value1, 1);
-        assert.equal(value2.value1, 2);
+        args.assert.notEqual(value1, value2);
+        args.assert.equal(value1.value1, 1);
+        args.assert.equal(value2.value1, 2);
     }
 
     const table2 = new cloud.Table("tests-table" + uniqueId++);
-    export async function testScanDoesNotReturnDeletedValues(assert: AssertType) {
+    export async function testScanDoesNotReturnDeletedValues(args: TestArgs) {
         await table2.insert({[table2.primaryKey.get()]: "val1", value1: 1, value2: "1"});
         await table2.insert({[table2.primaryKey.get()]: "val2", value1: 2, value2: "2"});
         await table2.delete({[table2.primaryKey.get()]: "val1"});
 
         const values = await table2.scan();
-        assert.equal(values.length, 1);
+        args.assert.equal(values.length, 1);
 
         const value = values[0];
 
-        assert.equal(value.value1, 2);
+        args.assert.equal(value.value1, 2);
     }
 }
 
@@ -114,8 +116,8 @@ namespace updateProgramTests {
     }
 }
 
-export async function runAllTests(assert: AssertType, harness: HarnessType, result: any): Promise<boolean> {
-    return await harness.testModule(assert, harness, result, {
+export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
+    return await args.harness.testModule(args, result, {
         ["tableTests.basicApiTests"]: basicApiTests,
         ["tableTests.updateApiTests"]: updateApiTests,
         ["tableTests.scanApiTests"]: scanApiTests,

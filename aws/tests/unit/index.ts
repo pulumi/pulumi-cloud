@@ -9,7 +9,7 @@ type AssertType = typeof assertModule;
 import * as harnessModule from "./harness";
 type HarnessType = typeof harnessModule;
 
-// import * as httpEndpointTests from "./httpEndpointTests";
+import * as httpEndpointTests from "./httpEndpointTests";
 // import * as serviceTests from "./serviceTests";
 import * as tableTests from "./tableTests";
 
@@ -17,17 +17,16 @@ const endpoint = new cloud.HttpEndpoint("tests-unittests");
 
 const testFunctions = [
     tableTests.runAllTests,
-    // httpEndpointTests.runAllTests,
+    httpEndpointTests.runAllTests,
     // serviceTests.runAllTests,
 ];
 
-
-async function testModulesWorker(assert: AssertType, harness: HarnessType): Promise<[boolean, any]> {
+async function testModulesWorker(arg: { assert: AssertType, harness: HarnessType }): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
     await Promise.all(testFunctions.map(async (testFn) => {
-        passed = await testFn(assert, harness, result) && passed;
+        passed = await testFn(arg, result) && passed;
     }));
 
     return [passed, result];
@@ -38,7 +37,8 @@ async function testModules(res: cloud.Response) {
     try {
         const assert = require("assert");
         const harness = require("./bin/harness");
-        const [passed, json] = await testModulesWorker(assert, harness);
+        const arg = { assert, harness };
+        const [passed, json] = await testModulesWorker(arg);
         if (passed) {
             res.json(json);
         }
