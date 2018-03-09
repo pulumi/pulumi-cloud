@@ -760,8 +760,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             // Run the task
             const res = await ecs.runTask({
-                cluster: clusterARN!.get(),
-                taskDefinition: taskDefinitionArn!.get(),
+                cluster: clusterARN.get(),
+                taskDefinition: taskDefinitionArn.get(),
                 placementConstraints: placementConstraintsForHost(options && options.host),
                 overrides: {
                     containerOverrides: [

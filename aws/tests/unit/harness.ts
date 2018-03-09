@@ -25,17 +25,6 @@ export async function testModulesWorker(
     return [passed, result];
 }
 
-export async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
-    try {
-        await body();
-    }
-    catch (err) {
-        return;
-    }
-
-    throw new Error("Expected error to be thrown");
-}
-
 // Run tests in each submodule of `module` in parallel, writing results into `result`.
 export async function testModule(
     arg: { assert: AssertType, harness: HarnessType }, result: any, module: any): Promise<boolean> {
@@ -70,4 +59,15 @@ async function runTests(
     }
 
     return passed;
+}
+
+export async function assertThrowsAsync(body: () => Promise<void>): Promise<void> {
+    try {
+        await body();
+    }
+    catch (err) {
+        return;
+    }
+
+    throw new Error("Expected error to be thrown");
 }
