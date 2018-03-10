@@ -1,9 +1,16 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import * as assert from "assert"; 
-import * as harness from "./harness";
-import * as supertest from "supertest";
+
+import * as assertModule from "assert";
+import * as supertestModule from "supertest";
+import * as harnessModule from "./harness";
+
+export type TestArgs = {
+    assert: typeof assertModule,
+    harness: typeof harnessModule,
+    supertest: typeof supertestModule,
+};
 
 let uniqueId = 0;
 
@@ -61,34 +68,35 @@ namespace basicTests {
 
     const nginxs = [nginx, nginxBuilt, nginxOverAppLB];
 
-    async function testEndpointShouldExistAndReturn200(endpoint: cloud.Endpoint) {
+    async function testEndpointShouldExistAndReturn200(args: TestArgs, endpoint: cloud.Endpoint) {
         console.log(`Testing endpoint at ${endpoint.hostname}:${endpoint.port}`);
-        assert.notEqual(endpoint.hostname, undefined);
-        assert.notEqual(endpoint.port, undefined);
-        await supertest(`http://${endpoint.hostname}:${endpoint.port}/`).get("/").expect(200);
+        args.assert.notEqual(endpoint.hostname, undefined);
+        args.assert.notEqual(endpoint.port, undefined);
+        await args.supertest(`http://${endpoint.hostname}:${endpoint.port}/`).get("/").expect(200);
     }
 
-    export async function testAllEndpoints() {
+    export async function testAllEndpoints(args: TestArgs) {
         await Promise.all(nginxs.map(async (naginx) => {
             const endpoint = await nginx.getEndpoint();
-            await testEndpointShouldExistAndReturn200(endpoint);
+            await testEndpointShouldExistAndReturn200(args, endpoint);
         }));
     }
-    
 
     const task = new cloud.Task("task-runfailure", {
         image: "nginx",
         memory: 100*1024, // Intentionaly ask for more memory than is available in the cluster to trigger error.
     });
 
-    export async function testTaskRunFailure() {
-        await harness.assertThrowsAsync(async () => await task.run());
+    export async function testTaskRunFailure(args: TestArgs) {
+        // console.log(task);
+        // await args.harness.assertThrowsAsync(async () => console.log(task));
+        await args.harness.assertThrowsAsync(async () => await task.run());
     }
 
 }
 
-export async function runAllTests(result: any): Promise<boolean>{
-    return await harness.testModule(result, {
+export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
+    return await args.harness.testModule(args, result, {
         ["serviceTests.basicTests"]: basicTests,
     });
 }

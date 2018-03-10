@@ -1,53 +1,46 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as cloud from "@pulumi/cloud";
+import * as assertModule from "assert";
+export type AssertType = typeof assertModule;
 
-export function errorJSON(err: any) {
+import * as harnessModule from "./harness";
+export type HarnessType = typeof harnessModule;
+
+function errorJSON(err: any) {
     const result: any = Object.create(null);
     Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
     return result;
 }
 
-async function testModulesWorker(
-    testFunctions: { (result: any): Promise<boolean>}[]): Promise<[boolean, any]> {
+export async function testModulesWorker(
+    testFunctions: { (arg: any, result: any): Promise<boolean>}[],
+    arg: any): Promise<[boolean, any]> {
     let passed = true;
     const result: any = Object.create(null);
 
-    for (const testFn of testFunctions) {
-        passed = await testFn(result) && passed;
-    }
+    await Promise.all(testFunctions.map(async (testFn) => {
+        passed = await testFn(arg, result) && passed;
+    }));
 
     return [passed, result];
 }
 
-export async function testModules(
-    res: cloud.Response,
-    testFunctions: { (result: any): Promise<boolean>}[]) {
-
-    try {
-        const [passed, json] = await testModulesWorker(testFunctions);
-        if (passed) {
-            res.json(json);
-        }
-        else {
-            res.status(500).json(json);
-        }
-    } catch (err) {
-        res.status(500).json(errorJSON(err));
-    }
-}
-
-export async function testModule(result: any, module: any): Promise<boolean> {
+// Run tests in each submodule of `module` in parallel, writing results into `result`.
+export async function testModule(
+    arg: { assert: AssertType, harness: HarnessType }, result: any, module: any): Promise<boolean> {
     let passed = true;
 
-    for (const moduleName of Object.keys(module)) {
-        passed = await runTests(moduleName, module[moduleName], result) && passed;
-    }
+    await Promise.all(Object.keys(module).map(async (moduleName) => {
+        passed = await runTests(arg, moduleName, module[moduleName], result) && passed;
+    }));
 
     return passed;
 }
 
-async function runTests(moduleName: string, module: any, result: any) {
+// Run each exported test function on `module` sequentially, writing results into `result`.
+async function runTests(
+        arg: { assert: AssertType, harness: HarnessType },
+        moduleName: string, module: any, result: any) {
     let passed = true;
     for (const name of Object.keys(module)) {
         if (!name.startsWith("test")) {
@@ -56,7 +49,7 @@ async function runTests(moduleName: string, module: any, result: any) {
 
         const fullName = `${moduleName}.${name}`;
         try {
-            await module[name]();
+            await module[name](arg);
             result[fullName] = "passed";
         }
         catch (err) {

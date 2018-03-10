@@ -111,6 +111,7 @@ export function getNetwork(): Network | undefined {
             };
         }
     }
+
     return network;
 }
 
@@ -148,6 +149,8 @@ export function getCluster(): Cluster | undefined {
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }
+
+        (<any>cluster).doNotCapture = true;
     }
     return cluster;
 }

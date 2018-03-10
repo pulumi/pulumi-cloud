@@ -2,7 +2,7 @@ required = ["github.com/pulumi/pulumi-aws"]
 
 [[override]]
   name = "github.com/pulumi/pulumi"
-  revision = "96d4cca4c8e93fb95a549f006505519388128eda"
+  revision = "b8c1fee96ca19651dc52b50381401370bb7a88bb"
 
 [[override]]
   name = "github.com/pulumi/pulumi-aws"
