@@ -1,7 +1,7 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as cloud from "@pulumi/cloud";
-import { Output } from "@pulumi/pulumi";
+import { Config, Output } from "@pulumi/pulumi";
 
 // A simple NGINX service, scaled out over two containers.
 let nginx = new cloud.Service("examples-nginx", {
@@ -48,10 +48,8 @@ let customWebServer = new cloud.Service("mycustomservice", {
     replicas: 2,
 });
 
-// TODO[pulumi/pulumi#397] Would be nice if this was a Secret<T> and closure
-// serialization knew to pass it in encrypted env vars.
-// TODO[pulumi/pulumi#381] Might also be nice if this could be generated uniquely per stack.
-let redisPassword = "SECRETPASSWORD";
+let config = new Config("containers:config");
+let redisPassword = config.require("redisPassword");
 
 /**
  * A simple Cache abstration, built on top of a Redis container Service.
