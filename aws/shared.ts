@@ -149,7 +149,9 @@ export function getCluster(): Cluster | undefined {
             };
         }
 
-        (<any>cluster).doNotCapture = true;
+        if (cluster) {
+            (<any>cluster).doNotCapture = true;
+        }
     }
     return cluster;
 }
