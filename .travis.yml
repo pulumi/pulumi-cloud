@@ -5,6 +5,7 @@ go: 1.9
 sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
     - export PULUMI_ROOT=/opt/pulumi
+    - git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home
     # Install Docker 17.09.
     - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -24,11 +25,8 @@ before_install:
     # Install Yarn as per https://yarnpkg.com/lang/en/docs/install-ci/#travis-tab.
     - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.2.1
     - export PATH=$HOME/.yarn/bin:$PATH
-    # Make a temp location for failed tests log to go into.
-    - export PULUMI_FAILED_TESTS_DIR=$(mktemp -d); echo "${PULUMI_FAILED_TESTS_DIR}"
+    - . ${GOPATH}/src/github.com/pulumi/home/scripts/keep-failed-tests.sh
 install:
-    # Clone the Pulumi repo and use its script to fetch the latest installation packages.
-    - git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home
     - ${GOPATH}/src/github.com/pulumi/home/scripts/install-locked.sh ${PULUMI_ROOT} pulumi pulumi-aws
     - make ensure
 before_script:
@@ -37,8 +35,6 @@ before_script:
 script:
     - make travis_${TRAVIS_EVENT_TYPE}
 after_failure:
-    # Copy any data from failed tests to S3.
-    - aws --region us-west-2 s3 cp --recursive "${PULUMI_FAILED_TESTS_DIR}" "s3://eng.pulumi.com/travis-logs/${TRAVIS_REPO_SLUG}/${TRAVIS_JOB_NUMBER}/failures"; echo "s3://eng.pulumi.com/travis-logs/${TRAVIS_REPO_SLUG}/${TRAVIS_JOB_NUMBER}/failures"
-    - echo "one or more tests failed, to view detailed failure information, visit https://s3.console.aws.amazon.com/s3/buckets/eng.pulumi.com/travis-logs/${TRAVIS_REPO_SLUG}/${TRAVIS_JOB_NUMBER}/failures/"
+    - ${GOPATH}/src/github.com/pulumi/home/scripts/upload-failed-tests
 notifications:
     webhooks: https://ufci1w66n3.execute-api.us-west-2.amazonaws.com/stage/travis

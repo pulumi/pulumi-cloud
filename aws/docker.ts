@@ -3,6 +3,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 import * as child_process from "child_process";
 import * as semver from "semver";
@@ -51,7 +52,7 @@ async function buildImageAsync(
     } else if (container.build) {
         build = container.build;
     } else {
-        throw new Error(`Cannot build a container with an empty build specification`);
+        throw new RunError(`Cannot build a container with an empty build specification`);
     }
 
     // If the build context is missing, default it to the working directory.
@@ -74,7 +75,7 @@ async function buildImageAsync(
             cachedDockerVersionString = versionResult.stdout;
             pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
         } catch (err) {
-            throw new Error("No 'docker' command available on PATH: Please install to use container 'build' mode.");
+            throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
         }
 
         // Decide whether to use --password or --password-stdin based on the client version.
@@ -105,13 +106,13 @@ async function buildImageAsync(
     // Invoke Docker CLI commands to build and push.
     const buildResult = await runCLICommand("docker", buildArgs);
     if (buildResult.code) {
-        throw new Error(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
+        throw new RunError(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
 
     // Finally, inspect the image so we can return the SHA digest.
     const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
     if (inspectResult.code || !inspectResult.stdout) {
-        throw new Error(
+        throw new RunError(
             `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
     }
     return inspectResult.stdout.trim();
@@ -133,20 +134,20 @@ async function pushImageAsync(
             "docker", ["login", "-u", username, "--password-stdin", registryName], false, password);
     }
     if (loginResult.code) {
-        throw new Error(`Failed to login to Docker registry ${registryName}`);
+        throw new RunError(`Failed to login to Docker registry ${registryName}`);
     }
 
     // Tag and push the image to the remote repository.
     if (!repositoryUrl) {
-        throw new Error("Expected repository URL to be defined during push");
+        throw new RunError("Expected repository URL to be defined during push");
     }
     const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
     if (tagResult.code) {
-        throw new Error(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
+        throw new RunError(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
     }
     const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
     if (pushResult.code) {
-        throw new Error(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
+        throw new RunError(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
     }
 }
 

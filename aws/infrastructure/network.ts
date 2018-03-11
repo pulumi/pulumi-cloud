@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 import { externalSecurityGroups, externalSubnets, externalVpcId, usePrivateNetwork } from "../config";
 import { getAwsAz } from "./aws";
@@ -25,7 +26,7 @@ export class Network {
         // pulumi/pulumi#331 lands, this will be much easier to do, and we can improve this situation.
         this.numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
         if (this.numberOfAvailabilityZones < 1 || this.numberOfAvailabilityZones > 4) {
-            throw new Error(
+            throw new RunError(
                 `Unsupported number of availability zones for network: ${this.numberOfAvailabilityZones}`);
         }
         this.privateSubnets = args.privateSubnets || false;

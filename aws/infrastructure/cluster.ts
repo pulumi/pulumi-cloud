@@ -2,6 +2,7 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 import { awsAccountId, awsRegion } from "./aws";
 import { Network } from "./network";
@@ -101,7 +102,7 @@ export class Cluster {
 
     constructor(name: string, args: ClusterArgs) {
         if (!args.network) {
-            throw new Error("Expected a valid Network to use for creating Cluster");
+            throw new RunError("Expected a valid Network to use for creating Cluster");
         }
 
         // First create an ECS cluster.

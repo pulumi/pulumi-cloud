@@ -3,6 +3,7 @@
 import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 import { Function } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
@@ -20,7 +21,7 @@ export function interval(name: string, options: timer.IntervalRate, handler: tim
 
     let unit = "minutes";
     if (rateMinutes < 1) {
-        throw new Error("Interval must be at least 1 minute");
+        throw new RunError("Interval must be at least 1 minute");
     }
     if (rateMinutes === 1) {
         unit = "minute";
@@ -48,7 +49,7 @@ export function daily(name: string,
         opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
-        throw new Error("Missing required timer handler function");
+        throw new RunError("Missing required timer handler function");
     }
     else {
         hour = scheduleOrHandler.hourUTC || 0;
@@ -70,7 +71,7 @@ export function hourly(name: string,
         opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
-        throw new Error("Missing required timer handler function");
+        throw new RunError("Missing required timer handler function");
     }
     else {
         minute = scheduleOrHandler.minuteUTC || 0;

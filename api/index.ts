@@ -5,6 +5,7 @@
 // in the actual platform implementation appropriate for them.
 
 import * as pulumi from "@pulumi/pulumi";
+import { RunError } from "@pulumi/pulumi/errors";
 
 declare let module: any;
 declare function require(name: string): any;
@@ -22,7 +23,7 @@ function loadFrameworkModule() {
     } catch (e) {
         // If the module was not found, return a useful error message.
         if ((e instanceof Error) && (e as any).code === "MODULE_NOT_FOUND") {
-            throw new Error(`
+            throw new RunError(`
 Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no '${frameworkModule}' module is installed.\
  Install it now or select another provider implementation with the "cloud:config:provider" setting.`,
             );
