@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi/pkg/operations"
+	"github.com/pulumi/pulumi/pkg/resource/config"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
-	"github.com/pulumi/pulumi/pkg/tokens"
 )
 
 func Test_Examples(t *testing.T) {
@@ -467,8 +467,8 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 	if !assert.NotNil(t, tree) {
 		return nil
 	}
-	cfg := map[tokens.ModuleMember]string{
-		"aws:config:region": region,
+	cfg := map[config.Key]string{
+		config.MustMakeKey("aws", "config:region"): region,
 	}
 	ops := tree.OperationsProvider(cfg)
 
