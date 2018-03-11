@@ -111,6 +111,7 @@ export function getNetwork(): Network | undefined {
             };
         }
     }
+
     return network;
 }
 
@@ -147,6 +148,10 @@ export function getCluster(): Cluster | undefined {
                     ? pulumi.output(config.ecsClusterSecurityGroup) : undefined,
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
+        }
+
+        if (cluster) {
+            (<any>cluster).doNotCapture = true;
         }
     }
     return cluster;

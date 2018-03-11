@@ -616,10 +616,11 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             waitForSteadyState: true,
         }, { parent: this });
 
-        this.endpoints = getEndpoints(ports);
+        const localEndpoints = getEndpoints(ports);
+        this.endpoints = localEndpoints;
 
         this.getEndpoint = async (containerName, containerPort) => {
-            const endpoints = this.endpoints.get();
+            const endpoints = localEndpoints.get();
 
             containerName = containerName || Object.keys(endpoints)[0];
             if (!containerName)  {
@@ -748,7 +749,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const taskDefinitionArn = this.taskDefinition.arn;
         const containerEnv = pulumi.all(container.environment || {});
 
-        this.run = async function (this: Task, options?: cloud.TaskRunOptions) {
+        // tslint:disable-next-line:no-empty
+        this.run = async function (options?: cloud.TaskRunOptions) {
             const awssdk = await import("aws-sdk");
             const ecs = new awssdk.ECS();
 

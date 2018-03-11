@@ -497,12 +497,12 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "96d4cca4c8e93fb95a549f006505519388128eda"
+  revision = "d677c80d2d97385dcf3c642e487d82810755ec72"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "fbb9b669f42aa7b44531380b8e19c41ee0c69046"
+  revision = "83ef258b318fd7be7d1af14f82766668ccd204e6"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -705,6 +705,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c62f30b3c8eb5a8d565a5c8250f0aef4e690ee0cc02f373b782d43d66029b0d8"
+  inputs-digest = "c6483fe00b98874cb58f12c7b6ae0909f488d10e0bd391fa91f5aa8f81c27f06"
   solver-name = "gps-cdcl"
   solver-version = 1

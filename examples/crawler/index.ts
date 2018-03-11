@@ -2,8 +2,7 @@
 
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
-import * as $ from "cheerio";
-import fetch, { Response } from "node-fetch";
+import * as nodeFetchModule from "node-fetch";
 import { canonicalUrl, hostname} from "./support";
 
 // Pending sites to be processed
@@ -29,6 +28,9 @@ publicURL.apply(u => {
 sites.subscribe("foreachurl", async (url) => {
     console.log(`${url}: Processing`);
 
+    const fetch = (await import("node-fetch")).default;
+    const $ = await import("cheerio");
+
     // Return immediately if the url has already been crawled
     let found = await documents.get({ id: url });
     if (found && !found.crawlInProgress) {
@@ -38,7 +40,7 @@ sites.subscribe("foreachurl", async (url) => {
 
     // Fetch the contents at the URL
     console.log(`${url}: Getting`);
-    let res: Response;
+    let res: nodeFetchModule.Response;
     try {
         res = await fetch(url);
     } catch (err) {
