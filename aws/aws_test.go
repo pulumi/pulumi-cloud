@@ -220,6 +220,8 @@ func Test_Examples(t *testing.T) {
 
 				// Validate the GET / endpoint
 				{
+					// Call the endpoint twice so that things have time to warm up.
+					http.Get(baseURL)
 					resp, err := http.Get(baseURL)
 					assert.NoError(t, err, "expected to be able to GET /")
 					assert.Equal(t, 200, resp.StatusCode, "expected 200")
