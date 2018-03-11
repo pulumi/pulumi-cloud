@@ -468,7 +468,7 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 		return nil
 	}
 	cfg := map[config.Key]string{
-		config.MustMakeKey("aws", "config:region"): region,
+		config.MustMakeKey("aws", "region"): region,
 	}
 	ops := tree.OperationsProvider(cfg)
 
