@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
-const config = new pulumi.Config("cloud-aws:config");
+const config = new pulumi.Config("cloud-aws");
 
 // TODO[pulumi/pulumi-cloud#134]: We need to clean up the set of options available on `cloud-aws`
 // and potentially reduce the dimentionality of the available configuration space.

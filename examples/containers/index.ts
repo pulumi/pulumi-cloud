@@ -48,7 +48,7 @@ let customWebServer = new cloud.Service("mycustomservice", {
     replicas: 2,
 });
 
-let config = new Config("containers:config");
+let config = new Config("containers");
 let redisPassword = config.require("redisPassword");
 
 /**

@@ -10,7 +10,7 @@ import { RunError } from "@pulumi/pulumi/errors";
 declare let module: any;
 declare function require(name: string): any;
 
-const config = new pulumi.Config("cloud:config");
+const config = new pulumi.Config("cloud");
 
 const provider = config.require("provider");
 
