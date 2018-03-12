@@ -2,15 +2,36 @@
 
 import * as pulumi from "@pulumi/pulumi";
 
+/**
+ * BucketPutHandlerArgs are the arguments passed to an [onPut] handler when an object is put in a bucket.
+ */
 export interface BucketPutHandlerArgs {
+    /**
+     * The key that was [put].
+     */
     key: string;
+    /**
+     * The size, in bytes, of the blob that was [put].
+     */
     size: number;
+    /**
+     * The ETag returned by the [put] operation.
+     */
     eTag: string;
+    /**
+     * The time when the [put] was performed.
+     */
     eventTime: string;
 }
 
+/**
+ * BucketPutHandler is the callback that handles an [onPut] event.
+ */
 export type BucketPutHandler = (args: BucketPutHandlerArgs) => Promise<void>;
 
+/**
+ * BucketPutFilter specifies filters to apply to an [onPut] subscription.
+ */
 export interface BucketPutFilter {
     keyPrefix?: string;
 }

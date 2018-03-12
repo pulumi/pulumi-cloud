@@ -5,6 +5,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { Function } from "./function";
 
+// See https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html.
 interface S3BucketNotificationEvent {
     "Records"?: S3BucketNotificationEvent[];
 }
