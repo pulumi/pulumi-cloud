@@ -90,7 +90,7 @@ if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
 }
 
 /**
- * Optionally use Fargate-based container compute when possible.
+ * Optionally use Fargate-based container compute. All tasks must be Fargate-compatible.
  */
 export let useFargate = config.getBoolean("useFargate") || false;
 
