@@ -149,3 +149,5 @@ export class Network {
         }
     }
 }
+
+(<any>Network).doNotCapture = true;
