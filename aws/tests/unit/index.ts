@@ -6,6 +6,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as assertModule from "assert";
 import * as harnessModule from "./harness";
 
+import * as bucketTests from "./bucketTests";
 import * as httpEndpointTests from "./httpEndpointTests";
 import * as tableTests from "./tableTests";
 import * as serviceTests from "./serviceTests";
@@ -13,6 +14,7 @@ import * as serviceTests from "./serviceTests";
 const endpoint = new cloud.HttpEndpoint("tests-unittests");
 
 const testFunctions = [
+    bucketTests.runAllTests,
     tableTests.runAllTests,
     httpEndpointTests.runAllTests,
     serviceTests.runAllTests,
