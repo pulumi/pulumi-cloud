@@ -269,6 +269,8 @@ export class Cluster {
     }
 }
 
+(<any>Cluster).doNotCapture = true;
+
 // http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_agent_versions.html
 async function getEcsAmiId(name?: string) {
     const result: aws.GetAmiResult = await aws.getAmi({
