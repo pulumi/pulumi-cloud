@@ -187,11 +187,10 @@ func Test_Examples(t *testing.T) {
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
 				// TODO: Fargate only in us-east-1.
-				"aws:config:region":                  "us-east-1",
-				"cloud:config:provider":              "aws",
-				"cloud-aws:config:useFargate":        "true",
-				"cloud-aws:config:usePrivateNetwork": "true",
-				"containers:config:redisPassword":    "SECRETPASSWORD",
+				"aws:config:region":               "us-east-1",
+				"cloud:config:provider":           "aws",
+				"cloud-aws:config:useFargate":     "true",
+				"containers:config:redisPassword": "SECRETPASSWORD",
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",

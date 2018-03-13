@@ -1,4 +1,3 @@
 name: pulumi
-description: The AWS implementation of the core Pulumi Framework abstractions.
 runtime: nodejs
-
+description: The AWS implementation of the core Pulumi Framework abstractions.

@@ -91,7 +91,7 @@ function createLoadBalancer(
     const shortName = utils.sha1hash(`${longName}`);
 
     // Create an internal load balancer if requested.
-    const internal: boolean = (network.privateSubnets && !portMapping.external);
+    const internal: boolean = (network.usePrivateSubnets && !portMapping.external);
     const portMappingProtocol: cloud.ContainerProtocol = portMapping.protocol || "tcp";
 
     // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
@@ -692,7 +692,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             waitForSteadyState: true,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
-                assignPublicIp: false,
+                assignPublicIp: !network.usePrivateSubnets,
                 securityGroups: [ cluster.securityGroupId!],
                 subnets: network.subnetIds,
             },

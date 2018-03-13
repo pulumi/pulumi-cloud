@@ -85,18 +85,21 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
 let network: Network;
 
 /**
- * Get or create the network to use for container (and possibly lambda) compute or undefined if containers are
- * unsupported and lambdas are being run outsie a VPC.
+ * Get or create the network to use for container and lambda compute.
  */
 export function getOrCreateNetwork(): Network {
-    // If no network has been initialized, see if we must lazily allocate one.
     if (!network) {
         if (!config.externalVpcId) {
-            // Create a new VPC for this private network or if an ECS cluster needs to be auto-provisioned.
-            network = new Network(createNameWithStackInfo("global"), {
-                privateSubnets: config.usePrivateNetwork,
-                numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
-            });
+            if (config.usePrivateNetwork) {
+                // Create a new VPC for this private network.
+                network = new Network(createNameWithStackInfo("global"), {
+                    usePrivateSubnets: config.usePrivateNetwork,
+                    numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
+                });
+            } else {
+                // Use the default VPC.
+                network = Network.getDefault();
+            }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
                 throw new RunError(
@@ -105,9 +108,8 @@ export function getOrCreateNetwork(): Network {
             }
             // Use an exsting VPC for this private network
             network = {
-                numberOfAvailabilityZones: config.externalSubnets.length,
                 vpcId: pulumi.output(config.externalVpcId),
-                privateSubnets: config.usePrivateNetwork,
+                usePrivateSubnets: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
                 publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
                 securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
