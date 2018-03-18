@@ -284,8 +284,8 @@ func Test_Examples(t *testing.T) {
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
 
-				// Wait for a minute before getting logs
-				time.Sleep(1 * time.Minute)
+				// Wait for a few minutes before getting logs.
+				time.Sleep(5 * time.Minute)
 
 				// Validate logs from example
 				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
