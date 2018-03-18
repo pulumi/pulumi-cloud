@@ -5,8 +5,9 @@ import * as pulumi from "@pulumi/pulumi";
 
 export class Bucket implements cloud.Bucket {
 
-    public get: (key: string) =>Promise<Buffer | undefined>;
+    public get: (key: string) =>Promise<Buffer>;
     public put: (key: string, contents: Buffer) => Promise<void>;
+    public delete: (key: string) => Promise<void>;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         throw new Error("Bucket is not yet implemented in mock");

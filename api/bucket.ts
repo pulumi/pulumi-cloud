@@ -67,11 +67,10 @@ export interface Bucket {
     /**
      * Get a blob from the bucket.
      *
-     * @param key The key to use for retreiving this blob later.
-     * @returns A promise for the resulting bloc if found, or for undefined if not found,
-     *   or a failed promise if the query could not be processed.
+     * @param key The key of the blog to retrieve.
+     * @returns A promise for the success or failure of the get.
      */
-    get(key: string): Promise<Buffer | undefined>;
+    get(key: string): Promise<Buffer>;
     /**
      * Insert a blob into the bucket.
      *
@@ -79,4 +78,11 @@ export interface Bucket {
      * @returns A promise for the success or failure of the put.
      */
     put(key: string, contents: Buffer): Promise<void>;
+    /**
+     * Delete a blob from the bucket.
+     *
+     * @param key The key of the blob to delete.
+     * @returns A promise for the success or failure of the delete.
+     */
+    delete(key: string): Promise<void>;
 }

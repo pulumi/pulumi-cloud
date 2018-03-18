@@ -21,8 +21,8 @@ namespace basicTests {
     export async function testGetAfterPut(args: TestArgs) {
         await bucket1.put("somekey", Buffer.from(str, "utf-8"));
         const buffer = await bucket1.get("somekey");
-        args.assert.notEqual(buffer, undefined);
-        args.assert.equal(buffer!.toString("utf-8"), str);
+        args.assert.equal(buffer.toString("utf-8"), str);
+        await bucket2.delete("somekey");
     }
 
     const bucket2 = new cloud.Bucket("tests-bucket" + uniqueId++);
@@ -39,10 +39,13 @@ namespace basicTests {
         
         // Read the testcomlete.json object created by the onPut handler
         const testCompleteBuffer = await bucket2.get("testcomplete.json");
-        args.assert.notEqual(testCompleteBuffer, undefined);
-        const testCompleteJSON: cloud.BucketPutHandlerArgs = JSON.parse(testCompleteBuffer!.toString("utf-8"));
+        const testCompleteJSON: cloud.BucketPutHandlerArgs = JSON.parse(testCompleteBuffer.toString("utf-8"));
         args.assert.equal(testCompleteJSON.key, "folder/foo");
         args.assert.equal(testCompleteJSON.size, Buffer.from(str, "utf-8").length);
+
+        // Cleanup
+        await bucket2.delete("folder/foo");
+        await bucket2.delete("testcomplete.json");
     }
 
 }

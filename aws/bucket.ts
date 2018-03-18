@@ -49,8 +49,9 @@ interface S3BucketNotificationEvent {
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public bucket: aws.s3.Bucket;
 
-    public get: (key: string) =>Promise<Buffer | undefined>;
+    public get: (key: string) => Promise<Buffer>;
     public put: (key: string, contents: Buffer) => Promise<void>;
+    public delete: (key: string) => Promise<void>;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:bucket:Bucket", name, {}, opts);
@@ -89,6 +90,15 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 Body: contents,
             }).promise();
         };
+
+        this.delete = async (key: string) => {
+            const s3 = await s3Client();
+            const res = await s3.deleteObject({
+                Bucket: bucketName.get(),
+                Key: key,
+            }).promise();
+        };
+
     }
 
     public onPut(name: string, handler: cloud.BucketPutHandler, filter?: cloud.BucketPutFilter): void {
