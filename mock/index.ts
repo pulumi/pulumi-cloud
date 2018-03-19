@@ -6,6 +6,7 @@
 
 import "./config";
 
+export * from "./bucket";
 export * from "./httpEndpoint";
 export * from "./table";
 export { Topic } from "./topic";
