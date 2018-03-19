@@ -13,7 +13,11 @@ export class Bucket implements cloud.Bucket {
         throw new Error("Bucket is not yet implemented in mock");
     }
 
-    public onPut(name: string, handler: cloud.BucketPutHandler, filter?: cloud.BucketPutFilter): void {
+    public onPut(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter): void {
+        throw new Error("Bucket is not yet implemented in mock");
+    }
+
+    public onDelete(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter): void {
         throw new Error("Bucket is not yet implemented in mock");
     }
 }

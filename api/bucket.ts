@@ -3,11 +3,11 @@
 import * as pulumi from "@pulumi/pulumi";
 
 /**
- * BucketPutHandlerArgs are the arguments passed to an [onPut] handler when an object is put in a bucket.
+ * BucketHandlerArgs are the arguments passed to an [onPut] or [onDelete] handler.
  */
-export interface BucketPutHandlerArgs {
+export interface BucketHandlerArgs {
     /**
-     * The key that was [put].
+     * The key that was updated or deleted by the operation.
      */
     key: string;
     /**
@@ -15,25 +15,22 @@ export interface BucketPutHandlerArgs {
      */
     size: number;
     /**
-     * The ETag returned by the [put] operation.
-     */
-    eTag: string;
-    /**
-     * The time when the [put] was performed.
+     * The time (in ISO-8601 format) when the [put] or [delete] was completed.
      */
     eventTime: string;
 }
 
 /**
- * BucketPutHandler is the callback that handles an [onPut] event.
+ * BucketHandler is the callback that handles an [onPut] or [onDelete] event.
  */
-export type BucketPutHandler = (args: BucketPutHandlerArgs) => Promise<void>;
+export type BucketHandler = (args: BucketHandlerArgs) => Promise<void>;
 
 /**
- * BucketPutFilter specifies filters to apply to an [onPut] subscription.
+ * BucketFilter specifies filters to apply to an [onPut] or [onDelete] subscription.
  */
-export interface BucketPutFilter {
+export interface BucketFilter {
     keyPrefix?: string;
+    keySuffix?: string;
 }
 
 export interface BucketConstructor {
@@ -52,6 +49,8 @@ export let Bucket: BucketConstructor; // tslint:disable-line
  * Bucket is a simple blob store.
  *
  * Gets are read-after-write consistent for puts of new blobs, and eventually consistent for overwriting puts.
+ *
+ * Blobs in a bucket are encrypted at rest by default.
  */
 export interface Bucket {
 
@@ -62,7 +61,15 @@ export interface Bucket {
      * @param filter A filter to decide which put events should be reported.
      * @param handler A callback to handle the event.
      */
-    onPut(name: string, handler: BucketPutHandler, filter?: BucketPutFilter): void;
+    onPut(name: string, handler: BucketHandler, filter?: BucketFilter): void;
+    /**
+     * Registers a handler to be notified when blobs are deleted from the bucket.
+     *
+     * @param name A unique name for the subscription.
+     * @param filter A filter to decide which put events should be reported.
+     * @param handler A callback to handle the event.
+     */
+    onDelete(name: string, handler: BucketHandler, filter?: BucketFilter): void;
 
     /**
      * Get a blob from the bucket.
