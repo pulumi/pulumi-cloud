@@ -23,6 +23,8 @@ func Test_Examples(t *testing.T) {
 	if region == "" {
 		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
 	}
+	// Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
+	fargateRegion := "us-east-1"
 	fmt.Printf("AWS Region: %v\n", region)
 
 	cwd, err := os.Getwd()
@@ -33,8 +35,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
-				// TODO: Fargate only in us-east-1.
-				"aws:config:region":                  "us-east-1",
+				"aws:config:region":                  fargateRegion,
 				"cloud:config:provider":              "aws",
 				"cloud-aws:config:useFargate":        "true",
 				"cloud-aws:config:usePrivateNetwork": "true",
@@ -186,8 +187,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "../examples/containers"),
 			Config: map[string]string{
-				// TODO: Fargate only in us-east-1.
-				"aws:config:region":               "us-east-1",
+				"aws:config:region":               fargateRegion,
 				"cloud:config:provider":           "aws",
 				"cloud-aws:config:useFargate":     "true",
 				"containers:config:redisPassword": "SECRETPASSWORD",
@@ -284,11 +284,11 @@ func Test_Examples(t *testing.T) {
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
 
-				// Wait for a few minutes before getting logs.
-				time.Sleep(5 * time.Minute)
+				// Wait for a minute before getting logs.
+				time.Sleep(1 * time.Minute)
 
 				// Validate logs from example
-				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+				logs := getLogs(t, fargateRegion, stackInfo, operations.LogQuery{})
 				if !assert.NotNil(t, logs, "expected logs to be produced") {
 					return
 				}
