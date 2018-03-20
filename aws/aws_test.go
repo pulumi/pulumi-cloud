@@ -284,8 +284,8 @@ func Test_Examples(t *testing.T) {
 					t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 				}
 
-				// Wait for a minute before getting logs.
-				time.Sleep(1 * time.Minute)
+				// Wait for five minutes before getting logs.
+				time.Sleep(5 * time.Minute)
 
 				// Validate logs from example
 				logs := getLogs(t, fargateRegion, stackInfo, operations.LogQuery{})
@@ -311,7 +311,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(nginxLogs) > 0) {
 						return
 					}
-					assert.Contains(t, nginxLogs[0].Message, "GET /")
+					assert.Contains(t, getAllMessageText(nginxLogs), "GET /")
 				}
 
 				// Hello World container Task logs
@@ -324,7 +324,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(hellowWorldLogs) > 16) {
 						return
 					}
-					assert.Contains(t, hellowWorldLogs[0].Message, "Hello from Docker!")
+					assert.Contains(t, getAllMessageText(hellowWorldLogs), "Hello from Docker!")
 				}
 
 				// Cache Redis container  logs
@@ -337,7 +337,7 @@ func Test_Examples(t *testing.T) {
 					if !assert.True(t, len(redisLogs) > 5) {
 						return
 					}
-					assert.Contains(t, redisLogs[0].Message, "Redis is starting")
+					assert.Contains(t, getAllMessageText(redisLogs), "Redis is starting")
 				}
 			},
 		},
@@ -523,4 +523,12 @@ func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationS
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 	t.Logf("GET %v [%v/%v]: %v", baseURL+urlPortion, resp.StatusCode, contentType, string(bytes))
+}
+
+func getAllMessageText(logs []operations.LogEntry) string {
+	allMessageText := ""
+	for _, logEntry := range logs {
+		allMessageText = allMessageText + logEntry.Message + "\n"
+	}
+	return allMessageText
 }
