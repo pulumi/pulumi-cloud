@@ -66,6 +66,12 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         super("cloud:bucket:Bucket", name, {}, opts);
         this.subscriptions = [];
 
+        // If `protect` is true, we will prevent the bucket from being destroyed
+        //
+        // TODO[pulumi/pulumi#782]: We shouldn't have to pass this explicitly to the child resource, it should be
+        // implicit that a protected component protects all its children from being deleted.
+        const preventDestroy = opts && opts.protect;
+
         this.bucket = new aws.s3.Bucket(name, {
             serverSideEncryptionConfiguration: {
                 rule: {
@@ -74,7 +80,10 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                     },
                 },
             },
-        }, { parent: this });
+            // We rely on Pulumi's `protect` as a first class way to prevent deletion instead of the S3 bucket's
+            // built-in `forceDestroy`. This means that by default, the bucket and all its contents can be deleted.
+            forceDestroy: true,
+        }, { parent: this, protect: preventDestroy });
 
         // Create the bucket notification resource if needed once before process exit.
         process.on("beforeExit", () => {
