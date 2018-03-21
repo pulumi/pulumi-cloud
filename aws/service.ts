@@ -835,6 +835,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const subnetIds = pulumi.all(network.subnetIds);
         const securityGroups =  cluster.securityGroupId!;
         const useFargate = config.useFargate;
+        const usePrivateSubnets = network.usePrivateSubnets;
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {
@@ -854,7 +855,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 launchType: useFargate ? "FARGATE" : "EC2",
                 networkConfiguration: {
                     awsvpcConfiguration: {
-                        assignPublicIp: "DISABLED",
+                        assignPublicIp: usePrivateSubnets ? "DISABLED" : "ENABLED",
                         securityGroups: [ securityGroups.get() ],
                         subnets: subnetIds.get(),
                     },
