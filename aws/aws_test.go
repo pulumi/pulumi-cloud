@@ -504,11 +504,19 @@ func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationS
 		return
 	}
 
-	// Validate the GET /unittests endpoint
-
-	resp, err := http.Get(baseURL + urlPortion)
-	if !assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion) {
-		return
+	// Validate the GET /unittests endpoint.  We allow this to potentially fail once with a 504 to avoid cold-start
+	// issues.
+	// TODO[pulumi/pulumi-cloud#440] Remove this workaround once we structure the unit tests to be resilient to this.
+	var resp *http.Response
+	var err error
+	for i := 0; i < 2; i++ {
+		resp, err = http.Get(baseURL + urlPortion)
+		if !assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion) {
+			return
+		}
+		if resp.StatusCode != 504 {
+			break
+		}
 	}
 
 	contentType := resp.Header.Get("Content-Type")
