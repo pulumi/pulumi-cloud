@@ -38,7 +38,7 @@ namespace basicTests {
         await new Promise(resolve => setTimeout(resolve, 10000));
         
         // Read the testcomlete.json object created by the onPut handler
-        const testCompleteBuffer = await bucket2.get("testcomplete.json");
+        const testCompleteBuffer = await pollBucket(bucket2, "testcomplete.json");
         const testCompleteJSON: cloud.BucketHandlerArgs = JSON.parse(testCompleteBuffer.toString("utf-8"));
         args.assert.equal(testCompleteJSON.key, "folder/foo");
         args.assert.equal(testCompleteJSON.size, Buffer.from(str, "utf-8").length);
@@ -46,6 +46,23 @@ namespace basicTests {
         // Cleanup
         await bucket2.delete("folder/foo");
         await bucket2.delete("testcomplete.json");
+    }
+
+    // Poll a bucket for a given key.
+    async function pollBucket(bucket: cloud.Bucket, key: string): Promise<Buffer> {
+        let iteration = 0;
+        for(;;) {
+            try {
+                let buf = await bucket.get(key);
+                return buf;
+            } catch(err) {
+                // Sleep for 500ms, then increment iteration counter.
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (iteration++ > 10) {
+                    throw err;
+                }
+            }
+        }
     }
 
 }
