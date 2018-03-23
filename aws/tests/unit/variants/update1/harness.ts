@@ -42,9 +42,10 @@ async function runTests(
         arg: { assert: AssertType, harness: HarnessType },
         moduleName: string, module: any, result: any) {
     let passed = true;
-    for (const name of Object.keys(module)) {
+
+    await Promise.all(Object.keys(module).map(async (name) => {
         if (!name.startsWith("test")) {
-            continue;
+            return;
         }
 
         const fullName = `${moduleName}.${name}`;
@@ -56,7 +57,7 @@ async function runTests(
             passed = false;
             result[fullName] = errorJSON(err);
         }
-    }
+    }));
 
     return passed;
 }
