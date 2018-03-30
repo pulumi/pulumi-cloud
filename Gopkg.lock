@@ -493,18 +493,19 @@
     "pkg/util/mapper",
     "pkg/util/retry",
     "pkg/util/rpcutil",
+    "pkg/util/rpcutil/rpcerror",
     "pkg/version",
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "26b1fcb67adc8a1fcf65684e959fc58eb8be1b5d"
-  version = "v0.11.0"
+  revision = "0dbf6f8263054f00eb012f35dc7cb0b0eb53ee3b"
+  version = "v0.11.1-rc1"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "16d218d2e15b9ae848559057a660b9ce73c6c3d6"
-  version = "v0.11.0"
+  revision = "647eda061b9232ef2b27e5077c6067652a10632d"
+  version = "v0.11.1-rc1"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
