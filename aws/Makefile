@@ -2,7 +2,7 @@ PROJECT_NAME := Pulumi Cloud Framework (AWS Implementation)
 NODE_MODULE_NAME := @pulumi/cloud-aws
 include ../build/common.mk
 
-VERSION := $(shell git describe --tags --dirty 2>/dev/null)
+VERSION := $(shell ../scripts/get-version)
 
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 

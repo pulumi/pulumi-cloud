@@ -149,10 +149,6 @@ export function getCluster(): Cluster | undefined {
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         }
-
-        if (cluster) {
-            (<any>cluster).doNotCapture = true;
-        }
     }
     return cluster;
 }

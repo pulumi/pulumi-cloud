@@ -84,7 +84,7 @@ export interface Container {
      * container](https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/#create-a-container)
      * section of the [Docker Remote
      * API](https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/)
-     * and the `COMMAND` parameter to [docker run](docker run). For more
+     * and the `COMMAND` parameter to [docker run](https://docs.docker.com/engine/reference/commandline/run/). For more
      * information about the Docker `CMD` parameter, go to
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
