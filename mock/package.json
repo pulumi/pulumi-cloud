@@ -18,7 +18,7 @@
         "http-proxy-middleware": "^0.17.4"
     },
     "peerDependencies": {
-        "@pulumi/pulumi": "^0.11.1-rc1",
+        "@pulumi/pulumi": "^0.11.1",
         "@pulumi/cloud": "${VERSION}"
     }
 }
