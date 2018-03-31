@@ -9,27 +9,68 @@ import { getAwsAz } from "./aws";
 
 export interface NetworkArgs {
     numberOfAvailabilityZones?: number;
-    privateSubnets?: boolean;
+    usePrivateSubnets?: boolean;
 }
 
+/**
+ * Network encapsulates the configuration of an Amazon VPC.  Both [VPC with Public
+ * Subnet](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario1.html) and [VPC with Public and Private
+ * Subnets (NAT)](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html) configurations are
+ * supported.
+ */
 export class Network {
-    public readonly numberOfAvailabilityZones: number;
+    /**
+     * The VPC id of the network.
+     */
     public readonly vpcId: pulumi.Output<string>;
-    public readonly privateSubnets: boolean;
+    /**
+     * Whether the network includes private subnets.
+     */
+    public readonly usePrivateSubnets: boolean;
+    /**
+     * The security group IDs for the network.
+     */
     public readonly securityGroupIds: pulumi.Output<string>[];
+    /**
+     * The subnets in which compute should run.  These are the private subnets if [usePrivateSubnets] == true, else
+     * these are the public subnets.
+     */
     public readonly subnetIds: pulumi.Output<string>[];
+    /**
+     * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
+     */
     public readonly publicSubnetIds: pulumi.Output<string>[];
+
+    /**
+     * Gets the default VPC for the AWS account as a Network
+     */
+    static getDefault(): Network {
+        const vpc = aws.ec2.getVpc({default: true});
+        const vpcId = vpc.then(v => v.id);
+        const subnetIds = aws.ec2.getSubnetIds({ vpcId: vpcId }).then(subnets => subnets.ids);
+        const defaultSecurityGroup = aws.ec2.getSecurityGroup({ name: "default", vpcId: vpcId }).then(sg => sg.id);
+        const subnet0 = subnetIds.then(ids => ids[0]);
+        const subnet1 = subnetIds.then(ids => ids[1]);
+
+        return {
+            vpcId: pulumi.output(vpcId),
+            subnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
+            usePrivateSubnets: false,
+            securityGroupIds: [ pulumi.output(defaultSecurityGroup) ],
+            publicSubnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
+        };
+    }
 
     constructor(name: string, args: NetworkArgs) {
         // IDEA: default to the number of availability zones in this region, rather than 2.  To do this requires
         // invoking the provider, which requires that we "go async" at a very inopportune time here.  When
         // pulumi/pulumi#331 lands, this will be much easier to do, and we can improve this situation.
-        this.numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
-        if (this.numberOfAvailabilityZones < 1 || this.numberOfAvailabilityZones > 4) {
+        const numberOfAvailabilityZones = args.numberOfAvailabilityZones || 2;
+        if (numberOfAvailabilityZones < 1 || numberOfAvailabilityZones > 4) {
             throw new RunError(
-                `Unsupported number of availability zones for network: ${this.numberOfAvailabilityZones}`);
+                `Unsupported number of availability zones for network: ${numberOfAvailabilityZones}`);
         }
-        this.privateSubnets = args.privateSubnets || false;
+        this.usePrivateSubnets = args.usePrivateSubnets || false;
 
         const vpc = new aws.ec2.Vpc(name, {
             cidrBlock: "10.10.0.0/16",
@@ -65,14 +106,14 @@ export class Network {
         this.subnetIds = [];
         this.publicSubnetIds = [];
 
-        for (let i = 0; i < this.numberOfAvailabilityZones; i++) {
+        for (let i = 0; i < numberOfAvailabilityZones; i++) {
             const subnetName = `${name}-${i}`;
             // Create the subnet for this AZ - either - either public or private
             const subnet = new aws.ec2.Subnet(subnetName, {
                 vpcId: vpc.id,
                 availabilityZone: getAwsAz(i),
                 cidrBlock: `10.10.${i}.0/24`,         // IDEA: Consider larger default CIDR block sizing
-                mapPublicIpOnLaunch: !this.privateSubnets, // Only assign public IP if we are exposing public subnets
+                mapPublicIpOnLaunch: !this.usePrivateSubnets, // Only assign public IP if we are exposing public subnets
                 tags: {
                     Name: subnetName,
                 },
@@ -82,7 +123,7 @@ export class Network {
             // whether we are in a public or private subnet
             let subnetRouteTable: aws.ec2.RouteTable;
 
-            if (this.privateSubnets) {
+            if (this.usePrivateSubnets) {
                 // We need a public subnet for the NAT Gateway
                 const natName = `${name}-nat-${i}`;
                 const natGatewayPublicSubnet = new aws.ec2.Subnet(natName, {
@@ -148,6 +189,7 @@ export class Network {
             this.subnetIds.push(subnetId);
         }
     }
+
 }
 
 (<any>Network).doNotCapture = true;

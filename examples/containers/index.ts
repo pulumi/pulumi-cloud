@@ -17,20 +17,6 @@ let nginx = new cloud.Service("examples-nginx", {
 
 export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
 
-// A simple MongoDB service, using a data volume which persists on the backing
-// storage beyond the lifetime of the deployment.
-let dataVolume = new cloud.SharedVolume("examples-mymongodb-data");
-let mongodb = new cloud.Service("examples-mymongodb", {
-    containers: {
-        mongodb: {
-            image: "mongo",
-            memory: 128,
-            ports: [{ port: 27017, external: true }],
-            volumes: [{ containerPath: "/data/db", sourceVolume: dataVolume }],
-        },
-    },
-});
-
 let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
         webserver: {
@@ -138,7 +124,6 @@ api.get("/test", async (req, res) => {
     try {
         res.json({
             nginx: await nginx.getEndpoint(),
-            mongodb: await mongodb.getEndpoint(),
             nginx2: await builtService.getEndpoint(),
         });
     } catch (err) {
@@ -179,9 +164,9 @@ api.get("/", async (req, res) => {
 });
 api.get("/run", async (req, res) => {
     try {
-        // Launch 10 instances of the Task.
+        // Launch 4 instances of the Task.
         let tasks: Promise<void>[] = [];
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 4; i++) {
             tasks.push(helloTask.run());
         }
         await Promise.all(tasks);
