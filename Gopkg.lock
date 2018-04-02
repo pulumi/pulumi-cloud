@@ -493,11 +493,12 @@
     "pkg/util/mapper",
     "pkg/util/retry",
     "pkg/util/rpcutil",
+    "pkg/util/rpcutil/rpcerror",
     "pkg/version",
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "304af9cdf192f484ffd7cc29d980524172009093"
+  revision = "da51a87461f69f374eed47d7f078ceb86ec71184"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
@@ -705,6 +706,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5e1d4473b0a82255e8ff3ed1ea156e81399701ee8ab70d793cf883213418071c"
+  inputs-digest = "ed8110761795326a55f7a36a8a966fcae5def429bd0972084c205613afe40b0e"
   solver-name = "gps-cdcl"
   solver-version = 1
