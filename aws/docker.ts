@@ -1,6 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
@@ -33,11 +32,14 @@ export function buildAndPushImage(
     // Then collect its output digest as well as the repo url and repo registry id.
     const outputs = pulumi.all([imageDigest, repositoryUrl]);
 
-    // Use those then push the image (note: this will only happen during a normal update, not a preview).  Then
-    // just return the digest as the final result for our caller to use.
+    // Use those then push the image.  Then just return the digest as the final result for our caller to use.
     return outputs.apply(async ([digest, url]) => {
-        const registry = await connectToRegistry();
-        await pushImageAsync(imageName, url, registry);
+        if (!pulumi.runtime.options.dryRun) {
+            // Only push the image during an update, do not push during a preview, even if digest and url are available
+            // from a previous update.
+            const registry = await connectToRegistry();
+            await pushImageAsync(imageName, url, registry);
+        }
         return digest;
     });
 }
