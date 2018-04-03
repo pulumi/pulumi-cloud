@@ -14,7 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi/pkg/operations"
+	"github.com/pulumi/pulumi/pkg/resource"
 	"github.com/pulumi/pulumi/pkg/resource/config"
+	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
@@ -462,7 +464,16 @@ func Test_Examples(t *testing.T) {
 func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidationStackInfo,
 	query operations.LogQuery) *[]operations.LogEntry {
 
-	tree := operations.NewResourceTree(stackInfo.Snapshot.Resources)
+	var states []*resource.State
+	for _, res := range stackInfo.Deployment.Resources {
+		state, err := stack.DeserializeResource(res)
+		if !assert.NoError(t, err) {
+			return nil
+		}
+		states = append(states, state)
+	}
+
+	tree := operations.NewResourceTree(states)
 	if !assert.NotNil(t, tree) {
 		return nil
 	}
