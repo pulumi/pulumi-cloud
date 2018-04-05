@@ -1,30 +1,7 @@
 #!/bin/bash
 # publish.sh builds and publishes a release.
 set -o nounset -o errexit -o pipefail
-
 ROOT=$(dirname $0)/..
-PUBLISH=$GOPATH/src/github.com/pulumi/home/scripts/publish.sh
-PUBLISH_GOOS=("linux" "windows" "darwin")
-PUBLISH_GOARCH=("amd64")
-PUBLISH_PROJECT="pulumi-cloud"
-
-if [ ! -f $PUBLISH ]; then
-    >&2 echo "error: Missing publish script at $PUBLISH"
-    exit 1
-fi
-
-echo "Publishing SDK build to s3://eng.pulumi.com/:"
-for OS in "${PUBLISH_GOOS[@]}"
-do
-    for ARCH in "${PUBLISH_GOARCH[@]}"
-    do
-        export GOOS=${OS}
-        export GOARCH=${ARCH}
-
-        RELEASE_INFO=($($(dirname $0)/make_release.sh))
-        ${PUBLISH} ${RELEASE_INFO[0]} "${PUBLISH_PROJECT}/${OS}/${ARCH}" ${RELEASE_INFO[@]:1}
-    done
-done
 
 echo "Publishing NPM packages to NPMjs.com:"
 
@@ -39,8 +16,17 @@ publish() {
     mv package.json package.json.dev
     mv package.json.publish package.json
 
+    NPM_TAG="dev"
+
+    # If the package doesn't have a pre-release tag, use the tag of latest instead of
+    # dev. NPM uses this tag as the default version to add, so we want it to mean
+    # the newest released version.
+    if [[ $(jq -r .version < package.json) != *-* ]]; then
+        NPM_TAG="latest"
+    fi
+
     # Now, perform the publish.
-    npm publish
+    npm publish -tag ${NPM_TAG}
     npm info 2>/dev/null
 
     # And finally restore the original package.json.
