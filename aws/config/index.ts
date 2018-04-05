@@ -90,6 +90,11 @@ if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
 }
 
 /**
+ * Optionally use Fargate-based container compute. All tasks must be Fargate-compatible.
+ */
+export let useFargate = config.getBoolean("useFargate") || false;
+
+/**
  * Optionally auto-provision an ECS Cluster.  If set to true, parameters for the cluster can be provided via
  * the other "ecsAutoCluster*" configuration variables.
  */

@@ -82,17 +82,6 @@ namespace basicTests {
         }));
     }
 
-    const task = new cloud.Task("task-runfailure", {
-        image: "nginx",
-        memory: 100*1024, // Intentionaly ask for more memory than is available in the cluster to trigger error.
-    });
-
-    export async function testTaskRunFailure(args: TestArgs) {
-        // console.log(task);
-        // await args.harness.assertThrowsAsync(async () => console.log(task));
-        await args.harness.assertThrowsAsync(async () => await task.run());
-    }
-
 }
 
 export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {

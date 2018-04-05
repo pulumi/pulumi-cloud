@@ -47,8 +47,6 @@ export function createSubscription(
             .then(() => { cb(null, null); })
             .catch((err: any) => { cb(err, null); });
         },
-        undefined,
-        o => o !== subscription,
     );
     const invokePermission = new aws.lambda.Permission(resName, {
         action: "lambda:invokeFunction",
