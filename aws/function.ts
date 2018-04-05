@@ -19,8 +19,7 @@ export class Function extends pulumi.ComponentResource {
 
     constructor(name: string,
                 handler: aws.serverless.Handler,
-                opts?: pulumi.ResourceOptions,
-                serialize?: (o: any) => boolean) {
+                opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
         // First allocate a function.
@@ -41,7 +40,7 @@ export class Function extends pulumi.ComponentResource {
                 subnetIds: pulumi.all(network.subnetIds),
             };
         }
-        this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }, serialize).lambda;
+        this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
 
         // And then a log group and subscription filter for that lambda.
         const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
