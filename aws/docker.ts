@@ -22,13 +22,15 @@ export interface Registry {
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 export function buildAndPushImage(
+    repository: aws.ecr.Repository,
     imageName: string,
     container: cloud.Container,
-    repositoryUrl: pulumi.Input<string>,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
+    const repositoryUrl = repository.repositoryUrl;
+
     // First build the image.
-    const imageDigest = buildImageAsync(imageName, container);
+    const imageDigest = buildImageAsync(repository, imageName, container);
 
     // Then collect its output digest as well as the repo url and repo registry id.
     const outputs = pulumi.all([imageDigest, repositoryUrl]);
@@ -43,7 +45,7 @@ export function buildAndPushImage(
 }
 
 async function buildImageAsync(
-        imageName: string, container: cloud.Container): Promise<string> {
+        repository: aws.ecr.Repository, imageName: string, container: cloud.Container): Promise<string> {
     let build: cloud.ContainerBuild;
     if (typeof container.build === "string") {
         build = {
@@ -73,7 +75,7 @@ async function buildImageAsync(
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
-            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
+            await repository.debugAsync(`'docker version' => ${cachedDockerVersionString}`);
         } catch (err) {
             throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
         }

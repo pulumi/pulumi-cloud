@@ -290,8 +290,10 @@ function computeImage(
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
-        pulumi.log.debug(`Building container image at '${container.build}'`);
-        if (!repository) {
+        if (repository) {
+            repository.debugAsync(`Building container image at '${container.build}'`);
+        } else {
+            pulumi.log.debug("", `Building container image at '${container.build}'`);
             throw new RunError("Expected a container repository for build image");
         }
 
@@ -302,14 +304,14 @@ function computeImage(
             // Safe to ! the result since we checked buildImageCache.has above.
             imageDigest = buildImageCache.get(imageName)!;
             imageDigest.apply(d =>
-                pulumi.log.debug(`    already built: ${imageName} (${d})`));
+                repository.debugAsync(`    already built: ${imageName} (${d})`));
         } else {
             // If we haven't, build and push the local build context to the ECR repository, wait for
             // that to complete, then return the image name pointing to the ECT repository along
             // with an environment variable for the image digest to ensure the TaskDefinition get's
             // replaced IFF the built image changes.
-            const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, async () => {
+            const registryId = repository!.registryId;
+            imageDigest = docker.buildAndPushImage(repository, imageName, container, async () => {
                 // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
                 // extracting the username/password pair after base64-decoding the token.
                 //
@@ -333,7 +335,7 @@ function computeImage(
                 buildImageCache.set(imageName, imageDigest);
             }
             imageDigest.apply(d =>
-                pulumi.log.debug(`    build complete: ${imageName} (${d})`));
+                repository.debugAsync(`    build complete: ${imageName} (${d})`));
         }
 
         preEnv.IMAGE_DIGEST = imageDigest;
