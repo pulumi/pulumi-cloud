@@ -130,7 +130,7 @@ function createLoadBalancer(
 
     const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
-        subnetMappings: network.publicSubnetIds.map(s => ({ subnetId: s })),
+        subnets: network.publicSubnetIds,
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
@@ -692,7 +692,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             waitForSteadyState: true,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
-                assignPublicIp: !network.usePrivateSubnets,
+                assignPublicIp: config.useFargate && !network.usePrivateSubnets,
                 securityGroups: [ cluster.securityGroupId!],
                 subnets: network.subnetIds,
             },
@@ -835,7 +835,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const subnetIds = pulumi.all(network.subnetIds);
         const securityGroups =  cluster.securityGroupId!;
         const useFargate = config.useFargate;
-        const usePrivateSubnets = network.usePrivateSubnets;
+        const assignPublicIp = useFargate && !network.usePrivateSubnets;
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {
@@ -855,7 +855,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 launchType: useFargate ? "FARGATE" : "EC2",
                 networkConfiguration: {
                     awsvpcConfiguration: {
-                        assignPublicIp: usePrivateSubnets ? "DISABLED" : "ENABLED",
+                        assignPublicIp: assignPublicIp ? "ENABLED" : "DISABLED",
                         securityGroups: [ securityGroups.get() ],
                         subnets: subnetIds.get(),
                     },
