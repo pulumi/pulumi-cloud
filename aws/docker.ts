@@ -1,6 +1,5 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
@@ -22,30 +21,31 @@ export interface Registry {
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 export function buildAndPushImage(
-    repository: aws.ecr.Repository,
     imageName: string,
     container: cloud.Container,
+    repositoryUrl: pulumi.Input<string>,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
-    const repositoryUrl = repository.repositoryUrl;
-
     // First build the image.
-    const imageDigest = buildImageAsync(repository, imageName, container);
+    const imageDigest = buildImageAsync(imageName, container);
 
     // Then collect its output digest as well as the repo url and repo registry id.
     const outputs = pulumi.all([imageDigest, repositoryUrl]);
 
-    // Use those then push the image (note: this will only happen during a normal update, not a preview).  Then
-    // just return the digest as the final result for our caller to use.
+    // Use those then push the image.  Then just return the digest as the final result for our caller to use.
     return outputs.apply(async ([digest, url]) => {
-        const registry = await connectToRegistry();
-        await pushImageAsync(imageName, url, registry);
+        if (!pulumi.runtime.options.dryRun) {
+            // Only push the image during an update, do not push during a preview, even if digest and url are available
+            // from a previous update.
+            const registry = await connectToRegistry();
+            await pushImageAsync(imageName, url, registry);
+        }
         return digest;
     });
 }
 
 async function buildImageAsync(
-        repository: aws.ecr.Repository, imageName: string, container: cloud.Container): Promise<string> {
+        imageName: string, container: cloud.Container): Promise<string> {
     let build: cloud.ContainerBuild;
     if (typeof container.build === "string") {
         build = {
@@ -75,7 +75,7 @@ async function buildImageAsync(
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
-            await pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`, repository);
+            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
         } catch (err) {
             throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
         }
