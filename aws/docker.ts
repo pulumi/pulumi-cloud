@@ -34,7 +34,7 @@ export function buildAndPushImage(
 
     // Use those then push the image.  Then just return the digest as the final result for our caller to use.
     return outputs.apply(async ([digest, url]) => {
-        if (!pulumi.runtime.options.dryRun) {
+        if (!pulumi.runtime.isDryRun()) {
             // Only push the image during an update, do not push during a preview, even if digest and url are available
             // from a previous update.
             const registry = await connectToRegistry();
