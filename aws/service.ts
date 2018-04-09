@@ -290,10 +290,8 @@ function computeImage(
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
-        if (repository) {
-            repository.debugAsync(`Building container image at '${container.build}'`);
-        } else {
-            pulumi.log.debug("", `Building container image at '${container.build}'`);
+        pulumi.log.debug(`Building container image at '${container.build}'`, repository);
+        if (!repository) {
             throw new RunError("Expected a container repository for build image");
         }
 
@@ -304,7 +302,7 @@ function computeImage(
             // Safe to ! the result since we checked buildImageCache.has above.
             imageDigest = buildImageCache.get(imageName)!;
             imageDigest.apply(d =>
-                repository.debugAsync(`    already built: ${imageName} (${d})`));
+                pulumi.log.debug(`    already built: ${imageName} (${d})`, repository));
         } else {
             // If we haven't, build and push the local build context to the ECR repository, wait for
             // that to complete, then return the image name pointing to the ECT repository along
@@ -335,7 +333,7 @@ function computeImage(
                 buildImageCache.set(imageName, imageDigest);
             }
             imageDigest.apply(d =>
-                repository.debugAsync(`    build complete: ${imageName} (${d})`));
+                pulumi.log.debug(`    build complete: ${imageName} (${d})`, repository));
         }
 
         preEnv.IMAGE_DIGEST = imageDigest;

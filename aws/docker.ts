@@ -75,7 +75,7 @@ async function buildImageAsync(
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
-            await repository.debugAsync(`'docker version' => ${cachedDockerVersionString}`);
+            await pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`, repository);
         } catch (err) {
             throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
         }
