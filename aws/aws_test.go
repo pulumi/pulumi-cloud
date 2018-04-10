@@ -188,7 +188,8 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/containers"),
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: "containers-fargate",
 			Config: map[string]string{
 				"aws:region":               fargateRegion,
 				"cloud:provider":           "aws",
@@ -202,7 +203,8 @@ func Test_Examples(t *testing.T) {
 			ExtraRuntimeValidation: containersRuntimeValidation,
 		},
 		{
-			Dir: path.Join(cwd, "../examples/containers"),
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: "containers-ec2",
 			Config: map[string]string{
 				"aws:region":                          region,
 				"cloud:provider":                      "aws",

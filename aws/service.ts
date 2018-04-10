@@ -627,6 +627,12 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         // Create the task definition, parented to this component.
         const taskDefinition = createTaskDefinition(this, name, containers, ports);
 
+        // If the cluster has an autoscaling group, ensure the service depends on it being created.
+        const serviceDependsOn = [];
+        if (cluster.autoScalingGroupStack) {
+            serviceDependsOn.push(cluster.autoScalingGroupStack);
+        }
+
         // Create the service.
         this.ecsService = new aws.ecs.Service(name, {
             desiredCount: replicas,
@@ -641,7 +647,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 securityGroups: [ cluster.securityGroupId!],
                 subnets: network.subnetIds,
             },
-        }, { parent: this });
+        }, { parent: this, dependsOn: serviceDependsOn });
 
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
