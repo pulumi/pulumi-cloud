@@ -104,7 +104,7 @@ export let ecsAutoCluster = config.getBoolean("ecsAutoCluster") || false;
  */
 export let ecsAutoClusterNumberOfAZs = config.getNumber("ecsAutoClusterNumberOfAZs");
 /**
- * The EC2 instance type to use for the cluster.  Defaults to `t2-micro`.
+ * The EC2 instance type to use for the cluster.  Defaults to `t2.micro`.
  */
 export let ecsAutoClusterInstanceType = config.get("ecsAutoClusterInstanceType");
 /**
@@ -142,15 +142,15 @@ export let ecsAutoClusterMaxSize = config.getNumber("ecsAutoClusterMaxSize");
 export let ecsAutoClusterPublicKey = config.get("ecsAutoClusterPublicKey");
 /**
  * The name of the ECS-optimzed AMI to use for the Container Instances in this cluster, e.g.
- * "amzn-ami-2017.09.a-amazon-ecs-optimized".
+ * "amzn-ami-2017.09.l-amazon-ecs-optimized".
  *
  * See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html for valid values.
  */
 export let ecsAutoClusterECSOptimizedAMIName = config.get("ecsAutoClusterECSOptimizedAMIName");
 /**
- * Optionally auto-provision an Elastic File System for the Cluster.  Defaults to true.
+ * Optionally auto-provision an Elastic File System for the Cluster.  Defaults to false.
  */
-export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS");
+export let ecsAutoClusterUseEFS = config.getBoolean("ecsAutoClusterUseEFS") || false;
 
 /**
  * setEcsCluster configures the ambient ECS cluster imperatively rather than using standard configuration.
