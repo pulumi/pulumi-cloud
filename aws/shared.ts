@@ -142,7 +142,7 @@ export function getCluster(): Cluster | undefined {
             // above - create a cluster in that network.
             cluster = new Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
-                addEFS: config.ecsAutoClusterUseEFS === undefined ? true : config.ecsAutoClusterUseEFS,
+                addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
                 instanceRootVolumeSize: config.ecsAutoClusterInstanceRootVolumeSize,

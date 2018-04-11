@@ -15,57 +15,6 @@ import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
 
-// The shared Load Balancer management role used across all Services.
-let serviceLoadBalancerRoleARN: pulumi.Output<string> | undefined;
-function getServiceLoadBalancerRoleARN(): pulumi.Output<string> {
-    if (!serviceLoadBalancerRoleARN) {
-        const assumeRolePolicy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": "sts:AssumeRole",
-                    "Principal": {
-                        "Service": "ecs.amazonaws.com",
-                    },
-                    "Effect": "Allow",
-                    "Sid": "",
-                },
-            ],
-        };
-        const policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                        "elasticloadbalancing:DeregisterTargets",
-                        "elasticloadbalancing:Describe*",
-                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                        "elasticloadbalancing:RegisterTargets",
-                        "ec2:Describe*",
-                        "ec2:AuthorizeSecurityGroupIngress",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*",
-                },
-            ],
-        };
-
-        const roleName = createNameWithStackInfo("load-balancer");
-        const serviceLoadBalancerRole = new aws.iam.Role(roleName, {
-            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-        }, { parent: getGlobalInfrastructureResource() });
-
-        const rolePolicy = new aws.iam.RolePolicy(roleName, {
-            role: serviceLoadBalancerRole.name,
-            policy: JSON.stringify(policy),
-        }, { parent: getGlobalInfrastructureResource() });
-
-        serviceLoadBalancerRoleARN = pulumi.all([serviceLoadBalancerRole.arn, rolePolicy.id]).apply(([arn, _]) => arn);
-    }
-
-    return serviceLoadBalancerRoleARN;
-}
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -149,7 +98,7 @@ function createLoadBalancer(
         tags: {
             Name: longName,
         },
-        targetType: config.useFargate ? "ip" : undefined,
+        targetType: "ip",
     }, { parent: parent });
 
     // Listen on the requested port on the LB and forward to the target.
@@ -675,11 +624,14 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             }
         }
 
-        // Only provide a role if the service is attached to a load balancer.
-        const iamRole = loadBalancers.length ? getServiceLoadBalancerRoleARN() : undefined;
-
         // Create the task definition, parented to this component.
         const taskDefinition = createTaskDefinition(this, name, containers, ports);
+
+        // If the cluster has an autoscaling group, ensure the service depends on it being created.
+        const serviceDependsOn = [];
+        if (cluster.autoScalingGroupStack) {
+            serviceDependsOn.push(cluster.autoScalingGroupStack);
+        }
 
         // Create the service.
         this.ecsService = new aws.ecs.Service(name, {
@@ -687,7 +639,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
-            iamRole: config.useFargate ? undefined : iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: true,
             launchType: config.useFargate ? "FARGATE" : "EC2",
@@ -696,7 +647,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 securityGroups: [ cluster.securityGroupId!],
                 subnets: network.subnetIds,
             },
-        }, { parent: this });
+        }, { parent: this, dependsOn: serviceDependsOn });
 
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
