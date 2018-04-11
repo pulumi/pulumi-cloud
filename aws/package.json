@@ -22,8 +22,8 @@
         "typescript": "^2.6.2"
     },
     "peerDependencies": {
-        "@pulumi/aws": "^0.11.0-dev-37-g399d60c",
+        "@pulumi/aws": "^0.11.1-dev-1523150138-g0d75d81",
         "@pulumi/cloud": "${VERSION}",
-        "@pulumi/pulumi": "^0.11.0-dev-130-g96d4cca4"
+        "@pulumi/pulumi": "^0.11.1-dev-1523390330-g479a2e6a"
     }
 }
