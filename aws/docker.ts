@@ -24,17 +24,18 @@ export function buildAndPushImage(
     imageName: string,
     container: cloud.Container,
     repositoryUrl: pulumi.Input<string>,
+    logResource: pulumi.Resource,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
     // First build the image.
-    const imageDigest = buildImageAsync(imageName, container);
+    const imageDigest = buildImageAsync(imageName, container, logResource);
 
     // Then collect its output digest as well as the repo url and repo registry id.
     const outputs = pulumi.all([imageDigest, repositoryUrl]);
 
     // Use those then push the image.  Then just return the digest as the final result for our caller to use.
     return outputs.apply(async ([digest, url]) => {
-        if (!pulumi.runtime.options.dryRun) {
+        if (!pulumi.runtime.isDryRun()) {
             // Only push the image during an update, do not push during a preview, even if digest and url are available
             // from a previous update.
             const registry = await connectToRegistry();
@@ -45,7 +46,7 @@ export function buildAndPushImage(
 }
 
 async function buildImageAsync(
-        imageName: string, container: cloud.Container): Promise<string> {
+        imageName: string, container: cloud.Container, logResource: pulumi.Resource): Promise<string> {
     let build: cloud.ContainerBuild;
     if (typeof container.build === "string") {
         build = {
@@ -75,7 +76,7 @@ async function buildImageAsync(
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
-            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`);
+            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`, logResource);
         } catch (err) {
             throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
         }

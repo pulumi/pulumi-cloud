@@ -15,57 +15,6 @@ import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
 
-// The shared Load Balancer management role used across all Services.
-let serviceLoadBalancerRoleARN: pulumi.Output<string> | undefined;
-function getServiceLoadBalancerRoleARN(): pulumi.Output<string> {
-    if (!serviceLoadBalancerRoleARN) {
-        const assumeRolePolicy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": "sts:AssumeRole",
-                    "Principal": {
-                        "Service": "ecs.amazonaws.com",
-                    },
-                    "Effect": "Allow",
-                    "Sid": "",
-                },
-            ],
-        };
-        const policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                        "elasticloadbalancing:DeregisterTargets",
-                        "elasticloadbalancing:Describe*",
-                        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                        "elasticloadbalancing:RegisterTargets",
-                        "ec2:Describe*",
-                        "ec2:AuthorizeSecurityGroupIngress",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*",
-                },
-            ],
-        };
-
-        const roleName = createNameWithStackInfo("load-balancer");
-        const serviceLoadBalancerRole = new aws.iam.Role(roleName, {
-            assumeRolePolicy: JSON.stringify(assumeRolePolicy),
-        }, { parent: getGlobalInfrastructureResource() });
-
-        const rolePolicy = new aws.iam.RolePolicy(roleName, {
-            role: serviceLoadBalancerRole.name,
-            policy: JSON.stringify(policy),
-        }, { parent: getGlobalInfrastructureResource() });
-
-        serviceLoadBalancerRoleARN = pulumi.all([serviceLoadBalancerRole.arn, rolePolicy.id]).apply(([arn, _]) => arn);
-    }
-
-    return serviceLoadBalancerRoleARN;
-}
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -130,7 +79,7 @@ function createLoadBalancer(
 
     const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
-        subnetMappings: network.publicSubnetIds.map(s => ({ subnetId: s })),
+        subnets: network.publicSubnetIds,
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
@@ -149,7 +98,7 @@ function createLoadBalancer(
         tags: {
             Name: longName,
         },
-        targetType: config.useFargate ? "ip" : undefined,
+        targetType: "ip",
     }, { parent: parent });
 
     // Listen on the requested port on the LB and forward to the target.
@@ -290,7 +239,7 @@ function computeImage(
 
     if (container.build) {
         // This is a container to build; produce a name, either user-specified or auto-computed.
-        pulumi.log.debug(`Building container image at '${container.build}'`);
+        pulumi.log.debug(`Building container image at '${container.build}'`, repository);
         if (!repository) {
             throw new RunError("Expected a container repository for build image");
         }
@@ -302,14 +251,14 @@ function computeImage(
             // Safe to ! the result since we checked buildImageCache.has above.
             imageDigest = buildImageCache.get(imageName)!;
             imageDigest.apply(d =>
-                pulumi.log.debug(`    already built: ${imageName} (${d})`));
+                pulumi.log.debug(`    already built: ${imageName} (${d})`, repository));
         } else {
             // If we haven't, build and push the local build context to the ECR repository, wait for
             // that to complete, then return the image name pointing to the ECT repository along
             // with an environment variable for the image digest to ensure the TaskDefinition get's
             // replaced IFF the built image changes.
             const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, async () => {
+            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, repository, async () => {
                 // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
                 // extracting the username/password pair after base64-decoding the token.
                 //
@@ -333,7 +282,7 @@ function computeImage(
                 buildImageCache.set(imageName, imageDigest);
             }
             imageDigest.apply(d =>
-                pulumi.log.debug(`    build complete: ${imageName} (${d})`));
+                pulumi.log.debug(`    build complete: ${imageName} (${d})`, repository));
         }
 
         preEnv.IMAGE_DIGEST = imageDigest;
@@ -675,11 +624,14 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             }
         }
 
-        // Only provide a role if the service is attached to a load balancer.
-        const iamRole = loadBalancers.length ? getServiceLoadBalancerRoleARN() : undefined;
-
         // Create the task definition, parented to this component.
         const taskDefinition = createTaskDefinition(this, name, containers, ports);
+
+        // If the cluster has an autoscaling group, ensure the service depends on it being created.
+        const serviceDependsOn = [];
+        if (cluster.autoScalingGroupStack) {
+            serviceDependsOn.push(cluster.autoScalingGroupStack);
+        }
 
         // Create the service.
         this.ecsService = new aws.ecs.Service(name, {
@@ -687,16 +639,15 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             taskDefinition: taskDefinition.task.arn,
             cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
-            iamRole: config.useFargate ? undefined : iamRole,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: true,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
-                assignPublicIp: !network.usePrivateSubnets,
+                assignPublicIp: config.useFargate && !network.usePrivateSubnets,
                 securityGroups: [ cluster.securityGroupId!],
                 subnets: network.subnetIds,
             },
-        }, { parent: this });
+        }, { parent: this, dependsOn: serviceDependsOn });
 
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
@@ -835,7 +786,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const subnetIds = pulumi.all(network.subnetIds);
         const securityGroups =  cluster.securityGroupId!;
         const useFargate = config.useFargate;
-        const usePrivateSubnets = network.usePrivateSubnets;
+        const assignPublicIp = useFargate && !network.usePrivateSubnets;
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {
@@ -855,7 +806,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 launchType: useFargate ? "FARGATE" : "EC2",
                 networkConfiguration: {
                     awsvpcConfiguration: {
-                        assignPublicIp: usePrivateSubnets ? "DISABLED" : "ENABLED",
+                        assignPublicIp: assignPublicIp ? "ENABLED" : "DISABLED",
                         securityGroups: [ securityGroups.get() ],
                         subnets: subnetIds.get(),
                     },

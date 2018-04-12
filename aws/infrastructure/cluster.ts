@@ -23,7 +23,7 @@ export interface ClusterArgs {
      */
     addEFS: boolean;
     /**
-     * The EC2 instance type to use for the Cluster.  Defaults to `t2-micro`.
+     * The EC2 instance type to use for the Cluster.  Defaults to `t2.micro`.
      */
     instanceType?: string;
     /**
@@ -68,7 +68,7 @@ export interface ClusterArgs {
     publicKey?: string;
     /**
      * The name of the ECS-optimzed AMI to use for the Container Instances in this cluster, e.g.
-     * "amzn-ami-2017.09.a-amazon-ecs-optimized".
+     * "amzn-ami-2017.09.l-amazon-ecs-optimized".
      *
      * See http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html for valid values.
      */
@@ -295,7 +295,7 @@ async function getEcsAmiId(name?: string) {
         filters: [
             {
                 name: "name",
-                values: [ name || "amzn-ami-2017.09.a-amazon-ecs-optimized" ],
+                values: [ name || "amzn-ami-2017.09.l-amazon-ecs-optimized" ],
             },
             {
                 name: "owner-id",
