@@ -210,7 +210,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider":                      "aws",
 				"cloud-aws:ecsAutoCluster":            "true",
 				"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
-				"cloud-aws:ecsAutoInstanceType":       "t2.micro",
+				"cloud-aws:ecsAutoInstanceType":       "t2.medium",
 				"cloud-aws:ecsAutoClusterMinSize":     "20",
 				"cloud-aws:ecsAutoClusterUseEFS":      "false",
 				"containers:redisPassword":            "SECRETPASSWORD",
