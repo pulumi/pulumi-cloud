@@ -164,12 +164,7 @@ api.get("/", async (req, res) => {
 });
 api.get("/run", async (req, res) => {
     try {
-        // Launch 4 instances of the Task.
-        let tasks: Promise<void>[] = [];
-        for (let i = 0; i < 4; i++) {
-            tasks.push(helloTask.run());
-        }
-        await Promise.all(tasks);
+        await helloTask.run();
         res.json({ success: true });
     } catch (err) {
         console.error(errorJSON(err));
