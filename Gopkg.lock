@@ -2,6 +2,27 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Azure/go-ansiterm"
+  packages = [
+    ".",
+    "winterm"
+  ]
+  revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
+
+[[projects]]
+  name = "github.com/Nvveen/Gotty"
+  packages = ["."]
+  revision = "a8b993ba6abdb0e0c12b0125c603323a71c7790c"
+  source = "https://github.com/ijc25/Gotty"
+
+[[projects]]
+  name = "github.com/Sirupsen/logrus"
+  packages = ["."]
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
+
+[[projects]]
   name = "github.com/agext/levenshtein"
   packages = ["."]
   revision = "5f10fee965225ac1eecdc234c09daf5cd9e7f7b6"
@@ -168,6 +189,15 @@
   packages = ["."]
   revision = "95292e44976d1217cf3611dc7c8d9466877d3ed5"
   version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/docker/docker"
+  packages = [
+    "pkg/term",
+    "pkg/term/windows"
+  ]
+  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
+  version = "v1.13.1"
 
 [[projects]]
   name = "github.com/go-ini/ini"
@@ -487,9 +517,11 @@
     "pkg/testing",
     "pkg/testing/integration",
     "pkg/tokens",
+    "pkg/util/cancel",
     "pkg/util/cmdutil",
     "pkg/util/contract",
     "pkg/util/fsutil",
+    "pkg/util/httputil",
     "pkg/util/mapper",
     "pkg/util/retry",
     "pkg/util/rpcutil",
@@ -498,12 +530,14 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "97c13440356bbf82bdecf000281f79c48a28117e"
+  revision = "33b630fa652f1e6249e4d9b3ba9190a7afcbd332"
+  version = "v0.12.0-rc1"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
   packages = ["."]
-  revision = "9067b79c92640640f7a7a80655104a155d55799f"
+  revision = "42ebc7d983e5ca3b97dd10e2bb8ee0ce3448fcfc"
+  version = "v0.12.0-rc1"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-terraform"
@@ -706,6 +740,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fca611762ac4d26125b2804698ef977bf72bd890597840f5068082d98b7157d0"
+  inputs-digest = "907391cdd24f4dfcef9a5a12839387fd7e268a702a6a1c4a85fdc29d8c62a21f"
   solver-name = "gps-cdcl"
   solver-version = 1
