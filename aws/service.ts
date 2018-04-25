@@ -612,8 +612,19 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         // Create load balancer listeners/targets for each exposed port.
         const loadBalancers = [];
+
+        let firstContainerName: string | undefined;
+        let firstContainerPort: number | undefined;
+
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
+            if (firstContainerName === undefined && containerName !== undefined) {
+                firstContainerName = containerName;
+                if (container.ports && container.ports.length > 0) {
+                    firstContainerPort = container.ports[0].port;
+                }
+            }
+
             ports[containerName] = {};
             if (container.ports) {
                 for (const portMapping of container.ports) {
@@ -662,8 +673,11 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
-        this.defaultEndpoint = this.endpoints.apply(
-            ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
+
+        this.defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
+            ? pulumi.output<Endpoint>(undefined!)
+            : this.endpoints.apply(
+                ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
 
         this.getEndpoint = async (containerName, containerPort) => {
             const endpoints = localEndpoints.get();
@@ -674,6 +688,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
 function getEndpointHelper(
     endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
+
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {

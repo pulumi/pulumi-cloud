@@ -240,7 +240,8 @@ export interface Service {
 
     /**
      * The primary endpoint exposed by the service.  All endpoints (including this one)
-     * can also be retrieved by using the 'Service.endpoints' property.
+     * can also be retrieved by using the 'Service.endpoints' property.  Note: this value
+     * may not be present if the service does not actually expose any endpoints.
      */
     defaultEndpoint: pulumi.Output<Endpoint>;
 
