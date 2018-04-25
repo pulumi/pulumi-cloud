@@ -677,18 +677,18 @@ function getEndpointHelper(
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {
-        throw new Error(`No containers available in this service`);
+        throw new RunError(`No containers available in this service`);
     }
 
     const containerPorts = endpoints[containerName] || {};
     containerPort = containerPort || +Object.keys(containerPorts)[0];
     if (!containerPort) {
-        throw new Error(`No ports available in service container ${containerName}`);
+        throw new RunError(`No ports available in service container ${containerName}`);
     }
 
     const endpoint = containerPorts[containerPort];
     if (!endpoint) {
-        throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
+        throw new RunError(`No exposed port for ${containerName} port ${containerPort}`);
     }
 
     return endpoint;
