@@ -15,7 +15,7 @@ let nginx = new cloud.Service("examples-nginx", {
     replicas: 2,
 });
 
-export let nginxEndpoint: Output<cloud.Endpoint> = nginx.endpoints.apply(endpoints => endpoints.nginx[80]);
+export let nginxEndpoint: Output<cloud.Endpoint> = nginx.defaultEndpoint;
 
 let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
@@ -187,5 +187,5 @@ api.get("/custom", async (req, res) => {
         res.status(500).json(errorJSON(err));
     }
 });
-api.proxy("/nginx", nginx.endpoints.apply(endpoints => endpoints.nginx[80]));
+api.proxy("/nginx", nginx.defaultEndpoint);
 export let frontendURL = api.publish().url;

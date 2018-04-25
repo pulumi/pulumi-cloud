@@ -577,6 +577,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly ecsService: aws.ecs.Service;
 
     public readonly endpoints: pulumi.Output<Endpoints>;
+    public readonly defaultEndpoint: pulumi.Output<Endpoint>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -661,29 +662,36 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
+        this.defaultEndpoint = this.endpoints.apply(
+            ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
 
         this.getEndpoint = async (containerName, containerPort) => {
             const endpoints = localEndpoints.get();
-
-            containerName = containerName || Object.keys(endpoints)[0];
-            if (!containerName)  {
-                throw new Error(`No containers available in this service`);
-            }
-
-            const containerPorts = endpoints[containerName] || {};
-            containerPort = containerPort || +Object.keys(containerPorts)[0];
-            if (!containerPort) {
-                throw new Error(`No ports available in service container ${containerName}`);
-            }
-
-            const endpoint = containerPorts[containerPort];
-            if (!endpoint) {
-                throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
-            }
-
-            return endpoint;
+            return getEndpointHelper(endpoints, containerName, containerPort);
         };
     }
+}
+
+function getEndpointHelper(
+    endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
+
+    containerName = containerName || Object.keys(endpoints)[0];
+    if (!containerName)  {
+        throw new Error(`No containers available in this service`);
+    }
+
+    const containerPorts = endpoints[containerName] || {};
+    containerPort = containerPort || +Object.keys(containerPorts)[0];
+    if (!containerPort) {
+        throw new Error(`No ports available in service container ${containerName}`);
+    }
+
+    const endpoint = containerPorts[containerPort];
+    if (!endpoint) {
+        throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
+    }
+
+    return endpoint;
 }
 
 function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
