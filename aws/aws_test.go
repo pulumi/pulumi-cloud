@@ -548,7 +548,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 			if !assert.True(t, exists) {
 				return
 			}
-			if !assert.True(t, len(hellowWorldLogs) > 16) {
+			if !assert.True(t, len(hellowWorldLogs) > 3) {
 				return
 			}
 			assert.Contains(t, getAllMessageText(hellowWorldLogs), "Hello from Docker!")
