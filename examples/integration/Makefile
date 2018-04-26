@@ -4,7 +4,7 @@ include ../../build/common.mk
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 build::
-	yarn link @pulumi/pulumi @pulumi/cloud
+	yarn link @pulumi/cloud
 	tsc
 
 lint::
