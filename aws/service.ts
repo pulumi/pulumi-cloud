@@ -591,8 +591,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
-                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
+            throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
+                " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
 
         const containers = args.containers;
@@ -807,8 +807,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const network = getOrCreateNetwork();
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
-                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
+            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
+                " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
