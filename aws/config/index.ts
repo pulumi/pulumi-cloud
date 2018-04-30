@@ -84,8 +84,8 @@ if (externalSecurityGroupsString) {
 
 if (externalVpcId && (!externalSubnets || !externalSecurityGroups)) {
     throw new RunError(
-        "Must configure 'cloud-aws:config:externalSubnets' and 'cloud-aws:config:externalSecurityGroups' " +
-        "when setting 'cloud-asws:config:externalVpcId'",
+        "Must configure 'cloud-aws:externalSubnets' and 'cloud-aws:externalSecurityGroups' " +
+        "when setting 'cloud-asws:externalVpcId'",
     );
 }
 
