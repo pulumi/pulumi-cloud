@@ -72,10 +72,13 @@ export interface Table {
     /**
      * Gets all documents from the table.
      *
+     * @param callback An optional callback that will be called for each page of results. If this callback returns
+     * false, no more pages will be fetched.
      * @returns A promise for the resulting documents, or a failed promise if
      * the lookup fails.
      */
     scan(): Promise<any[]>;
+    scan(callback: (items: any[]) => Promise<boolean>): Promise<void>;
     /**
      * Deletes a documents from the table.
      *
