@@ -94,9 +94,10 @@ export class Table implements cloud.Table {
 
             if (callback !== undefined) {
                 callback(result);
+                return Promise.resolve();
+            } else {
+                return Promise.resolve(result);
             }
-
-            return Promise.resolve(result);
         });
     }
 }

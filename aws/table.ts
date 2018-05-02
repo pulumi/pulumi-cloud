@@ -77,10 +77,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             }).promise();
         };
         this.scan = <any>(async (callback?: (items: any[]) => Promise<boolean>) => {
-            const items: any[] = [];
+            let items: any[] | undefined;
             if (callback === undefined) {
+                items = [];
                 callback = (page: any[]) => {
-                    items.push(...page);
+                    items!.push(...page);
                     return Promise.resolve(true);
                 };
             }
@@ -98,7 +99,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 }
                 params.ExclusiveStartKey = result.LastEvaluatedKey;
             }
-            return items;
+            if (items !== undefined) {
+                return items;
+            } else {
+                return;
+            }
         });
         this.update = async (query: any, updates: any) => {
             let updateExpression = "";
