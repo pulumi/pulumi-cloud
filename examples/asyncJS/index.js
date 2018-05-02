@@ -10,4 +10,4 @@ endpoint.get("/foo", async (req, res) => {
     res.status(200);
 });
 
-module.exports.endpoint = endpoint.publish().url;
+module.exports.url = endpoint.publish().url;
