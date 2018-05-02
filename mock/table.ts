@@ -12,7 +12,7 @@ export class Table implements cloud.Table {
 
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
-    public scan: () => Promise<any[]>;
+    public scan: { (): Promise<any[]>; (callback: (items: any[]) => Promise<boolean>): Promise<void>; };
     public delete: (query: Object) => Promise<void>;
     public update: (query: Object, updates: Object) => Promise<void>;
 
@@ -86,13 +86,18 @@ export class Table implements cloud.Table {
             return Promise.resolve();
         };
 
-        this.scan = () =>  {
+        this.scan = <any>((callback?: (items: any[]) => Promise<boolean>) => {
             const result = [];
             for (const key of Object.keys(database)) {
                 result.push(database[key]);
             }
 
-            return Promise.resolve(result);
-        };
+            if (callback !== undefined) {
+                callback(result);
+                return Promise.resolve();
+            } else {
+                return Promise.resolve(result);
+            }
+        });
     }
 }
