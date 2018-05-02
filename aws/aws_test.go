@@ -158,6 +158,32 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-aws",
 			},
 		},
+
+		{
+			Dir: path.Join(cwd, "../examples/asyncJS"),
+			Config: map[string]string{
+				"aws:region":     region,
+				"cloud:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/pulumi",
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url"].(string)
+				assert.True(t, ok, "expected a `url` output property of type string")
+
+				// Validate the GET / endpoint
+				resp, err := http.Get(baseURL + "/foo")
+				assert.NoError(t, err, "expected to be able to GET /foo")
+				contentType := resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html", contentType)
+				bytes, err := ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL+"/foo", resp.StatusCode, contentType, string(bytes))
+			},
+		},
 		{
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
