@@ -19,4 +19,3 @@ lint::
 	tslint -c ../tslint.json -p tsconfig.json
 
 test_all::
-	PATH=$(PULUMI_BIN):$(PATH) go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} .
