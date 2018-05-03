@@ -15,9 +15,8 @@ export * from "./topic";
 export * from "./service";
 export { onError } from "./unhandledError";
 import * as config from "./config";
-import * as infrastructure from "./infrastructure";
 import * as timer from "./timer";
-export { config, infrastructure, timer };
+export { config, timer };
 
 // Export internal AWS-only APIs that allows configuring AWS-specific settings.
 export * from "./shared";

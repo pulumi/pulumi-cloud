@@ -29,10 +29,6 @@
         "docker.ts",
 
         "config/index.ts",
-
-        "infrastructure/aws.ts",
-        "infrastructure/network.ts",
-        "infrastructure/cluster.ts"
     ]
 }
 
