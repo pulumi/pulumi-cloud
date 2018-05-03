@@ -13,6 +13,7 @@
     "peerDependencies": {
         "@pulumi/pulumi": "^0.11.2",
         "@pulumi/cloud": "latest",
-        "@pulumi/cloud-aws": "latest"
+        "@pulumi/cloud-aws": "latest",
+        "@pulumi/aws-infra": "latest"
     }
 }
