@@ -16,19 +16,10 @@
     },
     "files": [
         "index.ts",
-        "httpEndpoint.ts",
-        "function.ts",
-        "logCollector.ts",
-        "sns.ts",
-        "table.ts",
-        "timer.ts",
-        "topic.ts",
-        "service.ts",
-        "unhandledError.ts",
+        "aws.ts",
+        "cluster.ts",
+        "network.ts",
         "utils.ts",
-        "docker.ts",
-
-        "config/index.ts",
     ]
 }
 

@@ -5,7 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { Network } from "./network";
 
-import { liftResource, sha1hash } from "../utils";
+import { sha1hash } from "./utils";
 
 // The default path to use for mounting EFS inside ECS container instances.
 const defaultEfsMountPath = "/mnt/efs";

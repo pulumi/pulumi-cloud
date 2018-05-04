@@ -1,6 +1,6 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
-import * as awsinfra from "@pulumi/cloud-aws/infrastructure";
+import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
 import { Output } from "@pulumi/pulumi";
 

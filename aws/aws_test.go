@@ -47,6 +47,7 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -76,6 +77,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -88,6 +90,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -154,6 +157,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -229,6 +233,7 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -304,6 +309,7 @@ func Test_Examples(t *testing.T) {
 				"timers:message": "Hello, Pulumi Timers!",
 			},
 			Dependencies: []string{
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},

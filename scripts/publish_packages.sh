@@ -36,4 +36,4 @@ publish() {
 }
 
 publish api @pulumi/pulumi
-publish aws @pulumi/pulumi @pulumi/aws
+publish aws @pulumi/pulumi @pulumi/aws-infra @pulumi/aws
