@@ -113,9 +113,3 @@ cloud.timer.interval("cleanup", {minutes: 5}, async () => {
     }
     console.log(`Cleanup: restarted ${cleanupCount} items.`);
 });
-
-// Register to be informed of any errors during execution.  In particular, this will identify cases
-// where aggressive throttling of data storage leads to failures even after retries.
-cloud.onError("onerror", (message, payload) => {
-    console.log(`${message}: ${JSON.stringify(payload)}`);
-});
