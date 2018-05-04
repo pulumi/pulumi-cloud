@@ -1,6 +1,8 @@
 package examples
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,6 +20,7 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource/config"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
+	"github.com/pulumi/pulumi/pkg/util/contract"
 )
 
 // Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
@@ -44,7 +47,6 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
@@ -75,8 +77,8 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
+				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
 		},
@@ -88,7 +90,6 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
@@ -156,7 +157,6 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
@@ -170,8 +170,8 @@ func Test_Examples(t *testing.T) {
 				"cloud-aws:usePrivateNetwork": "true",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
@@ -193,7 +193,7 @@ func Test_Examples(t *testing.T) {
 		},
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: "containers-fargate",
+			StackName: addRandomSuffix("containers-fargate"),
 			Config: map[string]string{
 				"aws:region":               fargateRegion,
 				"cloud:provider":           "aws",
@@ -201,14 +201,14 @@ func Test_Examples(t *testing.T) {
 				"containers:redisPassword": "SECRETPASSWORD",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
 		},
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: "containers-ec2",
+			StackName: addRandomSuffix("containers-ec2"),
 			Config: map[string]string{
 				"aws:region":                          region,
 				"cloud:provider":                      "aws",
@@ -220,8 +220,8 @@ func Test_Examples(t *testing.T) {
 				"containers:redisPassword":            "SECRETPASSWORD",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: containersRuntimeValidator(region),
 		},
@@ -233,7 +233,6 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
@@ -310,7 +309,6 @@ func Test_Examples(t *testing.T) {
 				"timers:message": "Hello, Pulumi Timers!",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
@@ -324,8 +322,6 @@ func Test_Examples(t *testing.T) {
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
-				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -574,4 +570,11 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 			assert.Contains(t, getAllMessageText(redisLogs), "Redis is starting")
 		}
 	}
+}
+
+func addRandomSuffix(s string) string {
+	b := make([]byte, 4)
+	_, err := rand.Read(b)
+	contract.AssertNoError(err)
+	return s + "-" + hex.EncodeToString(b)
 }

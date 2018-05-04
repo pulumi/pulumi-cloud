@@ -6,6 +6,9 @@
     "scripts": {
         "build": "tsc"
     },
+    "dependencies": {
+        "@pulumi/pulumi": "^0.12.0"
+    },
     "devDependencies": {
         "@types/node": "^8.0.26",
         "@types/mocha": "^2.2.43",
@@ -17,7 +20,6 @@
         "supertest": "^3.0.0"
     },
     "peerDependencies": {
-        "@pulumi/pulumi": "^0.11.2",
         "@pulumi/aws-infra": "latest",
         "@pulumi/cloud": "latest",
         "@pulumi/cloud-aws": "latest"
