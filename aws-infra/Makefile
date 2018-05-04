@@ -10,7 +10,7 @@ TESTPARALLELISM := 10
 
 build::
 	yarn install
-	yarn link @pulumi/pulumi @pulumi/aws
+	#yarn link @pulumi/pulumi @pulumi/aws
 	tsc
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/
