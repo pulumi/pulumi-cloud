@@ -45,6 +45,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -75,6 +76,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud-aws",
 			},
 		},
@@ -87,6 +89,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -154,6 +157,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -230,6 +234,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -306,6 +311,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
@@ -319,6 +325,7 @@ func Test_Examples(t *testing.T) {
 			},
 			Dependencies: []string{
 				"@pulumi/pulumi",
+				"@pulumi/aws-infra",
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
