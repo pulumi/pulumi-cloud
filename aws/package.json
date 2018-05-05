@@ -22,8 +22,5 @@
         "@types/semver": "^5.4.0",
         "tslint": "^5.7.0",
         "typescript": "^2.6.2"
-    },
-    "peerDependencies": {
-        "@pulumi/cloud": "${VERSION}"
     }
 }
