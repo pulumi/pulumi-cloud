@@ -18,13 +18,11 @@
         "index.ts",
         "httpEndpoint.ts",
         "function.ts",
-        "logCollector.ts",
         "sns.ts",
         "table.ts",
         "timer.ts",
         "topic.ts",
         "service.ts",
-        "unhandledError.ts",
         "utils.ts",
         "docker.ts",
 

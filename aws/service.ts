@@ -10,7 +10,7 @@ import * as stream from "stream";
 
 import * as config from "./config";
 import * as docker from "./docker";
-import { getLogCollector } from "./logCollector";
+
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
@@ -438,13 +438,6 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {
         retentionInDays: 1,
-    }, { parent: parent });
-
-    // And hook it up to the aggregated log collector
-    const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(name, {
-        logGroup: logGroup,
-        destinationArn: getLogCollector().arn,
-        filterPattern: "",
     }, { parent: parent });
 
     // Find all referenced Volumes.

@@ -13,7 +13,6 @@ export * from "./httpEndpoint";
 export * from "./table";
 export * from "./topic";
 export * from "./service";
-export { onError } from "./unhandledError";
 import * as config from "./config";
 import * as timer from "./timer";
 export { config, timer };

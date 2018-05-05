@@ -4,15 +4,12 @@ import * as aws from "@pulumi/aws";
 import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
 import { functionMemorySize } from "./config";
-import { getLogCollector } from "./logCollector";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
-import { getUnhandledErrorTopic } from "./unhandledError";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
 
-// Function is a wrapper over aws.serverless.Function which applies a single shared
-// log collected across all functions in the application, allowing all application logs
-// to be read from a single place.
+// Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
+// `@pulumi/cloud` configuration.
 export class Function extends pulumi.ComponentResource {
     public readonly handler: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
@@ -25,9 +22,6 @@ export class Function extends pulumi.ComponentResource {
         // First allocate a function.
         const options: aws.serverless.FunctionOptions = {
             policies: [...getComputeIAMRolePolicies()],
-            deadLetterConfig: {
-                targetArn: getUnhandledErrorTopic().arn,
-            },
             memorySize: functionMemorySize,
         };
         if (runLambdaInVPC) {
@@ -41,15 +35,5 @@ export class Function extends pulumi.ComponentResource {
             };
         }
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
-
-        // And then a log group and subscription filter for that lambda.
-        const _ = new aws.cloudwatch.LogSubscriptionFilter(name, {
-            logGroup: new aws.cloudwatch.LogGroup(name, {
-                name: this.lambda.name.apply(n => "/aws/lambda/" + n),
-                retentionInDays: 1,
-            }, { parent: this }),
-            destinationArn: getLogCollector().arn,
-            filterPattern: "",
-        }, { parent: this });
     }
 }
