@@ -7,6 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as assert from "assert";
 import * as stream from "stream";
+import { CloudNetwork } from "./shared";
 
 import * as config from "./config";
 import * as docker from "./docker";
@@ -30,7 +31,7 @@ function createLoadBalancer(
         serviceName: string,
         containerName: string,
         portMapping: cloud.ContainerPort,
-        network: awsinfra.Network): ContainerPortLoadBalancer {
+        network: CloudNetwork): ContainerPortLoadBalancer {
 
     // Load balancers need *very* short names, so we unforutnately have to hash here.
     //
