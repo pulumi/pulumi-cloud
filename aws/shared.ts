@@ -6,6 +6,30 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
+export interface CloudNetwork {
+    /**
+     * The VPC id of the network.
+     */
+    readonly vpcId: pulumi.Output<string>;
+    /**
+     * Whether the network includes private subnets.
+     */
+    readonly usePrivateSubnets: boolean;
+    /**
+     * The security group IDs for the network.
+     */
+    readonly securityGroupIds: pulumi.Output<string>[];
+    /**
+     * The subnets in which compute should run.  These are the private subnets if [usePrivateSubnets] == true, else
+     * these are the public subnets.
+     */
+    readonly subnetIds: pulumi.Output<string>[];
+    /**
+     * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
+     */
+    readonly publicSubnetIds: pulumi.Output<string>[];
+}
+
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
 // it's safe to use these for top-level components like Network and Cluster, because they suffix all
 // internal resources they provision.
@@ -81,12 +105,12 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
     return computePolicies;
 }
 
-let network: awsinfra.Network;
+let network: CloudNetwork;
 
 /**
  * Get or create the network to use for container and lambda compute.
  */
-export function getOrCreateNetwork(): awsinfra.Network {
+export function getOrCreateNetwork(): CloudNetwork {
     if (!network) {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
@@ -122,7 +146,7 @@ export function getOrCreateNetwork(): awsinfra.Network {
 /**
  * @deprecated
  */
-export function getNetwork(): awsinfra.Network | undefined {
+export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
