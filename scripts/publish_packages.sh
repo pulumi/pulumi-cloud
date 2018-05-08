@@ -35,5 +35,5 @@ publish() {
     popd
 }
 
-publish api @pulumi/pulumi
-publish aws @pulumi/pulumi @pulumi/aws
+publish api
+publish aws
