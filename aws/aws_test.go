@@ -71,19 +71,6 @@ func Test_Examples(t *testing.T) {
 		},
 
 		{
-			Dir: path.Join(cwd, "./examples/cluster"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/aws-infra",
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
-
-		{
 			Dir: path.Join(cwd, "/tests/performance"),
 			Config: map[string]string{
 				"aws:region":     region,
@@ -335,7 +322,7 @@ func Test_Examples(t *testing.T) {
 	for _, ex := range examples {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
-			Tracing: "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
+			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
 		})
 		t.Run(example.Dir, func(t *testing.T) {
 			integration.ProgramTest(t, &example)
