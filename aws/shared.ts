@@ -1,11 +1,34 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
-import { Cluster } from "./infrastructure/cluster";
-import { Network } from "./infrastructure/network";
+
+export interface CloudNetwork {
+    /**
+     * The VPC id of the network.
+     */
+    readonly vpcId: pulumi.Output<string>;
+    /**
+     * Whether the network includes private subnets.
+     */
+    readonly usePrivateSubnets: boolean;
+    /**
+     * The security group IDs for the network.
+     */
+    readonly securityGroupIds: pulumi.Output<string>[];
+    /**
+     * The subnets in which compute should run.  These are the private subnets if [usePrivateSubnets] == true, else
+     * these are the public subnets.
+     */
+    readonly subnetIds: pulumi.Output<string>[];
+    /**
+     * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
+     */
+    readonly publicSubnetIds: pulumi.Output<string>[];
+}
 
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
 // it's safe to use these for top-level components like Network and Cluster, because they suffix all
@@ -82,23 +105,23 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
     return computePolicies;
 }
 
-let network: Network;
+let network: CloudNetwork;
 
 /**
  * Get or create the network to use for container and lambda compute.
  */
-export function getOrCreateNetwork(): Network {
+export function getOrCreateNetwork(): CloudNetwork {
     if (!network) {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
                 // Create a new VPC for this private network.
-                network = new Network(createNameWithStackInfo("global"), {
+                network = new awsinfra.Network(createNameWithStackInfo("global"), {
                     usePrivateSubnets: config.usePrivateNetwork,
                     numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
                 });
             } else {
                 // Use the default VPC.
-                network = Network.getDefault();
+                network = awsinfra.Network.getDefault();
             }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
@@ -123,13 +146,13 @@ export function getOrCreateNetwork(): Network {
 /**
  * @deprecated
  */
-export function getNetwork(): Network | undefined {
+export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
 // The cluster to use for container compute or undefined if containers are unsupported.
-let cluster: Cluster | undefined;
-export function getCluster(): Cluster | undefined {
+let cluster: awsinfra.Cluster | undefined;
+export function getCluster(): awsinfra.Cluster | undefined {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {
         if (config.ecsAutoCluster) {
@@ -140,7 +163,7 @@ export function getCluster(): Cluster | undefined {
             }
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
-            cluster = new Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
@@ -162,7 +185,7 @@ export function getCluster(): Cluster | undefined {
             };
         } else if (config.useFargate) {
             // Else, allocate a Fargate-only cluster.
-            cluster = new Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
                 maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,

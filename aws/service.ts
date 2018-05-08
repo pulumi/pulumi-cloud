@@ -1,16 +1,17 @@
 // Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
 
 import * as aws from "@pulumi/aws";
+import * as awsinfra from "@pulumi/aws-infra";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as assert from "assert";
 import * as stream from "stream";
+import { CloudNetwork } from "./shared";
 
 import * as config from "./config";
 import * as docker from "./docker";
-import * as awsinfra from "./infrastructure";
-import { getLogCollector } from "./logCollector";
+
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
@@ -30,7 +31,7 @@ function createLoadBalancer(
         serviceName: string,
         containerName: string,
         portMapping: cloud.ContainerPort,
-        network: awsinfra.Network): ContainerPortLoadBalancer {
+        network: CloudNetwork): ContainerPortLoadBalancer {
 
     // Load balancers need *very* short names, so we unforutnately have to hash here.
     //
@@ -327,6 +328,16 @@ function computeContainerDefinitions(
             const imageOptions = computeImage(imageName, container, ports, repository);
             const portMappings = (container.ports || []).map(p => ({
                 containerPort: p.targetPort || p.port,
+                // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
+                // > For task definitions that use the awsvpc network mode, you should only specify the containerPort.
+                // > The hostPort can be left blank or it must be the same value as the containerPort.
+                //
+                // However, if left blank, it will be automatically populated by AWS, potentially leading to dirty
+                // diffs even when no changes have been made. Since we are currently always using `awsvpc` mode, we
+                // go ahead and populate it with the same value as `containerPort`.
+                //
+                // See https://github.com/terraform-providers/terraform-provider-aws/issues/3401.
+                hostPort: p.targetPort || p.port,
             }));
 
             // tslint:disable-next-line:max-line-length
@@ -428,13 +439,6 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {
         retentionInDays: 1,
-    }, { parent: parent });
-
-    // And hook it up to the aggregated log collector
-    const subscriptionFilter = new aws.cloudwatch.LogSubscriptionFilter(name, {
-        logGroup: logGroup,
-        destinationArn: getLogCollector().arn,
-        filterPattern: "",
     }, { parent: parent });
 
     // Find all referenced Volumes.
@@ -567,6 +571,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly ecsService: aws.ecs.Service;
 
     public readonly endpoints: pulumi.Output<Endpoints>;
+    public readonly defaultEndpoint: pulumi.Output<Endpoint>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -580,8 +585,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
-                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
+            throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
+                " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
 
         const containers = args.containers;
@@ -601,8 +606,19 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         // Create load balancer listeners/targets for each exposed port.
         const loadBalancers = [];
+
+        let firstContainerName: string | undefined;
+        let firstContainerPort: number | undefined;
+
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
+            if (firstContainerName === undefined && containerName !== undefined) {
+                firstContainerName = containerName;
+                if (container.ports && container.ports.length > 0) {
+                    firstContainerPort = container.ports[0].port;
+                }
+            }
+
             ports[containerName] = {};
             if (container.ports) {
                 for (const portMapping of container.ports) {
@@ -652,28 +668,39 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const localEndpoints = getEndpoints(ports);
         this.endpoints = localEndpoints;
 
+        this.defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
+            ? pulumi.output<Endpoint>(undefined!)
+            : this.endpoints.apply(
+                ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
+
         this.getEndpoint = async (containerName, containerPort) => {
             const endpoints = localEndpoints.get();
-
-            containerName = containerName || Object.keys(endpoints)[0];
-            if (!containerName)  {
-                throw new Error(`No containers available in this service`);
-            }
-
-            const containerPorts = endpoints[containerName] || {};
-            containerPort = containerPort || +Object.keys(containerPorts)[0];
-            if (!containerPort) {
-                throw new Error(`No ports available in service container ${containerName}`);
-            }
-
-            const endpoint = containerPorts[containerPort];
-            if (!endpoint) {
-                throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
-            }
-
-            return endpoint;
+            return getEndpointHelper(endpoints, containerName, containerPort);
         };
     }
+}
+
+function getEndpointHelper(
+    endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
+
+
+    containerName = containerName || Object.keys(endpoints)[0];
+    if (!containerName)  {
+        throw new RunError(`No containers available in this service`);
+    }
+
+    const containerPorts = endpoints[containerName] || {};
+    containerPort = containerPort || +Object.keys(containerPorts)[0];
+    if (!containerPort) {
+        throw new RunError(`No ports available in service container ${containerName}`);
+    }
+
+    const endpoint = containerPorts[containerPort];
+    if (!endpoint) {
+        throw new RunError(`No exposed port for ${containerName} port ${containerPort}`);
+    }
+
+    return endpoint;
 }
 
 function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
@@ -774,8 +801,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const network = getOrCreateNetwork();
         const cluster: awsinfra.Cluster | undefined = getCluster();
         if (!cluster) {
-            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:config:ecsClusterARN'" +
-                " or 'cloud-aws:config:ecsAutoCluster' or 'cloud-aws:config:useFargate'");
+            throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
+                " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
         this.cluster = cluster;
         this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;

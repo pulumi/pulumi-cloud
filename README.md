@@ -50,11 +50,11 @@ Pulumi's framework for building modern cloud applications.
 - [cloud] Support for `build` mode on `Container`, allowing container images to be built during deployment and
   automatically pushed to a remote repository used for the `Service` or `Task`.
 - [cloud-aws] Support for running compute (functions and containers) inside a private network via
-  `cloud-aws:config:usePrivateNetwork` config variable.
+  `cloud-aws:usePrivateNetwork` config variable.
 - [cloud-aws] The memory used for AWS Lambda Functions can be globally configured via the
-  `cloud-aws:config:functionMemorySize` config variable.
+  `cloud-aws:functionMemorySize` config variable.
 - [cloud-aws] Support for auto-creating a cluster to use for containers (`Service` and `Task`), via the
-  `cloud-aws:config:ecsAutoCluster` config variable.
+  `cloud-aws:ecsAutoCluster` config variable.
 - [cloud] Allow `Service` ports to specify a `protocol`, which may be `tcp` (default), `http` or `https`.  The later two
   will use Layer 7 load balancer, and `https` will additionally to SSL termination using globally configured SSL
   certificate information if available.

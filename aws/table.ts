@@ -23,7 +23,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
 
     public get: (query: Object) => Promise<any>;
     public insert: (item: Object) => Promise<void>;
-    public scan: () => Promise<any[]>;
+    public scan: { (): Promise<any[]>; (callback: (items: any[]) => Promise<boolean>): Promise<void>; };
     public delete: (query: Object) => Promise<void>;
     public update: (query: Object, updates: Object) => Promise<void>;
 
@@ -76,14 +76,35 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 Item: item,
             }).promise();
         };
-        this.scan = async () => {
+        this.scan = <any>(async (callback?: (items: any[]) => Promise<boolean>) => {
+            let items: any[] | undefined;
+            if (callback === undefined) {
+                items = [];
+                callback = (page: any[]) => {
+                    items!.push(...page);
+                    return Promise.resolve(true);
+                };
+            }
+
             const db = await getDb();
-            const result = await db.scan({
+            const params: any = {
                 TableName: tableName.get(),
                 ConsistentRead: consistentRead,
-            }).promise();
-            return <any[]>result.Items;
-        };
+            };
+            while (true) {
+                const result = await db.scan(params).promise();
+                const acceptMore = await callback(<any[]>result.Items);
+                if (!acceptMore || (result.LastEvaluatedKey === undefined)) {
+                    break;
+                }
+                params.ExclusiveStartKey = result.LastEvaluatedKey;
+            }
+            if (items !== undefined) {
+                return items;
+            } else {
+                return;
+            }
+        });
         this.update = async (query: any, updates: any) => {
             let updateExpression = "";
             const attributeValues: {[key: string]: any} = {};

@@ -1,4 +1,4 @@
 name: httpEndpoint
 runtime: nodejs
 config:
-  aws:config:region: us-east-2
+  aws:region: us-east-2

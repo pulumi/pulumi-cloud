@@ -7,8 +7,7 @@ VERSION := $(shell ../scripts/get-version)
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 build::
-	yarn install
-	yarn link @pulumi/pulumi @pulumi/cloud
+	yarn link @pulumi/cloud
 	tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
 

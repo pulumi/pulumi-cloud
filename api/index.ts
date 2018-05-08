@@ -25,7 +25,7 @@ function loadFrameworkModule() {
         if ((e instanceof Error) && (e as any).code === "MODULE_NOT_FOUND") {
             throw new RunError(`
 Attempted to load the '${provider}' implementation of '@pulumi/cloud', but no '${frameworkModule}' module is installed.\
- Install it now or select another provider implementation with the "cloud:config:provider" setting.`,
+ Install it now or select another provider implementation with the "cloud:provider" setting.`,
             );
         }
         // Else, just return the error as is.

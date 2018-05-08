@@ -239,6 +239,13 @@ export interface Service {
     endpoints: pulumi.Output<{ [containerName: string]: { [port: number]: Endpoint } }>;
 
     /**
+     * The primary endpoint exposed by the service.  All endpoints (including this one)
+     * can also be retrieved by using the 'Service.endpoints' property.  Note: this value
+     * may not be present if the service does not actually expose any endpoints.
+     */
+    defaultEndpoint: pulumi.Output<Endpoint>;
+
+    /**
       * The exposed hostname and port for connecting to the given containerName
      * on the given containerPort.  If containerName is not provided, the first
      * container in the service is used.  If containerPort is not provided, the

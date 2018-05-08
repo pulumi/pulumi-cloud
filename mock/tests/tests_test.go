@@ -19,10 +19,9 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "./table"),
 			Config: map[string]string{
-				"cloud:config:provider": "mock",
+				"cloud:provider": "mock",
 			},
 			Dependencies: []string{
-				"@pulumi/pulumi",
 				"@pulumi/cloud",
 				"@pulumi/cloud-mock",
 			},
