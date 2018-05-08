@@ -9,7 +9,7 @@ export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 TESTPARALLELISM := 10
 
 build::
-	yarn link @pulumi/cloud @pulumi/aws-infra
+	yarn link @pulumi/cloud
 	tsc
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/
