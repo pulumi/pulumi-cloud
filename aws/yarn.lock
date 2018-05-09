@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@pulumi/aws-infra@=0.1.0-dev-1525729239-gf7a40fd":
-  version "0.1.0-dev-1525729239-gf7a40fd"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.1.0-dev-1525729239-gf7a40fd.tgz#25fd09749693accd0567685128591ef6d0c2074b"
+"@pulumi/aws-infra@=0.12.2-dev-1525825306-g2df3e09":
+  version "0.12.2-dev-1525825306-g2df3e09"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.12.2-dev-1525825306-g2df3e09.tgz#6a24e9f940433b2657ba7c8561da36724627d565"
   dependencies:
     "@pulumi/aws" "^0.12.0"
     "@pulumi/pulumi" "^0.12.0"

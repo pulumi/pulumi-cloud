@@ -4,7 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
 import { functionMemorySize } from "./config";
-import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
+import { CloudNetwork, getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
 
@@ -25,7 +25,7 @@ export class Function extends pulumi.ComponentResource {
             memorySize: functionMemorySize,
         };
         if (runLambdaInVPC) {
-            const network: awsinfra.Network | undefined = getOrCreateNetwork();
+            const network: CloudNetwork = getOrCreateNetwork();
             // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
             //     add VPC access will currently fail due to an issue in the Terraform provider.
             options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);

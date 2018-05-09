@@ -14,7 +14,7 @@ export interface CloudNetwork {
     /**
      * Whether the network includes private subnets.
      */
-    readonly usePrivateSubnets: boolean;
+    readonly usePrivateSubnets: pulumi.Output<boolean>;
     /**
      * The security group IDs for the network.
      */
@@ -121,7 +121,7 @@ export function getOrCreateNetwork(): CloudNetwork {
                 });
             } else {
                 // Use the default VPC.
-                network = awsinfra.Network.getDefault();
+                network = getDefaultNetwork();
             }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
@@ -132,7 +132,7 @@ export function getOrCreateNetwork(): CloudNetwork {
             // Use an exsting VPC for this private network
             network = {
                 vpcId: pulumi.output(config.externalVpcId),
-                usePrivateSubnets: config.usePrivateNetwork,
+                usePrivateSubnets: pulumi.output(config.usePrivateNetwork),
                 subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
                 publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
                 securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
@@ -144,15 +144,42 @@ export function getOrCreateNetwork(): CloudNetwork {
 }
 
 /**
+ * Gets the default VPC for the AWS account as a Network
+ */
+function getDefaultNetwork(): CloudNetwork {
+    const vpc = aws.ec2.getVpc({default: true});
+    const vpcId = vpc.then(v => v.id);
+    const subnetIds = aws.ec2.getSubnetIds({ vpcId: vpcId }).then(subnets => subnets.ids);
+    const defaultSecurityGroup = aws.ec2.getSecurityGroup({ name: "default", vpcId: vpcId }).then(sg => sg.id);
+    const subnet0 = subnetIds.then(ids => ids[0]);
+    const subnet1 = subnetIds.then(ids => ids[1]);
+
+    return {
+        vpcId: pulumi.output(vpcId),
+        subnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
+        usePrivateSubnets: pulumi.output(false),
+        securityGroupIds: [ pulumi.output(defaultSecurityGroup) ],
+        publicSubnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
+    };
+}
+
+/**
  * @deprecated
  */
 export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
+export interface CloudCluster {
+    readonly ecsClusterARN: pulumi.Output<string>;
+    readonly securityGroupId?: pulumi.Output<string>;
+    readonly efsMountPath?: string;
+    readonly autoScalingGroupStack?: pulumi.Resource;
+}
+
 // The cluster to use for container compute or undefined if containers are unsupported.
-let cluster: awsinfra.Cluster | undefined;
-export function getCluster(): awsinfra.Cluster | undefined {
+let cluster: CloudCluster | undefined;
+export function getCluster(): CloudCluster | undefined {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {
         if (config.ecsAutoCluster) {
@@ -161,10 +188,13 @@ export function getCluster(): awsinfra.Cluster | undefined {
             if  (config.ecsAutoClusterInstanceRolePolicyARNs) {
                 instanceRolePolicyARNs = (config.ecsAutoClusterInstanceRolePolicyARNs || "").split(",");
             }
+
+            const innerNetwork = getOrCreateNetwork();
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                network: getOrCreateNetwork(),
+                networkVpcId: innerNetwork.vpcId,
+                networkSubnetIds: innerNetwork.subnetIds,
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
@@ -184,13 +214,17 @@ export function getCluster(): awsinfra.Cluster | undefined {
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         } else if (config.useFargate) {
+            const innerNetwork = getOrCreateNetwork();
+
             // Else, allocate a Fargate-only cluster.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                network: getOrCreateNetwork(),
+                networkVpcId: innerNetwork.vpcId,
+                networkSubnetIds: innerNetwork.subnetIds,
                 maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,
             });
         }
     }
+
     return cluster;
 }
