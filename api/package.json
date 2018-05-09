@@ -10,7 +10,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "types": "types.d.ts",
     "dependencies": {
-        "@pulumi/pulumi": "^0.12.1-rc3"
+        "@pulumi/pulumi": "^0.12.1"
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
