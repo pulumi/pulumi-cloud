@@ -12,10 +12,6 @@ export interface CloudNetwork {
      */
     readonly vpcId: pulumi.Output<string>;
     /**
-     * Whether the network includes private subnets.
-     */
-    readonly usePrivateSubnets: pulumi.Output<boolean>;
-    /**
      * The security group IDs for the network.
      */
     readonly securityGroupIds: pulumi.Output<string>[];
@@ -28,6 +24,10 @@ export interface CloudNetwork {
      * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
      */
     readonly publicSubnetIds: pulumi.Output<string>[];
+    /**
+     * Whether the network includes private subnets.
+     */
+    readonly usePrivateSubnets1: boolean;
 }
 
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
@@ -116,8 +116,8 @@ export function getOrCreateNetwork(): CloudNetwork {
             if (config.usePrivateNetwork) {
                 // Create a new VPC for this private network.
                 network = new awsinfra.Network(createNameWithStackInfo("global"), {
-                    usePrivateSubnets: config.usePrivateNetwork,
-                    numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
+                    usePrivateSubnets1: config.usePrivateNetwork,
+                    numberOfAvailabilityZones1: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
                 });
             } else {
                 // Use the default VPC.
@@ -132,7 +132,7 @@ export function getOrCreateNetwork(): CloudNetwork {
             // Use an exsting VPC for this private network
             network = {
                 vpcId: pulumi.output(config.externalVpcId),
-                usePrivateSubnets: pulumi.output(config.usePrivateNetwork),
+                usePrivateSubnets1: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
                 publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
                 securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
@@ -157,7 +157,7 @@ function getDefaultNetwork(): CloudNetwork {
     return {
         vpcId: pulumi.output(vpcId),
         subnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
-        usePrivateSubnets: pulumi.output(false),
+        usePrivateSubnets1: false,
         securityGroupIds: [ pulumi.output(defaultSecurityGroup) ],
         publicSubnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
     };
@@ -193,8 +193,8 @@ export function getCluster(): CloudCluster | undefined {
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                networkVpcId: innerNetwork.vpcId,
-                networkSubnetIds: innerNetwork.subnetIds,
+                networkVpcId1: innerNetwork.vpcId,
+                networkSubnetIds1: innerNetwork.subnetIds,
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
@@ -218,8 +218,8 @@ export function getCluster(): CloudCluster | undefined {
 
             // Else, allocate a Fargate-only cluster.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                networkVpcId: innerNetwork.vpcId,
-                networkSubnetIds: innerNetwork.subnetIds,
+                networkVpcId1: innerNetwork.vpcId,
+                networkSubnetIds1: innerNetwork.subnetIds,
                 maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,
             });
