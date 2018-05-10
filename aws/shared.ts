@@ -6,28 +6,19 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
-export interface CloudNetwork {
+export interface CloudNetwork extends awsinfra.ClusterNetworkArgs {
     /**
-     * The VPC id of the network.
+     * Whether the network includes private subnets.
      */
-    readonly vpcId: pulumi.Output<string>;
+    readonly usePrivateSubnets: boolean;
     /**
      * The security group IDs for the network.
      */
     readonly securityGroupIds: pulumi.Output<string>[];
     /**
-     * The subnets in which compute should run.  These are the private subnets if [usePrivateSubnets] == true, else
-     * these are the public subnets.
-     */
-    readonly subnetIds: pulumi.Output<string>[];
-    /**
      * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
      */
     readonly publicSubnetIds: pulumi.Output<string>[];
-    /**
-     * Whether the network includes private subnets.
-     */
-    readonly usePrivateSubnets: boolean;
 }
 
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
@@ -189,12 +180,10 @@ export function getCluster(): CloudCluster | undefined {
                 instanceRolePolicyARNs = (config.ecsAutoClusterInstanceRolePolicyARNs || "").split(",");
             }
 
-            const innerNetwork = getOrCreateNetwork();
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                networkVpcId: innerNetwork.vpcId,
-                networkSubnetIds: innerNetwork.subnetIds,
+                network: getOrCreateNetwork(),
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
                 instanceRolePolicyARNs: instanceRolePolicyARNs,
@@ -214,12 +203,9 @@ export function getCluster(): CloudCluster | undefined {
                 efsMountPath: config.ecsClusterEfsMountPath,
             };
         } else if (config.useFargate) {
-            const innerNetwork = getOrCreateNetwork();
-
             // Else, allocate a Fargate-only cluster.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
-                networkVpcId: innerNetwork.vpcId,
-                networkSubnetIds: innerNetwork.subnetIds,
+                network: getOrCreateNetwork(),
                 maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,
             });
