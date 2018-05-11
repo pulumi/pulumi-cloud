@@ -112,7 +112,7 @@ export function getOrCreateNetwork(): CloudNetwork {
                 });
             } else {
                 // Use the default VPC.
-                network = getDefaultNetwork();
+                network = awsinfra.Network.getDefault();
             }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
@@ -121,37 +121,17 @@ export function getOrCreateNetwork(): CloudNetwork {
                     "'externalPublicSubnets' and 'externalSecurityGroups'");
             }
             // Use an exsting VPC for this private network
-            network = {
-                vpcId: pulumi.output(config.externalVpcId),
+            network = awsinfra.Network.fromVpc("external-vpc", {
+                vpcId: config.externalVpcId,
                 usePrivateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
-            };
+                subnetIds: config.externalSubnets,
+                publicSubnetIds: config.externalPublicSubnets,
+                securityGroupIds: config.externalSecurityGroups,
+            });
         }
     }
 
     return network;
-}
-
-/**
- * Gets the default VPC for the AWS account as a Network
- */
-function getDefaultNetwork(): CloudNetwork {
-    const vpc = aws.ec2.getVpc({default: true});
-    const vpcId = vpc.then(v => v.id);
-    const subnetIds = aws.ec2.getSubnetIds({ vpcId: vpcId }).then(subnets => subnets.ids);
-    const defaultSecurityGroup = aws.ec2.getSecurityGroup({ name: "default", vpcId: vpcId }).then(sg => sg.id);
-    const subnet0 = subnetIds.then(ids => ids[0]);
-    const subnet1 = subnetIds.then(ids => ids[1]);
-
-    return {
-        vpcId: pulumi.output(vpcId),
-        subnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
-        usePrivateSubnets: false,
-        securityGroupIds: [ pulumi.output(defaultSecurityGroup) ],
-        publicSubnetIds: [ pulumi.output(subnet0), pulumi.output(subnet1) ],
-    };
 }
 
 /**

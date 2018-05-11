@@ -11,7 +11,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/aws": "^0.12.0",
-        "@pulumi/aws-infra": "=0.12.2-dev-1525923356-g24ad6fe",
+        "@pulumi/aws-infra": "=0.12.2-dev-1526066488-g8081696",
         "@pulumi/pulumi": "^0.12.0",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
