@@ -6,11 +6,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
-export interface CloudNetwork {
-    /**
-     * The VPC id of the network.
-     */
-    readonly vpcId: pulumi.Output<string>;
+export interface CloudNetwork extends awsinfra.ClusterNetworkArgs {
     /**
      * Whether the network includes private subnets.
      */
@@ -19,11 +15,6 @@ export interface CloudNetwork {
      * The security group IDs for the network.
      */
     readonly securityGroupIds: pulumi.Output<string>[];
-    /**
-     * The subnets in which compute should run.  These are the private subnets if [usePrivateSubnets] == true, else
-     * these are the public subnets.
-     */
-    readonly subnetIds: pulumi.Output<string>[];
     /**
      * The public subnets for the VPC.  In case [usePrivateSubnets] == false, these are the same as [subnets].
      */
@@ -130,13 +121,13 @@ export function getOrCreateNetwork(): CloudNetwork {
                     "'externalPublicSubnets' and 'externalSecurityGroups'");
             }
             // Use an exsting VPC for this private network
-            network = {
-                vpcId: pulumi.output(config.externalVpcId),
+            network = awsinfra.Network.fromVpc("external-vpc", {
+                vpcId: config.externalVpcId,
                 usePrivateSubnets: config.usePrivateNetwork,
-                subnetIds: config.externalSubnets.map(s => pulumi.output(s)),
-                publicSubnetIds: config.externalPublicSubnets.map(s => pulumi.output(s)),
-                securityGroupIds: config.externalSecurityGroups.map(s => pulumi.output(s)),
-            };
+                subnetIds: config.externalSubnets,
+                publicSubnetIds: config.externalPublicSubnets,
+                securityGroupIds: config.externalSecurityGroups,
+            });
         }
     }
 
@@ -150,9 +141,16 @@ export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
+export interface CloudCluster {
+    readonly ecsClusterARN: pulumi.Output<string>;
+    readonly securityGroupId?: pulumi.Output<string>;
+    readonly efsMountPath?: string;
+    readonly autoScalingGroupStack?: pulumi.Resource;
+}
+
 // The cluster to use for container compute or undefined if containers are unsupported.
-let cluster: awsinfra.Cluster | undefined;
-export function getCluster(): awsinfra.Cluster | undefined {
+let cluster: CloudCluster | undefined;
+export function getCluster(): CloudCluster | undefined {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {
         if (config.ecsAutoCluster) {
@@ -161,6 +159,7 @@ export function getCluster(): awsinfra.Cluster | undefined {
             if  (config.ecsAutoClusterInstanceRolePolicyARNs) {
                 instanceRolePolicyARNs = (config.ecsAutoClusterInstanceRolePolicyARNs || "").split(",");
             }
+
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
             cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
@@ -192,5 +191,6 @@ export function getCluster(): awsinfra.Cluster | undefined {
             });
         }
     }
+
     return cluster;
 }

@@ -7,7 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as assert from "assert";
 import * as stream from "stream";
-import { CloudNetwork } from "./shared";
+import { CloudCluster, CloudNetwork } from "./shared";
 
 import * as config from "./config";
 import * as docker from "./docker";
@@ -15,7 +15,6 @@ import * as docker from "./docker";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
-
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -27,7 +26,7 @@ interface ContainerPortLoadBalancer {
 // pair.
 function createLoadBalancer(
         parent: pulumi.Resource,
-        cluster: awsinfra.Cluster,
+        cluster: CloudCluster,
         serviceName: string,
         containerName: string,
         portMapping: cloud.ContainerPort,
@@ -41,7 +40,7 @@ function createLoadBalancer(
     const shortName = utils.sha1hash(`${longName}`);
 
     // Create an internal load balancer if requested.
-    const internal: boolean = (network.usePrivateSubnets && !portMapping.external);
+    const internal = network.usePrivateSubnets && !portMapping.external;
     const portMappingProtocol: cloud.ContainerProtocol = portMapping.protocol || "tcp";
 
     // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
@@ -567,7 +566,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
     public readonly replicas: number;
-    public readonly cluster: awsinfra.Cluster;
+    public readonly cluster: CloudCluster;
     public readonly ecsService: aws.ecs.Service;
 
     public readonly endpoints: pulumi.Output<Endpoints>;
@@ -583,7 +582,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     }
 
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
-        const cluster: awsinfra.Cluster | undefined = getCluster();
+        const cluster = getCluster();
         if (!cluster) {
             throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
@@ -751,7 +750,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     }
 
     getHostPath() {
-        const cluster: awsinfra.Cluster | undefined = getCluster();
+        const cluster = getCluster();
         if (!cluster || !cluster.efsMountPath) {
             throw new RunError(
                 "Cannot use 'Volume'.  Configured cluster does not support EFS.",
@@ -785,7 +784,7 @@ export class HostPathVolume implements cloud.HostPathVolume {
  * A Task represents a container which can be [run] dynamically whenever (and as many times as) needed.
  */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
-    public readonly cluster: awsinfra.Cluster;
+    public readonly cluster: CloudCluster;
     public readonly taskDefinition: aws.ecs.TaskDefinition;
 
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
@@ -799,7 +798,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         super("cloud:task:Task", name, { container: container }, opts);
 
         const network = getOrCreateNetwork();
-        const cluster: awsinfra.Cluster | undefined = getCluster();
+        const cluster = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Task'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
