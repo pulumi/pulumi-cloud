@@ -2,8 +2,10 @@
 
 # Pulumi Cloud Framework
 
-Pulumi's framework for building modern cloud applications.
+:warning: **Pulumi is in private beta.  This package may not work unless you are already participating.
+Please visit [pulumi.com](https://pulumi.com/) to register for access.**
 
+Pulumi's framework for building modern cloud applications.
 
 # Changelog
 
