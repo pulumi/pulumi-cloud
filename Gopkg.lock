@@ -498,6 +498,7 @@
   version = "v1.1"
 
 [[projects]]
+  branch = "release/0.12"
   name = "github.com/pulumi/pulumi"
   packages = [
     "pkg/apitype",
@@ -531,8 +532,7 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "94bd88ffa26a74dbb2cc694636ec87486a79e21d"
-  version = "v0.12.2-rc1"
+  revision = "52892e33c8369e436cdfacbea70460fd1a820fe3"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
