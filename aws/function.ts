@@ -28,7 +28,11 @@ export class Function extends pulumi.ComponentResource {
             const network = getOrCreateNetwork();
             // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
             //     add VPC access will currently fail due to an issue in the Terraform provider.
-            options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+            if (options.policies) {
+               options.policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+            } else {
+               options.policies = [aws.iam.AWSLambdaVPCAccessExecutionRole];
+            }
             options.vpcConfig = {
                 securityGroupIds: pulumi.all(network.securityGroupIds),
                 subnetIds: pulumi.all(network.subnetIds),
