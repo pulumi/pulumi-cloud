@@ -522,6 +522,7 @@
     "pkg/util/contract",
     "pkg/util/fsutil",
     "pkg/util/httputil",
+    "pkg/util/logging",
     "pkg/util/mapper",
     "pkg/util/retry",
     "pkg/util/rpcutil",
@@ -530,7 +531,8 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "4f3d2366064de9a0098b959a05ba1aa1d95c7e0b"
+  revision = "94bd88ffa26a74dbb2cc694636ec87486a79e21d"
+  version = "v0.12.2-rc1"
 
 [[projects]]
   name = "github.com/pulumi/pulumi-aws"
@@ -738,6 +740,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "083392bda88c16badd131d08283a1e277a06904aa91e8d480fe179dbf6bc46c6"
+  inputs-digest = "e0b7f9a88e0bb8723430f386a1aa986413c6b5d623a1c506f54ecbb3107aadb0"
   solver-name = "gps-cdcl"
   solver-version = 1
