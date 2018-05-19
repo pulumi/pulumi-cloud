@@ -27,7 +27,6 @@ copy_package() {
 # Copy the three packages
 copy_package "${ROOT}/api/bin/." "@pulumi/cloud"
 copy_package "${ROOT}/aws/bin/." "@pulumi/cloud-aws"
-copy_package "${ROOT}/mock/bin/." "@pulumi/cloud-mock"
 
 # Tar up the file and then print it out for use by the caller or script.
 tar -czf ${PUBFILE} -C ${PUBDIR} .
