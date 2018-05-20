@@ -38,7 +38,7 @@ func Test_Examples(t *testing.T) {
 		return
 	}
 	examples := []integration.ProgramTestOptions{
-		{
+		/* 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
 				"aws:region":                  fargateRegion,
@@ -67,7 +67,7 @@ func Test_Examples(t *testing.T) {
 					},
 				},
 			},
-		},
+		}, */
 
 		{
 			Dir: path.Join(cwd, "/tests/performance"),
