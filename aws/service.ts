@@ -655,7 +655,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
             placementConstraints: placementConstraintsForHost(args.host),
-            waitForSteadyState: true,
+            waitForSteadyState: args.waitForSteadyState === undefined ? true : args.waitForSteadyState,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
                 assignPublicIp: config.useFargate && !network.usePrivateSubnets,

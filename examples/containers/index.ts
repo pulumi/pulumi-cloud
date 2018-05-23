@@ -116,6 +116,7 @@ let builtService = new cloud.Service("examples-nginx2", {
         },
     },
     replicas: 2,
+    waitForSteadyState: false,
 });
 
 // expose some APIs meant for testing purposes.
