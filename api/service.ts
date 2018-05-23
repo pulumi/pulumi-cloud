@@ -215,6 +215,12 @@ export interface ServiceArguments {
      * The properties of the host where this service can run.
      */
     host?: HostProperties;
+    /**
+     *
+     * Determines whether the service should wait to fully transition to a new steady state on creation and updates. If
+     * set to false, the service may complete its deployment before it is fully ready to be used. Defaults to 'true'.
+     */
+    waitForSteadyState?: boolean;
 }
 
 export interface Endpoint {
