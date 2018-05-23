@@ -166,3 +166,10 @@ export function setEcsCluster(cluster: aws.ecs.Cluster,
         ecsClusterEfsMountPath = efsMountPath;
     }
 }
+
+/**
+ * Determines whether ECS Services should wait until they are fully transitioned to a new steady state on creation and
+ * updates. If set to false, Services may complete their deployment before they are fully ready to be used. Defaults to
+ * 'true'.
+ */
+export let ecsWaitForSteadyState = config.getBoolean("ecsWaitForSteadyState") || true;
