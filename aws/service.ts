@@ -339,9 +339,9 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            // tslint:disable-next-line:max-line-length
-            return pulumi.all([imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id])
-                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+            return pulumi.all([imageOptions, container.command, container.memory,
+                               container.memoryReservation, logGroup.id, container.dockerLabels])
+                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOpts.environment)) {
                     keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
@@ -367,6 +367,7 @@ function computeContainerDefinitions(
                             "awslogs-stream-prefix": containerName,
                         },
                     },
+                    dockerLabels: dockerLabels,
                 };
                 return containerDefinition;
             });
