@@ -232,7 +232,6 @@ func Test_Examples(t *testing.T) {
 		},
 		{
 			Dir: path.Join(cwd, "../examples/httpEndpoint"),
-
 			Config: map[string]string{
 				"aws:region":     region,
 				"cloud:provider": "aws",
@@ -245,6 +244,25 @@ func Test_Examples(t *testing.T) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output string property")
 				testURLGet(t, baseURL, "test1.txt", "You got test1")
+			},
+		},
+		{
+			Dir: path.Join(cwd, "../examples/simplecontainers"),
+			Config: map[string]string{
+				"aws:region":           region,
+				"cloud:provider":       "aws",
+				"cloud-aws:useFargate": "true",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
+				if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
+					return
+				}
+				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		},
 	}
