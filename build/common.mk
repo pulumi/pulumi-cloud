@@ -39,7 +39,7 @@
 #  - only_test: this target runs the lint and test_all targets
 #               (test_all itself runs test_fast)
 #
-#  - only_fast_test: this target runs the lint and test_fast targets
+#  - only_test_fast: this target runs the lint and test_fast targets
 #
 #  - default: this is the target that is run by default when no
 #             arguments are passed to make, it runs the build, lint,
