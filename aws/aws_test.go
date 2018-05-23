@@ -249,74 +249,76 @@ func Test_Examples(t *testing.T) {
 		},
 	}
 
-	// Only include these tests on non-Short test runs
+	longExamples := []integration.ProgramTestOptions{
+		{
+			Dir: path.Join(cwd, "tests/unit"),
+			Config: map[string]string{
+				"aws:region":                  fargateRegion,
+				"cloud:provider":              "aws",
+				"cloud-aws:useFargate":        "true",
+				"cloud-aws:usePrivateNetwork": "true",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				hitUnitTestsEndpoint(t, stackInfo)
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/tests/unit/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+				{
+					Dir: cwd + "/tests/unit/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+			},
+		},
+		{
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: addRandomSuffix("containers-fargate"),
+			Config: map[string]string{
+				"aws:region":               fargateRegion,
+				"cloud:provider":           "aws",
+				"cloud-aws:useFargate":     "true",
+				"containers:redisPassword": "SECRETPASSWORD",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
+		},
+		{
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: addRandomSuffix("containers-ec2"),
+			Config: map[string]string{
+				"aws:region":                          region,
+				"cloud:provider":                      "aws",
+				"cloud-aws:ecsAutoCluster":            "true",
+				"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
+				"cloud-aws:ecsAutoInstanceType":       "t2.medium",
+				"cloud-aws:ecsAutoClusterMinSize":     "20",
+				"cloud-aws:ecsAutoClusterUseEFS":      "false",
+				"containers:redisPassword":            "SECRETPASSWORD",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: containersRuntimeValidator(region),
+		},
+	}
+
+	// Only include the long examples on non-Short test runs
 	if !testing.Short() {
-		examples = append(examples, ...[]integration.ProgramTestOptions{
-			{
-				Dir: path.Join(cwd, "tests/unit"),
-				Config: map[string]string{
-					"aws:region":                  fargateRegion,
-					"cloud:provider":              "aws",
-					"cloud-aws:useFargate":        "true",
-					"cloud-aws:usePrivateNetwork": "true",
-				},
-				Dependencies: []string{
-					"@pulumi/cloud",
-					"@pulumi/cloud-aws",
-				},
-				ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-					hitUnitTestsEndpoint(t, stackInfo)
-				},
-				EditDirs: []integration.EditDir{
-					{
-						Dir: cwd + "/tests/unit/variants/update1",
-						ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-							hitUnitTestsEndpoint(t, stackInfo)
-						},
-					},
-					{
-						Dir: cwd + "/tests/unit/variants/update2",
-						ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-							hitUnitTestsEndpoint(t, stackInfo)
-						},
-					},
-				},
-			},
-			{
-				Dir:       path.Join(cwd, "../examples/containers"),
-				StackName: addRandomSuffix("containers-fargate"),
-				Config: map[string]string{
-					"aws:region":               fargateRegion,
-					"cloud:provider":           "aws",
-					"cloud-aws:useFargate":     "true",
-					"containers:redisPassword": "SECRETPASSWORD",
-				},
-				Dependencies: []string{
-					"@pulumi/cloud",
-					"@pulumi/cloud-aws",
-				},
-				ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
-			},
-			{
-				Dir:       path.Join(cwd, "../examples/containers"),
-				StackName: addRandomSuffix("containers-ec2"),
-				Config: map[string]string{
-					"aws:region":                          region,
-					"cloud:provider":                      "aws",
-					"cloud-aws:ecsAutoCluster":            "true",
-					"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
-					"cloud-aws:ecsAutoInstanceType":       "t2.medium",
-					"cloud-aws:ecsAutoClusterMinSize":     "20",
-					"cloud-aws:ecsAutoClusterUseEFS":      "false",
-					"containers:redisPassword":            "SECRETPASSWORD",
-				},
-				Dependencies: []string{
-					"@pulumi/cloud",
-					"@pulumi/cloud-aws",
-				},
-				ExtraRuntimeValidation: containersRuntimeValidator(region),
-			},
-		})
+		examples = append(examples, longExamples...)
 	}
 
 	for _, ex := range examples {
