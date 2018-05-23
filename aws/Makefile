@@ -6,7 +6,7 @@ VERSION := $(shell ../scripts/get-version)
 
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
-TESTPARALLELISM := 10
+TESTPARALLELISM := 20
 
 build::
 	yarn link @pulumi/cloud
@@ -19,3 +19,6 @@ lint::
 
 test_all::
 	PATH=$(PULUMI_BIN):$(PATH) go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} .
+
+test_fast::
+	PATH=$(PULUMI_BIN):$(PATH) go test -short -v -cover -timeout 2h -parallel ${TESTPARALLELISM} .
