@@ -1,0 +1,19 @@
+{
+    "name": "simplecontainers",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^0.12.0"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-aws": "latest"
+    }
+}
