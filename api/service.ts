@@ -101,6 +101,13 @@ export interface Container {
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
     command?: pulumi.Input<string[]>;
+    /**
+     * A key/value map of labels to add to the container. This parameter maps to Labels in the [Create a
+     * container](https://docs.docker.com/engine/api/v1.27/#operation/ContainerCreate) section of the [Docker Remote
+     * API](https://docs.docker.com/engine/api/v1.27/) and the --label option to [docker
+     * run](https://docs.docker.com/engine/reference/run/).
+     */
+    dockerLabels?: pulumi.Input<{[name: string]: string}>;
 }
 
 /**
