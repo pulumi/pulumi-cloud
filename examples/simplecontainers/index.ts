@@ -9,7 +9,7 @@ let nginx = new cloud.Service("examples-nginx2", {
         nginx: {
             build: "./app",
             memory: 128,
-            ports: [{ port: 80 }],
+            ports: [{ port: 80, protocol: "http" }],
         },
     },
     replicas: 2,
