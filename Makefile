@@ -2,7 +2,6 @@ PROJECT_NAME := Pulumi Cloud Platform
 SUB_PROJECTS := api mock aws examples/integration
 include build/common.mk
 
-
 .PHONY: publish_tgz
 publish_tgz:
 	$(call STEP_MESSAGE)
