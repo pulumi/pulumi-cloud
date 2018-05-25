@@ -16,7 +16,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { Endpoint } from "./service";
 
 /**
- * Request represents an HttpEndpoint request.
+ * Request represents an API request.
  */
 export interface Request {
     /**
@@ -63,7 +63,7 @@ export interface Request {
 }
 
 /**
- * Response represents the response to an HttpEndpoint request.
+ * Response represents the response to an API request.
  */
 export interface Response {
     /**
@@ -109,7 +109,7 @@ export interface Response {
 }
 
 /**
- * RouteHandler represents a handler for a route on an HttpEndpoint.
+ * RouteHandler represents a handler for a route on an API.
  *
  * Implementations should invoke methods on `res` to respond to the request, or
  * invoke `next` to pass control to the next available handler on the route for
@@ -117,11 +117,11 @@ export interface Response {
  */
 export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
-export interface HttpEndpointConstructor {
-    new (apiName: string): HttpEndpoint;
+export interface APIConstructor {
+    new (apiName: string): API;
 }
 
-export let HttpEndpoint: HttpEndpointConstructor; // tslint:disable-line
+export let API: APIConstructor; // tslint:disable-line
 
 export interface ServeStaticOptions {
     /**
@@ -130,18 +130,18 @@ export interface ServeStaticOptions {
      */
     contentType?: string;
     /**
-     * By default HttpEndpoint.static will also serve 'index.html' in response to a request on a
+     * By default API.static will also serve 'index.html' in response to a request on a
      * directory. To disable this set false or to supply a new index pass a string.
      */
     index?: boolean | string;
 }
 
 /**
- * HttpEndpoint publishes an internet-facing HTTP API, for serving web
+ * API publishes an internet-facing HTTP API, for serving web
  * applications or REST APIs.
  *
  * ```javascript
- * let api = new HttpEndpoint("myapi")
+ * let api = new API("myapi")
  * api.get("/", (req, res) => res.json({hello: "world"}));
  * api.publish().url.then(url =>
  *   console.log(`Serving myapi at ${url}`)
@@ -157,7 +157,7 @@ export interface ServeStaticOptions {
  * route handler can be used to provide dynamic decisions about sub-routing
  * within a static path.
  */
-export interface HttpEndpoint {
+export interface API {
     /**
      * static serves a file or directory from within the source folder at the requested path.
      *
@@ -230,7 +230,7 @@ export interface HttpEndpoint {
     all(path: string, ...handlers: RouteHandler[]): void;
 
     /**
-     * Attach a custom domain to this HttpEndpoint.
+     * Attach a custom domain to this API.
      *
      * Provide a domain name you own, along with SSL certificates from a
      * certificate authority (e.g. LetsEncrypt).
@@ -243,18 +243,18 @@ export interface HttpEndpoint {
     attachCustomDomain(domain: Domain): void;
 
     /**
-     * Publishes an HttpEndpoint to be internet accessible.
+     * Publishes an API to be internet accessible.
      *
      * This should be called after describing desired routes and domains.
      * Throws an error if called multiple times on the same endpoint.
      *
-     * @returns An HttpDeployment object representing the live HttpEndpoint.
+     * @returns An HttpDeployment object representing the live API.
      */
     publish(): HttpDeployment;
 }
 
 /**
- * HttpDeployment represents an HttpEndpoint that has been deployed and is
+ * HttpDeployment represents an API that has been deployed and is
  * available at a URL.
  */
 export interface HttpDeployment {
@@ -264,7 +264,7 @@ export interface HttpDeployment {
     url: pulumi.Output<string>;
     /**
      * An optional list of custom domain names, each corresponding to a
-     * previous call to attachCustomDomain on the HttpEndpoint.  Each name
+     * previous call to attachCustomDomain on the API.  Each name
      * should be mapped using a DNS A record.
      */
     customDomainNames: pulumi.Output<string>[];
@@ -272,11 +272,11 @@ export interface HttpDeployment {
 
 /**
  * Domain includes the domain name and certificate data to enable hosting an
- * HttpEndpoint on a custom domain.
+ * API on a custom domain.
  */
 export interface Domain {
     /**
-     * The domain name to associate with the HttpEndpoint.
+     * The domain name to associate with the API.
      */
     domainName: string;
     /**
@@ -293,3 +293,12 @@ export interface Domain {
      */
     certificateChain: string;
 }
+
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export type HttpEndpoint = API;
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export let HttpEndpoint: APIConstructor; // tslint:disable-line

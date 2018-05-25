@@ -132,7 +132,7 @@ let builtService = new cloud.Service("examples-nginx2", {
 });
 
 // expose some APIs meant for testing purposes.
-let api = new cloud.HttpEndpoint("examples-containers");
+let api = new cloud.API("examples-containers");
 api.get("/test", async (req, res) => {
     try {
         res.json({

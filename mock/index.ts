@@ -19,7 +19,7 @@
 import "./config";
 
 export * from "./bucket";
-export * from "./httpEndpoint";
+export * from "./api";
 export * from "./table";
 export { Topic } from "./topic";
 export * from "./service";

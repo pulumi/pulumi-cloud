@@ -18,14 +18,14 @@ import * as pulumi from "@pulumi/pulumi";
 import * as assertModule from "assert";
 import * as harnessModule from "./harness";
 
-import * as httpEndpointTests from "./httpEndpointTests";
+import * as apiTests from "./apiTests";
 import * as tableTests from "./tableTests";
 
-const endpoint = new cloud.HttpEndpoint("tests-unittests");
+const endpoint = new cloud.API("tests-unittests");
 
 const testFunctions = [
     tableTests.runAllTests,
-    httpEndpointTests.runAllTests,
+    apiTests.runAllTests,
 ];
 
 // Run each of the `testFunction`s in parallel, each writing their results into `result.

@@ -245,7 +245,7 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/httpEndpoint"),
+			Dir: path.Join(cwd, "../examples/api"),
 			Config: map[string]string{
 				"aws:region":     region,
 				"cloud:provider": "aws",

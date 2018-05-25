@@ -24,7 +24,7 @@ export type TestArgs = {
     supertest: typeof supertestModule,
 };
 
-const endpoint = new cloud.HttpEndpoint("tests-endpoint");
+const endpoint = new cloud.API("tests-endpoint");
 
 namespace getApiTests {
     endpoint.get("/get1", async (req, res) => {
@@ -227,11 +227,11 @@ const deployment = endpoint.publish();
 
 export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
     return await args.harness.testModule(args, result, {
-        ["httpEndpointTests.getApiTests"]: getApiTests,
-        ["httpEndpointTests.deleteApiTests"]: deleteApiTests,
-        ["httpEndpointTests.postApiTests"]: postApiTests,
-        ["httpEndpointTests.staticApiTests"]: staticApiTests,
-        ["httpEndpointTests.proxyApiTests"]: proxyApiTests,
-        ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
+        ["apiTests.getApiTests"]: getApiTests,
+        ["apiTests.deleteApiTests"]: deleteApiTests,
+        ["apiTests.postApiTests"]: postApiTests,
+        ["apiTests.staticApiTests"]: staticApiTests,
+        ["apiTests.proxyApiTests"]: proxyApiTests,
+        ["apiTests.updateProgramTests"]: updateProgramTests,
     });
 }

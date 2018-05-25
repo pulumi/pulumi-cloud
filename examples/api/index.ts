@@ -15,11 +15,11 @@
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
 
-const endpoint = new cloud.HttpEndpoint("examples-test");
-endpoint.get("/test1.txt", (req, res) => {
+const api = new cloud.API("examples-test");
+api.get("/test1.txt", (req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.end("You got test1");
 });
-endpoint.proxy("/google", "http://www.google.com/")
+api.proxy("/google", "http://www.google.com/")
 
-export let url = endpoint.publish().url;
+export let url = api.publish().url;

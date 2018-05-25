@@ -23,7 +23,7 @@ import * as utils from "./utils";
 
 const usedNames: { [name: string]: string } = Object.create(null);
 
-export class HttpEndpoint implements cloud.HttpEndpoint {
+export class API implements cloud.API {
     public static: (path: string, localPath: string, options?: cloud.ServeStaticOptions) => void;
     public proxy: (path: string, target: string | pulumi.Output<cloud.Endpoint>) => void;
     public route: (method: string, path: string, ...handlers: cloud.RouteHandler[]) => void;
@@ -36,7 +36,7 @@ export class HttpEndpoint implements cloud.HttpEndpoint {
     public publish: () => cloud.HttpDeployment;
 
     constructor(name: string) {
-        utils.ensureUnique(usedNames, name, "HttpEndpoint");
+        utils.ensureUnique(usedNames, name, "API");
 
         const app = express();
 
@@ -197,3 +197,11 @@ class HttpDeployment implements cloud.HttpDeployment {
     }
 }
 
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export type HttpEndpoint = API;
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export let HttpEndpoint = API; // tslint:disable-line

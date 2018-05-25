@@ -21,7 +21,7 @@
 
 export * from "./bucket";
 export * from "./function";
-export * from "./httpEndpoint";
+export * from "./api";
 export * from "./table";
 export * from "./topic";
 export * from "./service";

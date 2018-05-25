@@ -57,7 +57,7 @@ export let ecsClusterSecurityGroup: pulumi.Input<string> | undefined = config.ge
 export let ecsClusterEfsMountPath = config.get("ecsClusterEfsMountPath");
 
 /**
- * Optionally put all compute in a private network with no Internet ingress except via explicit HttpEndpoint.
+ * Optionally put all compute in a private network with no Internet ingress except via explicit API.
  */
 export let usePrivateNetwork = config.getBoolean("usePrivateNetwork") || false;
 

@@ -36,19 +36,19 @@ declare module "assert" {
     throw new Error("Expected error to be thrown");
 };
 
-describe("HttpEndpoint", () => {
+describe("API", () => {
     let uniqueId = 0;
 
     describe("#new()", () => {
         it("should-throw-when-name-is-already-in-use", () => {
-            const app = new cloud.HttpEndpoint("");
-            assert.throws(() => new cloud.HttpEndpoint(""));
+            const app = new cloud.API("");
+            assert.throws(() => new cloud.API(""));
         });
     });
 
     describe("#get()", () => {
         it("Is get method", async function () {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res) {
                 assert.equal(req.method, "GET");
                 res.status(200).write("ok").end();
@@ -59,7 +59,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Responds to /", async function () {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res) {
                 res.status(200).write("ok").end();
             });
@@ -69,7 +69,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("404 for anything else", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res) {
                 res.status(200).write("ok").end();
             });
@@ -79,7 +79,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Does not call second handler unless requested", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res, next) {
                 res.status(200).write("ok").end();
             },
@@ -92,7 +92,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Does call second handler when requested", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res, next) {
                 next();
             },
@@ -105,7 +105,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Can call into default handler", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res, next) {
                 res.status(200).write("ok").end();
                 next();
@@ -116,7 +116,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Can get parameters", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/goo", function (req, res, next) {
                 assert.equal(req.query.name, "baz");
                 assert.equal(req.query.color, "purple");
@@ -128,7 +128,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Can get array parameters", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/goo", function (req, res, next) {
                 assert.deepEqual(req.query["name"], ["baz", "quux"]);
                 res.status(200).write("ok").end();
@@ -139,7 +139,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Can get body", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res, next) {
                 res.status(200).write("ok").end();
             });
@@ -149,7 +149,7 @@ describe("HttpEndpoint", () => {
         });
 
         it("Can get headers", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.get("/", function (req, res, next) {
                 assert.equal(req.headers.customheader, "value");
                 res.status(200).write("ok").end();
@@ -162,7 +162,7 @@ describe("HttpEndpoint", () => {
 
     describe("#post()", () => {
         it ("Is post method", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.post("/", function (req, res, next) {
                 assert.equal(req.method, "POST");
                 res.status(200).write("ok").end();
@@ -173,7 +173,7 @@ describe("HttpEndpoint", () => {
         });
 
         it ("Can get post body", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.post("/", function (req, res, next) {
                 assert.equal(req.body.toString(), "body-content");
                 res.status(200).write("ok").end();
@@ -186,7 +186,7 @@ describe("HttpEndpoint", () => {
 
     describe("#delete()", () => {
         it ("Is delete method", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.delete("/", function (req, res, next) {
                 assert.equal(req.method, "DELETE");
                 res.status(200).write("ok").end();
@@ -199,7 +199,7 @@ describe("HttpEndpoint", () => {
 
     describe("#put()", () => {
         it ("Is put method", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.put("/", function (req, res, next) {
                 assert.equal(req.method, "PUT");
                 res.status(200).write("ok").end();
@@ -210,7 +210,7 @@ describe("HttpEndpoint", () => {
         });
 
         it ("Can get put body", async () => {
-            const app = new cloud.HttpEndpoint("" + uniqueId++);
+            const app = new cloud.API("" + uniqueId++);
             app.put("/", function (req, res, next) {
                 assert.equal(req.body.toString(), "body-content");
                 res.status(200).write("ok").end();

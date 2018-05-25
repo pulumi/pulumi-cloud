@@ -3,7 +3,7 @@
     "version": "0.1",
     "scripts": {
         "build": "tsc",
-        "test": "mocha bin/tests/httpEndpoint/httpEndpoint.js"
+        "test": "mocha bin/tests/api/api.js"
     },
     "dependencies": {
         "@pulumi/pulumi": "^0.12.0",
