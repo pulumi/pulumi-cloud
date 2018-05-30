@@ -19,16 +19,16 @@ import * as assertModule from "assert";
 import * as harnessModule from "./harness";
 
 import * as bucketTests from "./bucketTests";
-import * as httpEndpointTests from "./httpEndpointTests";
+import * as apiTests from "./apiTests";
 import * as tableTests from "./tableTests";
 import * as serviceTests from "./serviceTests";
 
-const endpoint = new cloud.HttpEndpoint("tests-unittests");
+const endpoint = new cloud.API("tests-unittests");
 
 const testFunctions = [
     bucketTests.runAllTests,
     tableTests.runAllTests,
-    httpEndpointTests.runAllTests,
+    apiTests.runAllTests,
     serviceTests.runAllTests,
 ];
 

@@ -138,7 +138,7 @@ export function exampleSalesforce3() {
 }
 
 export function exampleSendSESEmail() {
-    let api = new cloud.HttpEndpoint("sadsad");
+    let api = new cloud.API("sadsad");
     api.get("/", async (req, res) => {
         try {
             await sendSESEmail({

@@ -17,7 +17,8 @@ import { Output } from "@pulumi/pulumi";
 import { authMiddleware } from "./middleware";
 
 let todos = new cloud.Table("examples-todo");
-let api = new cloud.HttpEndpoint("examples-todo");
+// Note: Intentionally use the deprecated name for `cloud.API` to validate copmatibility.
+let api = new cloud.HttpEndpoint("examples-todo");  
 
 // Serve all files in the 'www' folder under '/'
 // 'index.html' will be automatically served as '/' as well as '/index.html'.

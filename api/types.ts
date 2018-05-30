@@ -16,7 +16,7 @@
 // typescript itself uses to determine the shape of this module.
 
 export * from "./bucket";
-export * from "./httpEndpoint";
+export * from "./api";
 export * from "./table";
 export * from "./topic";
 export * from "./service";

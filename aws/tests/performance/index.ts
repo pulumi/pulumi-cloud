@@ -51,7 +51,7 @@ const table = new cloud.Table("tests-table");
 // and the number of times to call it.
 const tests: {[name: string]: [(metrics: MetricsType, record: boolean) => Promise<number>, number]} = {
     tableTests: [testTablePerformance, /*repeat*/ 20],
-    httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
+    apiTests: [testAPIPerformance, /*repeat*/ 2],
 };
 
 // The topic we use to push all the tests we want to run to.  Each test will then run in its own
@@ -144,14 +144,14 @@ async function testTableGetPerformance(metrics: MetricsType, record: boolean) {
     });
 }
 
-async function testHttpEndpointPerformance(metrics: MetricsType, record: boolean) {
+async function testAPIPerformance(metrics: MetricsType, record: boolean) {
     // todo: actually provide http endpoint tests.
-    return await recordAndReportTime(metrics, record, "httpEndpoint-all", () => Promise.resolve());
+    return await recordAndReportTime(metrics, record, "api-all", () => Promise.resolve());
 }
 
 // Expose two endpoints for our test harness to interact with.  One to kick off the tests.
 // The other to poll to see if tests are complete.
-const endpoint = new cloud.HttpEndpoint("tests-performance");
+const endpoint = new cloud.API("tests-performance");
 
 endpoint.get("/start-performance-tests", async (req, res) => {
     try {

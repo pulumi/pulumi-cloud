@@ -1,5 +1,5 @@
 {
-    "name": "httpEndpointExample",
+    "name": "apiExample",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",

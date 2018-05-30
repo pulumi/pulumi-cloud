@@ -34,7 +34,7 @@ let hostedZoneId = "ZAH2GWTP2BEOU";
 let certficateArn = "arn:aws:acm:us-east-1:153052954103:certificate/2a5c225d-de86-4e08-8639-e3a843089c57";
 
 // Create an HTTP Endpoint.
-let endpoint = new awscloud.HttpEndpoint("endpoint");
+let endpoint = new awscloud.API("endpoint");
 endpoint.get("/", async (req, res) => {
     res.json(req);
 });
@@ -46,7 +46,7 @@ endpoint.attachCustomDomain({
 });
 let deployment = endpoint.publish();
 
-// Add a DNS CNAME record for the subdomain pointing to the HttpEndpoint custom domain. 
+// Add a DNS CNAME record for the subdomain pointing to the API custom domain. 
 let recordSet = new aws.route53.Record(subdomain, {
     name: subdomain,
     zoneId: hostedZoneId,

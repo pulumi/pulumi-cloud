@@ -23,7 +23,7 @@ let sites = new cloud.Topic<string>("examples-sites-to-process");
 let documents = new cloud.Table("examples-documents");
 
 // Front end API and console
-let frontEnd = new cloud.HttpEndpoint("examples-crawler-front-end");
+let frontEnd = new cloud.API("examples-crawler-front-end");
 frontEnd.post("/queue", async (req, res) => {
     let url = req.body.toString();
     console.log(`Pushing ${url} to processing queue`);

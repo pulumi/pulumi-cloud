@@ -61,7 +61,7 @@ function isCloudDomain(domain: Domain): domain is cloud.Domain {
     return (domain as cloud.Domain).certificateBody !== undefined;
 }
 
-export class HttpEndpoint implements cloud.HttpEndpoint {
+export class API implements cloud.API {
     private readonly name: string;
     private readonly staticRoutes: StaticRoute[];
     private readonly proxyRoutes: ProxyRoute[];
@@ -405,7 +405,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
                 routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
-        super("cloud:http:HttpEndpoint", name, {
+        super("cloud:http:API", name, {
             staticRoutes: staticRoutes,
             proxyRoutes: proxyRoutes,
             routes: routes,
@@ -950,4 +950,11 @@ function safeS3BucketName(apiName: string): string {
     return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
 }
 
-
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export type HttpEndpoint = API;
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export let HttpEndpoint = API; // tslint:disable-line
