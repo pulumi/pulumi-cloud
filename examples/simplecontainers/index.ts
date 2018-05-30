@@ -34,7 +34,7 @@ let multistageCachedNginx = new cloud.Service("examples-multistage-cached-nginx"
         nginx: {
             build: {
                 context: "./app",
-                dockerfile: "Dockerfile-multistage",
+                dockerfile: "./app/Dockerfile-multistage",
                 cacheFrom: {stages: ["build"]},
             },
             memory: 128,
