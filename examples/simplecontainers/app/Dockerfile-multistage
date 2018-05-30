@@ -1,0 +1,5 @@
+FROM alpine AS build
+COPY index.html /
+
+FROM nginx
+COPY --from=build /index.html /usr/share/nginx/html
