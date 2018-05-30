@@ -111,6 +111,17 @@ export interface Container {
 }
 
 /**
+ * CacheFrom may be used to specify build stages to use for the Docker build cache.
+ */
+export interface CacheFrom {
+    /**
+     * An optional list of build stages to use for caching. Each build stage in this list will be built explicitly and
+     * pushed to the target repository. A given stage's image will be tagged as "[stage-name]".
+     */
+    stages?: string[];
+}
+
+/**
  * ContainerBuild may be used to specify detailed instructions about how to build a container.
  */
 export interface ContainerBuild {
@@ -131,6 +142,11 @@ export interface ContainerBuild {
      * to pass built-time variables that can be accessed like environment variables inside the `RUN` instruction.
      */
     args?: {[key: string]: string};
+    /**
+     * An optional CacheFrom object with information about the images and/or build stages to use for the Docker build
+     * cache. This parameter maps to the --cache-from argument to the Docker CLI.
+     */
+    cacheFrom?: CacheFrom;
 }
 /**
  * ContainerPort represents the information about how to expose a container port on a [Service].
