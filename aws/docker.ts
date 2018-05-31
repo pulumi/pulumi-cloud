@@ -44,11 +44,11 @@ export function buildAndPushImage(
     logResource: pulumi.Resource,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
-    let registry: Registry | undefined;
+    let loggedIn = false;
     const login = async () => {
-        if (!registry) {
-            registry = await connectToRegistry();
-            await loginToRegistry(registry);
+        if (!loggedIn) {
+            loggedIn = true;
+            await loginToRegistry(await connectToRegistry());
         }
     };
 
@@ -59,7 +59,8 @@ export function buildAndPushImage(
         // to instead hang an apply off of the raw Input<>, we would never end up running the pull if the repository
         // had not yet been created.
         const repoUrl = (<any>pulumi.output(repositoryUrl)).promise();
-        cacheFrom = pullCacheAsync(imageName, container.build.cacheFrom, login, repoUrl);
+        const cacheFromParam = typeof container.build.cacheFrom === "boolean" ? {} : container.build.cacheFrom;
+        cacheFrom = pullCacheAsync(imageName, cacheFromParam, login, repoUrl);
     } else {
         cacheFrom = Promise.resolve(undefined);
     }
@@ -175,6 +176,37 @@ async function buildImageAsync(
         }
     }
 
+    // If the container build specified build stages to cache, build each in turn.
+    const stages = [];
+    if (build.cacheFrom && typeof build.cacheFrom !== "boolean" && build.cacheFrom.stages) {
+        for (const stage of build.cacheFrom.stages) {
+            await dockerBuild(localStageImageName(imageName, stage), build, cacheFrom, stage);
+            stages.push(stage);
+        }
+    }
+
+    // Invoke Docker CLI commands to build.
+    await dockerBuild(imageName, build, cacheFrom);
+
+    // Finally, inspect the image so we can return the SHA digest.
+    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
+    if (inspectResult.code || !inspectResult.stdout) {
+        throw new RunError(
+            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+    }
+
+    return {
+        digest: inspectResult.stdout.trim(),
+        stages: stages,
+    };
+}
+
+async function dockerBuild(
+    imageName: string,
+    build: cloud.ContainerBuild,
+    cacheFrom: Promise<string[] | undefined>,
+    target?: string): Promise<void> {
+
     // Prepare the build arguments.
     const buildArgs: string[] = [ "build" ];
     if (build.dockerfile) {
@@ -191,35 +223,9 @@ async function buildImageAsync(
             buildArgs.push(...[ "--cache-from", cacheFromImages.join() ]);
         }
     }
-    buildArgs.push(build.context); // push the docker build context onto the path.
+    buildArgs.push(build.context!); // push the docker build context onto the path.
 
-    // If the container build specified build stages to cache, build each in turn.
-    const stages = [];
-    if (build.cacheFrom && build.cacheFrom.stages) {
-        for (const stage of build.cacheFrom.stages) {
-            await dockerBuild(localStageImageName(imageName, stage), buildArgs, stage);
-            stages.push(stage);
-        }
-    }
-
-    // Invoke Docker CLI commands to build.
-    await dockerBuild(imageName, buildArgs);
-
-    // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
-    if (inspectResult.code || !inspectResult.stdout) {
-        throw new RunError(
-            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
-    }
-
-    return {
-        digest: inspectResult.stdout.trim(),
-        stages: stages,
-    };
-}
-
-async function dockerBuild(imageName: string, buildArgs: string[], target?: string): Promise<void> {
-    buildArgs = buildArgs.concat([ "-t", imageName ]); // tag the image with the chosen name.
+    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
     if (target) {
         buildArgs.push(...[ "--target", target ]);
     }

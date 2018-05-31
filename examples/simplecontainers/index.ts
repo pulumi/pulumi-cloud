@@ -20,7 +20,7 @@ let cachedNginx = new cloud.Service("examples-cached-nginx", {
         nginx: {
             build: {
                 context: "./app",
-                cacheFrom: {},
+                cacheFrom: true,
             },
             memory: 128,
             ports: [{port: 80, protocol: "http" }],
