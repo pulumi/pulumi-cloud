@@ -30,6 +30,11 @@ export interface Registry {
     password: string;
 }
 
+interface BuildResult {
+    digest: string;
+    stages: string[];
+}
+
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 export function buildAndPushImage(
@@ -39,26 +44,92 @@ export function buildAndPushImage(
     logResource: pulumi.Resource,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
+    let loggedIn = false;
+    const login = async () => {
+        if (!loggedIn) {
+            loggedIn = true;
+            await loginToRegistry(await connectToRegistry());
+        }
+    };
+
+    // If the container specified a cacheFrom parameter, first set up the cached stages.
+    let cacheFrom: Promise<string[] | undefined>;
+    if (typeof container.build !== "string" && container.build && container.build.cacheFrom) {
+        // NOTE: we pull the promise out of the repository URL s.t. we can observe whether or not it exists. Were we
+        // to instead hang an apply off of the raw Input<>, we would never end up running the pull if the repository
+        // had not yet been created.
+        const repoUrl = (<any>pulumi.output(repositoryUrl)).promise();
+        const cacheFromParam = typeof container.build.cacheFrom === "boolean" ? {} : container.build.cacheFrom;
+        cacheFrom = pullCacheAsync(imageName, cacheFromParam, login, repoUrl);
+    } else {
+        cacheFrom = Promise.resolve(undefined);
+    }
+
     // First build the image.
-    const imageDigest = buildImageAsync(imageName, container, logResource);
+    const buildResult = buildImageAsync(imageName, container, logResource, cacheFrom);
 
     // Then collect its output digest as well as the repo url and repo registry id.
-    const outputs = pulumi.all([imageDigest, repositoryUrl]);
+    const outputs = pulumi.all([buildResult, repositoryUrl]);
 
     // Use those then push the image.  Then just return the digest as the final result for our caller to use.
-    return outputs.apply(async ([digest, url]) => {
+    return outputs.apply(async ([result, url]) => {
         if (!pulumi.runtime.isDryRun()) {
             // Only push the image during an update, do not push during a preview, even if digest and url are available
             // from a previous update.
-            const registry = await connectToRegistry();
-            await pushImageAsync(imageName, url, registry);
+            await login();
+
+            // Push the final image first, then push the stage images to use for caching.
+            await pushImageAsync(imageName, url);
+
+            for (const stage of result.stages) {
+                await pushImageAsync(localStageImageName(imageName, stage), url, stage);
+            }
         }
-        return digest;
+        return result.digest;
     });
 }
 
+async function pullCacheAsync(
+    imageName: string,
+    cacheFrom: cloud.CacheFrom,
+    login: () => Promise<void>,
+    repositoryUrl: Promise<string>): Promise<string[] | undefined> {
+
+    // Ensure that we have a repository URL. If we don't, we won't be able to pull anything.
+    const repoUrl = await repositoryUrl;
+    if (!repoUrl) {
+        return undefined;
+    }
+
+    // Ensure that we're logged in to the source registry and attempt to pull each stage in turn.
+    await login();
+
+    const cacheFromImages = [];
+    const stages = (cacheFrom.stages || []).concat([""]);
+    for (const stage of stages) {
+        const tag = stage ? `:${stage}` : "";
+        const image = `${repoUrl}${tag}`;
+        const pullResult = await runCLICommand("docker", ["pull", image]);
+        if (pullResult.code) {
+            console.log(`Docker pull of build stage ${image} failed with exit code: ${pullResult.code}`);
+        } else {
+            cacheFromImages.push(image);
+        }
+    }
+
+    return cacheFromImages;
+}
+
+function localStageImageName(imageName: string, stage: string): string {
+    return `${imageName}-${stage}`;
+}
+
 async function buildImageAsync(
-        imageName: string, container: cloud.Container, logResource: pulumi.Resource): Promise<string> {
+    imageName: string,
+    container: cloud.Container,
+    logResource: pulumi.Resource,
+    cacheFrom: Promise<string[] | undefined>): Promise<BuildResult> {
+
     let build: cloud.ContainerBuild;
     if (typeof container.build === "string") {
         build = {
@@ -105,9 +176,39 @@ async function buildImageAsync(
         }
     }
 
+    // If the container build specified build stages to cache, build each in turn.
+    const stages = [];
+    if (build.cacheFrom && typeof build.cacheFrom !== "boolean" && build.cacheFrom.stages) {
+        for (const stage of build.cacheFrom.stages) {
+            await dockerBuild(localStageImageName(imageName, stage), build, cacheFrom, stage);
+            stages.push(stage);
+        }
+    }
+
+    // Invoke Docker CLI commands to build.
+    await dockerBuild(imageName, build, cacheFrom);
+
+    // Finally, inspect the image so we can return the SHA digest.
+    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
+    if (inspectResult.code || !inspectResult.stdout) {
+        throw new RunError(
+            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+    }
+
+    return {
+        digest: inspectResult.stdout.trim(),
+        stages: stages,
+    };
+}
+
+async function dockerBuild(
+    imageName: string,
+    build: cloud.ContainerBuild,
+    cacheFrom: Promise<string[] | undefined>,
+    target?: string): Promise<void> {
+
     // Prepare the build arguments.
     const buildArgs: string[] = [ "build" ];
-    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
     if (build.dockerfile) {
         buildArgs.push(...[ "-f", build.dockerfile ]); // add a custom Dockerfile location.
     }
@@ -116,28 +217,26 @@ async function buildImageAsync(
             buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
         }
     }
-    buildArgs.push(build.context); // push the docker build context onto the path.
+    if (build.cacheFrom) {
+        const cacheFromImages = await cacheFrom;
+        if (cacheFromImages) {
+            buildArgs.push(...[ "--cache-from", cacheFromImages.join() ]);
+        }
+    }
+    buildArgs.push(build.context!); // push the docker build context onto the path.
 
-    // Invoke Docker CLI commands to build and push.
+    buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
+    if (target) {
+        buildArgs.push(...[ "--target", target ]);
+    }
+
     const buildResult = await runCLICommand("docker", buildArgs);
     if (buildResult.code) {
         throw new RunError(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
-
-    // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
-    if (inspectResult.code || !inspectResult.stdout) {
-        throw new RunError(
-            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
-    }
-    return inspectResult.stdout.trim();
 }
 
-async function pushImageAsync(
-    imageName: string,
-    repositoryUrl: string,
-    registry: Registry) {
-
+async function loginToRegistry(registry: Registry) {
     const { registry: registryName, username, password } = registry;
 
     let loginResult: CommandResult;
@@ -151,16 +250,22 @@ async function pushImageAsync(
     if (loginResult.code) {
         throw new RunError(`Failed to login to Docker registry ${registryName}`);
     }
+}
 
+async function pushImageAsync(imageName: string, repositoryUrl: string, tag?: string) {
     // Tag and push the image to the remote repository.
     if (!repositoryUrl) {
         throw new RunError("Expected repository URL to be defined during push");
     }
-    const tagResult = await runCLICommand("docker", ["tag", imageName, repositoryUrl]);
+
+    tag = tag ? `:${tag}` : "";
+    const targetImage = `${repositoryUrl}${tag}`;
+
+    const tagResult = await runCLICommand("docker", ["tag", imageName, targetImage]);
     if (tagResult.code) {
         throw new RunError(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
     }
-    const pushResult = await runCLICommand("docker", ["push", repositoryUrl]);
+    const pushResult = await runCLICommand("docker", ["push", targetImage]);
     if (pushResult.code) {
         throw new RunError(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
     }

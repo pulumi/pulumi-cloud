@@ -29,6 +29,35 @@ let nginx = new cloud.Service("examples-nginx", {
 
 export let nginxEndpoint: Output<cloud.Endpoint> = nginx.defaultEndpoint;
 
+let cachedNginx = new cloud.Service("examples-cached-nginx", {
+    containers: {
+        nginx: {
+            build: {
+                context: "./app",
+                cacheFrom: true,
+            },
+            memory: 128,
+            ports: [{port: 80, protocol: "http" }],
+        },
+    },
+    replicas: 2,
+});
+
+let multistageCachedNginx = new cloud.Service("examples-multistage-cached-nginx", {
+    containers: {
+        nginx: {
+            build: {
+                context: "./app",
+                dockerfile: "./app/Dockerfile-multistage",
+                cacheFrom: {stages: ["build"]},
+            },
+            memory: 128,
+            ports: [{port: 80, protocol: "http" }],
+        },
+    },
+    replicas: 2,
+});
+
 let customWebServer = new cloud.Service("mycustomservice", {
     containers: {
         webserver: {
