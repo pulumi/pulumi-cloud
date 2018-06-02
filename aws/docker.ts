@@ -44,12 +44,13 @@ export function buildAndPushImage(
     logResource: pulumi.Resource,
     connectToRegistry: () => Promise<Registry>): pulumi.Output<string> {
 
-    let loggedIn = false;
-    const login = async () => {
+    let loggedIn: Promise<void> | undefined;
+    const login = () => {
         if (!loggedIn) {
-            loggedIn = true;
-            await loginToRegistry(await connectToRegistry());
+            console.log("logging in to registry...");
+            loggedIn = connectToRegistry().then(r => loginToRegistry(r));
         }
+        return loggedIn;
     };
 
     // If the container specified a cacheFrom parameter, first set up the cached stages.
@@ -60,7 +61,7 @@ export function buildAndPushImage(
         // had not yet been created.
         const repoUrl = (<any>pulumi.output(repositoryUrl)).promise();
         const cacheFromParam = typeof container.build.cacheFrom === "boolean" ? {} : container.build.cacheFrom;
-        cacheFrom = pullCacheAsync(imageName, cacheFromParam, login, repoUrl);
+        cacheFrom = pullCacheAsync(imageName, cacheFromParam, login, repoUrl, logResource);
     } else {
         cacheFrom = Promise.resolve(undefined);
     }
@@ -93,13 +94,16 @@ async function pullCacheAsync(
     imageName: string,
     cacheFrom: cloud.CacheFrom,
     login: () => Promise<void>,
-    repositoryUrl: Promise<string>): Promise<string[] | undefined> {
+    repositoryUrl: Promise<string>,
+    logResource: pulumi.Resource): Promise<string[] | undefined> {
 
     // Ensure that we have a repository URL. If we don't, we won't be able to pull anything.
     const repoUrl = await repositoryUrl;
     if (!repoUrl) {
         return undefined;
     }
+
+    pulumi.log.debug(`pulling cache for ${imageName} from ${repoUrl}`, logResource);
 
     // Ensure that we're logged in to the source registry and attempt to pull each stage in turn.
     await login();
