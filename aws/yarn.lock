@@ -52,11 +52,11 @@
     "@pulumi/aws" "^0.13.0"
     "@pulumi/pulumi" "^0.12.2"
 
-"@pulumi/aws@=0.13.1-dev-1528221408-g36d2f13":
-  version "0.13.1-dev-1528221408-g36d2f13"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.13.1-dev-1528221408-g36d2f13.tgz#253f7692de0c822df225f25831b58d0ff5870b5a"
+"@pulumi/aws@=0.13.1-dev-1528227220-ga5c628e":
+  version "0.13.1-dev-1528227220-ga5c628e"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.13.1-dev-1528227220-ga5c628e.tgz#4e878c1cbeaa25f30a6b671eba204bcc946b49db"
   dependencies:
-    "@pulumi/pulumi" "^0.12.2"
+    "@pulumi/pulumi" "^0.12.3"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
