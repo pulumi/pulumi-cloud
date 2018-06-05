@@ -346,6 +346,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges: true,
 			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
 		},
 		{
