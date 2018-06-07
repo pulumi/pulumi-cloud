@@ -157,7 +157,7 @@ export interface CloudCluster {
     readonly ecsClusterARN: pulumi.Output<string>;
     readonly securityGroupId?: pulumi.Output<string>;
     readonly efsMountPath?: string;
-    readonly autoScalingGroupStack?: pulumi.Resource;
+    readonly autoScalingGroupStack?: any;
 }
 
 // The cluster to use for container compute or undefined if containers are unsupported.
