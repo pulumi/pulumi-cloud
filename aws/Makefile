@@ -8,11 +8,15 @@ export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 TESTPARALLELISM := 20
 
-build::
+build:: docs
 	yarn link @pulumi/cloud
 	tsc
 	sed -e 's/\$${VERSION}/$(VERSION)/g' < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/
+
+docs::
+	node_modules/.bin/typedoc --json \
+		bin/docs.json --mode modules --includeDeclarations --excludeExternals --excludeNotExported
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
