@@ -55,8 +55,9 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "/tests/performance"),
 			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
+				"aws:region":                        region,
+				"cloud:provider":                    "aws",
+				"cloud-aws:functionIncludePackages": "datadog-metrics",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
