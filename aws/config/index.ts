@@ -29,6 +29,26 @@ if (functionMemorySize % 64 !== 0 || functionMemorySize < 128 || functionMemoryS
     throw new RunError("Lambda memory size in MiB must be a multiple of 64 between 128 and 1536.");
 }
 
+const functionIncludePathsString = config.get("functionIncludePaths");
+/**
+ * Comma-seperated list of additional paths (relative to the project root) to include in Lambda zip uploads for
+ * JavaScript callbacks.  E.g "./img.png,app/".
+ */
+export let functionIncludePaths: string[] | undefined = undefined;
+if (functionIncludePathsString) {
+    functionIncludePaths = functionIncludePathsString.split(",");
+}
+
+const functionIncludePackagesString = config.get("functionIncludePackages");
+/**
+ * Comma-seperated list of additional packages (relative to the project root) to include in Lambda zip uploads for
+ * JavaScript callbacks.  E.g "body-parser,typescript".
+ */
+export let functionIncludePackages: string[] | undefined = undefined;
+if (functionIncludePackagesString) {
+    functionIncludePackages = functionIncludePackagesString.split(",");
+}
+
 /**
  * Set the IAM role policies to apply to compute (both Lambda and ECS) within this Pulumi program. The default is:
  * "arn:aws:iam::aws:policy/AWSLambdaFullAccess,arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess".

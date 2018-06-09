@@ -55,8 +55,9 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "/tests/performance"),
 			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
+				"aws:region":                        region,
+				"cloud:provider":                    "aws",
+				"cloud-aws:functionIncludePackages": "datadog-metrics",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
@@ -64,7 +65,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output property of type string")
@@ -132,7 +133,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 		},
 		{
 			Dir: path.Join(cwd, "../examples/countdown"),
@@ -147,7 +148,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
 				time.Sleep(6 * time.Minute)
@@ -179,7 +180,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output property of type string")
@@ -257,7 +258,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 		},
 		{
 			Dir: path.Join(cwd, "../examples/api"),
@@ -271,7 +272,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output string property")
@@ -314,7 +315,7 @@ func Test_Examples(t *testing.T) {
 			},
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
-			AllowEmptyUpdateChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				hitUnitTestsEndpoint(t, stackInfo)
 			},

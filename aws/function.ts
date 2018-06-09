@@ -15,7 +15,7 @@
 import * as aws from "@pulumi/aws";
 import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
-import { functionMemorySize } from "./config";
+import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -35,6 +35,8 @@ export class Function extends pulumi.ComponentResource {
         const options: aws.serverless.FunctionOptions = {
             policies: [...getComputeIAMRolePolicies()],
             memorySize: functionMemorySize,
+            includePaths: functionIncludePaths,
+            includePackages: functionIncludePackages,
         };
         if (runLambdaInVPC) {
             const network = getOrCreateNetwork();
