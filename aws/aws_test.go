@@ -66,7 +66,6 @@ func Test_Examples(t *testing.T) {
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
 			AllowEmptyUpdateChanges:  true,
-			Verbose:                  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output property of type string")
@@ -150,9 +149,6 @@ func Test_Examples(t *testing.T) {
 			// #494: lambda tests are unexpectedly proposing and performing code changes
 			AllowEmptyPreviewChanges: true,
 			AllowEmptyUpdateChanges:  true,
-			Verbose:                  true,
-			DebugUpdates:             true,
-			DebugLogLevel:            9,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
 				time.Sleep(6 * time.Minute)
