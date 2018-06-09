@@ -1,4 +1,16 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
@@ -49,7 +61,7 @@ function isCloudDomain(domain: Domain): domain is cloud.Domain {
     return (domain as cloud.Domain).certificateBody !== undefined;
 }
 
-export class HttpEndpoint implements cloud.HttpEndpoint {
+export class API implements cloud.API {
     private readonly name: string;
     private readonly staticRoutes: StaticRoute[];
     private readonly proxyRoutes: ProxyRoute[];
@@ -393,7 +405,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
                 routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
-        super("cloud:http:HttpEndpoint", name, {
+        super("cloud:http:API", name, {
             staticRoutes: staticRoutes,
             proxyRoutes: proxyRoutes,
             routes: routes,
@@ -938,4 +950,11 @@ function safeS3BucketName(apiName: string): string {
     return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
 }
 
-
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export type HttpEndpoint = API;
+/**
+ * @deprecated HttpEndpoint has been renamed to API
+ */
+export let HttpEndpoint = API; // tslint:disable-line

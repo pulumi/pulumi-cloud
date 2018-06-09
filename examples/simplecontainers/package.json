@@ -1,5 +1,5 @@
 {
-    "name": "httpEndpointExample",
+    "name": "simplecontainers",
     "version": "0.1",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -7,11 +7,10 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.12.2"
+        "@pulumi/pulumi": "^0.12.3"
     },
     "devDependencies": {
-        "@types/node": "^8.0.26",
-        "typescript": "^2.1.4"
+        "@types/node": "^8.0.27"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",

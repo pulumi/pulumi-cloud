@@ -1,9 +1,21 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as aws from "@pulumi/aws";
 import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
-import { functionMemorySize } from "./config";
+import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
 export { Context, Handler } from "@pulumi/aws/serverless";
@@ -23,6 +35,8 @@ export class Function extends pulumi.ComponentResource {
         const options: aws.serverless.FunctionOptions = {
             policies: [...getComputeIAMRolePolicies()],
             memorySize: functionMemorySize,
+            includePaths: functionIncludePaths,
+            includePackages: functionIncludePackages,
         };
         if (runLambdaInVPC) {
             const network = getOrCreateNetwork();

@@ -16,7 +16,7 @@
     },
     "files": [
         "index.ts",
-        "httpEndpoint.ts",
+        "api.ts",
         "function.ts",
         "sns.ts",
         "table.ts",

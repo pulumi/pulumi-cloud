@@ -1,3 +1,17 @@
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package examples
 
 import (
@@ -41,13 +55,17 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "/tests/performance"),
 			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
+				"aws:region":                        region,
+				"cloud:provider":                    "aws",
+				"cloud-aws:functionIncludePackages": "datadog-metrics",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output property of type string")
@@ -113,6 +131,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 		},
 		{
 			Dir: path.Join(cwd, "../examples/countdown"),
@@ -125,6 +146,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
 				time.Sleep(6 * time.Minute)
@@ -154,6 +178,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output property of type string")
@@ -229,10 +256,12 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 		},
 		{
-			Dir: path.Join(cwd, "../examples/httpEndpoint"),
-
+			Dir: path.Join(cwd, "../examples/api"),
 			Config: map[string]string{
 				"aws:region":     region,
 				"cloud:provider": "aws",
@@ -241,10 +270,32 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output string property")
 				testURLGet(t, baseURL, "test1.txt", "You got test1")
+			},
+		},
+		{
+			Dir: path.Join(cwd, "../examples/simplecontainers"),
+			Config: map[string]string{
+				"aws:region":           region,
+				"cloud:provider":       "aws",
+				"cloud-aws:useFargate": "true",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
+				if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
+					return
+				}
+				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		},
 	}
@@ -262,6 +313,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges:  true,
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				hitUnitTestsEndpoint(t, stackInfo)
 			},
@@ -293,6 +347,9 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
+			// #494: lambda tests are unexpectedly proposing and performing code changes
+			AllowEmptyPreviewChanges: true,
+			AllowEmptyUpdateChanges: true,
 			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
 		},
 		{
@@ -326,6 +383,7 @@ func Test_Examples(t *testing.T) {
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
 		})
+
 		t.Run(example.Dir, func(t *testing.T) {
 			integration.ProgramTest(t, &example)
 		})

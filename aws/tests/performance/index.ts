@@ -1,4 +1,16 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as cloud from "@pulumi/cloud";
 import { Output } from "@pulumi/pulumi";
@@ -39,7 +51,7 @@ const table = new cloud.Table("tests-table");
 // and the number of times to call it.
 const tests: {[name: string]: [(metrics: MetricsType, record: boolean) => Promise<number>, number]} = {
     tableTests: [testTablePerformance, /*repeat*/ 20],
-    httpEndpointTests: [testHttpEndpointPerformance, /*repeat*/ 2],
+    apiTests: [testAPIPerformance, /*repeat*/ 2],
 };
 
 // The topic we use to push all the tests we want to run to.  Each test will then run in its own
@@ -132,14 +144,14 @@ async function testTableGetPerformance(metrics: MetricsType, record: boolean) {
     });
 }
 
-async function testHttpEndpointPerformance(metrics: MetricsType, record: boolean) {
+async function testAPIPerformance(metrics: MetricsType, record: boolean) {
     // todo: actually provide http endpoint tests.
-    return await recordAndReportTime(metrics, record, "httpEndpoint-all", () => Promise.resolve());
+    return await recordAndReportTime(metrics, record, "api-all", () => Promise.resolve());
 }
 
 // Expose two endpoints for our test harness to interact with.  One to kick off the tests.
 // The other to poll to see if tests are complete.
-const endpoint = new cloud.HttpEndpoint("tests-performance");
+const endpoint = new cloud.API("tests-performance");
 
 endpoint.get("/start-performance-tests", async (req, res) => {
     try {

@@ -1,4 +1,16 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as cloud from "@pulumi/cloud";
 
@@ -12,7 +24,7 @@ export type TestArgs = {
     supertest: typeof supertestModule,
 };
 
-const endpoint = new cloud.HttpEndpoint("tests-endpoint");
+const endpoint = new cloud.API("tests-endpoint");
 
 namespace getApiTests {
     endpoint.get("/get1", async (req, res) => {
@@ -215,11 +227,11 @@ const deployment = endpoint.publish();
 
 export async function runAllTests(args: TestArgs, result: any): Promise<boolean> {
     return await args.harness.testModule(args, result, {
-        ["httpEndpointTests.getApiTests"]: getApiTests,
-        ["httpEndpointTests.deleteApiTests"]: deleteApiTests,
-        ["httpEndpointTests.postApiTests"]: postApiTests,
-        ["httpEndpointTests.staticApiTests"]: staticApiTests,
-        ["httpEndpointTests.proxyApiTests"]: proxyApiTests,
-        ["httpEndpointTests.updateProgramTests"]: updateProgramTests,
+        ["apiTests.getApiTests"]: getApiTests,
+        ["apiTests.deleteApiTests"]: deleteApiTests,
+        ["apiTests.postApiTests"]: postApiTests,
+        ["apiTests.staticApiTests"]: staticApiTests,
+        ["apiTests.proxyApiTests"]: proxyApiTests,
+        ["apiTests.updateProgramTests"]: updateProgramTests,
     });
 }

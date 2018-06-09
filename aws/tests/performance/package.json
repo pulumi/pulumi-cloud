@@ -7,15 +7,14 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.12.2"
+        "datadog-metrics": "^0.6.1",
+        "@pulumi/pulumi": "^0.12.3"
     },
     "devDependencies": {
         "@types/datadog-metrics": "^0.4.0",
         "@types/debug": "^0.0.30",
-        "@types/node": "^8.0.26",
-        "datadog-metrics": "^0.6.1",
-        "debug": "^3.1.0",
-        "typescript": "^2.1.4"
+        "typescript": "^2.1.4",
+        "debug": "^3.1.0"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest"

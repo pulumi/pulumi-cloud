@@ -1,4 +1,16 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
 
@@ -89,6 +101,25 @@ export interface Container {
      * https://docs.docker.com/engine/reference/builder/#cmd.
      */
     command?: pulumi.Input<string[]>;
+    /**
+     * A key/value map of labels to add to the container. This parameter maps to Labels in the [Create a
+     * container](https://docs.docker.com/engine/api/v1.27/#operation/ContainerCreate) section of the [Docker Remote
+     * API](https://docs.docker.com/engine/api/v1.27/) and the --label option to [docker
+     * run](https://docs.docker.com/engine/reference/run/).
+     */
+    dockerLabels?: pulumi.Input<{[name: string]: string}>;
+}
+
+/**
+ * CacheFrom may be used to specify build stages to use for the Docker build cache. The final image is always
+ * implicitly included.
+ */
+export interface CacheFrom {
+    /**
+     * An optional list of build stages to use for caching. Each build stage in this list will be built explicitly and
+     * pushed to the target repository. A given stage's image will be tagged as "[stage-name]".
+     */
+    stages?: string[];
 }
 
 /**
@@ -112,6 +143,13 @@ export interface ContainerBuild {
      * to pass built-time variables that can be accessed like environment variables inside the `RUN` instruction.
      */
     args?: {[key: string]: string};
+    /**
+     * An optional CacheFrom object with information about the build stages to use for the Docker build cache.
+     * This parameter maps to the --cache-from argument to the Docker CLI. If this parameter is `true`, only the final
+     * image will be pulled and passed to --cache-from; if it is a CacheFrom object, the stages named therein will
+     * also be pulled and passed to --cache-from.
+     */
+    cacheFrom?: boolean | CacheFrom;
 }
 /**
  * ContainerPort represents the information about how to expose a container port on a [Service].

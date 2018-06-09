@@ -1,4 +1,16 @@
-// Copyright 2016-2017, Pulumi Corporation.  All rights reserved.
+// Copyright 2016-2018, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import * as aws from "@pulumi/aws";
 import * as awsinfra from "@pulumi/aws-infra";
@@ -339,9 +351,9 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            // tslint:disable-next-line:max-line-length
-            return pulumi.all([imageOptions, container.command, container.memory, container.memoryReservation, logGroup.id])
-                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId]) => {
+            return pulumi.all([imageOptions, container.command, container.memory,
+                               container.memoryReservation, logGroup.id, container.dockerLabels])
+                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOpts.environment)) {
                     keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
@@ -367,6 +379,7 @@ function computeContainerDefinitions(
                             "awslogs-stream-prefix": containerName,
                         },
                     },
+                    dockerLabels: dockerLabels,
                 };
                 return containerDefinition;
             });
