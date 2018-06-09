@@ -58,9 +58,9 @@
   dependencies:
     "@pulumi/pulumi" "^0.12.2"
 
-"@pulumi/aws@^0.13.1-rc3":
-  version "0.13.1-rc3"
-  resolved "https://npmjs.pulumi.com/@pulumi%2faws/-/aws-0.13.1-rc3.tgz#405787eb8a4c4c236abfaa91f6c1ceb045c3ae3f"
+"@pulumi/aws@^0.13.1-rc4":
+  version "0.13.1-rc4"
+  resolved "https://npmjs.pulumi.com/@pulumi%2faws/-/aws-0.13.1-rc4.tgz#59e5d0e4dad3c722deacc516bfd50313fa190082"
   dependencies:
     "@pulumi/pulumi" "^0.12.3"
     builtin-modules "3.0.0"
