@@ -45,29 +45,23 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/aws-infra@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.13.0.tgz#166263049bb817a17a790fad86a1b76ae5df429b"
+"@pulumi/aws-infra@^0.13.2":
+  version "0.13.2"
+  resolved "https://npmjs.pulumi.com/@pulumi%2faws-infra/-/aws-infra-0.13.2.tgz#4135552943daddff3e41ddfb20fee58061c3c200"
   dependencies:
-    "@pulumi/aws" "^0.13.0"
-    "@pulumi/pulumi" "^0.12.2"
+    "@pulumi/aws" "^0.13.1"
+    "@pulumi/pulumi" "^0.12.3"
 
-"@pulumi/aws@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.13.0.tgz#b55467f01c6c2ce81290d5a4bdf811c6513c8346"
-  dependencies:
-    "@pulumi/pulumi" "^0.12.2"
-
-"@pulumi/aws@^0.13.1-rc4":
-  version "0.13.1-rc4"
-  resolved "https://npmjs.pulumi.com/@pulumi%2faws/-/aws-0.13.1-rc4.tgz#59e5d0e4dad3c722deacc516bfd50313fa190082"
+"@pulumi/aws@^0.13.1":
+  version "0.13.1"
+  resolved "https://npmjs.pulumi.com/@pulumi%2faws/-/aws-0.13.1.tgz#5e72d9eea2085cf1fe173b4abb8db85953bfb46c"
   dependencies:
     "@pulumi/pulumi" "^0.12.3"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
-"@pulumi/pulumi@^0.12.2", "@pulumi/pulumi@^0.12.3":
+"@pulumi/pulumi@^0.12.3":
   version "0.12.3"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.12.3.tgz#d05058346a655a7ad541546b1e65c809d13da395"
   dependencies:
