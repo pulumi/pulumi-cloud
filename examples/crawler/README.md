@@ -1,3 +1,3 @@
 # examples/crawler
 
-A simple web crawler appplication.
+A simple web crawler application.
