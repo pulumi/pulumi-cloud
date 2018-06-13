@@ -1,3 +1,3 @@
 # examples/todo
 
-A simple Todo appplication.
+A simple Todo application.
