@@ -7,7 +7,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.12.3",
+        "@pulumi/pulumi": "^0.14.0-rc1",
         "cheerio": "^1.0.0-rc.2",
         "node-fetch": "^1.7.3"
     },
