@@ -31,6 +31,6 @@ to expose services over http), and so on and so forth.
 
 `aws` then supplies an implementation of those abstractions, built on top of the `@pulumi/aws`
 library.  At deployment time and cloud application runtime, a Pulumi program can utilize this
-implementation the `API` by referencing the NPM module `@pulumi/cloud-aws`.  This package should
-only be referenced in a package.json file and should not be used directly in code.  Instead, only
-`@pulumi/cloud` should be referenced by the actual JavaScript or TypeScript code.
+implementation the `API` by referencing the NPM module `@pulumi/cloud-aws`.
+
+For more details see the examples in `examples`, or online at: https://docs.pulumi.com/quickstart/
