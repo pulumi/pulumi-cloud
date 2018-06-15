@@ -2,35 +2,80 @@
 
 # Pulumi Cloud Framework
 
-Pulumi's framework for building modern cloud applications.
+Pulumi's multi-cloud framework for building modern container and serverless cloud applications.
 
-Install using: ```npm install @pulumi/cloud``` and ```npm install @pulumi/cloud-aws```.
+## Installing
 
-The Pulumi Cloud Framework is in-progress.  It provides abstractions that can allow one to write a
-cloud-application on many different cloud providers (i.e. Amazon Web Services (AWS), Azure, Google Cloud Platform (GCP)), using a common api.
-Because these abstractions allow one to operate over different cloud platforms in a consistent
-manner, low level functionality and capabilities of the individual platforms are intentionally not
-exposed.
+This package is available for Node.js (JavaScript or TypeScript).
 
-To target a specific platform with the highest amount of functionality and fidelity, please use
-appropriate Pulumi platform framework.  For example: http://github.com/pulumi/pulumi-aws or
-http://github.com/pulumi/pulumi-azure.  These frameworks will give access to the full power of those
-platforms, but will in turn create applications specific to them.
+To install the core API package, use either `npm`:
 
-# Components
+    $ npm install @pulumi/cloud
 
-Currently, Pulumi Cloud has two primary components:
+or `yarn`:
 
-1. `api` defines the cloud abstractions critical to producing a multi-cloud application
-2. `aws` implements these abstractions for targeting AWS
+    $ yarn add @pulumi/cloud
 
-`api` can be used by any Pulumi application by referencing the NPM module `@pulumi/cloud`. It
-defines the cloud abstractions felt to be critical to producing a cloud application.  This includes
-systems like `Table` and `Bucket` (abstractions to store and retrieve data), `API` (an abstraction
-to expose services over http), and so on and so forth.
+Note that there are implementation packages for each major cloud provider that you will need also.
 
-`aws` then supplies an implementation of those abstractions, built on top of the `@pulumi/aws`
-library.  At deployment time and cloud application runtime, a Pulumi program can utilize this
-implementation the `API` by referencing the NPM module `@pulumi/cloud-aws`.
+For AWS, install the package using either `npm`:
+
+    $ npm install @pulumi/cloud-aws
+
+or `yarn`:
+
+    $ yarn add @pulumi/cloud-aws
+
+> **Note:** At the moment, only Amazon Web Services (AWS) support is available.  We are hard at work on other
+> cloud providers, so please stay tuned!
+
+## Concepts
+
+The Pulumi Cloud Framework is in preview.  It provides abstractions that can allow one to write a cloud-application on
+many different cloud providers (i.e. Amazon Web Services (AWS), Azure, Google Cloud Platform (GCP)), using a common API.
+
+There is an abstraction package, `@pulumi/cloud`, that defines the APIs common to all cloud providers.  This provides a
+highly productive view on modern cloud architectures, akin to Java or .NET's approach to operating systems.  Because
+these abstractions allow one to operate over different cloud platforms in a consistent manner, low level functionality
+and capabilities of the individual platforms are intentionally not exposed.
+
+There are implementation packages for individual cloud providers, such as `@pulumi/cloud-aws`, which first and foremost
+implement those APIs for the target cloud in question, but also offer more specific functionality in the form of derived
+classes that provide cloud-specific functionality.  This allows you to mix multi-cloud code with cloud-specific logic.
+
+Note that you are free, of course, to intersperse these abstractions with specific resources in your cloud
+platform of choice, using the appropriate Pulumi platform framework.  This delivers the highest fidelity possible.
+For example, [pulumi/pulumi-aws](http://github.com/pulumi/pulumi-aws) or
+[pulumi/pulumi-azure](http://github.com/pulumi/pulumi-azure).  These frameworks will give access to the full power of
+those platforms, but will in turn create applications specific to them.
+
+### Packages
+
+Currently, Pulumi Cloud contains two primary packages: `api` and `aws`.
+
+[`@pulumi/cloud`](https://github.com/pulumi/pulumi-cloud/tree/master/api) defines the cloud abstractions common to
+building modern cloud applications, and can be used by any Pulumi application directly for cloud-neutral logic.  For
+example, the `Service` type expresses a load balanced container, `API` exposes simple serverless functions over HTTP,
+and `timer` allows you to schedule timers.  All serverless functions are expressed using lambdas in your language of
+choice.  The package also offers simple data abstractions, systems like `Table` and `Bucket`.
+
+[`@pulumi/aws`](https://github.com/pulumi/pulumi-cloud/tree/master/api) supplies an implementation of those
+abstractions, built on top of the `@pulumi/aws` library.  Its implementation types offer more AWS-specific functionality
+than is available in the `@pulumi/cloud` package.
+
+To use either, simply reference them in the usual NPM style in your program.  You may decide to code against either the
+APIs or the implementation types, depending on the style of code you're writing and functionality you need.
+
+If you code against `@pulumi/cloud` directly, you will need to configure your program before running `pulumi update`.
+This can be done simply by running the `pulumi config set` command; for instance, to select `aws`, you will run:
+
+    $ pulumi config set cloud:provider aws
 
 For more details see the examples in `examples`, or online at: https://docs.pulumi.com/quickstart/
+
+## Reference¬
+
+For detailed reference documentation, please visit the API docs site for the package in question:
+
+* [@pulumi/cloud-aws](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud/index.html)
+* [@pulumi/cloud-aws](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud-aws/index.html)
