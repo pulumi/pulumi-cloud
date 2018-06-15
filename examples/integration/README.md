@@ -1,6 +1,6 @@
 # examples/integration
 
-A simple SaaS integation example.
+A simple SaaS integration example.
 
 Configuration required:
 

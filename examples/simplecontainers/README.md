@@ -1,3 +1,3 @@
 # examples/simplecontainers
 
-A simpler containers demo appplication.
+A simpler containers demo application.

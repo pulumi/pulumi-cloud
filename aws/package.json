@@ -1,13 +1,14 @@
 {
     "name": "@pulumi/cloud-aws",
     "version": "${VERSION}",
+    "license": "Apache 2.0",
     "description": "An implementation of the Pulumi Framework for targeting Amazon Web Services (AWS).",
     "keywords": [
         "pulumi",
         "cloud",
         "aws"
     ],
-    "homepage": "https://pulumi.io/cloud-aws",
+    "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/aws": "^0.14.0-rc1",
