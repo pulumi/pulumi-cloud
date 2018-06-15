@@ -1,6 +1,6 @@
 [[override]]
   name = "github.com/pulumi/pulumi"
-  version = "v0.14.0-rc1"
+  version = "v0.14.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
