@@ -73,7 +73,7 @@ This can be done simply by running the `pulumi config set` command; for instance
 
 For more details see the examples in `examples`, or online at: https://docs.pulumi.com/quickstart/
 
-## Reference¬
+## Reference
 
 For detailed reference documentation, please visit the API docs site for the package in question:
 
