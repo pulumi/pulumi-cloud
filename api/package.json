@@ -2,11 +2,12 @@
     "name": "@pulumi/cloud",
     "version": "${VERSION}",
     "description": "A highly productive, cloud neutral programming model.",
+    "license": "Apache 2.0",
     "keywords": [
         "pulumi",
         "cloud"
     ],
-    "homepage": "https://pulumi.io/cloud",
+    "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "types": "types.d.ts",
     "dependencies": {
