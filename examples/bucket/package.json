@@ -1,0 +1,24 @@
+{
+    "name": "crawler",
+    "version": "0.1",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "latest",
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-aws": "latest",
+        "cheerio": "^1.0.0-rc.2",
+        "node-fetch": "^1.7.3"
+    },
+    "devDependencies": {
+        "@types/cheerio": "^0.22.2",
+        "@types/node": "^8.0.27",
+        "@types/node-fetch": "^1.6.7",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+    }
+}
