@@ -48,6 +48,7 @@ export interface Route {
 }
 
 // AWSDomain represents a domain with an SSL/TLS certificate available in AWS.
+// The certificate must be in the us-east-1 region.
 export interface AWSDomain {
     domainName: string;
     certificateArn: pulumi.Input<string>;
