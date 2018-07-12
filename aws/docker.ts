@@ -324,7 +324,10 @@ async function runCLICommand(
     // different downstream dependencies depend on different versions of us).  By being random we
     // effectively make it completely unlikely that any two cli outputs could map to the same stream
     // id.
-    const streamID = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+    //
+    // Pick a reasonably distributed number between 0 and 2^30.  This will fit as an int32
+    // which the grpc layer needs.
+    const streamID = Math.floor(Math.random() * (1 << 30));
 
     return new Promise<CommandResult>((resolve, reject) => {
         const p = child_process.spawn(cmd, args);
