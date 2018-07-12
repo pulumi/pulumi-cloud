@@ -304,8 +304,6 @@ interface CommandResult {
     stdout?: string;
 }
 
-let cliStreamID = -1;
-
 // Runs a CLI command in a child process, returning a promise for the process's exit.
 // Both stdout and stderr are redirected to process.stdout and process.stder by default.
 // If the [returnStdout] argument is `true`, stdout is not redirected and is instead returned with the promise.
@@ -316,7 +314,17 @@ async function runCLICommand(
     resource: pulumi.Resource,
     stdin?: string): Promise<CommandResult> {
 
-    const streamID = cliStreamID--;
+    // Generate a unique stream-ID that we'll associate all the docker output with. This will allow
+    // each spawned CLI command's output to associated with 'resource' and also streamed to the UI
+    // in pieces so that it can be displayed live.  The stream-ID is so that the UI knows these
+    // messages are all related and should be considered as one large message (just one that was
+    // sent over in chunks).
+    //
+    // We use Math.random here in case our package is loaded multiple times in memory (i.e. because
+    // different downstream dependencies depend on different versions of us).  By being random we
+    // effectively make it completely unlikely that any two cli outputs could map to the same stream
+    // id.
+    const streamID = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
 
     return new Promise<CommandResult>((resolve, reject) => {
         const p = child_process.spawn(cmd, args);
