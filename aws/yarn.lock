@@ -73,9 +73,9 @@
     source-map-support "^0.4.16"
     typescript "^2.5.2"
 
-"@pulumi/pulumi@^0.14.3-dev-1531359233-gd79dbdce":
-  version "0.14.3-dev-1531359233-gd79dbdce"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.3-dev-1531359233-gd79dbdce.tgz#488c1f454de48d93862189cbe21b2c07187dd32d"
+"@pulumi/pulumi@^0.14.3":
+  version "0.14.3"
+  resolved "https://npmjs.pulumi.com/@pulumi%2fpulumi/-/pulumi-0.14.3.tgz#dc2f26d18814a12488574d56b0dc5251673c41df"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
