@@ -5,8 +5,7 @@ go: 1.9
 sudo: true # give us 7.5GB and >2 bursted cores.
 before_install:
     - export PULUMI_ROOT=/opt/pulumi
-    - if [ "${TRAVIS_SECURE_ENV_VARS:-}" = "true" ]; then git clone git@github.com:pulumi/home ${GOPATH}/src/github.com/pulumi/home; fi
-    - git clone git@github.com:pulumi/scripts ${GOPATH}/src/github.com/pulumi/scripts
+    - git clone https://github.com/pulumi/scripts ${GOPATH}/src/github.com/pulumi/scripts
     # Install Docker 17.09.
     - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -16,20 +15,20 @@ before_install:
     # Travis only fetches 50 commits by default, and we want them all so we can do git describe --tags
     - git fetch --unshallow
     # Dep for Go dependency management.
-    - go get -v github.com/golang/dep/cmd/dep
+    - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
     # Node.js 6.10.2 for Pulumi Fabric's Node.js runtime.
     - nvm install v6.10.2
     # Ensure that we can access Pulumi's private NPM org.
-    - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
+    - if [ ! -z "${NPM_TOKEN}" ]; then echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc; fi
     # Install the AWS CLI so that we can publish the resulting release (if applicable) at the end.
     - pip install --upgrade --user awscli
     # Install Yarn as per https://yarnpkg.com/lang/en/docs/install-ci/#travis-tab.
     - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.2.1
     - export PATH=$HOME/.yarn/bin:$PATH
     # Install Pulumi
-    - curl -L https://get.pulumi.com/ | bash -s -- --version 0.14.0
+    - curl -L https://get.pulumi.com/ | bash -s -- --version 0.14.1
     - export PATH=$HOME/.pulumi/bin:$PATH
-    - if [ "${TRAVIS_SECURE_ENV_VARS:-}" = "true" ]; then source  ${GOPATH}/src/github.com/pulumi/home/scripts/keep-failed-tests.sh; fi
+    - if [ "${TRAVIS_SECURE_ENV_VARS:-}" = "true" ]; then source ${GOPATH}/src/github.com/pulumi/scripts/ci/keep-failed-tests.sh; fi
 install:
     - make ensure
 before_script:
@@ -38,6 +37,6 @@ before_script:
 script:
     - make travis_${TRAVIS_EVENT_TYPE}
 after_failure:
-    - if [ "${TRAVIS_SECURE_ENV_VARS:-}" = "true" ]; then ${GOPATH}/src/github.com/pulumi/home/scripts/upload-failed-tests; fi
+    - if [ "${TRAVIS_SECURE_ENV_VARS:-}" = "true" ]; then ${GOPATH}/src/github.com/pulumi/scripts/ci/upload-failed-tests; fi
 notifications:
     webhooks: https://ufci1w66n3.execute-api.us-west-2.amazonaws.com/stage/travis

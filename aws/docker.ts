@@ -48,7 +48,7 @@ export function buildAndPushImage(
     const login = () => {
         if (!loggedIn) {
             console.log("logging in to registry...");
-            loggedIn = connectToRegistry().then(r => loginToRegistry(r));
+            loggedIn = connectToRegistry().then(r => loginToRegistry(r, logResource));
         }
         return loggedIn;
     };
@@ -80,10 +80,11 @@ export function buildAndPushImage(
             await login();
 
             // Push the final image first, then push the stage images to use for caching.
-            await pushImageAsync(imageName, url);
+            await pushImageAsync(imageName, url, logResource);
 
             for (const stage of result.stages) {
-                await pushImageAsync(localStageImageName(imageName, stage), url, stage);
+                await pushImageAsync(
+                    localStageImageName(imageName, stage), url, logResource, stage);
             }
         }
         return result.digest;
@@ -113,7 +114,7 @@ async function pullCacheAsync(
     for (const stage of stages) {
         const tag = stage ? `:${stage}` : "";
         const image = `${repoUrl}${tag}`;
-        const pullResult = await runCLICommand("docker", ["pull", image]);
+        const pullResult = await runCLICommand("docker", ["pull", image], logResource);
         if (pullResult.code) {
             console.log(`Docker pull of build stage ${image} failed with exit code: ${pullResult.code}`);
         } else {
@@ -159,7 +160,8 @@ async function buildImageAsync(
     // Verify that 'docker' is on the PATH and get the client/server versions
     if (!cachedDockerVersionString) {
         try {
-            const versionResult = await runCLICommand("docker", ["version", "-f", "{{json .}}"], true);
+            const versionResult = await runCLICommand(
+                "docker", ["version", "-f", "{{json .}}"], logResource);
             // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
             // features we want to use.
             cachedDockerVersionString = versionResult.stdout;
@@ -184,16 +186,18 @@ async function buildImageAsync(
     const stages = [];
     if (build.cacheFrom && typeof build.cacheFrom !== "boolean" && build.cacheFrom.stages) {
         for (const stage of build.cacheFrom.stages) {
-            await dockerBuild(localStageImageName(imageName, stage), build, cacheFrom, stage);
+            await dockerBuild(
+                localStageImageName(imageName, stage), build, cacheFrom, logResource, stage);
             stages.push(stage);
         }
     }
 
     // Invoke Docker CLI commands to build.
-    await dockerBuild(imageName, build, cacheFrom);
+    await dockerBuild(imageName, build, cacheFrom, logResource);
 
     // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand("docker", ["image", "inspect", "-f", "{{.Id}}", imageName], true);
+    const inspectResult = await runCLICommand(
+        "docker", ["image", "inspect", "-f", "{{.Id}}", imageName], logResource);
     if (inspectResult.code || !inspectResult.stdout) {
         throw new RunError(
             `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
@@ -209,6 +213,7 @@ async function dockerBuild(
     imageName: string,
     build: cloud.ContainerBuild,
     cacheFrom: Promise<string[] | undefined>,
+    logResource: pulumi.Resource,
     target?: string): Promise<void> {
 
     // Prepare the build arguments.
@@ -234,29 +239,32 @@ async function dockerBuild(
         buildArgs.push(...[ "--target", target ]);
     }
 
-    const buildResult = await runCLICommand("docker", buildArgs);
+    const buildResult = await runCLICommand("docker", buildArgs, logResource);
     if (buildResult.code) {
         throw new RunError(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
 }
 
-async function loginToRegistry(registry: Registry) {
+async function loginToRegistry(registry: Registry, logResource: pulumi.Resource) {
     const { registry: registryName, username, password } = registry;
 
     let loginResult: CommandResult;
     if (!dockerPasswordStdin) {
         loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "-p", password, registryName]);
+            "docker", ["login", "-u", username, "-p", password, registryName], logResource);
     } else {
         loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "--password-stdin", registryName], false, password);
+            "docker", ["login", "-u", username, "--password-stdin", registryName],
+            logResource, password);
     }
     if (loginResult.code) {
         throw new RunError(`Failed to login to Docker registry ${registryName}`);
     }
 }
 
-async function pushImageAsync(imageName: string, repositoryUrl: string, tag?: string) {
+async function pushImageAsync(
+        imageName: string, repositoryUrl: string, logResource: pulumi.Resource, tag?: string) {
+
     // Tag and push the image to the remote repository.
     if (!repositoryUrl) {
         throw new RunError("Expected repository URL to be defined during push");
@@ -265,11 +273,11 @@ async function pushImageAsync(imageName: string, repositoryUrl: string, tag?: st
     tag = tag ? `:${tag}` : "";
     const targetImage = `${repositoryUrl}${tag}`;
 
-    const tagResult = await runCLICommand("docker", ["tag", imageName, targetImage]);
+    const tagResult = await runCLICommand("docker", ["tag", imageName, targetImage], logResource);
     if (tagResult.code) {
         throw new RunError(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
     }
-    const pushResult = await runCLICommand("docker", ["push", targetImage]);
+    const pushResult = await runCLICommand("docker", ["push", targetImage], logResource);
     if (pushResult.code) {
         throw new RunError(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
     }
@@ -303,23 +311,38 @@ interface CommandResult {
 async function runCLICommand(
     cmd: string,
     args: string[],
-    returnStdout?: boolean,
+    resource: pulumi.Resource,
     stdin?: string): Promise<CommandResult> {
+
+    // Generate a unique stream-ID that we'll associate all the docker output with. This will allow
+    // each spawned CLI command's output to associated with 'resource' and also streamed to the UI
+    // in pieces so that it can be displayed live.  The stream-ID is so that the UI knows these
+    // messages are all related and should be considered as one large message (just one that was
+    // sent over in chunks).
+    //
+    // We use Math.random here in case our package is loaded multiple times in memory (i.e. because
+    // different downstream dependencies depend on different versions of us).  By being random we
+    // effectively make it completely unlikely that any two cli outputs could map to the same stream
+    // id.
+    //
+    // Pick a reasonably distributed number between 0 and 2^30.  This will fit as an int32
+    // which the grpc layer needs.
+    const streamID = Math.floor(Math.random() * (1 << 30));
+
     return new Promise<CommandResult>((resolve, reject) => {
         const p = child_process.spawn(cmd, args);
         let result: string | undefined;
-        if (returnStdout) {
-            // We store the results from stdout in memory and will return them as a string.
-            const chunks: Buffer[] = [];
-            p.stdout.on("data", (chunk: Buffer) => {
-                chunks.push(chunk);
-            });
-            p.stdout.on("end", () => {
-                result = Buffer.concat(chunks).toString();
-            });
-        } else {
-            p.stdout.pipe(process.stdout);
-        }
+
+        // We store the results from stdout in memory and will return them as a string.
+        const chunks: Buffer[] = [];
+        p.stdout.on("data", (chunk: Buffer) => {
+            pulumi.log.info(chunk.toString(), resource, streamID);
+            chunks.push(chunk);
+        });
+        p.stdout.on("end", () => {
+            result = Buffer.concat(chunks).toString();
+        });
+
         p.stderr.pipe(process.stderr);
         p.on("error", (err) => {
             reject(err);
