@@ -64,13 +64,14 @@ topic.subscribe("performance", async (info: TestInfo) => {
     const testFunction = tests[testName][0];
     const repeat = tests[testName][1];
 
-    const metrics = await import("datadog-metrics");
-    // Initialize the metrics object that will collect the perf data.
-    metrics.init({
-        apiKey: info.apiKey,
-        appKey: info.appKey,
-        prefix: "perf-tests-",
-    });
+    const metrics: any = undefined;
+    // const metrics = await import("datadog-metrics");
+    // // Initialize the metrics object that will collect the perf data.
+    // metrics.init({
+    //     apiKey: info.apiKey,
+    //     appKey: info.appKey,
+    //     prefix: "perf-tests-",
+    // });
 
     // Warm things up first.
     await testFunction(metrics, false);
@@ -81,9 +82,9 @@ topic.subscribe("performance", async (info: TestInfo) => {
     }
 
     // Ensure all our perf metrics are uploaded.
-    await new Promise((resolve, reject) => {
-        metrics.flush(resolve, reject);
-    });
+    // await new Promise((resolve, reject) => {
+    //     metrics.flush(resolve, reject);
+    // });
 
     // Mark that this test is completed.
     testResultTable.update(testResultKey, { [testName]: [true, totalTime] });
@@ -99,9 +100,9 @@ async function recordAndReportTime(
 
     const ms = (duration[0] * 1000) + (duration[1] / 1000000);
 
-    if (record) {
-        metrics.histogram(name, ms);
-    }
+    // if (record) {
+    //     metrics.histogram(name, ms);
+    // }
 
     return ms;
 }

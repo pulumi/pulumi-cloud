@@ -61,6 +61,15 @@
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
+"@pulumi/aws@^0.14.5-dev-1532056150-g5380481":
+  version "0.14.5-dev-1532121064-g67c0937"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.14.5-dev-1532121064-g67c0937.tgz#672d37149e96a3a37e86ea376778d3752be07467"
+  dependencies:
+    "@pulumi/pulumi" "^0.14.0"
+    builtin-modules "3.0.0"
+    read-package-tree "^5.2.1"
+    resolve "^1.7.1"
+
 "@pulumi/pulumi@^0.14.0":
   version "0.14.1"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.1.tgz#7cddcd958d42f16635afe455acf700d22f27a4e4"

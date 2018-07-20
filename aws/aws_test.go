@@ -87,9 +87,9 @@ func Test_Examples(t *testing.T) {
 				for true {
 					elapsed := time.Now().Sub(start)
 
-					// lambdas can ony run up to 5 minutes.  So if we go to 6, then there's no point
+					// lambdas can ony run up to 10 minutes.  So if we go to 1, then there's no point
 					// continuing.
-					if elapsed.Minutes() >= 6 {
+					if elapsed.Minutes() >= 11 {
 						assert.Fail(t, "Performance tests did not finish")
 						break
 					}
