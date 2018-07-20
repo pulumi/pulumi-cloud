@@ -26,6 +26,7 @@
         "typescript": "^2.6.2"
     },
     "peerDependencies": {
-        "@pulumi/cloud": "${VERSION}"
+        "@pulumi/cloud": "${VERSION}",
+        "@pulumi/docker": "${VERSION}"
     }
 }
