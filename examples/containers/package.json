@@ -7,7 +7,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.14.1",
+        "@pulumi/pulumi": "^0.14.4-dev-1532459229-g1ec4939b",
         "node-fetch": "^1.7.3",
         "redis": "^2.8.0"
     },
