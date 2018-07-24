@@ -2,7 +2,7 @@
     "name": "@pulumi/cloud",
     "version": "${VERSION}",
     "description": "A highly productive, cloud neutral programming model.",
-    "license": "Apache 2.0",
+    "license": "Apache-2.0",
     "keywords": [
         "pulumi",
         "cloud"
