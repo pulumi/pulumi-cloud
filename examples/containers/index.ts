@@ -29,6 +29,16 @@ let nginx = new cloud.Service("examples-nginx", {
 
 export let nginxEndpoint: Output<cloud.Endpoint> = nginx.defaultEndpoint;
 
+// A simple NGINX service, scaled out over two containers, using a single container rather than a map.
+let simpleNginx = new cloud.Service("examples-simple-nginx", {
+    image: "nginx",
+    memory: 128,
+    ports: [{ port: 80 }],
+    replicas: 2,
+});
+
+export let simpleNginxEndpoint: Output<cloud.Endpoint> = simpleNginx.defaultEndpoint;
+
 let cachedNginx = new cloud.Service("examples-cached-nginx", {
     containers: {
         nginx: {

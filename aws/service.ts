@@ -601,7 +601,20 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
 
-        const containers = args.containers;
+        let containers: cloud.Containers;
+        if (args.image || args.build || args.function) {
+            if (args.containers) {
+                throw new Error(
+                    "Exactly one of image, build, function, or containers must be used, not multiple");
+            }
+            containers = { "default": args };
+        } else if (args.containers) {
+            containers = args.containers;
+        } else {
+            throw new Error(
+                "Missing one of image, build, function, or containers, specifying this service's containers");
+        }
+
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
