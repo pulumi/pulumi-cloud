@@ -50,6 +50,11 @@ if (functionIncludePackagesString) {
 }
 
 /**
+ * Optionally use img for container builds.
+ */
+export let buildWithImg = config.getBoolean("buildWithImg") || false;
+
+/**
  * Set the IAM role policies to apply to compute (both Lambda and ECS) within this Pulumi program. The default is:
  * "arn:aws:iam::aws:policy/AWSLambdaFullAccess,arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess".
  */

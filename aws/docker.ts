@@ -19,9 +19,10 @@ import { RunError } from "@pulumi/pulumi/errors";
 import * as child_process from "child_process";
 import * as semver from "semver";
 
-// Store this so we can verify `docker` command is available only once per deployment.
+// Store this so we can verify `docker` or `img` command is available only once per deployment.
 let cachedDockerVersionString: string|undefined;
 let dockerPasswordStdin: boolean = false;
+let cachedImgVersionString: string|undefined;
 
 // Registry is the information required to login to a Docker registry.
 export interface Registry {
@@ -38,6 +39,7 @@ interface BuildResult {
 // buildAndPushImage will build and push the Dockerfile and context from [buildPath] into the requested ECR
 // [repository].  It returns the digest of the built image.
 export function buildAndPushImage(
+    buildWithImg: boolean,
     imageName: string,
     container: cloud.Container,
     repositoryUrl: pulumi.Input<string>,
@@ -48,14 +50,15 @@ export function buildAndPushImage(
     const login = () => {
         if (!loggedIn) {
             console.log("logging in to registry...");
-            loggedIn = connectToRegistry().then(r => loginToRegistry(r, logResource));
+            loggedIn = connectToRegistry().then(r => loginToRegistry(buildWithImg, r, logResource));
         }
         return loggedIn;
     };
 
-    // If the container specified a cacheFrom parameter, first set up the cached stages.
+    // If the container specified a cacheFrom parameter, first set up the cached stages. Note that this does not work
+    // for buildWithImg builds.
     let cacheFrom: Promise<string[] | undefined>;
-    if (typeof container.build !== "string" && container.build && container.build.cacheFrom) {
+    if (!buildWithImg && typeof container.build !== "string" && container.build && container.build.cacheFrom) {
         // NOTE: we pull the promise out of the repository URL s.t. we can observe whether or not it exists. Were we
         // to instead hang an apply off of the raw Input<>, we would never end up running the pull if the repository
         // had not yet been created.
@@ -67,7 +70,7 @@ export function buildAndPushImage(
     }
 
     // First build the image.
-    const buildResult = buildImageAsync(imageName, container, logResource, cacheFrom);
+    const buildResult = buildImageAsync(buildWithImg, imageName, container, logResource, cacheFrom);
 
     // Then collect its output digest as well as the repo url and repo registry id.
     const outputs = pulumi.all([buildResult, repositoryUrl]);
@@ -80,11 +83,11 @@ export function buildAndPushImage(
             await login();
 
             // Push the final image first, then push the stage images to use for caching.
-            await pushImageAsync(imageName, url, logResource);
+            await pushImageAsync(buildWithImg, imageName, url, logResource);
 
             for (const stage of result.stages) {
                 await pushImageAsync(
-                    localStageImageName(imageName, stage), url, logResource, stage);
+                   buildWithImg, localStageImageName(imageName, stage), url, logResource, stage);
             }
         }
         return result.digest;
@@ -130,6 +133,7 @@ function localStageImageName(imageName: string, stage: string): string {
 }
 
 async function buildImageAsync(
+    buildWithImg: boolean,
     imageName: string,
     container: cloud.Container,
     logResource: pulumi.Resource,
@@ -157,59 +161,101 @@ async function buildImageAsync(
                 (build.args ? `, args=${JSON.stringify(build.args)}` : ""),
     );
 
-    // Verify that 'docker' is on the PATH and get the client/server versions
-    if (!cachedDockerVersionString) {
-        try {
-            const versionResult = await runCLICommand(
-                "docker", ["version", "-f", "{{json .}}"], logResource);
-            // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
-            // features we want to use.
-            cachedDockerVersionString = versionResult.stdout;
-            pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`, logResource);
-        } catch (err) {
-            throw new RunError("No 'docker' command available on PATH: Please install to use container 'build' mode.");
-        }
-
-        // Decide whether to use --password or --password-stdin based on the client version.
-        try {
-            const versionData: any = JSON.parse(cachedDockerVersionString!);
-            const clientVersion: string = versionData.Client.Version;
-            if (semver.gte(clientVersion, "17.07.0", true)) {
-                dockerPasswordStdin = true;
+    // Verify that the build tool is on the PATH.
+    if (buildWithImg) {
+        if (!cachedImgVersionString) {
+            try {
+                const versionResult = await runCLICommand("img", ["version"], logResource);
+                cachedImgVersionString = versionResult.stdout;
+                pulumi.log.debug(`'img version' => ${cachedImgVersionString}`, logResource);
+            } catch (err) {
+                throw new RunError(
+                    "No 'img' command available on PATH: Please install to use container 'build' mode.");
             }
-        } catch (err) {
-            console.log(`Could not process Docker version (${err})`);
+        }
+    } else {
+        // Verify that 'docker' is on the PATH and get the client/server versions
+        if (!cachedDockerVersionString) {
+            try {
+                const versionResult = await runCLICommand(
+                    "docker", ["version", "-f", "{{json .}}"], logResource);
+                // IDEA: In the future we could warn here on out-of-date versions of Docker which may not support key
+                // features we want to use.
+                cachedDockerVersionString = versionResult.stdout;
+                pulumi.log.debug(`'docker version' => ${cachedDockerVersionString}`, logResource);
+            } catch (err) {
+                throw new RunError(
+                    "No 'docker' command available on PATH: Please install to use container 'build' mode.");
+            }
+
+            // Decide whether to use --password or --password-stdin based on the client version.
+            try {
+                const versionData: any = JSON.parse(cachedDockerVersionString!);
+                const clientVersion: string = versionData.Client.Version;
+                if (semver.gte(clientVersion, "17.07.0", true)) {
+                    dockerPasswordStdin = true;
+                }
+            } catch (err) {
+                console.log(`Could not process Docker version (${err})`);
+            }
         }
     }
 
     // If the container build specified build stages to cache, build each in turn.
     const stages = [];
-    if (build.cacheFrom && typeof build.cacheFrom !== "boolean" && build.cacheFrom.stages) {
+    if (!buildWithImg && build.cacheFrom && typeof build.cacheFrom !== "boolean" && build.cacheFrom.stages) {
         for (const stage of build.cacheFrom.stages) {
             await dockerBuild(
-                localStageImageName(imageName, stage), build, cacheFrom, logResource, stage);
+                buildWithImg, localStageImageName(imageName, stage), build, cacheFrom, logResource, stage);
             stages.push(stage);
         }
     }
 
     // Invoke Docker CLI commands to build.
-    await dockerBuild(imageName, build, cacheFrom, logResource);
+    await dockerBuild(buildWithImg, imageName, build, cacheFrom, logResource);
 
     // Finally, inspect the image so we can return the SHA digest.
-    const inspectResult = await runCLICommand(
-        "docker", ["image", "inspect", "-f", "{{.Id}}", imageName], logResource);
-    if (inspectResult.code || !inspectResult.stdout) {
-        throw new RunError(
-            `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+    let getDigest: () => Promise<string>;
+    if (!buildWithImg) {
+        getDigest = async () => {
+            const inspectResult = await runCLICommand(
+                "docker", ["image", "inspect", "-f", "{{.Id}}", imageName], logResource);
+            if (inspectResult.code || !inspectResult.stdout) {
+                throw new RunError(
+                    `No digest available for image ${imageName}: ${inspectResult.code} -- ${inspectResult.stdout}`);
+            }
+            return inspectResult.stdout.trim();
+        };
+    } else {
+        getDigest = async () => {
+            const lsResult = await runCLICommand(
+                "img", ["ls", "-f", `name~=docker.io/library/${imageName}`], logResource);
+            if (lsResult.code) {
+                throw new RunError(
+                    `No digest available for image ${imageName}: ${lsResult.code} -- ${lsResult.stdout}`);
+            }
+            const digestRe = new RegExp(`(sha256:[a-f0-9]+$)`, "gm");
+            const match = digestRe.exec(lsResult.stdout!);
+            if (match === null) {
+                throw new RunError(
+                    `No digest available for image ${imageName}: ${lsResult.code} -- ${lsResult.stdout}`);
+            }
+            if (digestRe.exec(lsResult.stdout!) !== null) {
+                throw new RunError(
+                    `Ambiguous digest for image ${imageName}: ${lsResult.code} -- ${lsResult.stdout}`);
+            }
+            return match[0];
+        };
     }
 
     return {
-        digest: inspectResult.stdout.trim(),
+        digest: await getDigest(),
         stages: stages,
     };
 }
 
 async function dockerBuild(
+    buildWithImg: boolean,
     imageName: string,
     build: cloud.ContainerBuild,
     cacheFrom: Promise<string[] | undefined>,
@@ -226,35 +272,39 @@ async function dockerBuild(
             buildArgs.push(...[ "--build-arg", `${arg}=${build.args[arg]}` ]);
         }
     }
-    if (build.cacheFrom) {
+    if (!buildWithImg && build.cacheFrom) {
         const cacheFromImages = await cacheFrom;
         if (cacheFromImages) {
             buildArgs.push(...[ "--cache-from", cacheFromImages.join() ]);
         }
     }
-    buildArgs.push(build.context!); // push the docker build context onto the path.
 
     buildArgs.push(...[ "-t", imageName ]); // tag the image with the chosen name.
     if (target) {
         buildArgs.push(...[ "--target", target ]);
     }
 
-    const buildResult = await runCLICommand("docker", buildArgs, logResource);
+    buildArgs.push(build.context!); // push the docker build context onto the path.
+
+    const buildResult = await runCLICommand(buildWithImg ? "img" : "docker", buildArgs, logResource);
     if (buildResult.code) {
         throw new RunError(`Docker build of image '${imageName}' failed with exit code: ${buildResult.code}`);
     }
 }
 
-async function loginToRegistry(registry: Registry, logResource: pulumi.Resource) {
+async function loginToRegistry(buildWithImg: boolean, registry: Registry, logResource: pulumi.Resource) {
     const { registry: registryName, username, password } = registry;
 
+    const passwordStdin = buildWithImg || dockerPasswordStdin;
+    const tool = buildWithImg ? "img" : "docker";
+
     let loginResult: CommandResult;
-    if (!dockerPasswordStdin) {
+    if (!passwordStdin) {
         loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "-p", password, registryName], logResource);
+            tool, ["login", "-u", username, "-p", password, registryName], logResource);
     } else {
         loginResult = await runCLICommand(
-            "docker", ["login", "-u", username, "--password-stdin", registryName],
+            tool, ["login", "-u", username, "--password-stdin", registryName],
             logResource, password);
     }
     if (loginResult.code) {
@@ -263,7 +313,7 @@ async function loginToRegistry(registry: Registry, logResource: pulumi.Resource)
 }
 
 async function pushImageAsync(
-        imageName: string, repositoryUrl: string, logResource: pulumi.Resource, tag?: string) {
+        buildWithImg: boolean, imageName: string, repositoryUrl: string, logResource: pulumi.Resource, tag?: string) {
 
     // Tag and push the image to the remote repository.
     if (!repositoryUrl) {
@@ -273,11 +323,12 @@ async function pushImageAsync(
     tag = tag ? `:${tag}` : "";
     const targetImage = `${repositoryUrl}${tag}`;
 
-    const tagResult = await runCLICommand("docker", ["tag", imageName, targetImage], logResource);
+    const tool = buildWithImg ? "img" : "docker";
+    const tagResult = await runCLICommand(tool, ["tag", imageName, targetImage], logResource);
     if (tagResult.code) {
         throw new RunError(`Failed to tag Docker image with remote registry URL ${repositoryUrl}`);
     }
-    const pushResult = await runCLICommand("docker", ["push", targetImage], logResource);
+    const pushResult = await runCLICommand(tool, ["push", targetImage], logResource);
     if (pushResult.code) {
         throw new RunError(`Docker push of image '${imageName}' failed with exit code: ${pushResult.code}`);
     }
