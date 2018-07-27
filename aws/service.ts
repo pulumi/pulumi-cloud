@@ -21,8 +21,8 @@ import * as assert from "assert";
 import * as stream from "stream";
 import { CloudCluster, CloudNetwork } from "./shared";
 
+import * as docker from "@pulumi/docker";
 import * as config from "./config";
-import * as docker from "./docker";
 
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
@@ -270,7 +270,7 @@ function computeImage(
             // with an environment variable for the image digest to ensure the TaskDefinition get's
             // replaced IFF the built image changes.
             const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, repository, async () => {
+            imageDigest = docker.buildAndPushImage(imageName, container.build, repositoryUrl, repository, async () => {
                 // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
                 // extracting the username/password pair after base64-decoding the token.
                 //
