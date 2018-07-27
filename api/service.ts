@@ -236,14 +236,15 @@ export interface HostPathVolumeConstructor {
 export let HostPathVolume: HostPathVolumeConstructor; // tslint:disable-line
 
 /**
- * The arguments to construct a Service object.
+ * The arguments to construct a Service object. These arguments may include container information, for simple
+ * single-container scenarios, or you may specify that information using the containers property. If a single container
+ * is specified in-line, it is implicitly given the name "default".
  */
-export interface ServiceArguments {
+export interface ServiceArguments extends Container {
     /**
-     * The collection of containers that will be deployed as part of this
-     * Service.
+     * A collection of containers that will be deployed as part of this Service, if there are multiple.
      */
-    containers: Containers;
+    containers?: Containers;
     /**
      * The number of copies of this Service's containers to deploy and maintain
      * as part of the running service.  Defaults to `1`.

@@ -1,7 +1,7 @@
 {
     "name": "@pulumi/cloud-aws",
     "version": "${VERSION}",
-    "license": "Apache 2.0",
+    "license": "Apache-2.0",
     "description": "An implementation of the Pulumi Framework for targeting Amazon Web Services (AWS).",
     "keywords": [
         "pulumi",
