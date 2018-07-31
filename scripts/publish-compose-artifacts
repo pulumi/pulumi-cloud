@@ -1,0 +1,16 @@
+#!/bin/bash
+set -eou pipefail
+
+if [ -z "${1:-}" ]; then
+    echo "usage: $0 <s3-prefix>"
+    exit 1
+fi
+
+S3_ROOT="$1"
+TEMP_DIR=$(mktemp -d)
+
+yarn --cwd ./api/bin pack --filename "${TEMP_DIR}/pulumi-cloud.tgz"
+yarn --cwd ./aws/bin pack --filename "${TEMP_DIR}/pulumi-cloud-aws.tgz"
+
+aws s3 cp --acl public-read "${TEMP_DIR}/pulumi-cloud.tgz" "${S3_ROOT}/nodejs/pulumi-cloud.tgz"
+aws s3 cp --acl public-read "${TEMP_DIR}/pulumi-cloud-aws.tgz" "${S3_ROOT}/nodejs/pulumi-cloud-aws.tgz"
