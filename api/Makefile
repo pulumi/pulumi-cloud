@@ -7,6 +7,10 @@ VERSION := $(shell ../scripts/get-version)
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 build::
+	yarn install
+
+	# pick up the local versions of these if possible.
+	yarn link @pulumi/pulumi || true
 	tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/

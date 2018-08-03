@@ -13,14 +13,13 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
+import * as serverless from "@pulumi/aws-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as sns from "./sns";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
-    public readonly subscriptions: aws.sns.TopicSubscription[];
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -31,7 +30,6 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
 
         this.name = name;
         this.topic = new aws.sns.Topic(name, {}, { parent: this });
-        this.subscriptions = [];
         const topicId = this.topic.id;
 
         this.publish = async (item) => {
@@ -46,11 +44,16 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
         const subscriptionName = this.name + "_" + name;
-        const subscription = sns.createSubscription(subscriptionName, this.topic, async (snsItem: sns.SNSItem) => {
-            const item = JSON.parse(snsItem.Message);
-            await handler(item);
-        });
 
-        this.subscriptions.push(subscription);
+        const wrappedHandler: serverless.sns.topic.TopicEventHandler = (event, context, callback) => {
+            const allPromises = Promise.all(event.Records.map(async record => {
+                await handler(JSON.parse(record.Sns.Message));
+            }));
+
+            allPromises.then(() => callback(undefined, undefined))
+                        .catch(err => callback(err, undefined));
+        };
+
+        serverless.sns.topic.onEvent(subscriptionName, this.topic, wrappedHandler, {}, { parent: this });
     }
 }
