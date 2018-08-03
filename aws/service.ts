@@ -21,8 +21,8 @@ import * as assert from "assert";
 import * as stream from "stream";
 import { CloudCluster, CloudNetwork } from "./shared";
 
+import * as docker from "@pulumi/docker";
 import * as config from "./config";
-import * as docker from "./docker";
 
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
@@ -270,7 +270,7 @@ function computeImage(
             // with an environment variable for the image digest to ensure the TaskDefinition get's
             // replaced IFF the built image changes.
             const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container, repositoryUrl, repository, async () => {
+            imageDigest = docker.buildAndPushImage(imageName, container.build, repositoryUrl, repository, async () => {
                 // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
                 // extracting the username/password pair after base64-decoding the token.
                 //
@@ -601,7 +601,20 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
 
-        const containers = args.containers;
+        let containers: cloud.Containers;
+        if (args.image || args.build || args.function) {
+            if (args.containers) {
+                throw new Error(
+                    "Exactly one of image, build, function, or containers must be used, not multiple");
+            }
+            containers = { "default": args };
+        } else if (args.containers) {
+            containers = args.containers;
+        } else {
+            throw new Error(
+                "Missing one of image, build, function, or containers, specifying this service's containers");
+        }
+
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
@@ -662,6 +675,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         }
 
         // Create the service.
+        const securityGroups = cluster.securityGroupId ? [ cluster.securityGroupId ] : [];
         this.ecsService = new aws.ecs.Service(name, {
             desiredCount: replicas,
             taskDefinition: taskDefinition.task.arn,
@@ -672,7 +686,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
                 assignPublicIp: config.useFargate && !network.usePrivateSubnets,
-                securityGroups: [ cluster.securityGroupId!],
+                securityGroups: securityGroups,
                 subnets: network.subnetIds,
             },
         }, { parent: this, dependsOn: serviceDependsOn });

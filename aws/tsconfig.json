@@ -23,7 +23,6 @@
         "topic.ts",
         "service.ts",
         "utils.ts",
-        "docker.ts",
 
         "config/index.ts",
     ]

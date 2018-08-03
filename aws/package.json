@@ -1,7 +1,7 @@
 {
     "name": "@pulumi/cloud-aws",
     "version": "${VERSION}",
-    "license": "Apache 2.0",
+    "license": "Apache-2.0",
     "description": "An implementation of the Pulumi Framework for targeting Amazon Web Services (AWS).",
     "keywords": [
         "pulumi",
@@ -13,6 +13,7 @@
     "dependencies": {
         "@pulumi/aws": "^0.14.0",
         "@pulumi/aws-infra": "^0.14.0",
+        "@pulumi/docker": "^0.14.0",
         "@pulumi/pulumi": "^0.14.3",
         "mime": "^2.0.3",
         "semver": "^5.4.0"

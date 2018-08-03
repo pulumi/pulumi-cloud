@@ -61,6 +61,14 @@
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
+"@pulumi/docker@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.14.0.tgz#d1067a77386f917d112217e5c259ddd98743c75b"
+  dependencies:
+    "@pulumi/pulumi" "^0.14.3"
+    mime "^2.0.3"
+    semver "^5.4.0"
+
 "@pulumi/pulumi@^0.14.0":
   version "0.14.1"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.1.tgz#7cddcd958d42f16635afe455acf700d22f27a4e4"
