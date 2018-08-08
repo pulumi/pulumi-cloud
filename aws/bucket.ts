@@ -208,6 +208,5 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             .then(() => callback(undefined, undefined))
             .catch(err => callback(err, undefined));
         }
-
     }
 }

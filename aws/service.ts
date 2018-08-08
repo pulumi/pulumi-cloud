@@ -573,8 +573,6 @@ export interface Endpoint extends cloud.Endpoint {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
 }
 
-export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
-
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -582,8 +580,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: CloudCluster;
     public readonly ecsService: aws.ecs.Service;
 
-    public readonly endpoints: pulumi.Output<Endpoints>;
-    public readonly defaultEndpoint: pulumi.Output<Endpoint>;
+    public readonly endpoints: pulumi.Output<cloud.Endpoints>;
+    public readonly defaultEndpoint: pulumi.Output<cloud.Endpoint>;
 
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
@@ -707,7 +705,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 }
 
 function getEndpointHelper(
-    endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
+    endpoints: cloud.Endpoints, containerName: string | undefined, containerPort: number | undefined): cloud.Endpoint {
 
 
     containerName = containerName || Object.keys(endpoints)[0];
@@ -729,7 +727,7 @@ function getEndpointHelper(
     return endpoint;
 }
 
-function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
+function getEndpoints(ports: ExposedPorts): pulumi.Output<cloud.Endpoints> {
     return pulumi.all(utils.apply(ports, portToExposedPort => {
         const inner: pulumi.Output<{ [port: string]: Endpoint }> =
             pulumi.all(utils.apply(portToExposedPort, exposedPort =>
@@ -750,9 +748,9 @@ export interface Volume extends cloud.Volume {
 
 // _Note_: In the current EFS-backed model, a Volume is purely virtual - it
 // doesn't actually manage any underlying resource.  It is used just to provide
-// a handle to a folder on the EFS share which can be mounted by conatainer(s).
+// a handle to a folder on the EFS share which can be mounted by container(s).
 // On platforms like ACI, we may be able to actually provision a unique File
-// Share per Volume to keep these independently managable.  For now, on AWS
+// Share per Volume to keep these independently manageable.  For now, on AWS
 // though, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.

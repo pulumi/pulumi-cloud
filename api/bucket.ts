@@ -65,7 +65,6 @@ export let Bucket: BucketConstructor; // tslint:disable-line
  * Blobs in a bucket are encrypted at rest by default.
  */
 export interface Bucket {
-
     /**
      * Registers a handler to be notified when blobs are put into the bucket (created or updated).
      *

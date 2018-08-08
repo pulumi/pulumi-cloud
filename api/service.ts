@@ -267,6 +267,12 @@ export interface Endpoint {
     port: number;
 }
 
+export interface Endpoints {
+    [containerName: string]: {
+        [port: number]: Endpoint;
+    };
+}
+
 /**
  * A persistent service running as part of the Pulumi Cloud application. A
  * collection of container specifications are provided to define the compute
@@ -281,7 +287,7 @@ export interface Service {
      * The exposed hostname and port for connecting to the given containerName
      * on the given containerPort.
      */
-    endpoints: pulumi.Output<{ [containerName: string]: { [port: number]: Endpoint } }>;
+    endpoints: pulumi.Output<Endpoints>;
 
     /**
      * The primary endpoint exposed by the service.  All endpoints (including this one)
