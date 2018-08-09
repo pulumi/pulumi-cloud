@@ -67,7 +67,7 @@ export class API implements cloud.API {
     private readonly staticRoutes: StaticRoute[];
     private readonly proxyRoutes: ProxyRoute[];
     private readonly routes: Route[];
-    private readonly customDomains: cloud.Domain[];
+    private readonly customDomains: Domain[];
     public deployment?: HttpDeployment;
 
     constructor(name: string) {
@@ -123,7 +123,7 @@ export class API implements cloud.API {
         this.route("ANY", path, ...handlers);
     }
 
-    public attachCustomDomain(domain: cloud.Domain): void {
+    public attachCustomDomain(domain: Domain): void {
         this.customDomains.push(domain);
     }
 

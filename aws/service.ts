@@ -13,12 +13,9 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import * as awsinfra from "@pulumi/aws-infra";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import * as assert from "assert";
-import * as stream from "stream";
 import { CloudCluster, CloudNetwork } from "./shared";
 
 import * as docker from "@pulumi/docker";
@@ -44,7 +41,7 @@ function createLoadBalancer(
         portMapping: cloud.ContainerPort,
         network: CloudNetwork): ContainerPortLoadBalancer {
 
-    // Load balancers need *very* short names, so we unforutnately have to hash here.
+    // Load balancers need *very* short names, so we unfortunately have to hash here.
     //
     // Note: Technically, we can only support one LB per service, so only the service name is needed here, but we
     // anticipate this will not always be the case, so we include a set of values which must be unique.
