@@ -13,12 +13,9 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import * as awsinfra from "@pulumi/aws-infra";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import * as assert from "assert";
-import * as stream from "stream";
 import { CloudCluster, CloudNetwork } from "./shared";
 
 import * as docker from "@pulumi/docker";
@@ -44,7 +41,7 @@ function createLoadBalancer(
         portMapping: cloud.ContainerPort,
         network: CloudNetwork): ContainerPortLoadBalancer {
 
-    // Load balancers need *very* short names, so we unforutnately have to hash here.
+    // Load balancers need *very* short names, so we unfortunately have to hash here.
     //
     // Note: Technically, we can only support one LB per service, so only the service name is needed here, but we
     // anticipate this will not always be the case, so we include a set of values which must be unique.
@@ -585,7 +582,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly endpoints: pulumi.Output<Endpoints>;
     public readonly defaultEndpoint: pulumi.Output<Endpoint>;
 
-    public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
+    public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<Endpoint>;
 
     // Expose the task role we create to clients (who will cast through <any>)
     // so they can attach their own policies.
@@ -750,9 +747,9 @@ export interface Volume extends cloud.Volume {
 
 // _Note_: In the current EFS-backed model, a Volume is purely virtual - it
 // doesn't actually manage any underlying resource.  It is used just to provide
-// a handle to a folder on the EFS share which can be mounted by conatainer(s).
+// a handle to a folder on the EFS share which can be mounted by container(s).
 // On platforms like ACI, we may be able to actually provision a unique File
-// Share per Volume to keep these independently managable.  For now, on AWS
+// Share per Volume to keep these independently manageable.  For now, on AWS
 // though, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.
