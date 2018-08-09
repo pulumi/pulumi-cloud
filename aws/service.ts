@@ -570,6 +570,8 @@ export interface Endpoint extends cloud.Endpoint {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
 }
 
+export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -577,10 +579,10 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: CloudCluster;
     public readonly ecsService: aws.ecs.Service;
 
-    public readonly endpoints: pulumi.Output<cloud.Endpoints>;
-    public readonly defaultEndpoint: pulumi.Output<cloud.Endpoint>;
+    public readonly endpoints: pulumi.Output<Endpoints>;
+    public readonly defaultEndpoint: pulumi.Output<Endpoint>;
 
-    public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
+    public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<Endpoint>;
 
     // Expose the task role we create to clients (who will cast through <any>)
     // so they can attach their own policies.
@@ -702,7 +704,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 }
 
 function getEndpointHelper(
-    endpoints: cloud.Endpoints, containerName: string | undefined, containerPort: number | undefined): cloud.Endpoint {
+    endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
 
 
     containerName = containerName || Object.keys(endpoints)[0];
@@ -724,7 +726,7 @@ function getEndpointHelper(
     return endpoint;
 }
 
-function getEndpoints(ports: ExposedPorts): pulumi.Output<cloud.Endpoints> {
+function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
     return pulumi.all(utils.apply(ports, portToExposedPort => {
         const inner: pulumi.Output<{ [port: string]: Endpoint }> =
             pulumi.all(utils.apply(portToExposedPort, exposedPort =>
