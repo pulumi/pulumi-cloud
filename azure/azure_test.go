@@ -15,8 +15,6 @@
 package examples
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,7 +31,6 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource/config"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
-	"github.com/pulumi/pulumi/pkg/util/contract"
 )
 
 func Test_Examples(t *testing.T) {
@@ -107,38 +104,6 @@ func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 	assert.NoError(t, err)
 	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
 	assert.Equal(t, contents, string(bytes))
-}
-
-func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-	const urlPortion = "/unittests"
-
-	baseURL, ok := stackInfo.Outputs["url"].(string)
-	if !assert.True(t, ok, fmt.Sprintf("expected a `url` output property of type string")) {
-		return
-	}
-
-	// Validate the GET /unittests endpoint.  We allow this to potentially fail once with a 504 to avoid cold-start
-	// issues.
-	// TODO[pulumi/pulumi-cloud#440] Remove this workaround once we structure the unit tests to be resilient to this.
-	var resp *http.Response
-	var err error
-	for i := 0; i < 2; i++ {
-		resp, err = http.Get(baseURL + urlPortion)
-		if !assert.NoError(t, err, "expected to be able to GET "+baseURL+urlPortion) {
-			return
-		}
-		if resp.StatusCode != 504 {
-			break
-		}
-	}
-
-	contentType := resp.Header.Get("Content-Type")
-	assert.Equal(t, "application/json", contentType)
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, 200, resp.StatusCode)
-	t.Logf("GET %v [%v/%v]: %v", baseURL+urlPortion, resp.StatusCode, contentType, string(bytes))
 }
 
 func getAllMessageText(logs []operations.LogEntry) string {
@@ -294,11 +259,4 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 			assert.Contains(t, getAllMessageText(redisLogs), "Redis is starting")
 		}
 	}
-}
-
-func addRandomSuffix(s string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	contract.AssertNoError(err)
-	return s + "-" + hex.EncodeToString(b)
 }
