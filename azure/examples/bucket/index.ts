@@ -17,5 +17,5 @@ import * as pulumi from "@pulumi/pulumi";
 
 const bucket = new cloud.Bucket("myBucket");
 bucket.onPut("myPutHandler", async (args) => {
-    console.log(JSON.stringify(args, null, 2));
+    console.log(JSON.stringify(args));
 });
