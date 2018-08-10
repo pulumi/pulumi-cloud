@@ -64,24 +64,33 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 }
 
 const config = new pulumi.Config("cloud-azure");
-export const resourceGroupName = config.require("resource-group-name");
 export const location = config.require("location");
 
-let globalResourceGroup: Promise<azure.core.ResourceGroup>;
-export function getGlobalResourceGroup() {
-    if (!globalResourceGroup) {
-        globalResourceGroup = getGlobalResourceGroupWorker();
+export const globalResourceGroup = getGlobalResourceGroup();
+export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
+
+function getGlobalResourceGroup() {
+    const resourceGroupPromise = getOrCreateGlobalResourceGroup();
+    return pulumi.all([resourceGroupPromise]).apply(([rg]) => rg);
+
+    async function getOrCreateGlobalResourceGroup() {
+        const resourceGroupName = config.get("resource-group-name");
+        if (resourceGroupName) {
+            // User specified the resource group they want to use.  Go fetch that.
+            const result = await azure.core.getResourceGroup({
+                name: resourceGroupName,
+            });
+
+            return azure.core.ResourceGroup.get("global", result.id);
+        }
+
+        // Create a new resource group to use.
+        return new azure.core.ResourceGroup("global", {
+            name: "global",
+            location: location,
+        },
+        { parent: getGlobalInfrastructureResource() });
     }
-
-    return globalResourceGroup;
-}
-
-async function getGlobalResourceGroupWorker() {
-    const result = await azure.core.getResourceGroup({
-        name: resourceGroupName,
-    });
-
-    return azure.core.ResourceGroup.get("global", result.id);
 }
 
 let globalStorageAccount: azure.storage.Account;
@@ -100,7 +109,7 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
     }
 
     return new azure.storage.Account("global", {
-        resourceGroupName: resourceGroupName,
+        resourceGroupName: globalResourceGroupName,
         location: location,
         accountKind: "StorageV2",
         accountTier: "Standard",

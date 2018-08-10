@@ -36,7 +36,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         const preventDestroy = opts && opts.protect;
 
-        const resourceGroupName = shared.resourceGroupName;
+        const resourceGroupName = shared.globalResourceGroupName;
         const storageAccount = shared.getGlobalStorageAccount();
 
         const container =  new azure.storage.Container(name, {
@@ -98,7 +98,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.onPut = async (putName, handler, filter) => {
-            const resourceGroup = await shared.getGlobalResourceGroup();
+            const resourceGroup = shared.globalResourceGroup;
             filter = filter || {};
             serverless.storage.onBlobEvent(putName, storageAccount, (context, buffer) => {
                     handler({
@@ -108,6 +108,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                     }).then(() => context.done());
                 },
                 {
+                    storageAccount: storageAccount,
                     containerName: container.name,
                     resourceGroup: resourceGroup,
                     filterPrefix: filter.keyPrefix,

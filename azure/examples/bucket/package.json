@@ -10,7 +10,7 @@
     "dependencies": {
         "@pulumi/pulumi": "^0.14.3",
         "@pulumi/azure": "^0.14.2",
-        "@pulumi/azure-serverless": "^0.14.0-dev-1533929922-g4e5b5ae",
+        "@pulumi/azure-serverless": "^0.14.0-dev-1533941118-g4128ac6",
         "azure-storage": "^2.10.1"
     },
     "devDependencies": {
