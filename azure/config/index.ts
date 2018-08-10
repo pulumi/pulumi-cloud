@@ -18,6 +18,8 @@ import { RunError } from "@pulumi/pulumi/errors";
 
 const config = new pulumi.Config("cloud-azure");
 
+
+
 const functionIncludePathsString = config.get("functionIncludePaths");
 /**
  * Comma-seperated list of additional paths (relative to the project root) to include in Lambda zip uploads for
