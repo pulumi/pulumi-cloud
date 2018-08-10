@@ -36,4 +36,4 @@ publish() {
 }
 
 publish api
-publish aws
+publish aws @pulumi/cloud
