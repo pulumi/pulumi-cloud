@@ -275,7 +275,7 @@ function computeImage(
                 if (!registryId) {
                     throw new RunError("Expected registry ID to be defined during push");
                 }
-                const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+                const credentials = await aws.ecr.getCredentials({ registryId: await (<any>registryId).promise() });
                 const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
                 const [username, password] = decodedCredentials.split(":");
                 if (!password || !username) {
