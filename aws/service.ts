@@ -288,7 +288,10 @@ function computeImageFromBuildWorker(
 
     // See if we've already built this.
     let imageDigest = buildImageCache.get(imageName);
-    if (!imageDigest) {
+    if (imageDigest) {
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
+    } else {
         // If we haven't, build and push the local build context to the ECR repository, wait for
         // that to complete, then return the image name pointing to the ECT repository along
         // with an environment variable for the image digest to ensure the TaskDefinition get's
@@ -316,10 +319,10 @@ function computeImageFromBuildWorker(
 
 
         buildImageCache.set(imageName, imageDigest);
-    }
 
-    imageDigest.apply(d =>
-        pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
+    }
 
     preEnv.IMAGE_DIGEST = imageDigest;
     return createImageOptions(repositoryUrl, preEnv);
