@@ -68,6 +68,7 @@ export const location = config.require("location");
 
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
+export const globalResourceGroupLocation = globalResourceGroup.apply(g => g.location);
 
 function getGlobalResourceGroup() {
     const resourceGroupPromise = getOrCreateGlobalResourceGroup();

@@ -15,6 +15,7 @@
 import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import * as shared from "./shared";
 import { RunError } from "@pulumi/pulumi/errors";
 
 import * as docker from "@pulumi/docker";
@@ -72,4 +73,21 @@ export class HostPathVolume implements cloud.HostPathVolume {
         this.kind = "HostPathVolume";
         this.path = path;
     }
+}
+
+// registries contains a cache of already created azure container registries.
+const registries = new Map<string, azure.containerservice.Registry>();
+
+function getOrCreateRegistry(imageName: string): azure.containerservice.Registry {
+    let registry = registries.get(imageName);
+    if (!registry) {
+        registry = new azure.containerservice.Registry(imageName,  {
+            resourceGroupName: shared.globalResourceGroupName,
+            location: shared.globalResourceGroupLocation,
+        });
+
+        registries.set(imageName, registry);
+    }
+
+    return registry;
 }
