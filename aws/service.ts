@@ -427,7 +427,6 @@ function createImageOptions(
     return pulumi.all(env).apply(e => ({ image: image, environment: e }));
 }
 
-
 // The ECS Task assume role policy for Task Roles
 const taskRolePolicy = {
     "Version": "2012-10-17",
