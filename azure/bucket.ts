@@ -13,10 +13,20 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
+import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import * as stream from "stream";
+import * as shared from "./shared";
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
+    public readonly container: azure.storage.Container;
+
+    // deployment-time api:
+    public onPut: (name: string, handler: cloud.BucketHandler, filter: cloud.BucketFilter | undefined) => void;
+    public onDelete: (name: string, handler: cloud.BucketHandler, filter: cloud.BucketFilter | undefined) => void;
+
+    // run-time api
     public get: (key: string) => Promise<Buffer>;
     public put: (key: string, contents: Buffer) => Promise<void>;
     public delete: (key: string) => Promise<void>;
@@ -24,18 +34,111 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:bucket:Bucket", name, {}, opts);
 
-        this.get = _ => { throw new Error("Method not implemented."); };
-        this.put = _ => { throw new Error("Method not implemented."); };
-        this.delete = _ => { throw new Error("Method not implemented."); };
+        const preventDestroy = opts && opts.protect;
 
-        throw new Error("Method not implemented.");
+        const resourceGroupName = shared.globalResourceGroupName;
+        const storageAccount = shared.getGlobalStorageAccount();
+
+        const container =  new azure.storage.Container(name, {
+            resourceGroupName: resourceGroupName,
+            storageAccountName: storageAccount.name,
+        }, { parent: this, protect: preventDestroy });
+        this.container = container;
+
+        this.get = async (key) => {
+            const azStorage = await import("azure-storage");
+            const streamBuffers = await import("stream-buffers");
+
+            const writableStream = new streamBuffers.WritableStreamBuffer();
+
+            const service = new azStorage.BlobService(storageAccount.name.get());
+            await new Promise((resolve, reject) => {
+                service.getBlobToStream(container.name.get(), key, writableStream, err => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    resolve();
+                });
+            });
+
+            return writableStream.getContents();
+        };
+
+        this.put = async (key, contents) => {
+            const azStorage = await import("azure-storage");
+
+            const service = new azStorage.BlobService(storageAccount.name.get());
+            const readableStream = new ReadableStream(contents);
+
+            await new Promise((resolve, reject) => {
+                service.createBlockBlobFromStream(container.name.get(), key, readableStream, contents.length, err => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    resolve();
+                });
+            });
+        };
+
+        this.delete = async (key) => {
+            const azStorage = await import("azure-storage");
+
+            const service = new azStorage.BlobService(storageAccount.name.get());
+            await new Promise((resolve, reject) => {
+                service.deleteBlob(container.name.get(), key, (err: Error) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    resolve();
+                });
+            });
+        };
+
+        this.onPut = async (putName, handler, filter) => {
+            const resourceGroup = shared.globalResourceGroup;
+            filter = filter || {};
+            serverless.storage.onBlobEvent(putName, storageAccount, (context, buffer) => {
+                    // Redirect console logging to context logging.
+                    console.log = context.log;
+                    console.error = context.log.error;
+                    console.warn = context.log.warn;
+                    // tslint:disable-next-line:no-console
+                    console.info = context.log.info;
+
+                    handler({
+                        key: context.bindingData.blobTrigger,
+                        eventTime: context.bindingData.sys.utcNow,
+                        size: buffer.length,
+                    }).then(() => context.done());
+                },
+                {
+                    storageAccount: storageAccount,
+                    containerName: container.name,
+                    resourceGroup: resourceGroup,
+                    filterPrefix: filter.keyPrefix,
+                    filterSuffix: filter.keySuffix,
+                },
+                { parent: this });
+        };
+
+        this.onDelete = async (delName, handler, filter) => {
+            throw new Error("@Bucket.onDelete is not yet implemented for @pulumi/cloud-azure.");
+        };
+    }
+}
+
+class ReadableStream extends stream.Readable {
+    public constructor(private buffer: Buffer | undefined) {
+        super();
     }
 
-    onPut(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter | undefined): void {
-        throw new Error("Method not implemented.");
-    }
-
-    onDelete(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter | undefined): void {
-        throw new Error("Method not implemented.");
+    public _read() {
+        if (this.buffer) {
+            this.push(this.buffer);
+            this.buffer = undefined;
+        }
     }
 }

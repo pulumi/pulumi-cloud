@@ -1,0 +1,24 @@
+{
+    "name": "bicket",
+    "version": "0.1",
+    "license": "Apache-2.0",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^0.14.3",
+        "@pulumi/azure": "^0.14.2",
+        "@pulumi/azure-serverless": "^0.14.0-dev-1533941118-g4128ac6",
+        "azure-storage": "^2.10.1"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.26",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-azure": "latest"
+    }
+}
