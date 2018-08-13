@@ -16,8 +16,6 @@ import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import * as containerregistry from "azure-arm-containerregistry"
-import * as msrest from "ms-rest";
 import * as shared from "./shared";
 
 import * as docker from "@pulumi/docker";
