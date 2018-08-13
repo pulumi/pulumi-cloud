@@ -12,8 +12,11 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/azure": "^0.14.2",
+        "@pulumi/azure-serverless": "^0.14.0-dev-1533941118-g4128ac6",
         "@pulumi/docker": "^0.14.0",
         "@pulumi/pulumi": "^0.14.4-dev",
+        "stream-buffers": "^3.0.2",
+        "azure-storage": "^2.10.1",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
     },
@@ -21,6 +24,7 @@
         "@types/mime": "^2.0.0",
         "@types/node": "^8.0.26",
         "@types/semver": "^5.4.0",
+        "@types/stream-buffers": "^3.0.2",
         "tslint": "^5.7.0",
         "typescript": "^2.6.2"
     },
