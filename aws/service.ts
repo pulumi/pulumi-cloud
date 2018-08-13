@@ -24,7 +24,6 @@ import * as config from "./config";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
-import { String } from "aws-sdk/clients/shield";
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
