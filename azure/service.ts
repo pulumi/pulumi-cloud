@@ -114,7 +114,7 @@ function computeImageFromBuild(
     // This is a container to build; produce a name, either user-specified or auto-computed.
     pulumi.log.debug(`Building container image at '${build}'`, registry);
 
-    const dockerRegistry: pulumi.Output<docker.Registry> =
+    const dockerRegistry =
         pulumi.all([registry.loginServer, registry.adminUsername, registry.adminPassword])
               .apply(([loginServer, username, password]) => ({ registry: loginServer, username, password }));
 
@@ -131,12 +131,9 @@ function computeImageFromBuildWorker(
         dockerRegistry: docker.Registry,
         logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
-    let imageDigest: pulumi.Output<string>;
+    let imageDigest = buildImageCache.get(imageName);
     // See if we've already built this.
-    if (imageName && buildImageCache.has(imageName)) {
-        // We got a cache hit, simply reuse the existing digest.
-        // Safe to ! the result since we checked buildImageCache.has above.
-        imageDigest = buildImageCache.get(imageName)!;
+    if (imageDigest) {
         imageDigest.apply(d =>
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
     } else {
@@ -147,10 +144,6 @@ function computeImageFromBuildWorker(
         imageDigest = docker.buildAndPushImage(
             imageName, build, dockerRegistry.registry, logResource,
             async () => dockerRegistry);
-
-        if (imageName) {
-            buildImageCache.set(imageName, imageDigest);
-        }
 
         imageDigest.apply(d =>
             pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
