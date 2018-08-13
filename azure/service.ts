@@ -81,9 +81,14 @@ const registries = new Map<string, azure.containerservice.Registry>();
 function getOrCreateRegistry(imageName: string): azure.containerservice.Registry {
     let registry = registries.get(imageName);
     if (!registry) {
-        registry = new azure.containerservice.Registry(imageName,  {
+        registry = new azure.containerservice.Registry(imageName, {
             resourceGroupName: shared.globalResourceGroupName,
             location: shared.globalResourceGroupLocation,
+
+            // We need the admin account enabled so that we can grab the name/password to send to
+            // docker.  We could consider an approach whereby this was not enabled, but it was
+            // conditionally enabled/disabled on demand when needed.
+            adminEnabled: true,
         });
 
         registries.set(imageName, registry);
