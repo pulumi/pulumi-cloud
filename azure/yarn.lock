@@ -224,6 +224,13 @@ aws4@^1.6.0, aws4@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.8.0.tgz#f0e003d9ca9e7f59c7a508945d7b2ef9a04a542f"
 
+azure-arm-containerinstance@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/azure-arm-containerinstance/-/azure-arm-containerinstance-3.0.0.tgz#a1766644484a2c53316b91ac091645382238e90d"
+  dependencies:
+    ms-rest "^2.3.3"
+    ms-rest-azure "^2.5.5"
+
 azure-arm-containerregistry@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/azure-arm-containerregistry/-/azure-arm-containerregistry-2.4.0.tgz#c58a9cafbcacbf864beab99f1d0cb8546b7a9cf1"

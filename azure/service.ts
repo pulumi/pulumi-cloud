@@ -16,7 +16,11 @@ import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
+import * as crypto from "crypto";
 import * as shared from "./shared";
+
+import * as azureContainerSDK from "azure-arm-containerinstance";
+import * as msrest from "ms-rest";
 
 import * as docker from "@pulumi/docker";
 import * as config from "./config";
@@ -48,9 +52,64 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
         super("cloud:task:Task", name, { container: container }, opts);
 
-        this.run = _ => { throw new Error("Method not implemented."); };
+        if (container.ports && container.ports.length > 0) {
+            throw new RunError("Tasks should not be given any [ports] in their Container definition.");
+        }
 
-        throw new Error("Method not implemented.");
+        const imageName = getImageName(container);
+        if (!imageName) {
+            throw new Error("[getImageName] should have always produced an image name.");
+        }
+
+        let registry: azure.containerservice.Registry | undefined;
+        if (container.build) {
+            // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
+            // The reason is subtle; however, if we do not, we end up with a circular reference between the
+            // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
+            // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
+            registry = getOrCreateRegistry(imageName);
+        }
+
+        const imageOptions = computeImage(imageName, container, registry);
+
+        const globalResourceGroupName = shared.globalResourceGroupName;
+        const { username, password } = shared.getUsernameAndPassword();
+        const subscriptionID = shared.getSubscriptionId();
+
+        const memory = pulumi.output(container.memory);
+
+        this.run = async (options) => {
+            options = options || {};
+            options.host = options.host || {};
+            const credentials = new msrest.BasicAuthenticationCredentials(username, password);
+            const client = new azureContainerSDK.ContainerInstanceManagementClient(credentials, subscriptionID);
+
+            const imageOpts = imageOptions.get();
+            let envMap = imageOpts.environment;
+            if (options.environment) {
+                envMap = Object.assign(options.environment, envMap);
+            }
+
+            // Convert the environment to the form that azure needs.
+            const env = Object.keys(envMap).map(k => ({ name: k, value: envMap[k] }));
+
+            const group = await client.containerGroups.createOrUpdate(
+                globalResourceGroupName.get(), name, {
+                    osType: options.host.os || "Linux",
+                    containers: [{
+                        name,
+                        image: imageOpts.image,
+                        environmentVariables: env,
+                        resources: {
+                            requests: {
+                                cpu: 1,
+                                memoryInGB: memory.get() || 1,
+                            },
+                        },
+                    }],
+                    restartPolicy: "Never",
+                });
+        };
     }
 }
 
@@ -72,6 +131,46 @@ export class HostPathVolume implements cloud.HostPathVolume {
     constructor(path: string) {
         this.kind = "HostPathVolume";
         this.path = path;
+    }
+}
+
+// getImageName generates an image name from a container definition.  It uses a combination of the
+// container's name and container specification to normalize the names of resulting repositories.
+// Notably, this leads to better caching in the event that multiple container specifications exist
+// that build the same location on disk.
+//
+// TODO(cyrusn): Share this with AWS impl.
+function getImageName(container: cloud.Container): string {
+    if (container.image) {
+        // In the event of an image, just use it.
+        return container.image;
+    }
+    else if (container.build) {
+        // Produce a hash of the build context and use that for the image name.
+        let buildSig: string;
+        if (typeof container.build === "string") {
+            buildSig = container.build;
+        }
+        else {
+            buildSig = container.build.context || ".";
+            if (container.build.dockerfile ) {
+                buildSig += `;dockerfile=${container.build.dockerfile}`;
+            }
+            if (container.build.args) {
+                for (const arg of Object.keys(container.build.args)) {
+                    buildSig += `;arg[${arg}]=${container.build.args[arg]}`;
+                }
+            }
+        }
+
+        return shared.createNameWithStackInfo(`${sha1hash(buildSig)}-container`);
+    }
+    else if (container.function) {
+        // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
+        return "lukehoban/nodejsrunner";
+    }
+    else {
+        throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
 }
 
@@ -103,6 +202,33 @@ const buildImageCache = new Map<string, pulumi.Output<string>>();
 interface ImageOptions {
     image: string;
     environment: Record<string, string>;
+}
+
+function computeImage(
+    imageName: string,
+    container: cloud.Container,
+    repository: azure.containerservice.Registry | undefined): pulumi.Output<ImageOptions> {
+
+    // Start with a copy from the container specification.
+    const preEnv: Record<string, pulumi.Input<string>> =
+        Object.assign({}, container.environment || {});
+
+    if (container.build) {
+        if (!repository) {
+            throw new RunError("Expected a container repository for build image");
+        }
+
+        return computeImageFromBuild(preEnv, container.build, imageName, repository);
+    }
+    else if (container.image) {
+        return computeImageFromImage(preEnv, imageName);
+    }
+    else if (container.function) {
+        return computeImageFromFunction(container.function, preEnv, imageName);
+    }
+    else {
+        throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
+    }
 }
 
 function computeImageFromBuild(
@@ -153,9 +279,36 @@ function computeImageFromBuildWorker(
     return createImageOptions(repositoryUrl, preEnv);
 }
 
+function computeImageFromImage(
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    return createImageOptions(imageName, preEnv);
+}
+
+function computeImageFromFunction(
+        func: () => void,
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+    // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
+    preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
+    return createImageOptions(imageName, preEnv);
+}
+
 function createImageOptions(
     image: string,
     env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
     return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+}
+
+// sha1hash returns a partial SHA1 hash of the input string.
+export function sha1hash(s: string): string {
+    const shasum = crypto.createHash("sha1");
+    shasum.update(s);
+    // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
+    //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
+    return shasum.digest("hex").substring(0, 8);
 }

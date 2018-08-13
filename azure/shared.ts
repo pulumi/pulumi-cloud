@@ -66,17 +66,26 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 const config = new pulumi.Config("cloud-azure");
 export const location = config.require("location");
 
-// let usernameAndPassword: { username: string; password: string };
-// export function getUsernameAndPassword() {
-//     if (!usernameAndPassword) {
-//         usernameAndPassword = {
-//             username: config.require("username"),
-//             password: config.require("password")
-//         };
-//     }
+let usernameAndPassword: { username: string; password: string };
+export function getUsernameAndPassword() {
+    if (!usernameAndPassword) {
+        usernameAndPassword = {
+            username: config.require("username"),
+            password: config.require("password")
+        };
+    }
 
-//     return usernameAndPassword;
-// }
+    return usernameAndPassword;
+}
+
+let subscriptionId: string | undefined;
+export function getSubscriptionId() {
+    if (!subscriptionId) {
+        subscriptionId = config.require("subscription-id");
+    }
+
+    return subscriptionId;
+}
 
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
