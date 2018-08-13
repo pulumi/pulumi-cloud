@@ -24,6 +24,7 @@ import * as config from "./config";
 import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
     getGlobalInfrastructureResource, getOrCreateNetwork } from "./shared";
 import * as utils from "./utils";
+import { String } from "aws-sdk/clients/shield";
 
 interface ContainerPortLoadBalancer {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
@@ -203,8 +204,8 @@ function computeImage(
         repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
 
     // Start with a copy from the container specification.
-    const preEnv: {[key: string]: pulumi.Input<string>} =
-        <any>Object.assign({}, container.environment || {});
+    const preEnv: Record<string, pulumi.Input<string>> =
+        Object.assign({}, container.environment || {});
 
     // Now add entries for service discovery amongst containers exposing endpoints.
     if (ports) {
@@ -247,72 +248,107 @@ function computeImage(
     }
 
     if (container.build) {
-        // This is a container to build; produce a name, either user-specified or auto-computed.
-        pulumi.log.debug(`Building container image at '${container.build}'`, repository);
         if (!repository) {
             throw new RunError("Expected a container repository for build image");
         }
 
-        let imageDigest: pulumi.Output<string>;
-        // See if we've already built this.
-        if (imageName && buildImageCache.has(imageName)) {
-            // We got a cache hit, simply reuse the existing digest.
-            // Safe to ! the result since we checked buildImageCache.has above.
-            imageDigest = buildImageCache.get(imageName)!;
-            imageDigest.apply(d =>
-                pulumi.log.debug(`    already built: ${imageName} (${d})`, repository));
-        } else {
-            // If we haven't, build and push the local build context to the ECR repository, wait for
-            // that to complete, then return the image name pointing to the ECT repository along
-            // with an environment variable for the image digest to ensure the TaskDefinition get's
-            // replaced IFF the built image changes.
-            const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container.build, repositoryUrl, repository, async () => {
-                // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
-                // extracting the username/password pair after base64-decoding the token.
-                //
-                // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-                if (!registryId) {
-                    throw new RunError("Expected registry ID to be defined during push");
-                }
-                const credentials = await aws.ecr.getCredentials({ registryId: registryId });
-                const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-                const [username, password] = decodedCredentials.split(":");
-                if (!password || !username) {
-                    throw new RunError("Invalid credentials");
-                }
-                return {
-                    registry: credentials.proxyEndpoint,
-                    username: username,
-                    password: password,
-                };
-            });
-            if (imageName) {
-                buildImageCache.set(imageName, imageDigest);
-            }
-            imageDigest.apply(d =>
-                pulumi.log.debug(`    build complete: ${imageName} (${d})`, repository));
-        }
-
-        preEnv.IMAGE_DIGEST = imageDigest;
-
-        return pulumi.all([repository.repositoryUrl, pulumi.all(preEnv)])
-                     .apply(([url, e]) => ({ image: url, environment: e }));
+        return computeImageFromBuild(preEnv, container.build, imageName, repository);
     }
     else if (container.image) {
-        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return computeImageFromImage(preEnv, imageName);
     }
     else if (container.function) {
-        const func = container.function;
-        preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
-
-        // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
-        // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return computeImageFromFunction(container.function, preEnv, imageName);
     }
     else {
         throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
+}
+
+function computeImageFromBuild(
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        repository: aws.ecr.Repository): pulumi.Output<ImageOptions> {
+
+    // This is a container to build; produce a name, either user-specified or auto-computed.
+    pulumi.log.debug(`Building container image at '${build}'`, repository);
+    const { repositoryUrl, registryId } = repository;
+
+    return pulumi.all([repositoryUrl, registryId]).apply(([repoUrl, regId]) =>
+        computeImageFromBuildWorker(preEnv, build, imageName, repoUrl, regId, repository));
+}
+
+function computeImageFromBuildWorker(
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        repositoryUrl: string,
+        registryId: string,
+        logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
+
+    let imageDigest: pulumi.Output<string>;
+    // See if we've already built this.
+    if (imageName && buildImageCache.has(imageName)) {
+        // We got a cache hit, simply reuse the existing digest.
+        // Safe to ! the result since we checked buildImageCache.has above.
+        imageDigest = buildImageCache.get(imageName)!;
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
+    } else {
+        // If we haven't, build and push the local build context to the ECR repository, wait for
+        // that to complete, then return the image name pointing to the ECT repository along
+        // with an environment variable for the image digest to ensure the TaskDefinition get's
+        // replaced IFF the built image changes.
+        imageDigest = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
+            // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
+            // extracting the username/password pair after base64-decoding the token.
+            //
+            // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+            if (!registryId) {
+                throw new RunError("Expected registry ID to be defined during push");
+            }
+            const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+            const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+            const [username, password] = decodedCredentials.split(":");
+            if (!password || !username) {
+                throw new RunError("Invalid credentials");
+            }
+            return {
+                registry: credentials.proxyEndpoint,
+                username: username,
+                password: password,
+            };
+        });
+
+        if (imageName) {
+            buildImageCache.set(imageName, imageDigest);
+        }
+
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
+    }
+
+    preEnv.IMAGE_DIGEST = imageDigest;
+    return createImageOptions(repositoryUrl, preEnv);
+}
+
+function computeImageFromImage(
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    return createImageOptions(imageName, preEnv);
+}
+
+function computeImageFromFunction(
+        func: () => void,
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+    // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
+    preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
+    return createImageOptions(imageName, preEnv);
 }
 
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
@@ -384,6 +420,14 @@ function computeContainerDefinitions(
 
     return pulumi.all(containerDefinitions);
 }
+
+function createImageOptions(
+    image: string,
+    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+
+    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+}
+
 
 // The ECS Task assume role policy for Task Roles
 const taskRolePolicy = {
