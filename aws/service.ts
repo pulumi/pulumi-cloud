@@ -286,12 +286,9 @@ function computeImageFromBuildWorker(
         registryId: string,
         logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
-    let imageDigest: pulumi.Output<string>;
     // See if we've already built this.
-    if (imageName && buildImageCache.has(imageName)) {
-        // We got a cache hit, simply reuse the existing digest.
-        // Safe to ! the result since we checked buildImageCache.has above.
-        imageDigest = buildImageCache.get(imageName)!;
+    let imageDigest = buildImageCache.get(imageName);
+    if (imageDigest) {
         imageDigest.apply(d =>
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
     } else {
@@ -320,9 +317,8 @@ function computeImageFromBuildWorker(
             };
         });
 
-        if (imageName) {
-            buildImageCache.set(imageName, imageDigest);
-        }
+
+        buildImageCache.set(imageName, imageDigest);
 
         imageDigest.apply(d =>
             pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
@@ -359,7 +355,11 @@ function computeContainerDefinitions(
     const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] =
         Object.keys(containers).map(containerName => {
             const container = containers[containerName];
-            const imageName: string = getImageName(container);
+            const imageName = getImageName(container);
+            if (!imageName) {
+                throw new Error("[getImageName] should have always produced an image name.");
+            }
+
             let repository: aws.ecr.Repository | undefined;
             if (container.build) {
                 // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
@@ -368,6 +368,7 @@ function computeContainerDefinitions(
                 // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
                 repository = getOrCreateRepository(imageName);
             }
+
             const imageOptions = computeImage(imageName, container, ports, repository);
             const portMappings = (container.ports || []).map(p => ({
                 containerPort: p.targetPort || p.port,
