@@ -11,12 +11,14 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/azure": "^0.14.2",
+        "@pulumi/azure": "^0.14.3-dev-1533767213-g1bdc311",
         "@pulumi/azure-serverless": "^0.14.0-dev-1533941118-g4128ac6",
         "@pulumi/docker": "^0.14.0",
         "@pulumi/pulumi": "^0.14.3",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
+        "azure-arm-containerregistry": "^2.4.0",
+        "ms-rest": "^2.3.6",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
     },

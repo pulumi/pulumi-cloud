@@ -66,9 +66,20 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 const config = new pulumi.Config("cloud-azure");
 export const location = config.require("location");
 
+// let usernameAndPassword: { username: string; password: string };
+// export function getUsernameAndPassword() {
+//     if (!usernameAndPassword) {
+//         usernameAndPassword = {
+//             username: config.require("username"),
+//             password: config.require("password")
+//         };
+//     }
+
+//     return usernameAndPassword;
+// }
+
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
-export const globalResourceGroupLocation = globalResourceGroup.apply(g => g.location);
 
 function getGlobalResourceGroup() {
     const resourceGroupPromise = getOrCreateGlobalResourceGroup();

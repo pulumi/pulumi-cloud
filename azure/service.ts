@@ -15,8 +15,10 @@
 import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as shared from "./shared";
 import { RunError } from "@pulumi/pulumi/errors";
+import * as containerregistry from "azure-arm-containerregistry"
+import * as msrest from "ms-rest";
+import * as shared from "./shared";
 
 import * as docker from "@pulumi/docker";
 import * as config from "./config";
@@ -83,7 +85,7 @@ function getOrCreateRegistry(imageName: string): azure.containerservice.Registry
     if (!registry) {
         registry = new azure.containerservice.Registry(imageName, {
             resourceGroupName: shared.globalResourceGroupName,
-            location: shared.globalResourceGroupLocation,
+            location: shared.location,
 
             // We need the admin account enabled so that we can grab the name/password to send to
             // docker.  We could consider an approach whereby this was not enabled, but it was
@@ -95,4 +97,74 @@ function getOrCreateRegistry(imageName: string): azure.containerservice.Registry
     }
 
     return registry;
+}
+
+// buildImageCache remembers the digests for all past built images, keyed by image name.
+const buildImageCache = new Map<string, pulumi.Output<string>>();
+
+interface ImageOptions {
+    image: string;
+    environment: Record<string, string>;
+}
+
+function computeImageFromBuild(
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        registry: azure.containerservice.Registry): pulumi.Output<ImageOptions> {
+
+    // This is a container to build; produce a name, either user-specified or auto-computed.
+    pulumi.log.debug(`Building container image at '${build}'`, registry);
+
+    const dockerRegistry: pulumi.Output<docker.Registry> =
+        pulumi.all([registry.loginServer, registry.adminUsername, registry.adminPassword])
+              .apply(([loginServer, username, password]) => ({ registry: loginServer, username, password }));
+
+    return pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
+        computeImageFromBuildWorker(
+            preEnv, build, imageName, loginServer, dockerRegistry, registry));
+}
+
+function computeImageFromBuildWorker(
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        repositoryUrl: string,
+        dockerRegistry: docker.Registry,
+        logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
+
+    let imageDigest: pulumi.Output<string>;
+    // See if we've already built this.
+    if (imageName && buildImageCache.has(imageName)) {
+        // We got a cache hit, simply reuse the existing digest.
+        // Safe to ! the result since we checked buildImageCache.has above.
+        imageDigest = buildImageCache.get(imageName)!;
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
+    } else {
+        // If we haven't, build and push the local build context to the ECR repository, wait for
+        // that to complete, then return the image name pointing to the ECT repository along
+        // with an environment variable for the image digest to ensure the TaskDefinition get's
+        // replaced IFF the built image changes.
+        imageDigest = docker.buildAndPushImage(
+            imageName, build, dockerRegistry.registry, logResource,
+            async () => dockerRegistry);
+
+        if (imageName) {
+            buildImageCache.set(imageName, imageDigest);
+        }
+
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
+    }
+
+    preEnv.IMAGE_DIGEST = imageDigest;
+    return createImageOptions(repositoryUrl, preEnv);
+}
+
+function createImageOptions(
+    image: string,
+    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+
+    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
 }
