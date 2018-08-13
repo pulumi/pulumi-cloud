@@ -76,7 +76,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const { username, password } = shared.getUsernameAndPassword();
         const subscriptionID = shared.getSubscriptionId();
 
-        const memory = pulumi.output(container.memory);
+        const memory = pulumi.output(container.memoryReservation);
 
         this.run = async (options) => {
             options = options || {};

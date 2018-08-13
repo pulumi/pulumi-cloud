@@ -71,7 +71,7 @@ export interface Container {
     /**
      * The amount of memory to reserve for the container, but the container will
      * be allowed to use more memory if it's available.  At least one of
-     * `memory` and `memorReservation` must be specified.  Maps to the Docker
+     * `memory` and `memoryReservation` must be specified.  Maps to the Docker
      * `--memory-reservation` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
