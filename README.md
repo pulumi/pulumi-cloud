@@ -64,7 +64,7 @@ container, `API` exposes simple serverless functions over HTTP, and `timer` allo
 timers.  All serverless functions are expressed using lambdas in your language of choice.  The
 package also offers simple data abstractions, systems like `Table` and `Bucket`.
 
-[`@pulumi/aws`](https://github.com/pulumi/pulumi-cloud/tree/master/api) supplies an implementation
+[`@pulumi/cloud-aws`](https://github.com/pulumi/pulumi-cloud/tree/master/aws) supplies an implementation
 of those abstractions, built on top of the `@pulumi/aws` library.  Its implementation types offer
 more AWS-specific functionality than is available in the `@pulumi/cloud` package.
 
