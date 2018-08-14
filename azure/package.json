@@ -13,7 +13,7 @@
     "dependencies": {
         "@pulumi/pulumi": "^0.15.0",
         "@pulumi/azure": "^0.15.0",
-        "@pulumi/azure-serverless": "^0.15.1-dev-1534282576-g614a044",
+        "@pulumi/azure-serverless": "^0.15.0",
         "@pulumi/docker": "^0.14.0",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",

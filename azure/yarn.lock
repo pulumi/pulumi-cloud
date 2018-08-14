@@ -45,9 +45,9 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/azure-serverless@^0.15.1-dev-1534282576-g614a044":
-  version "0.15.1-dev-1534282576-g614a044"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1534282576-g614a044.tgz#7472bd2cf965deac653d52edf9275c3f0516c9bd"
+"@pulumi/azure-serverless@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.0.tgz#7ea92bc33d8245645f58badeb7644879336f192b"
   dependencies:
     "@pulumi/azure" "^0.15.0"
     "@pulumi/pulumi" "^0.15.0"
