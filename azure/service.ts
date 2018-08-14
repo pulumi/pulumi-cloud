@@ -99,7 +99,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 options = options || {};
                 options.host = options.host || {};
 
-                console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2))
+                console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2));
 
                 const credentials = await new Promise<msrest.ApplicationTokenCredentials>((resolve, reject) => {
                     msrest.loginWithServicePrincipalSecret(
