@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -40,11 +41,29 @@ func Test_Examples(t *testing.T) {
 	}
 	fmt.Printf("ARM environment: %v\n", environ)
 
-	_, err := os.Getwd()
+	location := os.Getenv("ARM_LOCATION")
+	if location == "" {
+		t.Skipf("Skipping test due to missing ARM_LOCATION variable")
+	}
+	fmt.Printf("ARM location: %v\n", location)
+
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
-	examples := []integration.ProgramTestOptions{}
+	examples := []integration.ProgramTestOptions{
+		{
+			Dir: path.Join(cwd, "./examples/bucket"),
+			Config: map[string]string{
+				"azure:environment":    environ,
+				"cloud-azure:location": location,
+				"cloud:provider":       "azure",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		}}
 
 	longExamples := []integration.ProgramTestOptions{}
 
