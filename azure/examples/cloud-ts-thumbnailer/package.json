@@ -2,7 +2,15 @@
     "name": "video-thumbnailer",
     "version": "0.1.0",
     "main": "index.js",
+    "scripts": {
+        "build": "tsc"
+    },
     "dependencies": {
-        "@pulumi/cloud-azure": "latest"
+        "@pulumi/pulumi": "^0.15.0",
+        "@pulumi/azure": "^0.15.0",
+        "@pulumi/azure-serverless": "^0.15.0"
+    },
+    "devDependencies": {
+        "@pulumi/cloud": "latest"
     }
 }

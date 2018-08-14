@@ -20,7 +20,7 @@ bucket.onPut("onNewVideo", bucketArgs => {
     const framePos = file.substring(file.indexOf("_") + 1, file.indexOf(".")).replace("-", ":");
 
     const env = {
-        "S3_BUCKET": bucket.bucket.id.get(),
+        "BUCKET": bucket.container.id.get(),
         "INPUT_VIDEO": file,
         "TIME_OFFSET": framePos,
         "OUTPUT_FILE": thumbnailFile,
@@ -42,4 +42,4 @@ bucket.onPut("onNewThumbnail", bucketArgs => {
 }, { keySuffix: ".jpg" });
 
 // Export the bucket name.
-export const bucketName = bucket.bucket.id;
+export const bucketName = bucket.container.id;

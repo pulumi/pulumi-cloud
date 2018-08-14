@@ -77,22 +77,11 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const globalResourceGroupName = shared.globalResourceGroupName;
         const memory = pulumi.output(container.memoryReservation);
 
-        const subscriptionId = azure.config.subscriptionId;
-        const clientId = azure.config.clientId;
-        const clientSecret = azure.config.clientSecret;
-        const tenantId = azure.config.tenantId;
-        if (!subscriptionId) {
-            throw new RunError("azure:subscriptionId was not supplied");
-        }
-        if (!clientId) {
-            throw new RunError("azure:clientId was not supplied");
-        }
-        if (!clientSecret) {
-            throw new RunError("azure:clientSecret was not supplied");
-        }
-        if (!tenantId) {
-            throw new RunError("azure:tenantId was not supplied");
-        }
+        const config = new pulumi.Config("cloud-azure");
+        const subscriptionId = config.require("subscriptionId");
+        const clientId = config.require("clientId");
+        const clientSecret = config.require("clientSecret");
+        const tenantId = config.require("tenantId");
 
         this.run = async (options) => {
             try {
