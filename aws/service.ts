@@ -274,8 +274,8 @@ function computeImageFromBuild(
     pulumi.log.debug(`Building container image at '${build}'`, repository);
     const { repositoryUrl, registryId } = repository;
 
-    return pulumi.all([repositoryUrl, registryId]).apply(([repoUrl, regId]) =>
-        computeImageFromBuildWorker(preEnv, build, imageName, repoUrl, regId, repository));
+    return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
+        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, repository));
 }
 
 function computeImageFromBuildWorker(
@@ -386,15 +386,15 @@ function computeContainerDefinitions(
 
             return pulumi.all([imageOptions, container.command, container.memory,
                                container.memoryReservation, logGroup.id, container.dockerLabels])
-                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
+                         .apply(([imageOptions, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
-                for (const key of Object.keys(imageOpts.environment)) {
-                    keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
+                for (const key of Object.keys(imageOptions.environment)) {
+                    keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
                 }
 
                 const containerDefinition: aws.ecs.ContainerDefinition = {
                     name: containerName,
-                    image: imageOpts.image,
+                    image: imageOptions.image,
                     command: command,
                     memory: memory,
                     memoryReservation: memoryReservation,
