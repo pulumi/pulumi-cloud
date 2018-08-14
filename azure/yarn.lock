@@ -45,23 +45,23 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/azure@^0.15.0-rc":
-  version "0.15.0-rc2"
-  resolved "https://npmjs.pulumi.com/@pulumi%2fazure/-/azure-0.15.0-rc2.tgz#e0dedc240519e95d7276469524aea5e9844f061a"
+"@pulumi/azure@^0.15.0":
+  version "0.15.0"
+  resolved "https://npmjs.pulumi.com/@pulumi%2fazure/-/azure-0.15.0.tgz#f85fcf96bf2bd0e98164cd4b1802ca606e9f003e"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0-rc"
+    "@pulumi/pulumi" "^0.15.0"
 
-"@pulumi/docker@^0.15.0-rc":
-  version "0.15.0-rc2"
-  resolved "https://npmjs.pulumi.com/@pulumi%2fdocker/-/docker-0.15.0-rc2.tgz#b8656b172cabd0c4150932f0225b3ad0ecee5432"
+"@pulumi/docker@^0.15.0":
+  version "0.15.0"
+  resolved "https://npmjs.pulumi.com/@pulumi%2fdocker/-/docker-0.15.0.tgz#cd6076113b2527fe73ff9865934977db343a30ca"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0-rc"
+    "@pulumi/pulumi" "^0.15.0"
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0-rc":
-  version "0.15.0-rc2"
-  resolved "https://npmjs.pulumi.com/@pulumi%2fpulumi/-/pulumi-0.15.0-rc2.tgz#5dfbb583a8370334cdc0a20239e94fbcc93d83bf"
+"@pulumi/pulumi@^0.15.0":
+  version "0.15.0"
+  resolved "https://npmjs.pulumi.com/@pulumi%2fpulumi/-/pulumi-0.15.0.tgz#63f7e6ab76c35459eae4725112ff507f08d071c2"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
