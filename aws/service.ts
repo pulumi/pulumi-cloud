@@ -116,10 +116,10 @@ function createLoadBalancer(
         protocol: protocol,
         certificateArn: useCertificateARN,
         port: portMapping.port,
-        defaultActions: [{
+        defaultAction: {
             type: "forward",
             targetGroupArn: target.arn,
-        }],
+        },
         // If SSL is used, we automatically insert the recommended ELB security policy from
         // http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html.
         sslPolicy: useCertificateARN ? "ELBSecurityPolicy-2016-08" : undefined,
