@@ -53,8 +53,9 @@ func Test_Examples(t *testing.T) {
 	}
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "./bucket"),
+			Dir: path.Join(cwd, "./examples/bucket"),
 			Config: map[string]string{
+				"azure:environment":    environ,
 				"cloud-azure:location": location,
 				"cloud:provider":       "azure",
 			},
