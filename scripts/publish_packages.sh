@@ -37,4 +37,3 @@ publish() {
 
 publish api
 publish aws
-publish azure
