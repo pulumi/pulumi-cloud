@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// tslint:disable:max-line-length
+
 import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
@@ -20,7 +22,7 @@ import * as crypto from "crypto";
 import * as shared from "./shared";
 
 import * as azureContainerSDK from "azure-arm-containerinstance";
-import * as msrest from "ms-rest";
+import * as msrest from "ms-rest-azure";
 
 import * as docker from "@pulumi/docker";
 import * as config from "./config";
@@ -34,7 +36,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
-        super("cloud:service:Service", name, { }, opts);
+        super("cloud:service:Service", name, {}, opts);
 
         this.getEndpoint = _ => { throw new Error("Method not implemented."); };
 
@@ -73,42 +75,84 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const imageOptions = computeImage(imageName, container, registry);
 
         const globalResourceGroupName = shared.globalResourceGroupName;
-        const { username, password } = shared.getUsernameAndPassword();
-        const subscriptionID = shared.getSubscriptionId();
-
         const memory = pulumi.output(container.memoryReservation);
 
+        const subscriptionId = azure.config.subscriptionId;
+        const clientId = azure.config.clientId;
+        const clientSecret = azure.config.clientSecret;
+        const tenantId = azure.config.tenantId;
+        if (!subscriptionId) {
+            throw new RunError("azure:subscriptionId was not supplied");
+        }
+        if (!clientId) {
+            throw new RunError("azure:clientId was not supplied");
+        }
+        if (!clientSecret) {
+            throw new RunError("azure:clientSecret was not supplied");
+        }
+        if (!tenantId) {
+            throw new RunError("azure:tenantId was not supplied");
+        }
+
         this.run = async (options) => {
-            options = options || {};
-            options.host = options.host || {};
-            const credentials = new msrest.BasicAuthenticationCredentials(username, password);
-            const client = new azureContainerSDK.ContainerInstanceManagementClient(credentials, subscriptionID);
+            try {
+                options = options || {};
+                options.host = options.host || {};
 
-            const imageOpts = imageOptions.get();
-            let envMap = imageOpts.environment;
-            if (options.environment) {
-                envMap = Object.assign(options.environment, envMap);
-            }
+                console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2))
 
-            // Convert the environment to the form that azure needs.
-            const env = Object.keys(envMap).map(k => ({ name: k, value: envMap[k] }));
+                const credentials = await new Promise<msrest.ApplicationTokenCredentials>((resolve, reject) => {
+                    msrest.loginWithServicePrincipalSecret(
+                        clientId,
+                        clientSecret,
+                        tenantId,
+                        (err, credentials) => {
+                            if (err) {
+                                return reject(err);
+                            }
 
-            const group = await client.containerGroups.createOrUpdate(
-                globalResourceGroupName.get(), name, {
-                    osType: options.host.os || "Linux",
-                    containers: [{
-                        name,
-                        image: imageOpts.image,
-                        environmentVariables: env,
-                        resources: {
-                            requests: {
-                                cpu: 1,
-                                memoryInGB: memory.get() || 1,
-                            },
+                            resolve(credentials);
                         },
-                    }],
-                    restartPolicy: "Never",
+                    );
                 });
+
+                console.log("Succeeded making client.");
+
+                const client = new azureContainerSDK.ContainerInstanceManagementClient(credentials, subscriptionId);
+
+                const imageOpts = imageOptions.get();
+                let envMap = imageOpts.environment;
+                if (options.environment) {
+                    envMap = Object.assign(options.environment, envMap);
+                }
+
+                // Convert the environment to the form that azure needs.
+                const env = Object.keys(envMap).map(k => ({ name: k, value: envMap[k] }));
+                console.log("Total env: " + JSON.stringify(envMap, null, 2));
+
+                const group = await client.containerGroups.createOrUpdate(
+                    globalResourceGroupName.get(), name, {
+                        osType: options.host.os || "Linux",
+                        containers: [{
+                            name,
+                            image: imageOpts.image,
+                            environmentVariables: env,
+                            resources: {
+                                requests: {
+                                    cpu: 1,
+                                    memoryInGB: memory.get() || 1,
+                                },
+                            },
+                        }],
+                        restartPolicy: "Never",
+                    });
+
+                console.log("Succeeded making container group!");
+            }
+            catch (err) {
+                console.log("Error: " + JSON.stringify(err, null, 2));
+                throw err;
+            }
         };
     }
 }
@@ -153,7 +197,7 @@ function getImageName(container: cloud.Container): string {
         }
         else {
             buildSig = container.build.context || ".";
-            if (container.build.dockerfile ) {
+            if (container.build.dockerfile) {
                 buildSig += `;dockerfile=${container.build.dockerfile}`;
             }
             if (container.build.args) {
@@ -232,17 +276,17 @@ function computeImage(
 }
 
 function computeImageFromBuild(
-        preEnv: Record<string, pulumi.Input<string>>,
-        build: string | cloud.ContainerBuild,
-        imageName: string,
-        registry: azure.containerservice.Registry): pulumi.Output<ImageOptions> {
+    preEnv: Record<string, pulumi.Input<string>>,
+    build: string | cloud.ContainerBuild,
+    imageName: string,
+    registry: azure.containerservice.Registry): pulumi.Output<ImageOptions> {
 
     // This is a container to build; produce a name, either user-specified or auto-computed.
     pulumi.log.debug(`Building container image at '${build}'`, registry);
 
     const dockerRegistry =
         pulumi.all([registry.loginServer, registry.adminUsername, registry.adminPassword])
-              .apply(([loginServer, username, password]) => ({ registry: loginServer, username, password }));
+            .apply(([loginServer, username, password]) => ({ registry: loginServer, username, password }));
 
     return pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
         computeImageFromBuildWorker(
@@ -250,12 +294,12 @@ function computeImageFromBuild(
 }
 
 function computeImageFromBuildWorker(
-        preEnv: Record<string, pulumi.Input<string>>,
-        build: string | cloud.ContainerBuild,
-        imageName: string,
-        repositoryUrl: string,
-        dockerRegistry: docker.Registry,
-        logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
+    preEnv: Record<string, pulumi.Input<string>>,
+    build: string | cloud.ContainerBuild,
+    imageName: string,
+    repositoryUrl: string,
+    dockerRegistry: docker.Registry,
+    logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
     let imageDigest = buildImageCache.get(imageName);
     // See if we've already built this.
@@ -280,16 +324,16 @@ function computeImageFromBuildWorker(
 }
 
 function computeImageFromImage(
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: string): pulumi.Output<ImageOptions> {
+    preEnv: Record<string, pulumi.Input<string>>,
+    imageName: string): pulumi.Output<ImageOptions> {
 
     return createImageOptions(imageName, preEnv);
 }
 
 function computeImageFromFunction(
-        func: () => void,
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: string): pulumi.Output<ImageOptions> {
+    func: () => void,
+    preEnv: Record<string, pulumi.Input<string>>,
+    imageName: string): pulumi.Output<ImageOptions> {
 
     // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
     // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)

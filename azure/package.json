@@ -19,7 +19,7 @@
         "azure-storage": "^2.10.1",
         "azure-arm-containerregistry": "^2.4.0",
         "azure-arm-containerinstance": "^3.0.0",
-        "ms-rest": "^2.3.6",
+        "ms-rest-azure": "^2.5.7",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
     },

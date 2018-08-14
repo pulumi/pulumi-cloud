@@ -815,7 +815,7 @@ moment@^2.21.0, moment@^2.22.2:
   version "2.22.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.2.tgz#3c257f9839fc0e93ff53149632239eb90783ff66"
 
-ms-rest-azure@^2.5.5:
+ms-rest-azure@^2.5.5, ms-rest-azure@^2.5.7:
   version "2.5.7"
   resolved "https://registry.yarnpkg.com/ms-rest-azure/-/ms-rest-azure-2.5.7.tgz#8d4a68ed938d21488ba6e66b4525fe2e8cbdfb2d"
   dependencies:
@@ -825,7 +825,7 @@ ms-rest-azure@^2.5.5:
     ms-rest "^2.3.2"
     uuid "^3.2.1"
 
-ms-rest@^2.3.2, ms-rest@^2.3.3, ms-rest@^2.3.6:
+ms-rest@^2.3.2, ms-rest@^2.3.3:
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/ms-rest/-/ms-rest-2.3.6.tgz#9984fe9328cd07e3172b520db5dff0acb68f1f7a"
   dependencies:

@@ -66,27 +66,6 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 const config = new pulumi.Config("cloud-azure");
 export const location = config.require("location");
 
-let usernameAndPassword: { username: string; password: string };
-export function getUsernameAndPassword() {
-    if (!usernameAndPassword) {
-        usernameAndPassword = {
-            username: config.require("username"),
-            password: config.require("password")
-        };
-    }
-
-    return usernameAndPassword;
-}
-
-let subscriptionId: string | undefined;
-export function getSubscriptionId() {
-    if (!subscriptionId) {
-        subscriptionId = config.require("subscription-id");
-    }
-
-    return subscriptionId;
-}
-
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
@@ -95,7 +74,7 @@ function getGlobalResourceGroup() {
     return pulumi.all([resourceGroupPromise]).apply(([rg]) => rg);
 
     async function getOrCreateGlobalResourceGroup() {
-        const resourceGroupName = config.get("resource-group-name");
+        const resourceGroupName = config.get("resourceGroupName");
         if (resourceGroupName) {
             // User specified the resource group they want to use.  Go fetch that.
             const result = await azure.core.getResourceGroup({
@@ -124,7 +103,7 @@ export function getGlobalStorageAccount() {
 }
 
 function getOrCreateGlobalStorageAccount(): azure.storage.Account {
-    const storageAccountId = config.get("storage-account-id");
+    const storageAccountId = config.get("storageAccountId");
     if (storageAccountId) {
         return azure.storage.Account.get("global", storageAccountId);
     }
