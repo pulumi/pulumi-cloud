@@ -61,6 +61,12 @@
   dependencies:
     "@pulumi/pulumi" "^0.15.0"
 
+"@pulumi/azure@^0.15.1-dev-1534293441-g18c5bf9":
+  version "0.15.1-dev-1534293441-g18c5bf9"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.1-dev-1534293441-g18c5bf9.tgz#6c3e04688d2dad789569859cd92a2ce8b74237b9"
+  dependencies:
+    "@pulumi/pulumi" "^0.14.4-dev"
+
 "@pulumi/docker@^0.15.0":
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.0.tgz#cd6076113b2527fe73ff9865934977db343a30ca"
@@ -68,6 +74,20 @@
     "@pulumi/pulumi" "^0.15.0"
     mime "^2.0.3"
     semver "^5.4.0"
+
+"@pulumi/pulumi@^0.14.4-dev":
+  version "0.14.4-dev-1533786685-g80569fb5"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.4-dev-1533786685-g80569fb5.tgz#078a2e81e932bbc032a89d6668dce4670f6cc149"
+  dependencies:
+    google-protobuf "^3.5.0"
+    grpc "^1.12.2"
+    minimist "^1.2.0"
+    protobufjs "^6.8.6"
+    read-package-tree "^5.2.1"
+    require-from-string "^2.0.1"
+    source-map-support "^0.4.16"
+    ts-node "^7.0.0"
+    typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.0":
   version "0.15.0"

@@ -12,7 +12,7 @@ const ffmpegThumbnailTask = new cloud.Task("ffmpegThumbTask", {
 
 // When a new video is uploaded, run the FFMPEG task on the video file.
 // Use the time index specified in the filename (e.g. cat_00-01.mp4 uses timestamp 00:01)
-bucket.onPut("onNewVideo", bucketArgs => {
+bucket.onPut("onNewVideo", async (bucketArgs) => {
     console.log(`*** New video: file ${bucketArgs.key} was uploaded at ${bucketArgs.eventTime}.`);
     const file = bucketArgs.key;
 
@@ -28,11 +28,11 @@ bucket.onPut("onNewVideo", bucketArgs => {
 
     console.log("Running task with env: " + JSON.stringify(env, null, 2));
 
-    ffmpegThumbnailTask.run({
+    await ffmpegThumbnailTask.run({
         environment: env,
-    }).then(() => {
-        console.log(`Running thumbnailer task.`);
-    });
+    })
+
+    console.log(`Running thumbnailer task.`);
 }, { keySuffix: ".mp4" });
 
 // When a new thumbnail is created, log a message.

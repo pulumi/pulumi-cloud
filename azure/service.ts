@@ -21,9 +21,6 @@ import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";
 import * as shared from "./shared";
 
-import * as azureContainerSDK from "azure-arm-containerinstance";
-import * as msrest from "ms-rest-azure";
-
 import * as docker from "@pulumi/docker";
 import * as config from "./config";
 
@@ -62,6 +59,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         if (!imageName) {
             throw new Error("[getImageName] should have always produced an image name.");
         }
+        console.log("Image name: " + imageName);
 
         let registry: azure.containerservice.Registry | undefined;
         if (container.build) {
@@ -84,13 +82,16 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const tenantId = config.require("tenantId");
 
         this.run = async (options) => {
+            const azureContainerSDK = await import("azure-arm-containerinstance");
+            const msrest = await import("ms-rest-azure");
+
             try {
                 options = options || {};
                 options.host = options.host || {};
 
                 console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2));
 
-                const credentials = await new Promise<msrest.ApplicationTokenCredentials>((resolve, reject) => {
+                const credentials: any = await new Promise((resolve, reject) => {
                     msrest.loginWithServicePrincipalSecret(
                         clientId,
                         clientSecret,
@@ -213,6 +214,7 @@ const registries = new Map<string, azure.containerservice.Registry>();
 function getOrCreateRegistry(imageName: string): azure.containerservice.Registry {
     let registry = registries.get(imageName);
     if (!registry) {
+        console.log("Creating registry: " + imageName);
         registry = new azure.containerservice.Registry(imageName, {
             resourceGroupName: shared.globalResourceGroupName,
             location: shared.location,
