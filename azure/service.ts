@@ -197,7 +197,9 @@ function getImageName(container: cloud.Container): string {
             }
         }
 
-        return shared.createNameWithStackInfo(`${sha1hash(buildSig)}-container`);
+        const imageName = shared.createNameWithStackInfo(`${sha1hash(buildSig)}container`);
+        const disallowedChars = /[^a-zA-Z0-9]/g;
+        return imageName.replace(disallowedChars, "");
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
