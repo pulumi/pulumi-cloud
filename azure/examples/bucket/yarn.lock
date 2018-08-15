@@ -61,6 +61,12 @@
   dependencies:
     "@pulumi/pulumi" "^0.15.0"
 
+"@pulumi/azure@^0.15.1-dev-1534296732-ge860f58":
+  version "0.15.1-dev-1534296732-ge860f58"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.1-dev-1534296732-ge860f58.tgz#3a5688509bb14e16648ad5802dddb602eb205e41"
+  dependencies:
+    "@pulumi/pulumi" "^0.15.0"
+
 "@pulumi/pulumi@^0.15.0":
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.0.tgz#63f7e6ab76c35459eae4725112ff507f08d071c2"
