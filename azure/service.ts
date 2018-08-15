@@ -225,6 +225,8 @@ function getOrCreateRegistry(imageName: string): azure.containerservice.Registry
             // docker.  We could consider an approach whereby this was not enabled, but it was
             // conditionally enabled/disabled on demand when needed.
             adminEnabled: true,
+
+            sku: "Standard",
         });
 
         registries.set(imageName, registry);
@@ -283,7 +285,7 @@ function computeImageFromBuild(
 
     return pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
         computeImageFromBuildWorker(
-            preEnv, build, imageName, loginServer, dockerRegistry, registry));
+            preEnv, build, imageName, loginServer + "/" + imageName, dockerRegistry, registry));
 }
 
 function computeImageFromBuildWorker(
@@ -305,7 +307,7 @@ function computeImageFromBuildWorker(
         // with an environment variable for the image digest to ensure the TaskDefinition get's
         // replaced IFF the built image changes.
         imageDigest = docker.buildAndPushImage(
-            imageName, build, dockerRegistry.registry, logResource,
+            imageName, build, repositoryUrl, logResource,
             async () => dockerRegistry);
 
         imageDigest.apply(d =>
