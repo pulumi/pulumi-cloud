@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.14.3",
-        "@pulumi/azure": "^0.14.2",
-        "@pulumi/azure-serverless": "^0.14.0-dev-1533941118-g4128ac6",
+        "@pulumi/pulumi": "^0.15.0",
+        "@pulumi/azure": "^0.15.0",
+        "@pulumi/azure-serverless": "^0.15.0",
         "azure-storage": "^2.10.1"
     },
     "devDependencies": {
