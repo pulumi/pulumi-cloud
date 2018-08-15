@@ -61,11 +61,11 @@
   dependencies:
     "@pulumi/pulumi" "^0.15.0"
 
-"@pulumi/azure@^0.15.1-dev-1534293441-g18c5bf9":
-  version "0.15.1-dev-1534293441-g18c5bf9"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.1-dev-1534293441-g18c5bf9.tgz#6c3e04688d2dad789569859cd92a2ce8b74237b9"
+"@pulumi/azure@^0.15.1-dev-1534296732-ge860f58":
+  version "0.15.1-dev-1534296732-ge860f58"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.1-dev-1534296732-ge860f58.tgz#3a5688509bb14e16648ad5802dddb602eb205e41"
   dependencies:
-    "@pulumi/pulumi" "^0.14.4-dev"
+    "@pulumi/pulumi" "^0.15.0"
 
 "@pulumi/docker@^0.15.0":
   version "0.15.0"
@@ -74,20 +74,6 @@
     "@pulumi/pulumi" "^0.15.0"
     mime "^2.0.3"
     semver "^5.4.0"
-
-"@pulumi/pulumi@^0.14.4-dev":
-  version "0.14.4-dev-1533786685-g80569fb5"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.4-dev-1533786685-g80569fb5.tgz#078a2e81e932bbc032a89d6668dce4670f6cc149"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.0":
   version "0.15.0"
@@ -306,10 +292,6 @@ brace-expansion@^1.1.7:
 browserify-mime@~1.2.9:
   version "1.2.9"
   resolved "https://registry.yarnpkg.com/browserify-mime/-/browserify-mime-1.2.9.tgz#aeb1af28de6c0d7a6a2ce40adb68ff18422af31f"
-
-buffer-equal-constant-time@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz#f8e71132f7ffe6e01a5c9697a4c6f3e48d5cc819"
 
 buffer-from@^1.0.0, buffer-from@^1.1.0:
   version "1.1.1"
@@ -1338,13 +1320,6 @@ tough-cookie@~2.3.3:
   dependencies:
     punycode "^1.4.1"
 
-tough-cookie@~2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-2.4.3.tgz#53f36da3f47783b0925afa06ff9f3b165280f781"
-  dependencies:
-    psl "^1.1.24"
-    punycode "^1.4.1"
-
 ts-node@^7.0.0:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-7.0.1.tgz#9562dc2d1e6d248d24bc55f773e3f614337d9baf"
@@ -1406,10 +1381,6 @@ typescript@^2.6.2:
 typescript@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.1.tgz#43738f29585d3a87575520a4b93ab6026ef11fdb"
-
-"underscore@>= 1.3.1":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
 
 underscore@~1.8.3:
   version "1.8.3"
