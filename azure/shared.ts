@@ -86,7 +86,7 @@ function getGlobalResourceGroup() {
 
         // Create a new resource group to use.
         return new azure.core.ResourceGroup("global", {
-            name: "global",
+            name: createNameWithStackInfo("global"),
             location: location,
         },
         { parent: getGlobalInfrastructureResource() });

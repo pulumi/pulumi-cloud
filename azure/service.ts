@@ -59,7 +59,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         if (!imageName) {
             throw new Error("[getImageName] should have always produced an image name.");
         }
-        console.log("Image name: " + imageName);
 
         let registry: azure.containerservice.Registry | undefined;
         if (container.build) {
@@ -216,7 +215,6 @@ const registries = new Map<string, azure.containerservice.Registry>();
 function getOrCreateRegistry(imageName: string): azure.containerservice.Registry {
     let registry = registries.get(imageName);
     if (!registry) {
-        console.log("Creating registry: " + imageName);
         registry = new azure.containerservice.Registry(imageName, {
             resourceGroupName: shared.globalResourceGroupName,
             location: shared.location,
@@ -227,7 +225,7 @@ function getOrCreateRegistry(imageName: string): azure.containerservice.Registry
             adminEnabled: true,
 
             sku: "Standard",
-        });
+        }, { parent: shared.getGlobalInfrastructureResource() });
 
         registries.set(imageName, registry);
     }
