@@ -186,7 +186,7 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
                 selection: {
                     tagStatus: "untagged",
                     countType: "imageCountMoreThan",
-                    countNumber: 10,
+                    countNumber: 1,
                 },
                 action: {
                     type: "expire",
