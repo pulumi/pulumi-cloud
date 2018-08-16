@@ -15,6 +15,7 @@
 import * as azure from "@pulumi/azure";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
+import * as crypto from "crypto";
 
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
 // it's safe to use these for top-level components like Network and Cluster, because they suffix all
@@ -115,4 +116,13 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
         accountTier: "Standard",
         accountReplicationType: "LRS",
     }, { parent: getGlobalInfrastructureResource() });
+}
+
+// sha1hash returns a partial SHA1 hash of the input string.
+export function sha1hash(s: string): string {
+    const shasum = crypto.createHash("sha1");
+    shasum.update(s);
+    // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
+    //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
+    return shasum.digest("hex").substring(0, 8);
 }

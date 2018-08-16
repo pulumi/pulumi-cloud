@@ -18,7 +18,6 @@ import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import * as crypto from "crypto";
 import * as shared from "./shared";
 
 import * as docker from "@pulumi/docker";
@@ -60,14 +59,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             throw new Error("[getImageName] should have always produced an image name.");
         }
 
-        let registry: azure.containerservice.Registry | undefined;
-        if (container.build) {
-            // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
-            // The reason is subtle; however, if we do not, we end up with a circular reference between the
-            // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
-            // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
-            registry = getOrCreateRegistry(imageName);
-        }
+        const registry = container.build ? getOrCreateGlobalRegistry() : undefined;
 
         const imageOptions = computeImage(imageName, container, registry);
 
@@ -90,7 +82,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
                 console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2));
 
-                const credentials: any = await new Promise((resolve, reject) => {
+                const clientCredentials: any = await new Promise((resolve, reject) => {
                     msrest.loginWithServicePrincipalSecret(
                         clientId,
                         clientSecret,
@@ -107,7 +99,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
                 console.log("Succeeded making client.");
 
-                const client = new azureContainerSDK.ContainerInstanceManagementClient(credentials, subscriptionId);
+                const client = new azureContainerSDK.ContainerInstanceManagementClient(
+                    clientCredentials, subscriptionId);
 
                 const imageOpts = imageOptions.get();
                 let envMap = imageOpts.environment;
@@ -119,22 +112,34 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 const env = Object.keys(envMap).map(k => ({ name: k, value: envMap[k] }));
                 console.log("Total env: " + JSON.stringify(envMap, null, 2));
 
-                const group = await client.containerGroups.createOrUpdate(
-                    globalResourceGroupName.get(), name, {
-                        osType: options.host.os || "Linux",
-                        containers: [{
-                            name,
-                            image: imageOpts.image,
-                            environmentVariables: env,
-                            resources: {
-                                requests: {
-                                    cpu: 1,
-                                    memoryInGB: memory.get() || 1,
-                                },
+                const containerCredentials = registry
+                    ? [{ server: registry.loginServer.get(), username: registry.adminUsername.get(), password: registry.adminPassword.get() }]
+                    : undefined;
+
+                const uniqueName = createUniqueContainerName(name);
+
+                const containerArgs = {
+                    location: shared.location,
+                    osType: options.host.os || "Linux",
+                    containers: [{
+                        name: uniqueName,
+                        image: imageOpts.image,
+                        environmentVariables: env,
+                        resources: {
+                            requests: {
+                                cpu: 1,
+                                memoryInGB: memory.get() || 1,
                             },
-                        }],
-                        restartPolicy: "Never",
-                    });
+                        },
+                    }],
+                    imageRegistryCredentials: containerCredentials,
+                    restartPolicy: "Never",
+                };
+
+                console.log("Creating container: " + JSON.stringify(containerArgs, null, 2));
+
+                const group = await client.containerGroups.createOrUpdate(
+                    globalResourceGroupName.get(), uniqueName, containerArgs);
 
                 console.log("Succeeded making container group!");
             }
@@ -144,6 +149,13 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
         };
     }
+}
+
+function createUniqueContainerName(name: string) {
+    const uniqueName = name + shared.sha1hash(Math.random().toString());
+
+    // Azure requires container names to be all lowercase.
+    return uniqueName.toLowerCase();
 }
 
 export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
@@ -196,7 +208,7 @@ function getImageName(container: cloud.Container): string {
             }
         }
 
-        const imageName = shared.createNameWithStackInfo(`${sha1hash(buildSig)}container`);
+        const imageName = shared.createNameWithStackInfo(`${shared.sha1hash(buildSig)}container`);
         const disallowedChars = /[^a-zA-Z0-9]/g;
         return imageName.replace(disallowedChars, "");
     }
@@ -209,13 +221,10 @@ function getImageName(container: cloud.Container): string {
     }
 }
 
-// registries contains a cache of already created azure container registries.
-const registries = new Map<string, azure.containerservice.Registry>();
-
-function getOrCreateRegistry(imageName: string): azure.containerservice.Registry {
-    let registry = registries.get(imageName);
-    if (!registry) {
-        registry = new azure.containerservice.Registry(imageName, {
+let globalRegistry: azure.containerservice.Registry | undefined;
+function getOrCreateGlobalRegistry(): azure.containerservice.Registry {
+    if (!globalRegistry) {
+        globalRegistry = new azure.containerservice.Registry("global", {
             resourceGroupName: shared.globalResourceGroupName,
             location: shared.location,
 
@@ -226,11 +235,9 @@ function getOrCreateRegistry(imageName: string): azure.containerservice.Registry
 
             sku: "Standard",
         }, { parent: shared.getGlobalInfrastructureResource() });
-
-        registries.set(imageName, registry);
     }
 
-    return registry;
+    return globalRegistry;
 }
 
 // buildImageCache remembers the digests for all past built images, keyed by image name.
@@ -339,13 +346,4 @@ function createImageOptions(
     env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
     return pulumi.all(env).apply(e => ({ image: image, environment: e }));
-}
-
-// sha1hash returns a partial SHA1 hash of the input string.
-export function sha1hash(s: string): string {
-    const shasum = crypto.createHash("sha1");
-    shasum.update(s);
-    // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
-    //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
-    return shasum.digest("hex").substring(0, 8);
 }
