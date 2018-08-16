@@ -178,7 +178,8 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
         repository = new aws.ecr.Repository(imageName.toLowerCase());
         repositories.set(imageName, repository);
 
-        // Set a default lifecycle policy s.t. only the 10 most recent images are retained.
+        // Set a default lifecycle policy such that at most a single untagged image is retained.
+        // We tag all cached build layers as well as the final image, so those images will never expire.
         const lifecyclePolicyDocument = {
             rules: [{
                 rulePriority: 10,
