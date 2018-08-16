@@ -177,6 +177,27 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
     if (!repository) {
         repository = new aws.ecr.Repository(imageName.toLowerCase());
         repositories.set(imageName, repository);
+
+        // Set a default lifecycle policy such that at most a single untagged image is retained.
+        // We tag all cached build layers as well as the final image, so those images will never expire.
+        const lifecyclePolicyDocument = {
+            rules: [{
+                rulePriority: 10,
+                description: "remove untagged images",
+                selection: {
+                    tagStatus: "untagged",
+                    countType: "imageCountMoreThan",
+                    countNumber: 1,
+                },
+                action: {
+                    type: "expire",
+                },
+            }],
+        };
+        const lifecyclePolicy = new aws.ecr.LifecyclePolicy(imageName.toLowerCase(), {
+            policy: JSON.stringify(lifecyclePolicyDocument),
+            repository: repository.name,
+        });
     }
     return repository;
 }
