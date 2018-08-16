@@ -20,6 +20,7 @@ import * as stream from "stream";
 import * as shared from "./shared";
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
+    public readonly storageAccount: azure.storage.Account;
     public readonly container: azure.storage.Container;
 
     // deployment-time api:
@@ -38,6 +39,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         const resourceGroupName = shared.globalResourceGroupName;
         const storageAccount = shared.getGlobalStorageAccount();
+        this.storageAccount = storageAccount;
 
         const container =  new azure.storage.Container(name, {
             resourceGroupName: resourceGroupName,

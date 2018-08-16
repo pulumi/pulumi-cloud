@@ -80,8 +80,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 options = options || {};
                 options.host = options.host || {};
 
-                console.log("Credentials: " + JSON.stringify({ clientId, clientSecret, tenantId, subscriptionId }, null, 2));
-
                 const clientCredentials: any = await new Promise((resolve, reject) => {
                     msrest.loginWithServicePrincipalSecret(
                         clientId,
@@ -97,8 +95,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     );
                 });
 
-                console.log("Succeeded making client.");
-
                 const client = new azureContainerSDK.ContainerInstanceManagementClient(
                     clientCredentials, subscriptionId);
 
@@ -110,7 +106,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
                 // Convert the environment to the form that azure needs.
                 const env = Object.keys(envMap).map(k => ({ name: k, value: envMap[k] }));
-                console.log("Total env: " + JSON.stringify(envMap, null, 2));
 
                 const containerCredentials = registry
                     ? [{ server: registry.loginServer.get(), username: registry.adminUsername.get(), password: registry.adminPassword.get() }]
@@ -136,12 +131,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     restartPolicy: "Never",
                 };
 
-                console.log("Creating container: " + JSON.stringify(containerArgs, null, 2));
-
                 const group = await client.containerGroups.createOrUpdate(
                     globalResourceGroupName.get(), uniqueName, containerArgs);
-
-                console.log("Succeeded making container group!");
             }
             catch (err) {
                 console.log("Error: " + JSON.stringify(err, null, 2));
