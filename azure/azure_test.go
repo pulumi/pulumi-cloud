@@ -63,7 +63,20 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
-		}}
+		},
+		{
+			Dir: path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config: map[string]string{
+				"azure:environment":    environ,
+				"cloud-azure:location": location,
+				"cloud:provider":       "azure",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+	}
 
 	longExamples := []integration.ProgramTestOptions{}
 
