@@ -1,7 +1,9 @@
 {
     "name": "video-thumbnailer",
     "version": "0.1.0",
-    "main": "index.js",
+    "license": "Apache-2.0",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
