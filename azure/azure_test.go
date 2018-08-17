@@ -34,36 +34,56 @@ import (
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
+func getRequiredEnvValue(t *testing.T, key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		t.Skipf("Skipping test due to missing %v variable", key)
+	}
+	fmt.Printf("%v: %v\n", key, value)
+	return value
+}
+
 func Test_Examples(t *testing.T) {
-	environ := os.Getenv("ARM_ENVIRONMENT")
-	if environ == "" {
-		t.Skipf("Skipping test due to missing ARM_ENVIRONMENT variable")
-	}
-	fmt.Printf("ARM environment: %v\n", environ)
-
-	location := os.Getenv("ARM_LOCATION")
-	if location == "" {
-		t.Skipf("Skipping test due to missing ARM_LOCATION variable")
-	}
-	fmt.Printf("ARM location: %v\n", location)
-
 	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
+
+	environ := getRequiredEnvValue(t, "ARM_ENVIRONMENT")
+	location := getRequiredEnvValue(t, "ARM_LOCATION")
+	subscriptionID := getRequiredEnvValue(t, "ARM_SUBSCRIPTION_ID")
+	clientID := getRequiredEnvValue(t, "ARM_CLIENT_ID")
+	clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
+	tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
+
+	commonConfig := map[string]string{
+		"cloud:provider":             "azure",
+		"azure:environment":          environ,
+		"cloud-azure:location":       location,
+		"cloud-azure:subscriptionId": subscriptionID,
+		"cloud-azure:clientId":       clientID,
+		"cloud-azure:clientSecret":   clientSecret,
+		"cloud-azure:tenantId":       tenantID,
+	}
+
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "./examples/bucket"),
-			Config: map[string]string{
-				"azure:environment":    environ,
-				"cloud-azure:location": location,
-				"cloud:provider":       "azure",
-			},
+			Dir:    path.Join(cwd, "./examples/bucket"),
+			Config: commonConfig,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
-		}}
+		},
+		{
+			Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+	}
 
 	longExamples := []integration.ProgramTestOptions{}
 

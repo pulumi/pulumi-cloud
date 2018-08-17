@@ -15,15 +15,17 @@
 import * as azure from "@pulumi/azure";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
+import * as crypto from "crypto";
 
 // nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
 // it's safe to use these for top-level components like Network and Cluster, because they suffix all
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
-export function createNameWithStackInfo(requiredInfo: string) {
-    const maxLength = 24;
-
+/**
+ * Helper to create a name for resources with a name that should be unique to this stack.
+ */
+export function createNameWithStackInfo(requiredInfo: string, maxLength: number) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
@@ -46,7 +48,7 @@ export function createNameWithStackInfo(requiredInfo: string) {
 }
 
 // Expose a common infrastructure resource that all our global resources can consider themselves to
-// be parented by.  This helps ensure unique URN naming for these guys as tey cannot conflict with
+// be parented by.  This helps ensure unique URN naming for these guys as they cannot conflict with
 // any other user resource.
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
@@ -55,6 +57,10 @@ class InfrastructureResource extends pulumi.ComponentResource {
 }
 
 let globalInfrastructureResource: InfrastructureResource | undefined;
+
+/**
+ * Get's the resource that any global infrastructure resource for this stack can use as a parent.
+ */
 export function getGlobalInfrastructureResource(): pulumi.Resource {
     if (!globalInfrastructureResource) {
         globalInfrastructureResource = new InfrastructureResource();
@@ -66,6 +72,11 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 const config = new pulumi.Config("cloud-azure");
 export const location = config.require("location");
 
+/**
+ * The Azure Resource Group to use for all resources if a specific one is not specified. To use an
+ * existing Resource Group provide the [cloud-azure:resourceGroupName] config value. Otherwise, a
+ * new group will be created.
+ */
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
@@ -74,7 +85,7 @@ function getGlobalResourceGroup() {
     return pulumi.all([resourceGroupPromise]).apply(([rg]) => rg);
 
     async function getOrCreateGlobalResourceGroup() {
-        const resourceGroupName = config.get("resource-group-name");
+        const resourceGroupName = config.get("resourceGroupName");
         if (resourceGroupName) {
             // User specified the resource group they want to use.  Go fetch that.
             const result = await azure.core.getResourceGroup({
@@ -86,7 +97,9 @@ function getGlobalResourceGroup() {
 
         // Create a new resource group to use.
         return new azure.core.ResourceGroup("global", {
-            name: "global",
+            // https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions#general
+            // Resource groups have a max length of 90.
+            name: createNameWithStackInfo("global", 90),
             location: location,
         },
         { parent: getGlobalInfrastructureResource() });
@@ -94,6 +107,12 @@ function getGlobalResourceGroup() {
 }
 
 let globalStorageAccount: azure.storage.Account;
+
+/**
+ * The Azure Storage Account to use for all resources that need to store data if not specific
+ * account is specified. To use an existing Storage Account provide the
+ * [cloud-azure:storageAccountId] config value. Otherwise, a new account will be created.
+ */
 export function getGlobalStorageAccount() {
     if (!globalStorageAccount) {
         globalStorageAccount = getOrCreateGlobalStorageAccount();
@@ -103,7 +122,7 @@ export function getGlobalStorageAccount() {
 }
 
 function getOrCreateGlobalStorageAccount(): azure.storage.Account {
-    const storageAccountId = config.get("storage-account-id");
+    const storageAccountId = config.get("storageAccountId");
     if (storageAccountId) {
         return azure.storage.Account.get("global", storageAccountId);
     }
@@ -115,4 +134,13 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
         accountTier: "Standard",
         accountReplicationType: "LRS",
     }, { parent: getGlobalInfrastructureResource() });
+}
+
+// sha1hash returns a partial SHA1 hash of the input string.
+export function sha1hash(s: string): string {
+    const shasum = crypto.createHash("sha1");
+    shasum.update(s);
+    // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
+    //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
+    return shasum.digest("hex").substring(0, 8);
 }

@@ -367,6 +367,13 @@ function computeImageFromFunction(
     return createImageOptions(imageName, preEnv);
 }
 
+function createImageOptions(
+    image: string,
+    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+
+    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+}
+
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
 function computeContainerDefinitions(
         containers: cloud.Containers,
@@ -440,13 +447,6 @@ function computeContainerDefinitions(
         });
 
     return pulumi.all(containerDefinitions);
-}
-
-function createImageOptions(
-    image: string,
-    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
-
-    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
 }
 
 // The ECS Task assume role policy for Task Roles
