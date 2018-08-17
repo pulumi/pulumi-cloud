@@ -23,6 +23,9 @@ bucket.onPut("onNewVideo", async (bucketArgs) => {
     const framePos = file.substring(file.indexOf("_") + 1, file.indexOf(".")).replace("-", ":");
 
     const env = {
+        // 'Azure CLI' looks for the storage connection string in this environment variable. Setting
+        // it allows our docker command to read/write from our bucket to both get the input video
+        // and to write the output file.
         "AZURE_STORAGE_CONNECTION_STRING": bucket.storageAccount.primaryBlobConnectionString.get(),
         "CONTAINER": container,
         "INPUT_VIDEO": file,

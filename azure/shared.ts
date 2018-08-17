@@ -22,9 +22,7 @@ import * as crypto from "crypto";
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
-export function createNameWithStackInfo(requiredInfo: string) {
-    const maxLength = 24;
-
+export function createNameWithStackInfo(requiredInfo: string, maxLength: number = 24) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
@@ -87,7 +85,9 @@ function getGlobalResourceGroup() {
 
         // Create a new resource group to use.
         return new azure.core.ResourceGroup("global", {
-            name: createNameWithStackInfo("global"),
+            // https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions#general
+            // Resource groups have a max length of 90.
+            name: createNameWithStackInfo("global", 90),
             location: location,
         },
         { parent: getGlobalInfrastructureResource() });
