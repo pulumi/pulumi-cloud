@@ -22,6 +22,9 @@ import * as crypto from "crypto";
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
+/**
+ * Helper to create a name for resources with a name that should be unique to this stack.
+ */
 export function createNameWithStackInfo(requiredInfo: string, maxLength: number) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
@@ -45,7 +48,7 @@ export function createNameWithStackInfo(requiredInfo: string, maxLength: number)
 }
 
 // Expose a common infrastructure resource that all our global resources can consider themselves to
-// be parented by.  This helps ensure unique URN naming for these guys as tey cannot conflict with
+// be parented by.  This helps ensure unique URN naming for these guys as they cannot conflict with
 // any other user resource.
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
@@ -54,6 +57,10 @@ class InfrastructureResource extends pulumi.ComponentResource {
 }
 
 let globalInfrastructureResource: InfrastructureResource | undefined;
+
+/**
+ * Get's the resource that any global infrastructure resource for this stack can use as a parent.
+ */
 export function getGlobalInfrastructureResource(): pulumi.Resource {
     if (!globalInfrastructureResource) {
         globalInfrastructureResource = new InfrastructureResource();
@@ -65,6 +72,11 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
 const config = new pulumi.Config("cloud-azure");
 export const location = config.require("location");
 
+/**
+ * The Azure Resource Group to use for all resources if a specific one is not specified. To use an
+ * existing Resource Group provide the [cloud-azure:resourceGroupName] config value. Otherwise, a
+ * new group will be created.
+ */
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
@@ -95,6 +107,12 @@ function getGlobalResourceGroup() {
 }
 
 let globalStorageAccount: azure.storage.Account;
+
+/**
+ * The Azure Storage Account to use for all resources that need to store data if not specific
+ * account is specified. To use an existing Storage Account provide the
+ * [cloud-azure:storageAccountId] config value. Otherwise, a new account will be created.
+ */
 export function getGlobalStorageAccount() {
     if (!globalStorageAccount) {
         globalStorageAccount = getOrCreateGlobalStorageAccount();

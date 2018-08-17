@@ -66,6 +66,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const globalResourceGroupName = shared.globalResourceGroupName;
         const memory = pulumi.output(container.memoryReservation);
 
+        // Require the client credentials at deployment time so we can fail up-front if they are not
+        // provided.
         const config = new pulumi.Config("cloud-azure");
         const subscriptionId = config.require("subscriptionId");
         const clientId = config.require("clientId");
@@ -73,6 +75,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const tenantId = config.require("tenantId");
 
         this.run = async (options) => {
+            // Retrieve the azure SDKs at runtime.  We'll use them to call into azure to create and
+            // launch a container instance.
             const azureContainerSDK = await import("azure-arm-containerinstance");
             const msrest = await import("ms-rest-azure");
 
@@ -80,6 +84,11 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 options = options || {};
                 options.host = options.host || {};
 
+                // For now, we use Service Principal Authentication:
+                // https://github.com/Azure/azure-sdk-for-node/blob/master/Documentation/Authentication.md#service-principal-authentication
+                //
+                // We should consider supporting other forms (including Managed Service Identity) in
+                // the future.
                 const clientCredentials: any = await new Promise((resolve, reject) => {
                     msrest.loginWithServicePrincipalSecret(
                         clientId,
@@ -98,6 +107,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 const client = new azureContainerSDK.ContainerInstanceManagementClient(
                     clientCredentials, subscriptionId);
 
+                // Join the environment options specified by the image, along with any options
+                // provided by the caller of [Task.run].
                 const imageOpts = imageOptions.get();
                 let envMap = imageOpts.environment;
                 if (options.environment) {
@@ -112,27 +123,36 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     : undefined;
 
                 const uniqueName = createUniqueContainerName(name);
-
-                const containerArgs = {
-                    location: shared.location,
-                    osType: options.host.os || "Linux",
-                    containers: [{
-                        name: uniqueName,
-                        image: imageOpts.image,
-                        environmentVariables: env,
-                        resources: {
-                            requests: {
-                                cpu: 1,
-                                memoryInGB: memory.get() || 1,
-                            },
-                        },
-                    }],
-                    imageRegistryCredentials: containerCredentials,
-                    restartPolicy: "Never",
-                };
-
                 const group = await client.containerGroups.createOrUpdate(
-                    globalResourceGroupName.get(), uniqueName, containerArgs);
+                    globalResourceGroupName.get(),
+                    uniqueName, {
+                        location: shared.location,
+                        osType: options.host.os || "Linux",
+                        containers: [{
+                            name: uniqueName,
+                            image: imageOpts.image,
+                            environmentVariables: env,
+                            resources: {
+                                requests: {
+                                    cpu: 1,
+                                    memoryInGB: memory.get() || 1,
+                                },
+                            },
+                        }],
+                        imageRegistryCredentials: containerCredentials,
+                        // We specify 'Never' as the restart policy because we want a Task to
+                        // launch, execute once, and be done.  Note: this means that the account
+                        // will generally fill up with terminated container instances.  This Azure
+                        // feedback issue tracks Azure adding a facility for these to be
+                        // automatically cleaned up:
+                        // https://feedback.azure.com/forums/602224-azure-container-instances/suggestions/34066633-support-auto-delete-of-aci-when-container-exits-no
+                        //
+                        // In the meantime, we should consider if we should have some mechanism that
+                        // does this on behalf of the user.  For example, we could store the name
+                        // of this ephemeral instance somewhere.  Then, with each Task.run we could
+                        // enumerate that list and attempt to cleanup any terminated instances.
+                        restartPolicy: "Never",
+                    });
             }
             catch (err) {
                 console.log("Error: " + JSON.stringify(err, null, 2));
