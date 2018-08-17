@@ -22,7 +22,7 @@ import * as crypto from "crypto";
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
-export function createNameWithStackInfo(requiredInfo: string, maxLength: number = 24) {
+export function createNameWithStackInfo(requiredInfo: string, maxLength: number) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
