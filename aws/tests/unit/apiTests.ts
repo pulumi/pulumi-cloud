@@ -16,11 +16,11 @@ import * as cloud from "@pulumi/cloud";
 
 import * as assertModule from "assert";
 import * as supertestModule from "supertest";
-import * as harnessModule from "./harness";
+import * as harness from "./harness";
 
 export type TestArgs = {
     assert: typeof assertModule,
-    harness: typeof harnessModule,
+    harness: typeof harness,
     supertest: typeof supertestModule,
 };
 
@@ -57,8 +57,7 @@ namespace getApiTests {
 
             res.json(result);
         } catch (err) {
-            const localHarness = require("./bin/harness");
-            res.json(localHarness.errorJSON(err));
+            res.json(harness.errorJSON(err));
         }
     });
 
