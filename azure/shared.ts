@@ -31,11 +31,6 @@ export function createNameWithStackInfo(requiredInfo: string, maxLength: number,
 
     const stackName = pulumi.getStack();
 
-    // No required portion.  Just return the stack name.
-    if (requiredInfo.length === 0) {
-        return stackName.substr(0, maxLength);
-    }
-
     // Only enough room for required portion, don't add the stack.
     // Also don't add the stack if there wouldn't be room to add it and a dash.
     if (requiredInfo.length >= maxLength - delim.length) {

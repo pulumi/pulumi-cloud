@@ -59,11 +59,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
 
         const storageAccount = shared.getGlobalStorageAccount();
 
-        // Azure storage tables need a 'partition' to place data into.  Because we have no need to
-        // expose such functionality through the cloud.Table API, we just create a simple 'part1'
-        // partition and place all data there.
-        const partitionKey = "part1";
-
         // The underlying azure table that will store all the data.
         this.table = new azure.storage.Table(name, {
             resourceGroupName: shared.globalResourceGroupName,
@@ -73,17 +68,17 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         const tableName = this.table.name;
 
         this.get = async (query: any) => {
-            const rowKey = query[primaryKeyOutput.get()];
-            if (!rowKey) {
-                throw new RunError(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
+            const key = query[primaryKeyOutput.get()];
+            if (!key) {
+                throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorageSDK = await import("azure-storage");
-            const tableService = azureStorageSDK.createTableService(storageAccount.primaryConnectionString.get());
+            const azureStorage = await import("azure-storage");
+            const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             const result = await new Promise((resolve, reject) => {
                 tableService.retrieveEntity<any>(
-                    tableName.get(), partitionKey, rowKey, (err, result) => {
+                    tableName.get(), key, /*rowKey*/"", (err, result) => {
                         if (err) {
                             return reject(err);
                         }
@@ -96,16 +91,16 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         };
 
         this.insert = async (obj: any) => {
-            const rowKey = obj[primaryKeyOutput.get()];
-            if (!rowKey) {
-                throw new RunError(`[obj] must have a value specified for [${primaryKeyOutput.get()}]`);
+            const primaryKey = primaryKeyOutput.get();
+            const key = obj[primaryKey];
+            if (!key) {
+                throw new Error(`[obj] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorageSDK = await import("azure-storage");
-            const tableService = azureStorageSDK.createTableService(storageAccount.primaryConnectionString.get());
-            const entGen = azureStorageSDK.TableUtilities.entityGenerator;
+            const azureStorage = await import("azure-storage");
+            const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
-            const descriptor = convertToDescriptor(obj, partitionKey, rowKey, entGen);
+            const descriptor = convertToDescriptor(obj, primaryKey, key, azureStorage);
 
             await new Promise((resolve, reject) =>  {
                 tableService.insertOrReplaceEntity<any>(
@@ -120,16 +115,16 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         };
 
         this.delete = async (query: any) => {
-            const rowKey = query[primaryKeyOutput.get()];
-            if (!rowKey) {
-                throw new RunError(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
+            const primaryKey = primaryKeyOutput.get();
+            const key = query[primaryKey];
+            if (!key) {
+                throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorageSDK = await import("azure-storage");
-            const tableService = azureStorageSDK.createTableService(storageAccount.primaryConnectionString.get());
-            const entGen = azureStorageSDK.TableUtilities.entityGenerator;
+            const azureStorage = await import("azure-storage");
+            const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
-            const descriptor = convertToDescriptor({}, partitionKey, rowKey, entGen);
+            const descriptor = convertToDescriptor({}, primaryKey, key, azureStorage);
 
             await new Promise((resolve, reject) => {
                 tableService.deleteEntity(tableName.get(), descriptor, (err, result) => {
@@ -143,20 +138,20 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         };
 
         this.update = async (query: any, updates: any) => {
-            const rowKey = query[primaryKeyOutput.get()];
-            if (!rowKey) {
-                throw new RunError(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
+            const primaryKey = primaryKeyOutput.get();
+            const key = query[primaryKey];
+            if (!key) {
+                throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorageSDK = await import("azure-storage");
-            const tableService = azureStorageSDK.createTableService(storageAccount.primaryConnectionString.get());
-            const entGen = azureStorageSDK.TableUtilities.entityGenerator;
+            const azureStorage = await import("azure-storage");
+            const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             // Auzre takes a single object to represent the update.  So we just merge both the query
             // object and the updates object into one and we create the descriptor from that
             // combined object.
             const obj = { ...query, ...updates };
-            const descriptor = convertToDescriptor(obj, partitionKey, rowKey, entGen);
+            const descriptor = convertToDescriptor(obj, primaryKey, key, azureStorage);
 
             await new Promise((resolve, reject) =>  {
                 tableService.insertOrMergeEntity<any>(
@@ -180,10 +175,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 };
             }
 
-            const azureStorageSDK = await import("azure-storage");
-            const tableService = azureStorageSDK.createTableService(storageAccount.primaryConnectionString.get());
+            const azureStorage = await import("azure-storage");
+            const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
-            const query = new azureStorageSDK.TableQuery().where("PartitionKey eq ?", partitionKey);
+            // Create an empty query.  It will return all results across all partitions.
+            const query = new azureStorage.TableQuery();
             let continuationToken: azureStorageModule.TableService.TableContinuationToken | null | undefined = null;
 
             do {
@@ -212,71 +208,69 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 return;
             }
         });
+    }
+}
+function convertToDescriptor(
+    obj: any, primaryKey: string, partitionKey: string, mod: typeof azureStorageModule): any {
 
-        return;
+    // Copy all properties the user provides over.  Then supply the appropriate partition
+    // and row.  Do not copy over the primary key the user supplies. It will be place in
+    // RowKey instead.
+    const descriptor = {
+        ...obj,
+        PartitionKey: partitionKey,
+        RowKey: "",
+    };
 
-        function convertToDescriptor(
-                obj: any, partitionKey: string, rowKey: string,
-                entGen: typeof azureStorageModule.TableUtilities.entityGenerator): any {
-            // Copy all properties the user provides over.  Then supply the appropraite partition
-            // and row.  Do not copy over the primary key the user supplies. It will be place in
-            // RowKey instead.
-            const descriptor = {
-                ...obj,
-                PartitionKey: partitionKey,
-                RowKey: rowKey,
-            };
+    delete descriptor[primaryKey];
 
-            delete descriptor[primaryKeyOutput.get()];
-
-            for (const key in descriptor) {
-                if (descriptor.hasOwnProperty(key)) {
-                    descriptor[key] = translate(key, descriptor[key]);
-                }
-            }
-
-            return descriptor;
-
-            function translate(key: string, value: any): any {
-                if (Buffer.isBuffer(value)) {
-                    return entGen.Binary(value);
-                }
-
-                if (value instanceof Date) {
-                    return entGen.DateTime(value);
-                }
-
-                switch (typeof value) {
-                    case "string": return entGen.String(value);
-                    case "number": return entGen.Double(value);
-                    case "boolean": return entGen.Boolean(value);
-                    default:
-                        throw new Error(`value[${key}] was not a supported type.  Supported types are: string | number | boolean | Date | Buffer`);
-                }
-            }
-        }
-
-        function deserialize(value: any) {
-            const result = {
-                ...value,
-            };
-
-            // Azure include these four keys in the result.  Strip out so they do not
-            // get returned to the cloud.Table client.
-            delete result["PartitionKey"];
-            delete result["RowKey"];
-            delete result["Timestamp"];
-            delete result[".metadata"];
-
-            for (const key in result) {
-                if (result.hasOwnProperty(key)) {
-                    // Azure has already deserialized the result values into their proper JS value
-                    // types under a property called '_'.
-                    result[key] = result[key]["_"];
-                }
-            }
-
-            return result;
+    for (const key in descriptor) {
+        if (descriptor.hasOwnProperty(key)) {
+            descriptor[key] = translate(key, descriptor[key], mod);
         }
     }
+
+    return descriptor;
+}
+
+function translate(key: string, value: any, mod: typeof azureStorageModule): any {
+    const entGen = mod.TableUtilities.entityGenerator;
+    if (Buffer.isBuffer(value)) {
+        return entGen.Binary(value);
+    }
+
+    if (value instanceof Date) {
+        return entGen.DateTime(value);
+    }
+
+    switch (typeof value) {
+        case "string": return entGen.String(value);
+        case "number": return entGen.Double(value);
+        case "boolean": return entGen.Boolean(value);
+        default:
+            throw new Error(`value[${key}] was not a supported type.  Supported types are: string | number | boolean | Date | Buffer`);
+    }
+}
+
+function deserialize(value: any) {
+    const result = {
+        ...value,
+    };
+
+    // Azure include these four keys in the result.  Strip out so they do not
+    // get returned to the cloud.Table client.
+    delete result["PartitionKey"];
+    delete result["RowKey"];
+    delete result["Timestamp"];
+    delete result[".metadata"];
+
+    for (const key in result) {
+        if (result.hasOwnProperty(key)) {
+            // Azure has already deserialized the result values into their proper JS value
+            // types under a property called '_'.
+            result[key] = result[key]["_"];
+        }
+    }
+
+    return result;
 }
