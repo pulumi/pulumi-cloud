@@ -221,8 +221,8 @@ function getImageName(container: cloud.Container): string {
 
         // The container name must contain no more than 63 characters and must match the regex
         // '[a-z0-9]([-a-z0-9]*[a-z0-9])?' (e.g. 'my-name')."
-        const imageName = shared.createNameWithStackInfo(`${shared.sha1hash(buildSig)}container`, 63);
-        const disallowedChars = /[^a-zA-Z0-9]/g;
+        const imageName = shared.createNameWithStackInfo(`container-${shared.sha1hash(buildSig)}`, 63, "-");
+        const disallowedChars = /[^-a-zA-Z0-9]/g;
         return imageName.replace(disallowedChars, "");
     }
     else if (container.function) {

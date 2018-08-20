@@ -1,5 +1,5 @@
 {
-    "name": "bucket",
+    "name": "table",
     "version": "0.1.0",
     "license": "Apache-2.0",
     "main": "bin/index.js",
@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.15.0",
-        "@pulumi/azure": "^0.15.1-dev-1534296732-ge860f58",
-        "@pulumi/azure-serverless": "^0.15.0",
+        "@pulumi/pulumi": "^0.15.1-dev",
+        "@pulumi/azure": "^0.15.2-dev",
+        "@pulumi/azure-serverless": "^0.15.1-dev",
         "azure-storage": "^2.10.1"
     },
     "devDependencies": {

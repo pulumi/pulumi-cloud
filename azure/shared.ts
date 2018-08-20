@@ -17,33 +17,34 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";
 
-// nameWithStackInfo is the resource prefix we'll use for all resources we auto-provision.  In general,
-// it's safe to use these for top-level components like Network and Cluster, because they suffix all
-// internal resources they provision.
-const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
-
 /**
  * Helper to create a name for resources with a name that should be unique to this stack.
  */
-export function createNameWithStackInfo(requiredInfo: string, maxLength: number) {
+export function createNameWithStackInfo(requiredInfo: string, maxLength: number, delim: string) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
     }
 
+    if (requiredInfo.length === 0) {
+        throw new RunError(`[requiredInfo] must be non-empty`);
+    }
+
+    const stackName = pulumi.getStack();
+
     // No required portion.  Just return the stack name.
     if (requiredInfo.length === 0) {
-        return nameWithStackInfo.substr(0, maxLength);
+        return stackName.substr(0, maxLength);
     }
 
     // Only enough room for required portion, don't add the stack.
     // Also don't add the stack if there wouldn't be room to add it and a dash.
-    if (requiredInfo.length >= maxLength - "-".length) {
+    if (requiredInfo.length >= maxLength - delim.length) {
         return requiredInfo;
     }
 
     // Attempt to keep some portion of the stack, then - then the required part.
-    const suffix = "-" + requiredInfo;
-    const result = nameWithStackInfo.substr(0, maxLength - suffix.length) + suffix;
+    const suffix = delim + requiredInfo;
+    const result = stackName.substr(0, maxLength - suffix.length) + suffix;
     return result;
 }
 
@@ -99,7 +100,7 @@ function getGlobalResourceGroup() {
         return new azure.core.ResourceGroup("global", {
             // https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions#general
             // Resource groups have a max length of 90.
-            name: createNameWithStackInfo("global", 90),
+            name: createNameWithStackInfo("global-" + sha1hash(pulumi.getStack()), 90, "-"),
             location: location,
         },
         { parent: getGlobalInfrastructureResource() });
@@ -127,9 +128,16 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
         return azure.storage.Account.get("global", storageAccountId);
     }
 
+    // Account name must be 24 chars or less and must be lowercase.
+    // https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions#storage
+    const storageAccountName = createNameWithStackInfo("global" + sha1hash(pulumi.getStack()), 24, /*delim*/ "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toLowerCase();
+
     return new azure.storage.Account("global", {
         resourceGroupName: globalResourceGroupName,
         location: location,
+        name: storageAccountName,
         accountKind: "StorageV2",
         accountTier: "Standard",
         accountReplicationType: "LRS",

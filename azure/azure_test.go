@@ -76,6 +76,14 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
+			Dir:    path.Join(cwd, "./examples/table"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
 			Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
 			Config: commonConfig,
 			Dependencies: []string{
