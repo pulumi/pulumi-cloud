@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// types.ts is declared in package.json as: types: "types.ts'. As such, this becomes the file that
-// typescript itself uses to determine the shape of this module.
+import * as pulumi from "@pulumi/pulumi";
+import * as http from "http";
 
-export * from "./bucket";
-export * from "./api";
-export * from "./httpServer";
-export * from "./table";
-export * from "./topic";
-export * from "./service";
-import * as timer from "./timer";
-export { timer };
+export interface HttpServerConstructor {
+    /**
+     * Creates a new Table.
+     */
+    new (name: string,
+         createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
+         opts?: pulumi.ResourceOptions): HttpServer;
+}
+
+// tslint:disable-next-line:variable-name
+export let HttpServer: HttpServerConstructor;
+
+export interface HttpServer {
+    readonly url: pulumi.Output<string>;
+}
