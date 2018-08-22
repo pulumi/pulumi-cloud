@@ -15,7 +15,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as awslambda from "aws-lambda";
 import * as http from "http";
 
 import { Function } from "./function";
@@ -39,7 +38,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const requestListener = createRequestListener();
             const server = serverlessExpress.createServer(requestListener);
 
-            serverlessExpress.proxy(server, event, <awslambda.Context><any>context);
+            serverlessExpress.proxy(server, event, <any>context);
         }
 
         // Have to register two paths (that will point to the same lambda).  One for the root
