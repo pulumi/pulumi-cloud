@@ -16,9 +16,6 @@ import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
 
 export interface HttpServerConstructor {
-    /**
-     * Creates a new Table.
-     */
     new (name: string,
          createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
          opts?: pulumi.ResourceOptions): HttpServer;
