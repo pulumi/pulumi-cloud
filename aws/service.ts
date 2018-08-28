@@ -218,6 +218,7 @@ interface ImageOptions {
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name and environment which can be used in an ECS TaskDefinition.
 function computeImage(
+        parent: pulumi.Resource,
         imageName: string,
         container: cloud.Container,
         ports: ExposedPorts | undefined,
@@ -272,7 +273,7 @@ function computeImage(
             throw new RunError("Expected a container repository for build image");
         }
 
-        return computeImageFromBuild(preEnv, container.build, imageName, repository);
+        return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
     }
     else if (container.image) {
         return computeImageFromImage(preEnv, imageName);
@@ -286,6 +287,7 @@ function computeImage(
 }
 
 function computeImageFromBuild(
+        parent: pulumi.Resource,
         preEnv: Record<string, pulumi.Input<string>>,
         build: string | cloud.ContainerBuild,
         imageName: string,
@@ -296,7 +298,7 @@ function computeImageFromBuild(
     const { repositoryUrl, registryId } = repository;
 
     return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
-        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, repository));
+        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
 }
 
 function computeImageFromBuildWorker(
@@ -376,6 +378,7 @@ function createImageOptions(
 
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
 function computeContainerDefinitions(
+        parent: pulumi.Resource,
         containers: cloud.Containers,
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
@@ -397,7 +400,7 @@ function computeContainerDefinitions(
                 repository = getOrCreateRepository(imageName);
             }
 
-            const imageOptions = computeImage(imageName, container, ports, repository);
+            const imageOptions = computeImage(parent, imageName, container, ports, repository);
             const portMappings = (container.ports || []).map(p => ({
                 containerPort: p.targetPort || p.port,
                 // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
@@ -532,7 +535,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup);
+    const containerDefinitions = computeContainerDefinitions(parent, containers, ports, logGroup);
 
     // Compute the memory and CPU requirements of the task for Fargate
     const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
