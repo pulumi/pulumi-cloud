@@ -19,6 +19,10 @@ import * as pulumi from "@pulumi/pulumi";
  */
 export interface BucketHandlerArgs {
     /**
+     * Identifier of the bucket that this event is for.
+     */
+    id: string;
+    /**
      * The key that was updated or deleted by the operation.
      */
     key: string;

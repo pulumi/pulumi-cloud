@@ -64,7 +64,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const imageOptions = computeImage(imageName, container, registry);
 
         const globalResourceGroupName = shared.globalResourceGroupName;
-        const memory = pulumi.output(container.memoryReservation);
+        const memoryResInGB = pulumi.output(container.memoryReservation).apply(
+            r => r === undefined ? 1 : Math.ceil(r / 1024));
 
         // Require the client credentials at deployment time so we can fail up-front if they are not
         // provided.
@@ -135,7 +136,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                             resources: {
                                 requests: {
                                     cpu: 1,
-                                    memoryInGB: memory.get() || 1,
+                                    memoryInGB: memoryResInGB.get(),
                                 },
                             },
                         }],

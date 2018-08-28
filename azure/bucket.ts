@@ -110,8 +110,13 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                     // tslint:disable-next-line:no-console
                     console.info = context.log.info;
 
+                    const fullPath = context.bindingData.blobTrigger;
+                    const slashIndex = fullPath.indexOf("/");
+                    const id = fullPath.substr(0, slashIndex);
+                    const key = fullPath.substr(slashIndex + 1);
+
                     handler({
-                        key: context.bindingData.blobTrigger,
+                        id, key,
                         eventTime: context.bindingData.sys.utcNow,
                         size: buffer.length,
                     }).then(() => context.done());

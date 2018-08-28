@@ -183,6 +183,8 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             permission: permission,
         });
 
+        const bucket = this.bucket;
+
         function eventHandler(
             event: S3BucketNotificationEvent,
             context: aws.serverless.Context,
@@ -194,6 +196,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             for (const record of records) {
                 // Construct an event arguments object.
                 const args: cloud.BucketHandlerArgs = {
+                    id: bucket.id.get(),
                     key: record.s3.object.key,
                     size: record.s3.object.size,
                     eventTime: record.eventTime,
