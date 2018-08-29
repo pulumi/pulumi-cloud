@@ -21,10 +21,11 @@ import { RunError } from "@pulumi/pulumi/errors";
 import * as shared from "./shared";
 
 import * as docker from "@pulumi/docker";
-import * as config from "./config";
+import * as utils from "./utils";
 
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
+    public readonly groups: azure.containerservice.Group[];
 
     public readonly endpoints: pulumi.Output<cloud.Endpoints>;
     public readonly defaultEndpoint: pulumi.Output<cloud.Endpoint>;
@@ -32,12 +33,229 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly getEndpoint: (containerName?: string, containerPort?: number) => Promise<cloud.Endpoint>;
 
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
-        super("cloud:service:Service", name, {}, opts);
+        let containers: cloud.Containers;
+        if (args.image || args.build || args.function) {
+            if (args.containers) {
+                throw new Error(
+                    "Exactly one of image, build, function, or containers must be used, not multiple");
+            }
+            containers = { "default": args };
+        }
+        else if (args.containers) {
+            containers = args.containers;
+        }
+        else {
+            throw new Error(
+                "Missing one of image, build, function, or containers, specifying this service's containers");
+        }
 
-        this.getEndpoint = _ => { throw new Error("Method not implemented."); };
+        const replicas = args.replicas === undefined ? 1 : args.replicas;
+        if (replicas !== 1) {
+            throw new RunError("Only a single replicable is supposrted in Azure currently.")
+        }
 
-        throw new Error("Method not implemented.");
+        super("cloud:service:Service", name, {
+            containers: containers,
+            replicas: replicas,
+        }, opts);
+
+        const { groups, endpoints, defaultEndpoint } = createGroups(
+            this, name, args.host, containers);
+
+        this.groups = groups;
+        this.endpoints = endpoints;
+        this.defaultEndpoint = defaultEndpoint;
+
+        this.getEndpoint = async (containerName, containerPort) => {
+            return getEndpointHelper(endpoints.get(), containerName, containerPort);
+        };
     }
+}
+
+function getEndpointHelper(
+    endpoints: cloud.Endpoints, containerName?: string, containerPort?: number): cloud.Endpoint {
+
+    containerName = containerName || Object.keys(endpoints)[0];
+    if (!containerName)  {
+        throw new RunError(`No containers available in this service`);
+    }
+
+    const containerPorts = endpoints[containerName] || {};
+    containerPort = containerPort || +Object.keys(containerPorts)[0];
+    if (!containerPort) {
+        throw new RunError(`No ports available in service container ${containerName}`);
+    }
+
+    const endpoint = containerPorts[containerPort];
+    if (!endpoint) {
+        throw new RunError(`No exposed port for ${containerName} port ${containerPort}`);
+    }
+
+    return endpoint;
+}
+
+interface AzureContainer {
+    command?: pulumi.Input<string>;
+    cpu: pulumi.Input<number>;
+    environmentVariables?: pulumi.Input<{
+        [key: string]: any;
+    }>;
+    image: pulumi.Input<string>;
+    memory: pulumi.Input<number>;
+    name: pulumi.Input<string>;
+    port?: pulumi.Input<number>;
+    protocol?: pulumi.Input<string>;
+    volumes?: pulumi.Input<pulumi.Input<{
+        mountPath: pulumi.Input<string>;
+        name: pulumi.Input<string>;
+        readOnly?: pulumi.Input<boolean>;
+        shareName: pulumi.Input<string>;
+        storageAccountKey: pulumi.Input<string>;
+        storageAccountName: pulumi.Input<string>;
+    }>[]>;
+}
+
+interface GroupsInfo {
+    groups: azure.containerservice.Group[];
+    endpoints: pulumi.Output<cloud.Endpoints>;
+    defaultEndpoint: pulumi.Output<cloud.Endpoint>;
+}
+
+interface ExposedPorts {
+    [name: string]: {
+        [port: string]: ExposedPort;
+    };
+}
+
+interface ExposedPort {
+    group: azure.containerservice.Group;
+    hostPort: number;
+}
+
+function createGroups(
+        parent: pulumi.Resource,
+        name: string,
+        props: cloud.HostProperties | undefined,
+        containers: cloud.Containers): GroupsInfo {
+
+    props = props || {};
+    const groups: azure.containerservice.Group[] = [];
+
+    let firstContainerName: string | undefined;
+    let firstContainerPort: number | undefined;
+    const exposedPorts: ExposedPorts = {};
+
+    for (const containerName of Object.keys(containers)) {
+        const container = containers[containerName];
+
+        if (firstContainerName === undefined) {
+            firstContainerName = containerName;
+        }
+
+        const ports = container.ports;
+        let targetPortNumber: number | undefined;
+        let protocol: string | undefined;
+        let isPublic: boolean | undefined;
+        if (ports) {
+            if (ports.length >= 2) {
+                throw new RunError("Only zero or one port can be provided with a container: " + containerName);
+            }
+
+            if (ports.length === 1) {
+                const port = ports[0];
+                targetPortNumber = port.targetPort !== undefined ? port.targetPort : port.port;
+                protocol = port.protocol;
+
+                if (port.port !== undefined && targetPortNumber !== port.port) {
+                    throw new RunError("Mapping a host port to a different target port is not supported in Azure currently.");
+                }
+
+                if (containerName === firstContainerName) {
+                    firstContainerPort = targetPortNumber;
+                }
+
+                const external = port.external === undefined ? false : port.external;
+                if (isPublic === undefined) {
+                    // first port we're seeing.  set the isPublic value based on that.
+                    isPublic = external;
+                }
+                else if (isPublic !== external) {
+                    // have an existing port.  Values have to match.
+                    throw new RunError("All ports must have a matching [external] value.");
+                }
+            }
+        }
+
+        if (isPublic === false) {
+            throw new RunError("Only public ip address types are supported by Azure currently.");
+        }
+
+        const imageName = getImageName(container);
+        if (!imageName) {
+            throw new Error("[getImageName] should have always produced an image name.");
+        }
+
+        const registry = container.build ? getOrCreateGlobalRegistry() : undefined;
+
+        const imageOptions = computeImage(this, imageName, container, registry);
+
+        const memoryInGB = pulumi.output(container.memoryReservation).apply(
+            r => r === undefined ? 1 : r / 1024);
+
+        const disallowedChars = /[^-a-zA-Z0-9]/g;
+        const qualifiedName = (name + "-" + containerName).replace(disallowedChars, "-");
+
+        const azureContainer: AzureContainer = {
+            name: qualifiedName,
+            cpu: 1,
+            memory: memoryInGB,
+            port: targetPortNumber,
+            protocol: protocol,
+            image: imageOptions.apply(io => io.image),
+            environmentVariables: imageOptions.apply(io => io.environment),
+        };
+
+        const credentials = registry
+            ? [{ password: registry.adminPassword, server: registry.loginServer, username: registry.adminUsername }]
+            : undefined;
+
+        const groupArgs: azure.containerservice.GroupArgs = {
+            containers: [azureContainer],
+            location: shared.location,
+            resourceGroupName: shared.globalResourceGroupName,
+            osType: getOS(props),
+            imageRegistryCredentials: credentials,
+            ipAddressType: "Public",
+        };
+
+        const group = new azure.containerservice.Group(
+            qualifiedName, groupArgs, { parent: parent });
+        groups.push(group);
+
+        if (targetPortNumber !== undefined) {
+            exposedPorts[containerName] = { [targetPortNumber]: { group, hostPort: targetPortNumber } };
+        }
+    }
+
+    const endpoints = getEndpoints(exposedPorts);
+    const defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
+        ? pulumi.output<cloud.Endpoint>(undefined!)
+        : endpoints.apply(
+            ep => getEndpointHelper(ep));
+
+    return { groups, endpoints, defaultEndpoint };
+}
+
+function getEndpoints(ports: ExposedPorts): pulumi.Output<cloud.Endpoints> {
+    return pulumi.all(utils.apply(ports, portToExposedPort => {
+        const inner: pulumi.Output<{ [port: string]: cloud.Endpoint }> =
+            pulumi.all(utils.apply(portToExposedPort, exposedPort =>
+                exposedPort.group.ipAddress.apply(ip => ({
+                    port: exposedPort.hostPort, hostname: ip,
+                }))));
+
+        return inner;
+    }));
 }
 
 /**
@@ -61,7 +279,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         const registry = container.build ? getOrCreateGlobalRegistry() : undefined;
 
-        const imageOptions = computeImage(imageName, container, registry);
+        const imageOptions = computeImage(this, imageName, container, registry);
 
         const globalResourceGroupName = shared.globalResourceGroupName;
         const memory = pulumi.output(container.memoryReservation);
@@ -82,7 +300,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
             try {
                 options = options || {};
-                options.host = options.host || {};
 
                 // For now, we use Service Principal Authentication:
                 // https://github.com/Azure/azure-sdk-for-node/blob/master/Documentation/Authentication.md#service-principal-authentication
@@ -127,7 +344,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                     globalResourceGroupName.get(),
                     uniqueName, {
                         location: shared.location,
-                        osType: options.host.os || "Linux",
+                        osType: getOS(options.host),
                         containers: [{
                             name: uniqueName,
                             image: imageOpts.image,
@@ -160,6 +377,10 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
         };
     }
+}
+
+function getOS(props: cloud.HostProperties | undefined) {
+    return props && props.os ? props.os : "Linux";
 }
 
 function createUniqueContainerName(name: string) {
@@ -223,7 +444,7 @@ function getImageName(container: cloud.Container): string {
         // '[a-z0-9]([-a-z0-9]*[a-z0-9])?' (e.g. 'my-name')."
         const imageName = shared.createNameWithStackInfo(`container-${shared.sha1hash(buildSig)}`, 63, "-");
         const disallowedChars = /[^-a-zA-Z0-9]/g;
-        return imageName.replace(disallowedChars, "");
+        return imageName.replace(disallowedChars, "-");
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
@@ -262,6 +483,7 @@ interface ImageOptions {
 }
 
 function computeImage(
+    parent: pulumi.Resource,
     imageName: string,
     container: cloud.Container,
     repository: azure.containerservice.Registry | undefined): pulumi.Output<ImageOptions> {
@@ -275,7 +497,7 @@ function computeImage(
             throw new RunError("Expected a container repository for build image");
         }
 
-        return computeImageFromBuild(preEnv, container.build, imageName, repository);
+        return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
     }
     else if (container.image) {
         return computeImageFromImage(preEnv, imageName);
@@ -289,6 +511,7 @@ function computeImage(
 }
 
 function computeImageFromBuild(
+    parent: pulumi.Resource,
     preEnv: Record<string, pulumi.Input<string>>,
     build: string | cloud.ContainerBuild,
     imageName: string,
@@ -303,7 +526,7 @@ function computeImageFromBuild(
 
     return pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
         computeImageFromBuildWorker(
-            preEnv, build, imageName, loginServer + "/" + imageName, dockerRegistry, registry));
+            preEnv, build, imageName, loginServer + "/" + imageName, dockerRegistry, parent));
 }
 
 function computeImageFromBuildWorker(

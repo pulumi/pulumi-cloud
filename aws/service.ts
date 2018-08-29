@@ -701,7 +701,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
-            if (firstContainerName === undefined && containerName !== undefined) {
+            if (firstContainerName === undefined) {
                 firstContainerName = containerName;
                 if (container.ports && container.ports.length > 0) {
                     firstContainerPort = container.ports[0].port;
@@ -772,7 +772,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
 function getEndpointHelper(
     endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
-
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {

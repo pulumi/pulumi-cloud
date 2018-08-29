@@ -9,7 +9,7 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "^0.15.1-dev",
-        "@pulumi/azure": "^0.15.0",
+        "@pulumi/azure": "^0.15.2-dev",
         "@pulumi/azure-serverless": "^0.15.0",
         "azure-arm-containerinstance": "^3.0.0",
         "ms-rest-azure": "^2.5.7"
