@@ -94,6 +94,10 @@ function getEndpointHelper(
     return endpoint;
 }
 
+// AzureContainer and AzureCredentials are just extracted sub-portions of
+// azure.containerservice.GroupArgs.  This was done to make it easy to type check small
+// objets as we're building them up before making the final Group.
+
 interface AzureContainer {
     command?: pulumi.Input<string>;
     cpu: pulumi.Input<number>;
