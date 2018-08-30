@@ -233,17 +233,15 @@ function createGroup(
         }
     }
 
-    const groupArgs: azure.containerservice.GroupArgs = {
-        containers: azureContainers,
-        location: shared.location,
-        resourceGroupName: shared.globalResourceGroupName,
-        osType: getOS(props),
-        imageRegistryCredentials: credentials,
-        ipAddressType: "Public",
-    };
-
     const group = new azure.containerservice.Group(
-        name.replace(disallowedChars, "-"), groupArgs, { parent: parent });
+        name.replace(disallowedChars, "-"), {
+            containers: azureContainers,
+            location: shared.location,
+            resourceGroupName: shared.globalResourceGroupName,
+            osType: getOS(props),
+            imageRegistryCredentials: credentials,
+            ipAddressType: "Public",
+        }, { parent: parent });
 
     const endpoints = getEndpoints(exposedPorts, group);
     const defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
