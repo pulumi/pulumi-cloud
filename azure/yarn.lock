@@ -62,14 +62,14 @@
     "@pulumi/pulumi" "^0.15.0"
 
 "@pulumi/azure@^0.15.2-dev":
-  version "0.15.2-dev-1535571617-g3034485"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-dev-1535571617-g3034485.tgz#f8c2309216c860c74d6dc4f855ebedb583646a44"
+  version "0.15.2-dev-1535578965-g423227d"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-dev-1535578965-g423227d.tgz#3ea9a492d0cd19c906292ef1cb55a9533ad778d2"
   dependencies:
     "@pulumi/pulumi" "^0.15.0"
 
 "@pulumi/docker@^0.15.1-dev":
-  version "0.15.1-dev-1535413571-g5629182"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1-dev-1535413571-g5629182.tgz#fb962618c21ee16e94b0bac74d5cd278346132ec"
+  version "0.15.1-dev-1535584875-g0109adf"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1-dev-1535584875-g0109adf.tgz#5fed5b01ca17262945ede226e0b0bbe03583ad97"
   dependencies:
     "@pulumi/pulumi" "^0.14.3"
     mime "^2.0.3"
@@ -102,8 +102,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.1-dev":
-  version "0.15.1-dev-1535567358-g6883d087"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535567358-g6883d087.tgz#b05ec1348f3aa9157929788913d34c25674dee00"
+  version "0.15.1-dev-1535645299-g1ebd698a"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535645299-g1ebd698a.tgz#344a950c7ef0da3c423ba33d01ae58ca68cb5ae5"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -124,12 +124,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.9.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.3.tgz#85f288502503ade0b3bfc049fe1777b05d0327d5"
+  version "10.9.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.4.tgz#0f4cb2dc7c1de6096055357f70179043c33e9897"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
-  version "8.10.28"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.28.tgz#03bf70dd7f1de7826251331ce57beddf7f9dd253"
+  version "8.10.29"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.29.tgz#b3a13b58dd7b0682bf1b42022bef4a5a9718f687"
 
 "@types/semver@^5.4.0":
   version "5.5.0"
@@ -253,8 +253,8 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.8.0.tgz#f0e003d9ca9e7f59c7a508945d7b2ef9a04a542f"
 
 azure-arm-containerinstance@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/azure-arm-containerinstance/-/azure-arm-containerinstance-3.0.0.tgz#a1766644484a2c53316b91ac091645382238e90d"
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/azure-arm-containerinstance/-/azure-arm-containerinstance-3.1.0.tgz#4fe1f385739d731a8a3e4fd0ad5ed2bcb88223c6"
   dependencies:
     ms-rest "^2.3.3"
     ms-rest-azure "^2.5.5"
@@ -783,8 +783,8 @@ long@~3:
   resolved "https://registry.yarnpkg.com/long/-/long-3.2.0.tgz#d821b7138ca1cb581c172990ef14db200b5c474b"
 
 make-error@^1.1.1:
-  version "1.3.4"
-  resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.4.tgz#19978ed575f9e9545d2ff8c13e33b5d18a67d535"
+  version "1.3.5"
+  resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.5.tgz#efe4e81f6db28cadd605c70f29c831b58ef776c8"
 
 md5.js@1.3.4:
   version "1.3.4"
@@ -1370,8 +1370,8 @@ typescript@^2.5.2:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.9.2.tgz#1cbf61d05d6b96269244eb6a3bce4bd914e0f00c"
 
 typescript@^3.0.0, typescript@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.1.tgz#43738f29585d3a87575520a4b93ab6026ef11fdb"
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.3.tgz#4853b3e275ecdaa27f78fda46dc273a7eb7fc1c8"
 
 "underscore@>= 1.3.1":
   version "1.9.1"
