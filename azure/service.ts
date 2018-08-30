@@ -25,7 +25,7 @@ import * as utils from "./utils";
 
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
-    public readonly groups: azure.containerservice.Group[];
+    public readonly group: azure.containerservice.Group;
 
     public readonly endpoints: pulumi.Output<cloud.Endpoints>;
     public readonly defaultEndpoint: pulumi.Output<cloud.Endpoint>;
@@ -59,10 +59,10 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             replicas: replicas,
         }, opts);
 
-        const { groups, endpoints, defaultEndpoint } = createGroups(
+        const { group, endpoints, defaultEndpoint } = createGroup(
             this, name, args.host, containers);
 
-        this.groups = groups;
+        this.group = group;
         this.endpoints = endpoints;
         this.defaultEndpoint = defaultEndpoint;
 
@@ -115,31 +115,35 @@ interface AzureContainer {
     }>[]>;
 }
 
-interface GroupsInfo {
-    groups: azure.containerservice.Group[];
+interface AzureCredentials {
+    password: pulumi.Input<string>;
+    server: pulumi.Input<string>;
+    username: pulumi.Input<string>;
+}
+
+interface GroupInfo {
+    group: azure.containerservice.Group;
     endpoints: pulumi.Output<cloud.Endpoints>;
     defaultEndpoint: pulumi.Output<cloud.Endpoint>;
 }
 
 interface ExposedPorts {
     [name: string]: {
-        [port: string]: ExposedPort;
+        [port: string]: number;
     };
 }
 
-interface ExposedPort {
-    group: azure.containerservice.Group;
-    hostPort: number;
-}
-
-function createGroups(
+function createGroup(
         parent: pulumi.Resource,
         name: string,
         props: cloud.HostProperties | undefined,
-        containers: cloud.Containers): GroupsInfo {
+        containers: cloud.Containers): GroupInfo {
+
+    const disallowedChars = /[^-a-zA-Z0-9]/g;
 
     props = props || {};
-    const groups: azure.containerservice.Group[] = [];
+    const azureContainers: AzureContainer[] = [];
+    let credentials: AzureCredentials[] | undefined;
 
     let firstContainerName: string | undefined;
     let firstContainerPort: number | undefined;
@@ -153,6 +157,8 @@ function createGroups(
         }
 
         const ports = container.ports;
+
+        let hostPortNumber: number | undefined;
         let targetPortNumber: number | undefined;
         let protocol: string | undefined;
         let isPublic: boolean | undefined;
@@ -163,10 +169,11 @@ function createGroups(
 
             if (ports.length === 1) {
                 const port = ports[0];
-                targetPortNumber = port.targetPort !== undefined ? port.targetPort : port.port;
+                hostPortNumber = port.port;
+                targetPortNumber = port.targetPort !== undefined ? port.targetPort : hostPortNumber;
                 protocol = port.protocol;
 
-                if (port.port !== undefined && targetPortNumber !== port.port) {
+                if (targetPortNumber !== hostPortNumber) {
                     throw new RunError("Mapping a host port to a different target port is not supported in Azure currently.");
                 }
 
@@ -202,10 +209,8 @@ function createGroups(
         const memoryInGB = pulumi.output(container.memoryReservation).apply(
             r => r === undefined ? 1 : r / 1024);
 
-        const disallowedChars = /[^-a-zA-Z0-9]/g;
         const qualifiedName = (name + "-" + containerName).replace(disallowedChars, "-");
-
-        const azureContainer: AzureContainer = {
+        azureContainers.push({
             name: qualifiedName,
             cpu: 1,
             memory: memoryInGB,
@@ -213,45 +218,44 @@ function createGroups(
             protocol: protocol,
             image: imageOptions.apply(io => io.image),
             environmentVariables: imageOptions.apply(io => io.environment),
-        };
+        });
 
-        const credentials = registry
+        credentials = credentials || (registry
             ? [{ password: registry.adminPassword, server: registry.loginServer, username: registry.adminUsername }]
-            : undefined;
-
-        const groupArgs: azure.containerservice.GroupArgs = {
-            containers: [azureContainer],
-            location: shared.location,
-            resourceGroupName: shared.globalResourceGroupName,
-            osType: getOS(props),
-            imageRegistryCredentials: credentials,
-            ipAddressType: "Public",
-        };
-
-        const group = new azure.containerservice.Group(
-            qualifiedName, groupArgs, { parent: parent });
-        groups.push(group);
+            : undefined);
 
         if (targetPortNumber !== undefined) {
-            exposedPorts[containerName] = { [targetPortNumber]: { group, hostPort: targetPortNumber } };
+            exposedPorts[containerName] = { [targetPortNumber]: hostPortNumber! };
         }
     }
 
-    const endpoints = getEndpoints(exposedPorts);
+    const groupArgs: azure.containerservice.GroupArgs = {
+        containers: azureContainers,
+        location: shared.location,
+        resourceGroupName: shared.globalResourceGroupName,
+        osType: getOS(props),
+        imageRegistryCredentials: credentials,
+        ipAddressType: "Public",
+    };
+
+    const group = new azure.containerservice.Group(
+        name.replace(disallowedChars, "-"), groupArgs, { parent: parent });
+
+    const endpoints = getEndpoints(exposedPorts, group);
     const defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
         ? pulumi.output<cloud.Endpoint>(undefined!)
         : endpoints.apply(
             ep => getEndpointHelper(ep));
 
-    return { groups, endpoints, defaultEndpoint };
+    return { group, endpoints, defaultEndpoint };
 }
 
-function getEndpoints(ports: ExposedPorts): pulumi.Output<cloud.Endpoints> {
-    return pulumi.all(utils.apply(ports, portToExposedPort => {
+function getEndpoints(ports: ExposedPorts, group: azure.containerservice.Group): pulumi.Output<cloud.Endpoints> {
+    return pulumi.all(utils.apply(ports, targetPortToHostPort => {
         const inner: pulumi.Output<{ [port: string]: cloud.Endpoint }> =
-            pulumi.all(utils.apply(portToExposedPort, exposedPort =>
-                exposedPort.group.ipAddress.apply(ip => ({
-                    port: exposedPort.hostPort, hostname: ip,
+            pulumi.all(utils.apply(targetPortToHostPort, hostPort =>
+                group.ipAddress.apply(ip => ({
+                    port: hostPort, hostname: ip,
                 }))));
 
         return inner;
