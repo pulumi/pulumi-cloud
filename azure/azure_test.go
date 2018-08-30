@@ -64,6 +64,7 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:clientId":       clientID,
 		"cloud-azure:clientSecret":   clientSecret,
 		"cloud-azure:tenantId":       tenantID,
+		"containers:redisPassword":   "REDIS_PASSWORD",
 	}
 
 	examples := []integration.ProgramTestOptions{
