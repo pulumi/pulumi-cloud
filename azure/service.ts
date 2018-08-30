@@ -51,7 +51,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         if (replicas !== 1) {
-            throw new RunError("Only a single replicable is supposrted in Azure currently.")
+            throw new RunError("Only a single replicable is supported in Azure currently.");
         }
 
         super("cloud:service:Service", name, {
