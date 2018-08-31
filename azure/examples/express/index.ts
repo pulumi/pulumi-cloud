@@ -14,7 +14,6 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as express from "express";
-import { basename } from "path";
 
 const server = new cloud.HttpServer("myexpress", () => {
     const app = express();

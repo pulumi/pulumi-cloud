@@ -46,8 +46,8 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 "name"      : "res",
             }];
 
+        const createHandler = azureFunctionExpress.createHandler;
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
-            const createHandler = azureFunctionExpress.createHandler;
             const requestListener = createRequestListener();
             const handler = createHandler(requestListener);
 
