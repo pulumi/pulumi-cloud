@@ -17,6 +17,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as azurefunctions from "azure-functions-ts-essentials";
 import * as http from "http";
+import * as azureFunctionExpress from "./azure-function-express";
 import * as shared from "./shared";
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
@@ -46,7 +47,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             }];
 
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
-            const createHandler = require("azure-function-express").createHandler;
+            const createHandler = azureFunctionExpress.createHandler;
             const requestListener = createRequestListener();
             const handler = createHandler(requestListener);
 

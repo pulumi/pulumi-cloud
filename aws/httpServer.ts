@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// tslint:disable:max-line-length
+
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
@@ -19,7 +21,6 @@ import * as http from "http";
 
 import * as apigateway from "./apigateway";
 import { createFactoryFunction } from "./function";
-import * as utils from "./utils";
 import { sha1hash } from "./utils";
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
