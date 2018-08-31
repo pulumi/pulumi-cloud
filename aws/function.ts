@@ -42,9 +42,24 @@ export class Function extends pulumi.ComponentResource {
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
+        const policies = [...getComputeIAMRolePolicies()];
+        let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
+
+        if (runLambdaInVPC) {
+            const network = getOrCreateNetwork();
+            // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
+            //     add VPC access will currently fail due to an issue in the Terraform provider.
+            policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+            vpcConfig = {
+                securityGroupIds: pulumi.all(network.securityGroupIds),
+                subnetIds: pulumi.all(network.subnetIds),
+            };
+        }
+
         // First allocate a function.
         const options: aws.serverless.FunctionOptions = {
-            policies: [...getComputeIAMRolePolicies()],
+            policies,
+            vpcConfig,
             memorySize: functionMemorySize,
             includePaths: functionIncludePaths,
             includePackages: functionIncludePackages,
@@ -52,18 +67,6 @@ export class Function extends pulumi.ComponentResource {
             factoryFunc: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
         };
 
-        if (runLambdaInVPC) {
-            const network = getOrCreateNetwork();
-            // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
-            //     add VPC access will currently fail due to an issue in the Terraform provider.
-            options.policies!.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
-            (<any>options).vpcConfig = {
-                securityGroupIds: pulumi.all(network.securityGroupIds),
-                subnetIds: pulumi.all(network.subnetIds),
-            };
-        }
-
-        this.lambda = new aws.serverless.Function(
-            name, options, undefined, { parent: this }).lambda;
+        this.lambda = new aws.serverless.Function(name, options, undefined, { parent: this }).lambda;
     }
 }
