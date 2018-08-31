@@ -17,6 +17,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
 
+import * as apigateway from "./apigateway";
 import { createFactoryFunction } from "./function";
 import * as utils from "./utils";
 import { sha1hash } from "./utils";
@@ -38,7 +39,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const requestListener = createRequestListener();
             const server = serverlessExpress.createServer(requestListener);
 
-            return (event: APIGatewayRequest, context: aws.serverless.Context) => {
+            return (event: apigateway.APIGatewayRequest, context: aws.serverless.Context) => {
                 serverlessExpress.proxy(server, event, <any>context);
             };
         }
@@ -51,12 +52,12 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         const func =  createFactoryFunction(name, entryPoint, { parent: this });
 
         // Register two paths in the Swagger spec, for the root and for a catch all under the root
-        const swagger = createBaseSpec(name);
-        swagger.paths[swaggerPath] = { "x-amazon-apigateway-any-method": createPathSpecLambda(func.lambda) };
-        swagger.paths[swaggerPathProxy] = { "x-amazon-apigateway-any-method": createPathSpecLambda(func.lambda) };
+        const swagger = apigateway.createBaseSpec(name);
+        swagger.paths[swaggerPath] = { "x-amazon-apigateway-any-method": apigateway.createPathSpecLambda(func.lambda) };
+        swagger.paths[swaggerPathProxy] = { "x-amazon-apigateway-any-method": apigateway.createPathSpecLambda(func.lambda) };
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
-        const swaggerStr = createSwaggerString(swagger);
+        const swaggerStr = apigateway.createSwaggerString(swagger);
         const api = new aws.apigateway.RestApi(name, {
             body: swaggerStr,
         }, { parent: this });
@@ -106,202 +107,5 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         super.registerOutputs({
             url: this.url,
         });
-    }
-}
-
-function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
-    const region = aws.config.requireRegion();
-    const uri = lambda.arn.apply(lambdaARN =>
-        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
-
-    return {
-        "x-amazon-apigateway-integration": {
-            uri: uri,
-            passthroughBehavior: "when_no_match",
-            httpMethod: "POST",
-            type: "aws_proxy",
-        },
-    };
-}
-
-interface APIGatewayRequest {
-    resource: string;
-    path: string;
-    httpMethod: string;
-    // Note: cloud.Request.headers is typed as { [header: string]: string | string[]; }.  However,
-    // currently AWS does not support duplicated headers.  See:
-    //
-    // https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-known-issues.html
-    // > Duplicated headers are not supported."
-    headers: { [header: string]: string; };
-    queryStringParameters: { [param: string]: string; };
-    pathParameters: { [param: string]: string; };
-    stageVariables: { [name: string]: string; };
-    requestContext: APIGatewayRequestContext;
-    body: string;
-    isBase64Encoded: boolean;
-}
-
-interface APIGatewayRequestContext {
-    accountId: string;
-    resourceId: string;
-    stage: string;
-    requestId: string;
-    identity: APIGatewayIdentity;
-    resourcePath: string;
-    httpMethod: string;
-    apiId: string;
-}
-
-interface APIGatewayIdentity {
-    cognitoIdentityPoolId?: string;
-    accountId?: string;
-    cognitoIdentityId?: string;
-    caller?: string;
-    apiKey?: string;
-    sourceIp?: string;
-    cognitoAuthenticationType?: string;
-    cognitoAuthenticationProvider?: string;
-    userArn?: string;
-    userAgent?: string;
-    user?: string;
-}
-
-function createBaseSpec(apiName: string): SwaggerSpec {
-    return {
-        swagger: "2.0",
-        info: { title: apiName, version: "1.0" },
-        paths: {},
-        "x-amazon-apigateway-binary-media-types": [ "*/*" ],
-    };
-}
-
-interface SwaggerSpec {
-    swagger: string;
-    info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: SwaggerOperationAsync; }; };
-    "x-amazon-apigateway-binary-media-types"?: string[];
-}
-
-interface SwaggerInfo {
-    title: string;
-    version: string;
-}
-
-interface ApigatewayIntegrationBase {
-    requestParameters?: any;
-    passthroughBehavior?: string;
-    httpMethod: string;
-    type: string;
-    responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
-    connectionType?: string;
-}
-
-interface ApigatewayIntegration extends ApigatewayIntegrationBase {
-    uri: string;
-    credentials?: string;
-    connectionId?: string;
-}
-
-interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
-    uri: pulumi.Output<string>;
-    credentials?: pulumi.Output<string>;
-    connectionId?: pulumi.Output<string>;
-}
-
-interface SwaggerOperationAsync {
-    parameters?: any[];
-    responses?: { [code: string]: SwaggerResponse };
-    "x-amazon-apigateway-integration": ApigatewayIntegrationAsync;
-}
-
-interface SwaggerOperation {
-    parameters?: any[];
-    responses?: { [code: string]: SwaggerResponse };
-    "x-amazon-apigateway-integration": ApigatewayIntegration;
-}
-
-interface SwaggerResponse {
-    description: string;
-    schema?: SwaggerSchema;
-    headers?: { [header: string]: SwaggerHeader };
-}
-
-interface SwaggerSchema {
-    type: string;
-}
-
-interface SwaggerHeader {
-    type: "string" | "number" | "integer" | "boolean" | "array";
-    items?: SwaggerItems;
-}
-
-interface SwaggerItems {
-    type: "string" | "number" | "integer" | "boolean" | "array";
-    items?: SwaggerItems;
-}
-
-interface SwaggerAPIGatewayIntegrationResponse {
-    statusCode: string;
-    responseParameters?: { [key: string]: string };
-}
-
-// createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
-// an ordinary JSON.stringify because the spec contains computed values.
-function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
-    const pathsDeps = pulumi.all(utils.apply(spec.paths, p => {
-        const temp: pulumi.Output<Record<string, SwaggerOperation>> =
-            pulumi.all(utils.apply(p, x => resolveOperationDependencies(x)));
-        return temp;
-    }));
-
-    // After all values have settled, we can produce the resulting string.
-    return pathsDeps.apply(paths =>
-        JSON.stringify({
-            swagger: spec.swagger,
-            info: spec.info,
-            paths: paths,
-            "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
-            // Map paths the user doesn't have access to as 404.
-            // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
-            "x-amazon-apigateway-gateway-responses": {
-                "MISSING_AUTHENTICATION_TOKEN": {
-                    "statusCode": 404,
-                    "responseTemplates": {
-                        "application/json": "{\"message\": \"404 Not found\" }",
-                    },
-                },
-                "ACCESS_DENIED": {
-                    "statusCode": 404,
-                    "responseTemplates": {
-                        "application/json": "{\"message\": \"404 Not found\" }",
-                    },
-                },
-            },
-        }));
-
-    // local functions
-    function resolveOperationDependencies(op: SwaggerOperationAsync): pulumi.Output<SwaggerOperation> {
-        return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
-            integration => ({
-                    parameters: op.parameters,
-                    responses: op.responses,
-                    "x-amazon-apigateway-integration": integration,
-                }));
-    }
-
-    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): pulumi.Output<ApigatewayIntegration> {
-        return pulumi.all([op.uri, op.credentials, op.connectionId])
-                     .apply(([uri, credentials, connectionId]) => ({
-                requestParameters: op.requestParameters,
-                passthroughBehavior: op.passthroughBehavior,
-                httpMethod: op.httpMethod,
-                type: op.type,
-                responses: op.responses,
-                connectionType: op.connectionType,
-                uri: uri,
-                credentials: credentials,
-                connectionId: connectionId,
-            }));
     }
 }
