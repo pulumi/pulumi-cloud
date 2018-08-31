@@ -1,3 +1,3 @@
-# examples/customDomain
+# examples/express
 
-An example of using API custom domains in AWS.
+An example of using the HttpServer api with Expressjs
