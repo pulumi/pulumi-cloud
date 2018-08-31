@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as serverless from "@pulumi/azure-serverless";
-import * as subscription from "@pulumi/azure-serverless/subscription";
+import * as azurefunctions from "azure-functions-ts-essentials";
 import * as http from "http";
-
-const azureExpression = require("azure-function-express");
+import * as shared from "./shared";
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
@@ -29,22 +28,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         opts: pulumi.ComponentResourceOptions) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
-
-        /*
-        {
-            "bindings": [{
-              "authLevel" : "anonymous",
-              "type"      : "httpTrigger",
-              "direction" : "in",
-              "name"      : "req",
-              "route"     : "{*segments}"
-            }, {
-              "type"      : "http",
-              "direction" : "out",
-              "name"      : "res"
-            }]
-          }
-          */
 
         const bindings: subscription.Binding[] = [
             // Input binding that captures all incoming http requests.
@@ -62,10 +45,33 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 "name"      : "res",
             }];
 
-        const eventSubscription = new subscription.EventSubscription<subscription.Context, any> (
-            "cloud:httpserver:EventSubscription", name,
-            context => {
+        const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
+            const createHandler = require("azure-function-express").createHandler;
+            const requestListener = createRequestListener();
+            const handler = createHandler((req: http.IncomingMessage, res: http.ServerResponse) => {
+                // the incoming url will be relative to the site and thus will always have
+                // '/api/' at the start of it.  We want routes to not have to specify the
+                // '/api/' portion in them.
 
-            }, bindings, {}, { parent: this });
+                const url = req.url!;
+                if (!url.startsWith("/api/")) {
+                    throw new Error("Expected [url] to start with: /api/");
+                }
+
+                req.url = url.substr("/api".length);
+                requestListener(req, res);
+            });
+        };
+
+        const eventSubscription = new subscription.EventSubscription<subscription.Context, any>(
+            "cloud:httpserver:EventSubscription", name, bindings, {
+                factoryFunc,
+                resourceGroup: shared.globalResourceGroup,
+            }, { parent: this });
+
+        this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);
+        super.registerOutputs({
+            url: this.url,
+        });
     }
 }

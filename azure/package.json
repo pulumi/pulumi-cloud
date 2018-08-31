@@ -29,7 +29,6 @@
         "@types/node": "^8.0.26",
         "@types/semver": "^5.4.0",
         "@types/stream-buffers": "^3.0.2",
-        "@types/azure-function-express": "",
         "tslint": "^5.7.0",
         "typescript": "^2.6.2"
     },
