@@ -15,7 +15,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import { Function } from "./function";
+import { createFunction, Function } from "./function";
 
 // See https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html.
 interface S3BucketNotificationEvent {
@@ -162,7 +162,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public addHandler(name: string, handler: cloud.BucketHandler, events: string[], filter?: cloud.BucketFilter) {
 
         // Create the Lambda function to handle the event.
-        const f = new Function(name, eventHandler, { parent: this });
+        const f = createFunction(name, eventHandler, { parent: this });
 
         // Give S3 permission to invoke the function.
         const permission = new aws.lambda.Permission(name, {

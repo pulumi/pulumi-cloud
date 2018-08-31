@@ -14,7 +14,11 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import * as serverless from "@pulumi/azure-serverless";
+import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as http from "http";
+
+const azureExpression = require("azure-function-express");
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
@@ -24,8 +28,44 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
         opts: pulumi.ComponentResourceOptions) {
 
-        super("cloud:express:Express", name, {}, opts);
+        super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        throw new Error("Method not implemented.");
+        /*
+        {
+            "bindings": [{
+              "authLevel" : "anonymous",
+              "type"      : "httpTrigger",
+              "direction" : "in",
+              "name"      : "req",
+              "route"     : "{*segments}"
+            }, {
+              "type"      : "http",
+              "direction" : "out",
+              "name"      : "res"
+            }]
+          }
+          */
+
+        const bindings: subscription.Binding[] = [
+            // Input binding that captures all incoming http requests.
+            <subscription.Binding>{
+                "authLevel" : "anonymous",
+                "type"      : "httpTrigger",
+                "direction" : "in",
+                "name"      : "req",
+                "route"     : "{*segments}",
+            },
+            // Output binding necessary to return http responses.
+            {
+                "type"      : "http",
+                "direction" : "out",
+                "name"      : "res",
+            }];
+
+        const eventSubscription = new subscription.EventSubscription<subscription.Context, any> (
+            "cloud:httpserver:EventSubscription", name,
+            context => {
+
+            }, bindings, {}, { parent: this });
     }
 }

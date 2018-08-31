@@ -17,7 +17,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
 
-import { Function } from "./function";
+import { createFactoryFunction } from "./function";
 import * as utils from "./utils";
 import { sha1hash } from "./utils";
 
@@ -29,16 +29,18 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
         opts: pulumi.ComponentResourceOptions) {
 
-        super("cloud:express:Express", name, {}, opts);
+        super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        // Create the main aws lambda entrypoint.  It will create an instance of express, configure
-        // it (however the caller wants) and then will forward the actual lambda request on to it.
-        function entryPoint(event: APIGatewayRequest, context: aws.serverless.Context) {
+        // Create the main aws lambda entrypoint factory function.  Note that this is a factory
+        // funcion so that we can just run this code once and hook up to
+        function entryPoint() {
             const serverlessExpress = require("aws-serverless-express");
             const requestListener = createRequestListener();
-            const server = serverlessExpress.createServer(requestListener);
 
-            serverlessExpress.proxy(server, event, <any>context);
+            return (event: APIGatewayRequest, context: aws.serverless.Context) => {
+                const server = serverlessExpress.createServer(requestListener);
+                serverlessExpress.proxy(server, event, <any>context);
+            };
         }
 
         // Have to register two paths (that will point to the same lambda).  One for the root
@@ -46,7 +48,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         const swaggerPath = "/";
         const swaggerPathProxy = "/{proxy+}";
 
-        const func = new Function(name, entryPoint, { parent: this });
+        const func =  createFactoryFunction(name, entryPoint, { parent: this });
 
         // Register two paths in the Swagger spec, for the root and for a catch all under the root
         const swagger = createBaseSpec(name);

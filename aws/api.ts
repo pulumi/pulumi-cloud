@@ -23,7 +23,7 @@ import * as mime from "mime";
 import * as fspath from "path";
 import * as utils from "./utils";
 
-import { Function } from "./function";
+import { createFunction, Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
@@ -324,7 +324,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         const lambdas: {[key: string]: Function} = {};
         for (const route of routes) {
             const method: string = swaggerMethod(route.method);
-            const lambda = new Function(
+            const lambda = createFunction(
                 apiName + sha1hash(method + ":" + route.path),
                 (ev: APIGatewayRequest, ctx, cb) => {
                     let body: Buffer;
