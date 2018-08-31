@@ -48,19 +48,18 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
             const createHandler = require("azure-function-express").createHandler;
             const requestListener = createRequestListener();
-            const handler = createHandler((req: http.IncomingMessage, res: http.ServerResponse) => {
-                // the incoming url will be relative to the site and thus will always have
-                // '/api/' at the start of it.  We want routes to not have to specify the
-                // '/api/' portion in them.
+            const handler = createHandler(requestListener);
 
-                const url = req.url!;
-                if (!url.startsWith("/api/")) {
-                    throw new Error("Expected [url] to start with: /api/");
-                }
+            return (context: subscription.Context) => {
+                // Redirect console logging to context logging.
+                console.log = context.log;
+                console.error = context.log.error;
+                console.warn = context.log.warn;
+                // tslint:disable-next-line:no-console
+                console.info = context.log.info;
 
-                req.url = url.substr("/api".length);
-                requestListener(req, res);
-            });
+                return handler(context);
+            };
         };
 
         const eventSubscription = new subscription.EventSubscription<subscription.Context, any>(

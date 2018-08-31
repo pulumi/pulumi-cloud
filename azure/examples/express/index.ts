@@ -14,11 +14,20 @@
 
 import * as cloud from "@pulumi/cloud";
 import * as express from "express";
+import { basename } from "path";
 
 const server = new cloud.HttpServer("myexpress", () => {
     const app = express();
-    app.get("/", (req, res) => {
+    const router = express.Router();
+
+    app.use("/api", router);
+
+    router.get("/", (req, res) => {
         res.json({ succeeded: true });
+    });
+
+    router.get("*", (req, res) => {
+        res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl } });
     });
 
     return app;
