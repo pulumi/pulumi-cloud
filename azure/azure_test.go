@@ -84,23 +84,22 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-azure",
 			},
 		},
-		// TODO(cyrusn): These are currently timing out on travis.
-		// {
-		// 	Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
-		// 	Config: commonConfig,
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-azure",
-		// 	},
-		// },
-		// {
-		// 	Dir:    path.Join(cwd, "./examples/containers"),
-		// 	Config: commonConfig,
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-azure",
-		// 	},
-		// },
+		{
+			Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:    path.Join(cwd, "./examples/containers"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
 	}
 
 	longExamples := []integration.ProgramTestOptions{}
