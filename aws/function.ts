@@ -54,7 +54,6 @@ export class Function extends pulumi.ComponentResource {
             includePackages: functionIncludePackages,
         };
 
-
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
     }
 }
