@@ -31,23 +31,29 @@ export class Function extends pulumi.ComponentResource {
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
-        // First allocate a function.
-        const options: aws.serverless.FunctionOptions = {
-            policies: [...getComputeIAMRolePolicies()],
-            memorySize: functionMemorySize,
-            includePaths: functionIncludePaths,
-            includePackages: functionIncludePackages,
-        };
+        const policies = [...getComputeIAMRolePolicies()];
+        let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
+
         if (runLambdaInVPC) {
             const network = getOrCreateNetwork();
             // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
             //     add VPC access will currently fail due to an issue in the Terraform provider.
-            options.policies!.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
-            options.vpcConfig = {
+            policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+            vpcConfig = {
                 securityGroupIds: pulumi.all(network.securityGroupIds),
                 subnetIds: pulumi.all(network.subnetIds),
             };
         }
+
+        // First allocate a function.
+        const options: aws.serverless.FunctionOptions = {
+            policies,
+            vpcConfig,
+            memorySize: functionMemorySize,
+            includePaths: functionIncludePaths,
+            includePackages: functionIncludePackages,
+        };
+
         this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
     }
 }

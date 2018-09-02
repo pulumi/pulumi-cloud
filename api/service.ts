@@ -64,6 +64,12 @@ export interface Container {
     environment?: {[name: string]: pulumi.Input<string>};
     /**
      * The maximum amount of memory the container will be allowed to use. Maps to the Docker
+     * `--cpus` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
+     */
+    cpu?: pulumi.Input<number>;
+    /**
+     * The maximum amount of memory the container will be allowed to use. Maps to the Docker
      * `--memory` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      *

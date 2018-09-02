@@ -415,9 +415,9 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            return pulumi.all([imageOptions, container.command, container.memory,
+            return pulumi.all([imageOptions, container.command, container.cpu, container.memory,
                                container.memoryReservation, logGroup.id, container.dockerLabels])
-                         .apply(([imageOptions, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
+                         .apply(([imageOptions, command, cpu, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOptions.environment)) {
                     keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
@@ -427,6 +427,7 @@ function computeContainerDefinitions(
                     name: containerName,
                     image: imageOptions.image,
                     command: command,
+                    cpu: cpu,
                     memory: memory,
                     memoryReservation: memoryReservation,
                     portMappings: portMappings,
