@@ -216,7 +216,7 @@ function createGroup(
         const qualifiedName = (name + "-" + containerName).replace(disallowedChars, "-");
         azureContainers.push({
             name: qualifiedName,
-            cpu: pulumi.output(container.cpu).apply(,
+            cpu: pulumi.output(container.cpu).apply(c => c === undefined ? 1 : c),
             memory: memoryInGB,
             port: targetPortNumber,
             protocol: protocol,
