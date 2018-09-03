@@ -1,6 +1,6 @@
 {
-    "name": "bucket",
-    "version": "0.1.0",
+    "name": "containers",
+    "version": "0.0.1",
     "license": "Apache-2.0",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -8,17 +8,17 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.15.0",
-        "@pulumi/azure": "^0.15.2-dev",
-        "@pulumi/azure-serverless": "^0.15.0",
-        "azure-storage": "^2.10.1"
+        "@pulumi/pulumi": "^0.15.1-dev",
+        "node-fetch": "^1.7.3",
+        "redis": "^2.8.0"
     },
     "devDependencies": {
-        "@types/node": "^8.0.26",
+        "@types/node": "^8.0.27",
+        "@types/node-fetch": "^1.6.7",
         "typescript": "^2.1.4"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
-        "@pulumi/cloud-azure": "latest"
+        "@pulumi/cloud-aws": "latest"
     }
 }

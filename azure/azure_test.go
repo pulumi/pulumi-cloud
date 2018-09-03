@@ -64,6 +64,7 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:clientId":       clientID,
 		"cloud-azure:clientSecret":   clientSecret,
 		"cloud-azure:tenantId":       tenantID,
+		"containers:redisPassword":   "REDIS_PASSWORD",
 	}
 
 	examples := []integration.ProgramTestOptions{
@@ -85,6 +86,14 @@ func Test_Examples(t *testing.T) {
 		},
 		{
 			Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:    path.Join(cwd, "./examples/containers"),
 			Config: commonConfig,
 			Dependencies: []string{
 				"@pulumi/cloud",

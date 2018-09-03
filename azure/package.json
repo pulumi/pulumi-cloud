@@ -14,7 +14,7 @@
         "@pulumi/pulumi": "^0.15.1-dev",
         "@pulumi/azure": "^0.15.2-dev",
         "@pulumi/azure-serverless": "^0.15.1-dev",
-        "@pulumi/docker": "^0.15.0",
+        "@pulumi/docker": "^0.15.1-dev",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
         "azure-arm-containerregistry": "^2.4.0",
@@ -29,7 +29,7 @@
         "@types/semver": "^5.4.0",
         "@types/stream-buffers": "^3.0.2",
         "tslint": "^5.7.0",
-        "typescript": "^2.6.2"
+        "typescript": "^3.0.1"
     },
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}"

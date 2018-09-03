@@ -67,13 +67,25 @@
   dependencies:
     "@pulumi/pulumi" "^0.15.0"
 
-"@pulumi/docker@^0.15.0":
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.0.tgz#cd6076113b2527fe73ff9865934977db343a30ca"
+"@pulumi/docker@^0.15.1-dev":
+  version "0.15.1-dev-1535584875-g0109adf"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1-dev-1535584875-g0109adf.tgz#5fed5b01ca17262945ede226e0b0bbe03583ad97"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.14.3"
     mime "^2.0.3"
     semver "^5.4.0"
+
+"@pulumi/pulumi@^0.14.3":
+  version "0.14.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.14.3.tgz#dc2f26d18814a12488574d56b0dc5251673c41df"
+  dependencies:
+    google-protobuf "^3.5.0"
+    grpc "^1.12.2"
+    minimist "^1.2.0"
+    protobufjs "^6.8.6"
+    require-from-string "^2.0.1"
+    source-map-support "^0.4.16"
+    typescript "^2.5.2"
 
 "@pulumi/pulumi@^0.15.0":
   version "0.15.0"
@@ -90,8 +102,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.1-dev":
-  version "0.15.1-dev-1535674640-g3066cbcb"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535674640-g3066cbcb.tgz#db9a12abbc15cbff4dfb54c0007bbbe0eef14e77"
+  version "0.15.1-dev-1535921408-g35b78abc"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535921408-g35b78abc.tgz#da4f95ffe534fd2c513d946e65e3829b279df625"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -950,7 +962,7 @@ os-homedir@^1.0.0:
 
 os-locale@^1.4.0:
   version "1.4.0"
-  resolved "https://registry.yarnpkg.com/os-locale/-/os-locale-1.4.0.tgz#20f9f17ae29ed345e8bde583b13d2009803c14d9"
+  resolved "http://registry.npmjs.org/os-locale/-/os-locale-1.4.0.tgz#20f9f17ae29ed345e8bde583b13d2009803c14d9"
   dependencies:
     lcid "^1.0.0"
 
@@ -1353,11 +1365,11 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
 
-typescript@^2.6.2:
+typescript@^2.5.2:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.9.2.tgz#1cbf61d05d6b96269244eb6a3bce4bd914e0f00c"
 
-typescript@^3.0.0:
+typescript@^3.0.0, typescript@^3.0.1:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.3.tgz#4853b3e275ecdaa27f78fda46dc273a7eb7fc1c8"
 
@@ -1386,7 +1398,7 @@ validate-npm-package-license@^3.0.1:
 
 validator@~9.4.1:
   version "9.4.1"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-9.4.1.tgz#abf466d398b561cd243050112c6ff1de6cc12663"
+  resolved "http://registry.npmjs.org/validator/-/validator-9.4.1.tgz#abf466d398b561cd243050112c6ff1de6cc12663"
 
 verror@1.10.0:
   version "1.10.0"
@@ -1408,7 +1420,7 @@ window-size@^0.1.4:
 
 wrap-ansi@^2.0.0:
   version "2.1.0"
-  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-2.1.0.tgz#d8fc3d284dd05794fe84973caecdd1cf824fdd85"
+  resolved "http://registry.npmjs.org/wrap-ansi/-/wrap-ansi-2.1.0.tgz#d8fc3d284dd05794fe84973caecdd1cf824fdd85"
   dependencies:
     string-width "^1.0.1"
     strip-ansi "^3.0.1"

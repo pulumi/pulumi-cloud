@@ -415,9 +415,9 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            return pulumi.all([imageOptions, container.command, container.memory,
+            return pulumi.all([imageOptions, container.command, container.cpu, container.memory,
                                container.memoryReservation, logGroup.id, container.dockerLabels])
-                         .apply(([imageOptions, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
+                         .apply(([imageOptions, command, cpu, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOptions.environment)) {
                     keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
@@ -427,6 +427,7 @@ function computeContainerDefinitions(
                     name: containerName,
                     image: imageOptions.image,
                     command: command,
+                    cpu: cpu,
                     memory: memory,
                     memoryReservation: memoryReservation,
                     portMappings: portMappings,
@@ -701,7 +702,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
-            if (firstContainerName === undefined && containerName !== undefined) {
+            if (firstContainerName === undefined) {
                 firstContainerName = containerName;
                 if (container.ports && container.ports.length > 0) {
                     firstContainerPort = container.ports[0].port;
@@ -772,7 +773,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
 function getEndpointHelper(
     endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
-
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {
