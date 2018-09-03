@@ -15,7 +15,7 @@
 import * as cloud from "@pulumi/cloud";
 import { Config, Output } from "@pulumi/pulumi";
 
-// A simple NGINX service, scaled out over two containers.
+// A simple NGINX service.
 let nginx = new cloud.Service("examples-nginx", {
     containers: {
         nginx: {
@@ -29,16 +29,6 @@ let nginx = new cloud.Service("examples-nginx", {
 
 export let nginxEndpoint: Output<cloud.Endpoint> = nginx.defaultEndpoint;
 
-// A simple NGINX service, scaled out over two containers, using a single container rather than a map.
-let simpleNginx = new cloud.Service("examples-simple-nginx", {
-    image: "nginx",
-    memory: 128,
-    ports: [{ port: 80, external: true }],
-    replicas: 1,
-});
-
-export let simpleNginxEndpoint: Output<cloud.Endpoint> = simpleNginx.defaultEndpoint;
-
 let cachedNginx = new cloud.Service("examples-cached-nginx", {
     containers: {
         nginx: {
@@ -51,123 +41,6 @@ let cachedNginx = new cloud.Service("examples-cached-nginx", {
         },
     },
     replicas: 1,
-});
-
-let multistageCachedNginx = new cloud.Service("examples-multistage-cached-nginx", {
-    containers: {
-        nginx: {
-            build: {
-                context: "./app",
-                dockerfile: "./app/Dockerfile-multistage",
-                cacheFrom: {stages: ["build"]},
-            },
-            memory: 128,
-            ports: [{ port: 80, external: true }],
-        },
-    },
-    replicas: 1,
-});
-
-let customWebServer = new cloud.Service("mycustomservice", {
-    containers: {
-        webserver: {
-            memory: 128,
-            ports: [{ port: 80, external: true }],
-            function: () => {
-                let rand = Math.random();
-                let http = require("http");
-                http.createServer((req: any, res: any) => {
-                    res.end(`Hello, world! (from ${rand})`);
-                }).listen(80);
-            },
-        },
-    },
-    replicas: 1,
-});
-
-let config = new Config("containers");
-let redisPassword = config.require("redisPassword");
-
-/**
- * A simple Cache abstration, built on top of a Redis container Service.
- */
-class Cache {
-
-    get: (key: string) => Promise<string>;
-    set: (key: string, value: string) => Promise<void>;
-
-    constructor(name: string, memory: number = 128) {
-        let redis = new cloud.Service(name, {
-            containers: {
-                redis: {
-                    image: "redis:alpine",
-                    memory: memory,
-                    ports: [{ port: 6379, external: true }],
-                    command: ["redis-server", "--requirepass", redisPassword],
-                },
-            },
-        });
-        this.get = (key: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
-                let client = require("redis").createClient(
-                    endpoint.port,
-                    endpoint.hostname,
-                    { password: redisPassword },
-                );
-                console.log(client);
-                return new Promise<string>((resolve, reject) => {
-                    client.get(key, (err: any, v: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(v);
-                        }
-                    });
-                });
-            });
-        };
-        this.set = (key: string, value: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
-                let client = require("redis").createClient(
-                    endpoint.port,
-                    endpoint.hostname,
-                    { password: redisPassword },
-                );
-                console.log(client);
-                return new Promise<void>((resolve, reject) => {
-                    client.set(key, value, (err: any, v: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    });
-                });
-            });
-        };
-    }
-}
-
-let cache = new Cache("examples-mycache");
-
-let helloTask = new cloud.Task("examples-hello-world", {
-    image: "hello-world",
-    memory: 20,
-});
-
-// build an anonymous image:
-let builtService = new cloud.Service("examples-nginx2", {
-    containers: {
-        nginx: {
-            build: "./app",
-            memory: 128,
-            ports: [{ port: 80, external: true }],
-        },
-    },
-    replicas: 1,
-    waitForSteadyState: false,
 });
 
 // expose some APIs meant for testing purposes.
@@ -184,11 +57,11 @@ let builtService = new cloud.Service("examples-nginx2", {
 //     }
 // });
 
-function errorJSON(err: any) {
-    const result: any = Object.create(null);
-    Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
-    return result;
-}
+// function errorJSON(err: any) {
+//     const result: any = Object.create(null);
+//     Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
+//     return result;
+// }
 
 // api.get("/", async (req, res) => {
 //     try {
