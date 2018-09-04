@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as azure from "@pulumi/azure";
+import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";
@@ -147,13 +147,4 @@ export function sha1hash(s: string): string {
     // TODO[pulumi/pulumi#377] Workaround for issue with long names not generating per-deplioyment randomness, leading
     //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
     return shasum.digest("hex").substring(0, 8);
-}
-
-export function redirectConsoleOutput(context: subscription.Context) {
-    // Redirect console logging to context logging.
-    console.log = context.log;
-    console.error = context.log.error;
-    console.warn = context.log.warn;
-    // tslint:disable-next-line:no-console
-    console.info = context.log.info;
 }

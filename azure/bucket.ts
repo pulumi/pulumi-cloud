@@ -104,8 +104,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             filter = filter || {};
             serverless.storage.onBlobEvent(putName, storageAccount, {
                     func: (context, buffer) => {
-                        shared.redirectConsoleOutput(context);
-
                         handler({
                             key: context.bindingData.blobTrigger,
                             eventTime: context.bindingData.sys.utcNow,

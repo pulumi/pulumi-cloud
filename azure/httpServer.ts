@@ -52,7 +52,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const handler = createHandler(requestListener);
 
             return (context: subscription.Context) => {
-                shared.redirectConsoleOutput(context);
                 return handler(context);
             };
         };

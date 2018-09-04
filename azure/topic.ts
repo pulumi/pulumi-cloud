@@ -51,9 +51,8 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             const subscription = serverless.eventhub.onTopicEvent(
                 name, namespace, topic, {
                     resourceGroup: shared.globalResourceGroup,
-                    func: async (context, val) => {
-                        shared.redirectConsoleOutput(context);
-                        handler(JSON.parse(val));
+                    func: (context, val) => {
+                        handler(JSON.parse(val)).then(() => context.done());
                     },
                 }, { parent: this });
 
