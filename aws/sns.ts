@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import { createFunction, Function } from "./function";
+import { createFunction } from "./function";
 
 interface SNSEvent {
     Records: SNSRecord[];

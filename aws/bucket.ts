@@ -15,7 +15,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import { createFunction, Function } from "./function";
+import { createFunction } from "./function";
 
 // See https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html.
 interface S3BucketNotificationEvent {
