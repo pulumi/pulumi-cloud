@@ -12,14 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// types.ts is declared in package.json as: types: "types.ts'. As such, this becomes the file that
-// typescript itself uses to determine the shape of this module.
+import * as cloud from "@pulumi/cloud";
+import * as express from "express";
 
-export * from "./bucket";
-export * from "./api";
-export * from "./httpServer";
-export * from "./table";
-export * from "./topic";
-export * from "./service";
-import * as timer from "./timer";
-export { timer };
+const server = new cloud.HttpServer("myexpress", () => {
+    const app = express();
+    const router = express.Router();
+
+    app.use("/api", router);
+
+    router.get("/", (req, res) => {
+        res.json({ succeeded: true });
+    });
+
+    router.get("*", (req, res) => {
+        res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl } });
+    });
+
+    return app;
+});
+
+// Export the URL for the express Endpoint.
+export let url = server.url;

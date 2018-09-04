@@ -46,11 +46,11 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.1-dev":
-  version "0.15.1-dev-1534452000-g9e477cb"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1534452000-g9e477cb.tgz#10270b2d09dad7fb160bf5e8830481ecf82b4dcf"
+  version "0.15.1-dev-1535695066-g94e315b"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1535695066-g94e315b.tgz#4781af95fe5522da1cb48a23e9ea917be6fd802f"
   dependencies:
     "@pulumi/azure" "^0.15.0"
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.15.1-dev"
     azure-functions-ts-essentials "^1.3.2"
     azure-storage "^2.10.1"
     read-package-tree "^5.2.1"
@@ -102,8 +102,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.1-dev":
-  version "0.15.1-dev-1535645299-g1ebd698a"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535645299-g1ebd698a.tgz#344a950c7ef0da3c423ba33d01ae58ca68cb5ae5"
+  version "0.15.1-dev-1535921408-g35b78abc"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1535921408-g35b78abc.tgz#da4f95ffe534fd2c513d946e65e3829b279df625"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -815,11 +815,11 @@ minimatch@^3.0.4:
 
 minimist@0.0.8:
   version "0.0.8"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
+  resolved "http://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
 
 minimist@^1.2.0:
   version "1.2.0"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
+  resolved "http://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
 
 minipass@^2.2.1, minipass@^2.3.3:
   version "2.3.4"
@@ -962,7 +962,7 @@ os-homedir@^1.0.0:
 
 os-locale@^1.4.0:
   version "1.4.0"
-  resolved "https://registry.yarnpkg.com/os-locale/-/os-locale-1.4.0.tgz#20f9f17ae29ed345e8bde583b13d2009803c14d9"
+  resolved "http://registry.npmjs.org/os-locale/-/os-locale-1.4.0.tgz#20f9f17ae29ed345e8bde583b13d2009803c14d9"
   dependencies:
     lcid "^1.0.0"
 
@@ -1398,7 +1398,7 @@ validate-npm-package-license@^3.0.1:
 
 validator@~9.4.1:
   version "9.4.1"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-9.4.1.tgz#abf466d398b561cd243050112c6ff1de6cc12663"
+  resolved "http://registry.npmjs.org/validator/-/validator-9.4.1.tgz#abf466d398b561cd243050112c6ff1de6cc12663"
 
 verror@1.10.0:
   version "1.10.0"
@@ -1420,7 +1420,7 @@ window-size@^0.1.4:
 
 wrap-ansi@^2.0.0:
   version "2.1.0"
-  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-2.1.0.tgz#d8fc3d284dd05794fe84973caecdd1cf824fdd85"
+  resolved "http://registry.npmjs.org/wrap-ansi/-/wrap-ansi-2.1.0.tgz#d8fc3d284dd05794fe84973caecdd1cf824fdd85"
   dependencies:
     string-width "^1.0.1"
     strip-ansi "^3.0.1"
