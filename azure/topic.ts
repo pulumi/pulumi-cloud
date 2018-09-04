@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
+import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as shared from "./shared";
@@ -20,6 +21,7 @@ import * as shared from "./shared";
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     public readonly namespace: azure.eventhub.Namespace;
     public readonly topic: azure.eventhub.Topic;
+    // public readonly subscriptions: serverless.eventhub.
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -29,7 +31,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:topic:Topic", name, {}, opts);
 
-        const ns = new azure.eventhub.Namespace(name, {
+        const namespace = new azure.eventhub.Namespace(name, {
             location: shared.location,
             resourceGroupName: shared.globalResourceGroupName,
             // topics are only supported in standard and premium.
@@ -37,18 +39,29 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         }, { parent: this });
 
         const topic = new azure.eventhub.Topic(name, {
-            location: shared.location,
             resourceGroupName: shared.globalResourceGroupName,
-            namespaceName: ns.name,
+            namespaceName: namespace.name,
         });
 
-        this.namespace = ns;
+        this.namespace = namespace;
         this.topic = topic;
 
-        this.publish = _ => { throw new Error("Method not implemented."); };
-
         this.subscribe = (name, handler) => {
-            const subscription =
+            const subscription = serverless.eventhub.onTopicEvent(
+                name, namespace, topic, {
+                    resourceGroup: shared.globalResourceGroup,
+                    func: async (context, val) => {
+                        handler(val);
+                    },
+                }, { parent: this });
         };
+
+        this.publish = async val => {
+            
+        };
+
+        this.registerOutputs({
+            namespace, topic,
+        });
     }
 }
