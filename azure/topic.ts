@@ -16,12 +16,13 @@ import * as azure from "@pulumi/azure";
 import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import * as azuresb from "azure-sb";
 import * as shared from "./shared";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     public readonly namespace: azure.eventhub.Namespace;
     public readonly topic: azure.eventhub.Topic;
-    // public readonly subscriptions: serverless.eventhub.
+    public readonly subscriptions: serverless.eventhub.TopicEventSubscription[] = [];
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -51,13 +52,25 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
                 name, namespace, topic, {
                     resourceGroup: shared.globalResourceGroup,
                     func: async (context, val) => {
-                        handler(val);
+                        shared.redirectConsoleOutput(context);
+                        handler(JSON.parse(val));
                     },
                 }, { parent: this });
+
+            this.subscriptions.push(subscription);
         };
 
-        this.publish = async val => {
-            
+        this.publish = async (val) => {
+            const client = azuresb.createServiceBusService(namespace.defaultPrimaryConnectionString.get());
+            await new Promise((resolve, reject) => {
+                client.sendTopicMessage(topic.name.get(), JSON.stringify(val), (err, res) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    return resolve(res);
+                });
+            });
         };
 
         this.registerOutputs({
