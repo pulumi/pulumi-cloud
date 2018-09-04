@@ -24,7 +24,7 @@ import * as fspath from "path";
 import * as utils from "./utils";
 
 import * as apigateway from "./apigateway";
-import { Function } from "./function";
+import { createFunction, Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
@@ -324,8 +324,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                                   routes: Route[], swagger: apigateway.SwaggerSpec): {[key: string]: Function} {
         const lambdas: {[key: string]: Function} = {};
         for (const route of routes) {
-            const method: string = apigateway.swaggerMethod(route.method);
-            const lambda = new Function(
+            const method = apigateway.swaggerMethod(route.method);
+            const lambda = createFunction(
                 apiName + sha1hash(method + ":" + route.path),
                 (ev: apigateway.APIGatewayRequest, ctx, cb) => {
                     let body: Buffer;

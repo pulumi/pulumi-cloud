@@ -12,7 +12,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/pulumi": "^0.15.1-dev",
-        "@pulumi/aws": "^0.15.0",
+        "@pulumi/aws": "^0.15.1-dev",
         "@pulumi/aws-infra": "^0.15.0",
         "@pulumi/docker": "^0.15.1-dev",
         "mime": "^2.0.3",
@@ -27,6 +27,7 @@
         "typescript": "^3.0.1"
     },
     "peerDependencies": {
-        "@pulumi/cloud": "${VERSION}"
+        "@pulumi/cloud": "${VERSION}",
+        "@types/express": "^4.16.0"
     }
 }

@@ -102,21 +102,21 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         this.onPut = async (putName, handler, filter) => {
             const resourceGroup = shared.globalResourceGroup;
             filter = filter || {};
-            serverless.storage.onBlobEvent(putName, storageAccount, (context, buffer) => {
-                    // Redirect console logging to context logging.
-                    console.log = context.log;
-                    console.error = context.log.error;
-                    console.warn = context.log.warn;
-                    // tslint:disable-next-line:no-console
-                    console.info = context.log.info;
+            serverless.storage.onBlobEvent(putName, storageAccount, {
+                    func: (context, buffer) => {
+                        // Redirect console logging to context logging.
+                        console.log = context.log;
+                        console.error = context.log.error;
+                        console.warn = context.log.warn;
+                        // tslint:disable-next-line:no-console
+                        console.info = context.log.info;
 
-                    handler({
-                        key: context.bindingData.blobTrigger,
-                        eventTime: context.bindingData.sys.utcNow,
-                        size: buffer.length,
-                    }).then(() => context.done());
-                },
-                {
+                        handler({
+                            key: context.bindingData.blobTrigger,
+                            eventTime: context.bindingData.sys.utcNow,
+                            size: buffer.length,
+                        }).then(() => context.done());
+                    },
                     storageAccount: storageAccount,
                     containerName: container.name,
                     resourceGroup: resourceGroup,

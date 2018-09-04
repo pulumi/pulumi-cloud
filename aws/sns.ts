@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import { Function } from "./function";
+import { createFunction } from "./function";
 
 interface SNSEvent {
     Records: SNSRecord[];
@@ -50,7 +50,7 @@ export function createSubscription(
     resName: string, topic: aws.sns.Topic, handler: (item: SNSItem) => Promise<void>): aws.sns.TopicSubscription {
 
     let subscription: aws.sns.TopicSubscription;
-    const func = new Function(
+    const func = createFunction(
         resName,
         (ev: SNSEvent, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
             Promise.all(ev.Records.map(async (record: SNSRecord) => {

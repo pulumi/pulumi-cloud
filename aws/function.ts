@@ -20,6 +20,16 @@ import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from ".
 
 export { Context, Handler } from "@pulumi/aws/serverless";
 
+export function createFunction(
+        name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
+    return new Function(name, handler, /*isFactoryFunction*/ false, opts);
+}
+
+export function createFactoryFunction(
+        name: string, handler: aws.serverless.HandlerFactory, opts?: pulumi.ResourceOptions): Function {
+    return new Function(name, handler, /*isFactoryFunction*/ true, opts);
+}
+
 // Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
 // `@pulumi/cloud` configuration.
 export class Function extends pulumi.ComponentResource {
@@ -27,7 +37,8 @@ export class Function extends pulumi.ComponentResource {
     public readonly lambda: aws.lambda.Function;
 
     constructor(name: string,
-                handler: aws.serverless.Handler,
+                handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
+                isFactoryFunction: boolean,
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
@@ -52,8 +63,10 @@ export class Function extends pulumi.ComponentResource {
             memorySize: functionMemorySize,
             includePaths: functionIncludePaths,
             includePackages: functionIncludePackages,
+            func: isFactoryFunction ? undefined : handler,
+            factoryFunc: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
         };
 
-        this.lambda = new aws.serverless.Function(name, options, handler, { parent: this }).lambda;
+        this.lambda = new aws.serverless.Function(name, options, undefined, { parent: this }).lambda;
     }
 }
