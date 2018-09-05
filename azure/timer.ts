@@ -12,39 +12,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as azure from "@pulumi/azure";
+import * as subscription from "@pulumi/azure-serverless/subscription";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-// import { Function } from "./function";
+import * as shared from "./shared";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
-    let rateMinutes = 0;
-    if (options.minutes) {
-        rateMinutes += options.minutes;
-    }
-    if (options.hours) {
-        rateMinutes += options.hours * 60;
-    }
-    if (options.days) {
-        rateMinutes += options.days * 60 * 24;
+
+    if (options.days !== undefined) {
+        if (options.days !== 0) {
+            // Yes.  This is strange.  But it is how Azure interprets things:
+            // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
+            checkRange("options.days", options.days, 24, 100);
+        }
     }
 
-    let unit = "minutes";
-    if (rateMinutes < 1) {
-        throw new RunError("Interval must be at least 1 minute");
-    }
-    if (rateMinutes === 1) {
-        unit = "minute";
+    if (options.minutes !== undefined) {
+        checkRange("options.minutes", options.minutes, 0, 60);
     }
 
-    createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler, opts);
+    if (options.hours !== undefined) {
+        checkRange("options.hours", options.hours, 0, 24);
+    }
+
+    const timeSpan = options.days !== undefined
+        ? `${pad(options.days)}:${pad(options.hours)}:${pad(options.minutes)}`
+        : `${pad(options.hours)}:${pad(options.minutes)}:00`;
+
+    createScheduledEvent(name, timeSpan, handler, opts);
 }
 
-export function cron(name: string, cronTab: string, handler: timer.Action,
-                     opts?: pulumi.ResourceOptions): void {
-    createScheduledEvent(name, `cron(${cronTab})`, handler, opts);
+function pad(val: number | undefined): string {
+    if (val === undefined) {
+        return "00";
+    }
+
+    if (val < 10) {
+        return "0" + val;
+    }
+
+    return val.toString();
+}
+
+function checkIntegral(name: string, val: number) {
+    if (!Number.isInteger(val)) {
+        throw new Error(`[${name}] must be an integer.`);
+    }
+}
+
+function checkRange(name: string, val: number, lowInclusive: number, highExclusive: number) {
+    checkIntegral(name, val);
+
+    if (val < lowInclusive || val >= highExclusive) {
+        throw new Error(`[${name}] must be in the range [${lowInclusive}, ${highExclusive}).`);
+    }
 }
 
 export function daily(name: string,
@@ -92,17 +115,44 @@ export function hourly(name: string,
     cron(name, `${minute} * * * ? *`, handler, opts);
 }
 
-class Timer extends pulumi.ComponentResource {
-    constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
-        super("cloud:timer:Timer", name, {
-            scheduleExpression: scheduleExpression,
-        }, opts);
-
-        throw new Error("Method not implemented");
-    }
+export function cron(name: string, cronTab: string, handler: timer.Action,
+                     opts?: pulumi.ResourceOptions): void {
+    createScheduledEvent(name, cronTab, handler, opts);
 }
 
 function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action,
                               opts?: pulumi.ResourceOptions): void {
     const t = new Timer(name, scheduleExpression, handler, opts);
+}
+
+interface TimerBinder extends subscription.Binding {
+    schedule: string;
+    name: string;
+    type: "timerTrigger";
+    direction: "in";
+}
+
+class Timer extends pulumi.ComponentResource {
+    public readonly subscription: subscription.EventSubscription<subscription.Context, any>;
+
+    constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
+        super("cloud:timer:Timer", name, {
+            scheduleExpression: scheduleExpression,
+        }, opts);
+
+        const binding: TimerBinder = {
+            schedule: scheduleExpression,
+            name: "timer",
+            type: "timerTrigger",
+            direction: "in",
+        };
+
+        this.subscription = new subscription.EventSubscription<subscription.Context, any>(
+            "cloud:timer:EventSubscription", name, [binding], {
+                resourceGroup: shared.globalResourceGroup,
+                func: (context, data) => {
+                    handler().then(() => context.done());
+                },
+            }, { parent: this });
+    }
 }
