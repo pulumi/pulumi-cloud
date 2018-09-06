@@ -15,15 +15,13 @@
 import * as cloud from "@pulumi/cloud";
 import * as express from "express";
 
-const name = "cloudexample";
-
 interface Message {
     title: string;
     info: string;
 }
 
-const topic = new cloud.Topic<Message>(name);
-topic.subscribe(name, async (message) => {
+const topic = new cloud.Topic<Message>("example");
+topic.subscribe("example", async (message) => {
     console.log("Subscription fired.");
     console.log("Got: " + JSON.stringify(message));
 });
@@ -35,7 +33,7 @@ const asyncMiddleware = (fn: AsyncRequestHandler) =>
         Promise.resolve(fn(req, res, next)).catch(next);
     };
 
-const server = new cloud.HttpServer(name, () => {
+const server = new cloud.HttpServer("example", () => {
     const app = express();
     const router = express.Router();
 
