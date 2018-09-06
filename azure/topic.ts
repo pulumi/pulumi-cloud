@@ -42,7 +42,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         const topic = new azure.eventhub.Topic(name, {
             resourceGroupName: shared.globalResourceGroupName,
             namespaceName: namespace.name,
-        });
+        }, { parent: this });
 
         this.namespace = namespace;
         this.topic = topic;
