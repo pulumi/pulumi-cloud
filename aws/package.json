@@ -24,6 +24,7 @@
         "@types/mime": "^2.0.0",
         "@types/node": "^8.0.26",
         "@types/semver": "^5.4.0",
+        "@types/aws-serverless-express": "^3.0.1",
         "tslint": "^5.7.0",
         "typescript": "^3.0.1"
     },
