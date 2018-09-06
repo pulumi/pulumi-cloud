@@ -108,6 +108,14 @@ func Test_Examples(t *testing.T) {
 				"@pulumi/cloud-azure",
 			},
 		},
+		{
+			Dir:    path.Join(cwd, "./examples/topic"),
+			Config: commonConfig,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
 	}
 
 	longExamples := []integration.ProgramTestOptions{}
