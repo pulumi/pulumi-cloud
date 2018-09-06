@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.1-dev":
-  version "0.15.1-dev-1536095274-gf334b45"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1536095274-gf334b45.tgz#27ad02e28740df2853563ee7b620b4a8eadfd4e5"
+  version "0.15.1-dev-1536201078-gac81127"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1536201078-gac81127.tgz#467b53556bc8021d2d9d7673f5db66d5ba97faf1"
   dependencies:
     "@pulumi/azure" "^0.15.0"
     "@pulumi/pulumi" "^0.15.1-dev"
@@ -102,8 +102,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.1-dev":
-  version "0.15.1-dev-1536159657-gb46820db"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1536159657-gb46820db.tgz#600e4946ded0f22e1d0cc890b5a0821ccc2cdfa9"
+  version "0.15.1-dev-1536195048-gf83d3239"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1536195048-gf83d3239.tgz#f9d165b810bb7a1bd8b2a4a86d81aabcfb02e5d8"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -261,13 +261,6 @@ aws4@^1.8.0:
 azure-arm-containerinstance@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/azure-arm-containerinstance/-/azure-arm-containerinstance-3.1.0.tgz#4fe1f385739d731a8a3e4fd0ad5ed2bcb88223c6"
-  dependencies:
-    ms-rest "^2.3.3"
-    ms-rest-azure "^2.5.5"
-
-azure-arm-containerregistry@^2.4.0:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/azure-arm-containerregistry/-/azure-arm-containerregistry-2.4.1.tgz#8478702374b73b019dfbeba5e3cd5c1b19819e6f"
   dependencies:
     ms-rest "^2.3.3"
     ms-rest-azure "^2.5.5"

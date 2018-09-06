@@ -23,6 +23,9 @@ import * as shared from "./shared";
 import * as docker from "@pulumi/docker";
 import * as utils from "./utils";
 
+import * as azureContainerSDK from "azure-arm-containerinstance";
+import * as msrest from "ms-rest-azure";
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly group: azure.containerservice.Group;
@@ -299,11 +302,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const tenantId = config.require("tenantId");
 
         this.run = async (options) => {
-            // Retrieve the azure SDKs at runtime.  We'll use them to call into azure to create and
-            // launch a container instance.
-            const azureContainerSDK = await import("azure-arm-containerinstance");
-            const msrest = await import("ms-rest-azure");
-
             try {
                 options = options || {};
 

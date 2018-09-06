@@ -15,6 +15,7 @@
         "@pulumi/aws": "^0.15.1-dev",
         "@pulumi/aws-infra": "^0.15.0",
         "@pulumi/docker": "^0.15.1-dev",
+        "aws-serverless-express": "^3.3.5",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
     },
@@ -29,5 +30,10 @@
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}",
         "@types/express": "^4.16.0"
+    },
+    "pulumi": {
+        "runtimeDependencies": {
+            "aws-serverless-express": "^3.3.5"
+        }
     }
 }

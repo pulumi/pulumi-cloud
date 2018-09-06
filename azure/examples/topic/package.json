@@ -9,8 +9,7 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "^0.15.1-dev",
-        "express": "^4.16.3",
-        "azure-sb": "^0.10.6"
+        "express": "^4.16.3"
     },
     "devDependencies": {
         "@types/node": "^8.0.27",

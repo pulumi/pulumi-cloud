@@ -20,7 +20,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as shared from "./shared";
 
-import * as azureStorageModule from "azure-storage";
+import * as azureStorage from "azure-storage";
 
 export class Table extends pulumi.ComponentResource implements cloud.Table {
     public readonly table: azure.storage.Table;
@@ -73,7 +73,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorage = await import("azure-storage");
             const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             const result = await new Promise((resolve, reject) => {
@@ -97,7 +96,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 throw new Error(`[obj] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorage = await import("azure-storage");
             const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             const descriptor = convertToDescriptor(obj, primaryKey, key, azureStorage);
@@ -121,7 +119,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorage = await import("azure-storage");
             const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             const descriptor = convertToDescriptor({}, primaryKey, key, azureStorage);
@@ -144,7 +141,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 throw new Error(`[query] must have a value specified for [${primaryKeyOutput.get()}]`);
             }
 
-            const azureStorage = await import("azure-storage");
             const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             // Auzre takes a single object to represent the update.  So we just merge both the query
@@ -175,12 +171,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 };
             }
 
-            const azureStorage = await import("azure-storage");
             const tableService = azureStorage.createTableService(storageAccount.primaryConnectionString.get());
 
             // Create an empty query.  It will return all results across all partitions.
             const query = new azureStorage.TableQuery();
-            let continuationToken: azureStorageModule.TableService.TableContinuationToken | null | undefined = null;
+            let continuationToken: azureStorage.TableService.TableContinuationToken | null | undefined = null;
 
             do {
                 const entries = await new Promise<any[]>((resolve, reject) => {
@@ -211,7 +206,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
     }
 }
 function convertToDescriptor(
-    obj: any, primaryKey: string, partitionKey: string, mod: typeof azureStorageModule): any {
+    obj: any, primaryKey: string, partitionKey: string, mod: typeof azureStorage): any {
 
     // Copy all properties the user provides over.  Then supply the appropriate partition
     // and row.  Do not copy over the primary key the user supplies. It will be place in
@@ -233,7 +228,7 @@ function convertToDescriptor(
     return descriptor;
 }
 
-function translate(key: string, value: any, mod: typeof azureStorageModule): any {
+function translate(key: string, value: any, mod: typeof azureStorage): any {
     const entGen = mod.TableUtilities.entityGenerator;
     if (Buffer.isBuffer(value)) {
         return entGen.Binary(value);

@@ -18,7 +18,6 @@
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
         "azure-sb": "^0.10.6",
-        "azure-arm-containerregistry": "^2.4.0",
         "azure-arm-containerinstance": "^3.0.0",
         "ms-rest-azure": "^2.5.7",
         "mime": "^2.0.3",
@@ -35,5 +34,13 @@
     },
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}"
+    },
+    "pulumi": {
+        "runtimeDependencies": {
+            "azure-arm-containerinstance": "^3.0.0",
+            "ms-rest-azure": "^2.5.7",
+            "azure-sb": "^0.10.6",
+            "azure-storage": "^2.10.1"
+        }
     }
 }
