@@ -23,6 +23,8 @@ import * as apigateway from "./apigateway";
 import { createFactoryFunction } from "./function";
 import { sha1hash } from "./utils";
 
+import * as serverlessExpress from "aws-serverless-express";
+
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 
@@ -36,7 +38,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // Create the main aws lambda entrypoint factory function.  Note that this is a factory
         // funcion so that we can just run this code once and hook up to
         function entryPoint() {
-            const serverlessExpress = require("aws-serverless-express");
             const requestListener = createRequestListener();
             const server = serverlessExpress.createServer(requestListener);
 

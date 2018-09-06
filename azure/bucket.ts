@@ -19,6 +19,9 @@ import * as pulumi from "@pulumi/pulumi";
 import * as stream from "stream";
 import * as shared from "./shared";
 
+import * as azStorage from "azure-storage";
+import * as streamBuffers from "stream-buffers";
+
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public readonly storageAccount: azure.storage.Account;
     public readonly container: azure.storage.Container;
@@ -48,9 +51,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         this.container = container;
 
         this.get = async (key) => {
-            const azStorage = await import("azure-storage");
-            const streamBuffers = await import("stream-buffers");
-
             const writableStream = new streamBuffers.WritableStreamBuffer();
 
             const service = new azStorage.BlobService(storageAccount.name.get());
@@ -68,8 +68,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.put = async (key, contents) => {
-            const azStorage = await import("azure-storage");
-
             const service = new azStorage.BlobService(storageAccount.name.get());
             const readableStream = new ReadableStream(contents);
 
@@ -85,8 +83,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.delete = async (key) => {
-            const azStorage = await import("azure-storage");
-
             const service = new azStorage.BlobService(storageAccount.name.get());
             await new Promise((resolve, reject) => {
                 service.deleteBlob(container.name.get(), key, (err: Error) => {
@@ -104,13 +100,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             filter = filter || {};
             serverless.storage.onBlobEvent(putName, storageAccount, {
                     func: (context, buffer) => {
-                        // Redirect console logging to context logging.
-                        console.log = context.log;
-                        console.error = context.log.error;
-                        console.warn = context.log.warn;
-                        // tslint:disable-next-line:no-console
-                        console.info = context.log.info;
-
                         handler({
                             key: context.bindingData.blobTrigger,
                             eventTime: context.bindingData.sys.utcNow,

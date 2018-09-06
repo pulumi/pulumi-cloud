@@ -52,13 +52,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const handler = createHandler(requestListener);
 
             return (context: subscription.Context) => {
-                // Redirect console logging to context logging.
-                console.log = context.log;
-                console.error = context.log.error;
-                console.warn = context.log.warn;
-                // tslint:disable-next-line:no-console
-                console.info = context.log.info;
-
                 return handler(context);
             };
         };

@@ -9,6 +9,8 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "^0.15.1-dev",
+        "@pulumi/azure": "^0.15.2-dev",
+        "@pulumi/azure-serverless": "^0.15.1-dev",
         "node-fetch": "^1.7.3",
         "redis": "^2.8.0"
     },

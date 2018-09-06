@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
+import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";

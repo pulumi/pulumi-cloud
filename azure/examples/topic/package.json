@@ -1,5 +1,5 @@
 {
-    "name": "express",
+    "name": "topic",
     "version": "0.0.1",
     "license": "Apache-2.0",
     "main": "bin/index.js",
@@ -9,6 +9,8 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "^0.15.1-dev",
+        "@pulumi/azure": "^0.15.2-dev",
+        "@pulumi/azure-serverless": "^0.15.1-dev",
         "express": "^4.16.3"
     },
     "devDependencies": {
@@ -17,8 +19,7 @@
         "typescript": "^3.0.3"
     },
     "peerDependencies": {
-        "@pulumi/aws-infra": "latest",
         "@pulumi/cloud": "latest",
-        "@pulumi/cloud-aws": "latest"
+        "@pulumi/cloud-azure": "latest"
     }
 }

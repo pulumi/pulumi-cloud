@@ -17,7 +17,7 @@
         "@pulumi/docker": "^0.15.1-dev",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
-        "azure-arm-containerregistry": "^2.4.0",
+        "azure-sb": "^0.10.6",
         "azure-arm-containerinstance": "^3.0.0",
         "ms-rest-azure": "^2.5.7",
         "mime": "^2.0.3",
@@ -28,10 +28,19 @@
         "@types/node": "^8.0.26",
         "@types/semver": "^5.4.0",
         "@types/stream-buffers": "^3.0.2",
+        "@types/azure-sb": "^0.0.32",
         "tslint": "^5.7.0",
         "typescript": "^3.0.1"
     },
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}"
+    },
+    "pulumi": {
+        "runtimeDependencies": {
+            "azure-arm-containerinstance": "^3.0.0",
+            "ms-rest-azure": "^2.5.7",
+            "azure-sb": "^0.10.6",
+            "azure-storage": "^2.10.1"
+        }
     }
 }
