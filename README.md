@@ -27,8 +27,12 @@ or `yarn`:
     $ yarn add @pulumi/cloud-aws
 
 > **Note:** At the moment, only Amazon Web Services (AWS) support is fleshed out enough to be used.
-> Azure support is in progress, but is very incomplete. We are hard at work on this and other cloud
-> providers, so please stay tuned!
+> Azure support is currently being worked on and is in an early preview state.  It can be used, but issues may be encountered.  To use Azure change the above lines to:
+
+    $ npm install @pulumi/cloud-azure
+    $ yarn add @pulumi/cloud-azure
+
+> We also intend to support GCP in the future.  https://github.com/pulumi/pulumi-cloud/issues/518 tracks this request.
 
 ## Concepts
 
