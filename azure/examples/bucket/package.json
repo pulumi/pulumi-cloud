@@ -10,7 +10,7 @@
     "dependencies": {
         "@pulumi/pulumi": "^0.15.0",
         "@pulumi/azure": "^0.15.2-dev",
-        "@pulumi/azure-serverless": "^0.15.0"
+        "@pulumi/azure-serverless": "^0.15.1-dev"
     },
     "devDependencies": {
         "@types/node": "^8.0.26",
