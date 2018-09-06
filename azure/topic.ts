@@ -52,7 +52,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
                 name, namespace, topic, {
                     resourceGroup: shared.globalResourceGroup,
                     func: (context, val) => {
-                        handler(JSON.parse(val)).then(() => context.done());
+                        handler(val).then(() => context.done());
                     },
                 }, { parent: this });
 
