@@ -1,0 +1,21 @@
+{
+    "name": "url-shortener",
+    "version": "1.0.0",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "@types/express": "^4.16.0",
+        "typescript": "^2.7.2"
+    },
+    "dependencies": {
+        "redis": "^2.8.0",
+        "@pulumi/cloud": "^0.15.1-dev",
+        "@pulumi/cloud-aws": "^0.15.1-dev",
+        "@pulumi/cloud-azure": "0.15.1-dev-1536219716-gf974a2c",
+        "express": "^4.16.3"
+    }
+}
