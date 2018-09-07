@@ -15,7 +15,7 @@
 import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as azurefunctions from "azure-functions-ts-essentials";
+import * as express from "express";
 import * as http from "http";
 import * as azureFunctionExpress from "./azure-function-express";
 import * as shared from "./shared";
@@ -49,7 +49,11 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         const createHandler = azureFunctionExpress.createHandler;
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
             const requestListener = createRequestListener();
-            const handler = createHandler(requestListener);
+
+            const app = express();
+            app.use("/api", requestListener);
+
+            const handler = createHandler(app);
 
             return (context: subscription.Context) => {
                 return handler(context);
