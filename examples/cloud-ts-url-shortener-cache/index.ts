@@ -32,6 +32,7 @@ let endpoint = new cloud.HttpServer("my", () => {
     app.get("/url", asyncMiddleware(async (req, res) => {
         try {
             let items = await urlTable.scan();
+            console.log("Items: " + JSON.stringify(items));
             res.status(200).json(items);
             console.log(`GET /url retrieved ${items.length} items`);
         } catch (err) {
@@ -82,6 +83,7 @@ let endpoint = new cloud.HttpServer("my", () => {
         let url = <string>req.query["url"];
         let name = <string>req.query["name"];
         try {
+            console.log("Inserting: " + JSON.stringify({ name, url }));
             await urlTable.insert({ name, url });
             await urlCache.set(name, url);
             res.json({ shortenedURLName: name });
