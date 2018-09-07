@@ -17,7 +17,7 @@ export class Cache {
                 redis: {
                     image: "redis:alpine",
                     memory: memory,
-                    ports: [{ port: 6379 }],
+                    ports: [{ port: 6379, external: true }],
                     command: ["redis-server", "--requirepass", pw],
                 },
             },
