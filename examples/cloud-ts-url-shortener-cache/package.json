@@ -12,10 +12,13 @@
         "typescript": "^2.7.2"
     },
     "dependencies": {
+        "@pulumi/pulumi": "^0.15.1-dev",
         "redis": "^2.8.0",
-        "@pulumi/cloud": "^0.15.1-dev",
-        "@pulumi/cloud-aws": "^0.15.1-dev",
-        "@pulumi/cloud-azure": "0.15.1-dev-1536219716-gf974a2c",
         "express": "^4.16.3"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-aws": "latest",
+        "@pulumi/cloud-azure": "latest"
     }
 }
