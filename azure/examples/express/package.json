@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.15.1-dev",
-        "@pulumi/azure": "^0.15.2-dev",
-        "@pulumi/azure-serverless": "^0.15.1-dev",
+        "@pulumi/pulumi": "^0.15.1-rc",
+        "@pulumi/azure": "^0.15.2-rc",
+        "@pulumi/azure-serverless": "^0.15.1-rc",
         "@pulumi/cloud": "^0.15.1-dev",
         "@pulumi/cloud-azure": "^0.15.1-dev",
         "express": "^4.16.3"

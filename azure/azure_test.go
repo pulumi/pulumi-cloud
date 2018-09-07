@@ -62,47 +62,63 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:location":       location,
 		"cloud-azure:subscriptionId": subscriptionID,
 		"cloud-azure:clientId":       clientID,
-		"cloud-azure:clientSecret":   clientSecret,
 		"cloud-azure:tenantId":       tenantID,
 		"containers:redisPassword":   "REDIS_PASSWORD",
+	}
+	commonSecrets := map[string]string{
+		"cloud-azure:clientSecret": clientSecret,
 	}
 
 	examples := []integration.ProgramTestOptions{
 		{
-			Dir:    path.Join(cwd, "./examples/bucket"),
-			Config: commonConfig,
+			Dir:     path.Join(cwd, "./examples/bucket"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir:    path.Join(cwd, "./examples/table"),
-			Config: commonConfig,
+			Dir:     path.Join(cwd, "./examples/table"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir:    path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
-			Config: commonConfig,
+			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir:    path.Join(cwd, "./examples/containers"),
-			Config: commonConfig,
+			Dir:     path.Join(cwd, "./examples/containers"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir:    path.Join(cwd, "./examples/express"),
-			Config: commonConfig,
+			Dir:     path.Join(cwd, "./examples/express"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/topic"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -121,6 +137,9 @@ func Test_Examples(t *testing.T) {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
+			// TODO[pulumi/pulumi#1900]: This should be the default value, every test we have causes some sort of
+			// change during a `pulumi refresh` for reasons outside our control.
+			ExpectRefreshChanges: true,
 		})
 
 		t.Run(example.Dir, func(t *testing.T) {

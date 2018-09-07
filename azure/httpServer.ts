@@ -69,6 +69,8 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 handler = createHandler(app);
             }
             catch (err) {
+                // If we failed to execute the function the caller provided, set up a simple handler
+                // that just indicates the problem.
                 return context => {
                     context.log("Error occurred setting up factory function.");
                     context.done();

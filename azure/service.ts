@@ -225,9 +225,7 @@ function createGroup(
             protocol: protocol,
             image: imageOptions.apply(io => io.image),
             environmentVariables: imageOptions.apply(io => io.environment),
-            commands: container.command /* container.command === undefined
-                ? undefined
-                : pulumi.output(container.command).apply(cmd => cmd.join(" ")),*/
+            commands: container.command,
         });
 
         credentials = credentials || (registry
