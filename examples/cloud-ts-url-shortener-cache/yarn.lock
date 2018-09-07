@@ -45,6 +45,22 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
+"@pulumi/aws-infra@^0.15.1-rc":
+  version "0.15.1-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.1-rc1.tgz#6b7efb8ccd61793f27cc91a05d77b5b241950570"
+  dependencies:
+    "@pulumi/aws" "^0.15.1-rc"
+    "@pulumi/pulumi" "^0.15.1-rc"
+
+"@pulumi/aws@^0.15.1-rc":
+  version "0.15.1-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.1-rc1.tgz#918d56c17c36ffc9913b2e0203bc066b7197a5b9"
+  dependencies:
+    "@pulumi/pulumi" "^0.15.1-rc"
+    builtin-modules "3.0.0"
+    read-package-tree "^5.2.1"
+    resolve "^1.7.1"
+
 "@pulumi/azure-serverless@^0.15.1-dev":
   version "0.15.1-dev-1536277770-g7099b8b"
   resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1536277770-g7099b8b.tgz#fbf0979ac1bf9c66244178c5cf47389146f73a44"
@@ -66,6 +82,18 @@
   resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-rc1.tgz#375b88fcbad4563f457c48e9b38859dc6c9ea065"
   dependencies:
     "@pulumi/pulumi" "^0.15.1-rc"
+
+"@pulumi/cloud-aws@^0.15.1-dev":
+  version "0.15.1-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud-aws/-/cloud-aws-0.15.1-rc1.tgz#62e490bae73d32905b6e574019ec12c6264a1116"
+  dependencies:
+    "@pulumi/aws" "^0.15.1-rc"
+    "@pulumi/aws-infra" "^0.15.1-rc"
+    "@pulumi/docker" "^0.15.1-dev"
+    "@pulumi/pulumi" "^0.15.1-rc"
+    aws-serverless-express "^3.3.5"
+    mime "^2.0.3"
+    semver "^5.4.0"
 
 "@pulumi/cloud-azure@^0.15.1-dev":
   version "0.15.1-dev-1536219716-gf974a2c"
@@ -312,6 +340,13 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
 
+aws-serverless-express@^3.3.5:
+  version "3.3.5"
+  resolved "https://registry.yarnpkg.com/aws-serverless-express/-/aws-serverless-express-3.3.5.tgz#0cb9de00dbbf29dfe4c096ac573a518c3bda933a"
+  dependencies:
+    binary-case "^1.0.0"
+    type-is "^1.6.16"
+
 aws-sign2@~0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/aws-sign2/-/aws-sign2-0.7.0.tgz#b46e890934a9591f2d2f6f86d7e6a9f1b3fe76a8"
@@ -381,6 +416,10 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
+binary-case@^1.0.0:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/binary-case/-/binary-case-1.1.4.tgz#d687104d59e38f2b9e658d3a58936963c59ab931"
+
 body-parser@1.18.2:
   version "1.18.2"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.18.2.tgz#87678a19d84b47d859b83199bd59bce222b10454"
@@ -414,6 +453,10 @@ buffer-equal-constant-time@1.0.1:
 buffer-from@^1.0.0, buffer-from@^1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz#32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
+
+builtin-modules@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
 
 builtin-modules@^1.0.0:
   version "1.1.1"
@@ -1183,6 +1226,10 @@ path-is-absolute@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
 
+path-parse@^1.0.5:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.6.tgz#d62dbb5679405d72c4737ec58600e9ddcf06d24c"
+
 path-to-regexp@0.1.7:
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c"
@@ -1368,6 +1415,12 @@ redis@^2.8.0:
 require-from-string@^2.0.1:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/require-from-string/-/require-from-string-2.0.2.tgz#89a7fdd938261267318eafe14f9c32e598c36909"
+
+resolve@^1.7.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.8.1.tgz#82f1ec19a423ac1fbd080b0bab06ba36e84a7a26"
+  dependencies:
+    path-parse "^1.0.5"
 
 rimraf@^2.6.1:
   version "2.6.2"
@@ -1611,7 +1664,7 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
 
-type-is@~1.6.15, type-is@~1.6.16:
+type-is@^1.6.16, type-is@~1.6.15, type-is@~1.6.16:
   version "1.6.16"
   resolved "https://registry.yarnpkg.com/type-is/-/type-is-1.6.16.tgz#f89ce341541c672b25ee7ae3c73dee3b2be50194"
   dependencies:

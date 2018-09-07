@@ -130,4 +130,4 @@ function staticRoutes(app: express.Express, path: string, root: string) {
     }
 }
 
-export let endpointUrl = endpoint.url;
+export let endpointUrl = endpoint.url.apply(u => u + "index.html");
