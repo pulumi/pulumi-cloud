@@ -15,10 +15,8 @@
 import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as azurefunctions from "azure-functions-ts-essentials";
 import * as http from "http";
 import * as azureFunctionExpress from "./azure-function-express";
-import * as config from "./config";
 import * as shared from "./shared";
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
