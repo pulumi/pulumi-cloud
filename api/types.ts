@@ -17,6 +17,7 @@
 
 export * from "./bucket";
 export * from "./api";
+export * from "./httpServer";
 export * from "./table";
 export * from "./topic";
 export * from "./service";

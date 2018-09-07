@@ -111,9 +111,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 }
                 params.ExclusiveStartKey = result.LastEvaluatedKey;
             }
+
             if (items !== undefined) {
                 return items;
-            } else {
+            }
+            else {
                 return;
             }
         });

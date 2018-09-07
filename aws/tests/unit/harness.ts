@@ -18,7 +18,7 @@ export type AssertType = typeof assertModule;
 import * as harnessModule from "./harness";
 export type HarnessType = typeof harnessModule;
 
-function errorJSON(err: any) {
+export function errorJSON(err: any) {
     const result: any = Object.create(null);
     Object.getOwnPropertyNames(err).forEach(key => result[key] = err[key]);
     return result;

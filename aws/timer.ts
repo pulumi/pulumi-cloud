@@ -16,7 +16,7 @@ import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import { Function } from "./function";
+import { createFunction, Function } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
@@ -105,7 +105,7 @@ class Timer extends pulumi.ComponentResource {
 
         this.scheduleExpression = scheduleExpression;
 
-        this.function = new Function(
+        this.function = createFunction(
             name,
             (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 handler().then(() => {

@@ -1,6 +1,6 @@
 {
     "name": "@pulumi/integration-examples",
-    "version": "0.1",
+    "version": "0.0.1",
     "license": "Apache-2.0",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -9,7 +9,7 @@
         "lint": "tslint -c ../tslint.json -p tsconfig.json"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.14.1",
+        "@pulumi/pulumi": "^0.15.1-rc",
         "jsforce": "^1.8.0",
         "request": "^2.81.0",
         "request-promise-native": "^1.0.4",

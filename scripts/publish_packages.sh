@@ -37,3 +37,5 @@ publish() {
 
 publish api
 publish aws @pulumi/cloud
+publish azure @pulumi/cloud
+>>>>>>> origin/master

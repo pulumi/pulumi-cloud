@@ -63,17 +63,26 @@ export interface Container {
      */
     environment?: {[name: string]: pulumi.Input<string>};
     /**
+     * Number of CPUs for the container to use. Maps to the Docker `--cpus` option - see
+     * https://docs.docker.com/engine/reference/commandline/run.
+     */
+    cpu?: pulumi.Input<number>;
+    /**
      * The maximum amount of memory the container will be allowed to use. Maps to the Docker
      * `--memory` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
+     *
+     * This should be supplied in MB. i.e. A value of 1024 would equal one gigabyte.
      */
     memory?: pulumi.Input<number>;
     /**
      * The amount of memory to reserve for the container, but the container will
      * be allowed to use more memory if it's available.  At least one of
-     * `memory` and `memorReservation` must be specified.  Maps to the Docker
+     * `memory` and `memoryReservation` must be specified.  Maps to the Docker
      * `--memory-reservation` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
+     *
+     * This should be supplied in MB. i.e. A value of 1024 would equal one gigabyte.
      */
     memoryReservation?: pulumi.Input<number>;
     /**
@@ -267,6 +276,12 @@ export interface Endpoint {
     port: number;
 }
 
+export interface Endpoints {
+    [containerName: string]: {
+        [port: number]: Endpoint;
+    };
+}
+
 /**
  * A persistent service running as part of the Pulumi Cloud application. A
  * collection of container specifications are provided to define the compute
@@ -281,7 +296,7 @@ export interface Service {
      * The exposed hostname and port for connecting to the given containerName
      * on the given containerPort.
      */
-    endpoints: pulumi.Output<{ [containerName: string]: { [port: number]: Endpoint } }>;
+    endpoints: pulumi.Output<Endpoints>;
 
     /**
      * The primary endpoint exposed by the service.  All endpoints (including this one)

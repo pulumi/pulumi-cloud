@@ -1,6 +1,6 @@
 {
-    "name": "performance",
-    "version": "0.1",
+    "name": "timer",
+    "version": "0.1.0",
     "license": "Apache-2.0",
     "main": "bin/index.js",
     "typings": "bin/index.d.ts",
@@ -8,17 +8,16 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.14.1",
-        "datadog-metrics": "^0.6.1"
+        "@pulumi/pulumi": "^0.15.1-rc",
+        "@pulumi/azure": "^0.15.2-rc",
+        "@pulumi/azure-serverless": "^0.15.1-rc"
     },
     "devDependencies": {
-        "@types/datadog-metrics": "^0.4.0",
-        "@types/debug": "^0.0.30",
         "@types/node": "^8.0.26",
-        "debug": "^3.1.0",
         "typescript": "^2.1.4"
     },
     "peerDependencies": {
-        "@pulumi/cloud": "latest"
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-azure": "latest"
     }
 }

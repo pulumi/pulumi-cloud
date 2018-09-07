@@ -16,7 +16,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
 import * as assertModule from "assert";
-import * as harnessModule from "./harness";
+import * as harness from "./harness";
 
 import * as apiTests from "./apiTests";
 import * as tableTests from "./tableTests";
@@ -32,7 +32,6 @@ const testFunctions = [
 async function testModules(res: cloud.Response) {
     try {
         const assert: typeof assertModule = require("assert");
-        const harness: typeof harnessModule = require("./bin/harness");
         const supertest = require("supertest");
 
         const arg = { assert, harness, supertest };
