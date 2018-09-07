@@ -1,0 +1,26 @@
+{
+    "name": "containers",
+    "version": "0.0.1",
+    "license": "Apache-2.0",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^0.15.1-rc",
+        "@pulumi/azure": "^0.15.2-rc",
+        "@pulumi/azure-serverless": "^0.15.1-rc",
+        "node-fetch": "^1.7.3",
+        "redis": "^2.8.0"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.27",
+        "@types/node-fetch": "^1.6.7",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-aws": "latest"
+    }
+}

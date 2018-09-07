@@ -1,0 +1,23 @@
+{
+    "name": "table",
+    "version": "0.1.0",
+    "license": "Apache-2.0",
+    "main": "bin/index.js",
+    "typings": "bin/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^0.15.1-rc",
+        "@pulumi/azure": "^0.15.2-rc",
+        "@pulumi/azure-serverless": "^0.15.1-rc"
+    },
+    "devDependencies": {
+        "@types/node": "^8.0.26",
+        "typescript": "^2.1.4"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-azure": "latest"
+    }
+}

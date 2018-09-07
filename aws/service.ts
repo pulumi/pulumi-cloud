@@ -177,6 +177,27 @@ function getOrCreateRepository(imageName: string): aws.ecr.Repository {
     if (!repository) {
         repository = new aws.ecr.Repository(imageName.toLowerCase());
         repositories.set(imageName, repository);
+
+        // Set a default lifecycle policy such that at most a single untagged image is retained.
+        // We tag all cached build layers as well as the final image, so those images will never expire.
+        const lifecyclePolicyDocument = {
+            rules: [{
+                rulePriority: 10,
+                description: "remove untagged images",
+                selection: {
+                    tagStatus: "untagged",
+                    countType: "imageCountMoreThan",
+                    countNumber: 1,
+                },
+                action: {
+                    type: "expire",
+                },
+            }],
+        };
+        const lifecyclePolicy = new aws.ecr.LifecyclePolicy(imageName.toLowerCase(), {
+            policy: JSON.stringify(lifecyclePolicyDocument),
+            repository: repository.name,
+        });
     }
     return repository;
 }
@@ -197,14 +218,15 @@ interface ImageOptions {
 // computeImage turns the `image`, `function` or `build` setting on a `cloud.Container` into a valid Docker image
 // name and environment which can be used in an ECS TaskDefinition.
 function computeImage(
+        parent: pulumi.Resource,
         imageName: string,
         container: cloud.Container,
         ports: ExposedPorts | undefined,
         repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
 
     // Start with a copy from the container specification.
-    const preEnv: {[key: string]: pulumi.Input<string>} =
-        <any>Object.assign({}, container.environment || {});
+    const preEnv: Record<string, pulumi.Input<string>> =
+        Object.assign({}, container.environment || {});
 
     // Now add entries for service discovery amongst containers exposing endpoints.
     if (ports) {
@@ -247,76 +269,116 @@ function computeImage(
     }
 
     if (container.build) {
-        // This is a container to build; produce a name, either user-specified or auto-computed.
-        pulumi.log.debug(`Building container image at '${container.build}'`, repository);
         if (!repository) {
             throw new RunError("Expected a container repository for build image");
         }
 
-        let imageDigest: pulumi.Output<string>;
-        // See if we've already built this.
-        if (imageName && buildImageCache.has(imageName)) {
-            // We got a cache hit, simply reuse the existing digest.
-            // Safe to ! the result since we checked buildImageCache.has above.
-            imageDigest = buildImageCache.get(imageName)!;
-            imageDigest.apply(d =>
-                pulumi.log.debug(`    already built: ${imageName} (${d})`, repository));
-        } else {
-            // If we haven't, build and push the local build context to the ECR repository, wait for
-            // that to complete, then return the image name pointing to the ECT repository along
-            // with an environment variable for the image digest to ensure the TaskDefinition get's
-            // replaced IFF the built image changes.
-            const {repositoryUrl, registryId} = repository!;
-            imageDigest = docker.buildAndPushImage(imageName, container.build, repositoryUrl, repository, async () => {
-                // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
-                // extracting the username/password pair after base64-decoding the token.
-                //
-                // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
-                if (!registryId) {
-                    throw new RunError("Expected registry ID to be defined during push");
-                }
-                const credentials = await aws.ecr.getCredentials({ registryId: await (<any>registryId).promise() });
-                const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
-                const [username, password] = decodedCredentials.split(":");
-                if (!password || !username) {
-                    throw new RunError("Invalid credentials");
-                }
-                return {
-                    registry: credentials.proxyEndpoint,
-                    username: username,
-                    password: password,
-                };
-            });
-            if (imageName) {
-                buildImageCache.set(imageName, imageDigest);
-            }
-            imageDigest.apply(d =>
-                pulumi.log.debug(`    build complete: ${imageName} (${d})`, repository));
-        }
-
-        preEnv.IMAGE_DIGEST = imageDigest;
-
-        return pulumi.all([repository.repositoryUrl, pulumi.all(preEnv)])
-                     .apply(([url, e]) => ({ image: url, environment: e }));
+        return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
     }
     else if (container.image) {
-        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return computeImageFromImage(preEnv, imageName);
     }
     else if (container.function) {
-        const func = container.function;
-        preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
-
-        // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
-        // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-        return pulumi.all(preEnv).apply(e => ({ image: imageName, environment: e }));
+        return computeImageFromFunction(container.function, preEnv, imageName);
     }
     else {
         throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
 }
 
+function computeImageFromBuild(
+        parent: pulumi.Resource,
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        repository: aws.ecr.Repository): pulumi.Output<ImageOptions> {
+
+    // This is a container to build; produce a name, either user-specified or auto-computed.
+    pulumi.log.debug(`Building container image at '${build}'`, repository);
+    const { repositoryUrl, registryId } = repository;
+
+    return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
+        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
+}
+
+function computeImageFromBuildWorker(
+        preEnv: Record<string, pulumi.Input<string>>,
+        build: string | cloud.ContainerBuild,
+        imageName: string,
+        repositoryUrl: string,
+        registryId: string,
+        logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
+
+    // See if we've already built this.
+    let imageDigest = buildImageCache.get(imageName);
+    if (imageDigest) {
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
+    } else {
+        // If we haven't, build and push the local build context to the ECR repository, wait for
+        // that to complete, then return the image name pointing to the ECT repository along
+        // with an environment variable for the image digest to ensure the TaskDefinition get's
+        // replaced IFF the built image changes.
+        imageDigest = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
+            // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
+            // extracting the username/password pair after base64-decoding the token.
+            //
+            // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
+            if (!registryId) {
+                throw new RunError("Expected registry ID to be defined during push");
+            }
+            const credentials = await aws.ecr.getCredentials({ registryId: registryId });
+            const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
+            const [username, password] = decodedCredentials.split(":");
+            if (!password || !username) {
+                throw new RunError("Invalid credentials");
+            }
+            return {
+                registry: credentials.proxyEndpoint,
+                username: username,
+                password: password,
+            };
+        });
+
+
+        buildImageCache.set(imageName, imageDigest);
+
+        imageDigest.apply(d =>
+            pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
+    }
+
+    preEnv.IMAGE_DIGEST = imageDigest;
+    return createImageOptions(repositoryUrl, preEnv);
+}
+
+function computeImageFromImage(
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    return createImageOptions(imageName, preEnv);
+}
+
+function computeImageFromFunction(
+        func: () => void,
+        preEnv: Record<string, pulumi.Input<string>>,
+        imageName: string): pulumi.Output<ImageOptions> {
+
+    // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
+    // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
+    preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
+    return createImageOptions(imageName, preEnv);
+}
+
+function createImageOptions(
+    image: string,
+    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+
+    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+}
+
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
 function computeContainerDefinitions(
+        parent: pulumi.Resource,
         containers: cloud.Containers,
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
@@ -324,7 +386,11 @@ function computeContainerDefinitions(
     const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] =
         Object.keys(containers).map(containerName => {
             const container = containers[containerName];
-            const imageName: string = getImageName(container);
+            const imageName = getImageName(container);
+            if (!imageName) {
+                throw new Error("[getImageName] should have always produced an image name.");
+            }
+
             let repository: aws.ecr.Repository | undefined;
             if (container.build) {
                 // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
@@ -333,7 +399,8 @@ function computeContainerDefinitions(
                 // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
                 repository = getOrCreateRepository(imageName);
             }
-            const imageOptions = computeImage(imageName, container, ports, repository);
+
+            const imageOptions = computeImage(parent, imageName, container, ports, repository);
             const portMappings = (container.ports || []).map(p => ({
                 containerPort: p.targetPort || p.port,
                 // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
@@ -348,18 +415,19 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            return pulumi.all([imageOptions, container.command, container.memory,
+            return pulumi.all([imageOptions, container.command, container.cpu, container.memory,
                                container.memoryReservation, logGroup.id, container.dockerLabels])
-                         .apply(([imageOpts, command, memory, memoryReservation, logGroupId, dockerLabels]) => {
+                         .apply(([imageOptions, command, cpu, memory, memoryReservation, logGroupId, dockerLabels]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
-                for (const key of Object.keys(imageOpts.environment)) {
-                    keyValuePairs.push({ name: key, value: imageOpts.environment[key] });
+                for (const key of Object.keys(imageOptions.environment)) {
+                    keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
                 }
 
                 const containerDefinition: aws.ecs.ContainerDefinition = {
                     name: containerName,
-                    image: imageOpts.image,
+                    image: imageOptions.image,
                     command: command,
+                    cpu: cpu,
                     memory: memory,
                     memoryReservation: memoryReservation,
                     portMappings: portMappings,
@@ -468,7 +536,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(containers, ports, logGroup);
+    const containerDefinitions = computeContainerDefinitions(parent, containers, ports, logGroup);
 
     // Compute the memory and CPU requirements of the task for Fargate
     const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
@@ -634,7 +702,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
-            if (firstContainerName === undefined && containerName !== undefined) {
+            if (firstContainerName === undefined) {
                 firstContainerName = containerName;
                 if (container.ports && container.ports.length > 0) {
                     firstContainerPort = container.ports[0].port;
@@ -705,7 +773,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
 function getEndpointHelper(
     endpoints: Endpoints, containerName: string | undefined, containerPort: number | undefined): Endpoint {
-
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {

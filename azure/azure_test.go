@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -33,18 +34,97 @@ import (
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 )
 
-func Test_Examples(t *testing.T) {
-	environ := os.Getenv("ARM_ENVIRONMENT")
-	if environ == "" {
-		t.Skipf("Skipping test due to missing ARM_ENVIRONMENT variable")
+func getRequiredEnvValue(t *testing.T, key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		t.Skipf("Skipping test due to missing %v variable", key)
 	}
-	fmt.Printf("ARM environment: %v\n", environ)
+	fmt.Printf("%v: %v\n", key, value)
+	return value
+}
 
-	_, err := os.Getwd()
+func Test_Examples(t *testing.T) {
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
-	examples := []integration.ProgramTestOptions{}
+
+	environ := getRequiredEnvValue(t, "ARM_ENVIRONMENT")
+	location := getRequiredEnvValue(t, "ARM_LOCATION")
+	subscriptionID := getRequiredEnvValue(t, "ARM_SUBSCRIPTION_ID")
+	clientID := getRequiredEnvValue(t, "ARM_CLIENT_ID")
+	clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
+	tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
+
+	commonConfig := map[string]string{
+		"cloud:provider":             "azure",
+		"azure:environment":          environ,
+		"cloud-azure:location":       location,
+		"cloud-azure:subscriptionId": subscriptionID,
+		"cloud-azure:clientId":       clientID,
+		"cloud-azure:tenantId":       tenantID,
+		"containers:redisPassword":   "REDIS_PASSWORD",
+	}
+	commonSecrets := map[string]string{
+		"cloud-azure:clientSecret": clientSecret,
+	}
+
+	examples := []integration.ProgramTestOptions{
+		{
+			Dir:     path.Join(cwd, "./examples/bucket"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/table"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/containers"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/express"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/topic"),
+			Config:  commonConfig,
+			Secrets: commonSecrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+	}
 
 	longExamples := []integration.ProgramTestOptions{}
 
@@ -57,6 +137,9 @@ func Test_Examples(t *testing.T) {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
+			// TODO[pulumi/pulumi#1900]: This should be the default value, every test we have causes some sort of
+			// change during a `pulumi refresh` for reasons outside our control.
+			ExpectRefreshChanges: true,
 		})
 
 		t.Run(example.Dir, func(t *testing.T) {

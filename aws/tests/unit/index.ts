@@ -18,10 +18,10 @@ import * as pulumi from "@pulumi/pulumi";
 import * as assertModule from "assert";
 import * as harness from "./harness";
 
-import * as bucketTests from "./bucketTests";
 import * as apiTests from "./apiTests";
-import * as tableTests from "./tableTests";
+import * as bucketTests from "./bucketTests";
 import * as serviceTests from "./serviceTests";
+import * as tableTests from "./tableTests";
 
 const endpoint = new cloud.API("tests-unittests");
 

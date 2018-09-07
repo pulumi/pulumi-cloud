@@ -27,8 +27,12 @@ or `yarn`:
     $ yarn add @pulumi/cloud-aws
 
 > **Note:** At the moment, only Amazon Web Services (AWS) support is fleshed out enough to be used.
-> Azure support is in progress, but is very incomplete. We are hard at work on this and other cloud
-> providers, so please stay tuned!
+> Azure support is currently being worked on and is in an early preview state.  It can be used, but issues may be encountered.  To use Azure change the above lines to:
+
+    $ npm install @pulumi/cloud-azure
+    $ yarn add @pulumi/cloud-azure
+
+> We also intend to support GCP in the future.  https://github.com/pulumi/pulumi-cloud/issues/518 tracks this request.
 
 ## Concepts
 
@@ -64,7 +68,7 @@ container, `API` exposes simple serverless functions over HTTP, and `timer` allo
 timers.  All serverless functions are expressed using lambdas in your language of choice.  The
 package also offers simple data abstractions, systems like `Table` and `Bucket`.
 
-[`@pulumi/aws`](https://github.com/pulumi/pulumi-cloud/tree/master/api) supplies an implementation
+[`@pulumi/cloud-aws`](https://github.com/pulumi/pulumi-cloud/tree/master/aws) supplies an implementation
 of those abstractions, built on top of the `@pulumi/aws` library.  Its implementation types offer
 more AWS-specific functionality than is available in the `@pulumi/cloud` package.
 

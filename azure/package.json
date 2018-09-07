@@ -11,20 +11,39 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/azure": "^0.15.0",
-        "@pulumi/docker": "^0.15.0",
-        "@pulumi/pulumi": "^0.15.0",
+        "@pulumi/pulumi": "^0.15.1-rc",
+        "@pulumi/azure": "^0.15.2-rc",
+        "@pulumi/azure-serverless": "^0.15.1-rc",
+        "@pulumi/docker": "^0.15.1-dev",
+        "stream-buffers": "^3.0.2",
+        "azure-storage": "^2.10.1",
+        "azure-sb": "^0.10.6",
+        "azure-arm-containerinstance": "^3.0.0",
+        "ms-rest-azure": "^2.5.7",
         "mime": "^2.0.3",
-        "semver": "^5.4.0"
+        "semver": "^5.4.0",
+        "express": "^4.16.3"
     },
     "devDependencies": {
         "@types/mime": "^2.0.0",
         "@types/node": "^8.0.26",
         "@types/semver": "^5.4.0",
+        "@types/stream-buffers": "^3.0.2",
+        "@types/azure-sb": "^0.0.32",
+        "@types/express": "^4.16.0",
         "tslint": "^5.7.0",
-        "typescript": "^2.6.2"
+        "typescript": "^3.0.1"
     },
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}"
+    },
+    "pulumi": {
+        "runtimeDependencies": {
+            "azure-arm-containerinstance": "^3.0.0",
+            "ms-rest-azure": "^2.5.7",
+            "azure-sb": "^0.10.6",
+            "azure-storage": "^2.10.1",
+            "express": "^4.16.3"
+        }
     }
 }
