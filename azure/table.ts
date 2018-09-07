@@ -217,8 +217,6 @@ function convertToDescriptor(
         RowKey: "",
     };
 
-    delete descriptor[primaryKey];
-
     for (const key in descriptor) {
         if (descriptor.hasOwnProperty(key)) {
             descriptor[key] = translate(key, descriptor[key], mod);
