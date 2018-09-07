@@ -1,22 +1,18 @@
 // Copyright 2016-2018, Pulumi Corporation.  All rights reserved.
 
-import * as pulumi from "@pulumi/pulumi";
 import * as cloud from "@pulumi/cloud";
 import * as cache from "./cache";
 import * as express from "express";
-import * as parseUrl from "parseurl";
-import * as path from "path";
 import * as fs from "fs";
-import * as http from "http";
 import * as mime from "mime-types";
 
 type AsyncRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
 
-const asyncMiddleware = (fn: AsyncRequestHandler) =>
-    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const asyncMiddleware = (fn: AsyncRequestHandler) => {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
         Promise.resolve(fn(req, res, next)).catch(next);
     };
-
+}
 
 // Create a table `urls`, with `name` as primary key.
 let urlTable = new cloud.Table("urls", "name");
@@ -25,18 +21,17 @@ let urlTable = new cloud.Table("urls", "name");
 let urlCache = new cache.Cache("urlcache");
 
 // Create a web server.
-let endpoint = new cloud.HttpServer("my", () => {
+let endpoint = new cloud.HttpServer("urlshortener", () => {
     let app = express();
 
     // GET /url lists all URLs currently registered.
     app.get("/url", asyncMiddleware(async (req, res) => {
         try {
             let items = await urlTable.scan();
-            console.log("Items: " + JSON.stringify(items));
             res.status(200).json(items);
             console.log(`GET /url retrieved ${items.length} items`);
         } catch (err) {
-            res.json(err.stack);
+            res.status(500).json(err.stack);
             console.log(`GET /url error: ${err.stack}`);
         }
     }));
@@ -73,23 +68,22 @@ let endpoint = new cloud.HttpServer("my", () => {
                 console.log(`GET /url/${name} is missing (404)`)
             }
         } catch (err) {
-            res.json(err.stack);
+            res.status(500).json(err.stack);
             console.log(`GET /url/${name} error: ${err.stack}`);
         }
     }));
 
     // POST /url registers a new URL with a given short-name.
     app.post("/url", asyncMiddleware(async (req, res) => {
-        let url = <string>req.query["url"];
-        let name = <string>req.query["name"];
+        const url = <string>req.query["url"];
+        const name = <string>req.query["name"];
         try {
-            console.log("Inserting: " + JSON.stringify({ name, url }));
             await urlTable.insert({ name, url });
             await urlCache.set(name, url);
             res.json({ shortenedURLName: name });
             console.log(`POST /url/${name} => ${url}`);
         } catch (err) {
-            res.json(err.stack);
+            res.status(500).json(err.stack);
             console.log(`POST /url/${name} => ${url} error: ${err.stack}`);
         }
     }));
@@ -100,24 +94,10 @@ let endpoint = new cloud.HttpServer("my", () => {
     //      cloud-azure:functionIncludePaths
 
     staticRoutes(app, "/", "www");
-    // app.use("/", express.static("www"));
-    // app.use("/", (req, res) => {
-    //     const originalUrl = parseUrl.original(req)
-    //     const pathname = parseUrl(req)!.pathname
-    //     res.json({ originalUrl, pathname, resolved: path.resolve("www") });
-    // });
-
-    // app.get("/", (req, res) => {
-    //     res.json({ fellthrough: false, cwd: process.cwd() });
-    // });
 
     app.get("*", (req, res) => {
         res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl } });
     });
-
-    // app.use(function (err: any, req: any, res: any, next: any) {
-    //     res.json({ finalinnerhandler: "triggered " + err + "\n" + err.stack });
-    // });
 
     return app;
 });
