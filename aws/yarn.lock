@@ -65,7 +65,7 @@
   version "0.15.1-dev-1535584875-g0109adf"
   resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1-dev-1535584875-g0109adf.tgz#5fed5b01ca17262945ede226e0b0bbe03583ad97"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.14.3"
     mime "^2.0.3"
     semver "^5.4.0"
 
@@ -1058,10 +1058,6 @@ typescript@^2.5.2:
 typescript@^3.0.0, typescript@^3.0.1:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.3.tgz#4853b3e275ecdaa27f78fda46dc273a7eb7fc1c8"
-
-typescript@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.1.tgz#43738f29585d3a87575520a4b93ab6026ef11fdb"
 
 url@0.10.3:
   version "0.10.3"
