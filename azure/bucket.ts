@@ -99,6 +99,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             const resourceGroup = shared.globalResourceGroup;
             filter = filter || {};
             serverless.storage.onBlobEvent(putName, storageAccount, {
+                    ...shared.defaultSubscriptionArgs,
                     func: (context, buffer) => {
                         handler({
                             key: context.bindingData.blobTrigger,
