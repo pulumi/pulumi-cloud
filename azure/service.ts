@@ -102,7 +102,7 @@ function getEndpointHelper(
 // objets as we're building them up before making the final Group.
 
 interface AzureContainer {
-    command?: pulumi.Input<string>;
+    commands?: pulumi.Input<string[]>;
     cpu: pulumi.Input<number>;
     environmentVariables?: pulumi.Input<{
         [key: string]: any;
@@ -225,6 +225,9 @@ function createGroup(
             protocol: protocol,
             image: imageOptions.apply(io => io.image),
             environmentVariables: imageOptions.apply(io => io.environment),
+            commands: container.command /* container.command === undefined
+                ? undefined
+                : pulumi.output(container.command).apply(cmd => cmd.join(" ")),*/
         });
 
         credentials = credentials || (registry

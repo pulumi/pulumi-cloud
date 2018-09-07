@@ -35,7 +35,7 @@ let endpoint = new cloud.HttpServer("my", () => {
             res.status(200).json(items);
             console.log(`GET /url retrieved ${items.length} items`);
         } catch (err) {
-            res.status(500).json(err.stack);
+            res.json(err.stack);
             console.log(`GET /url error: ${err.stack}`);
         }
     }));
@@ -72,7 +72,7 @@ let endpoint = new cloud.HttpServer("my", () => {
                 console.log(`GET /url/${name} is missing (404)`)
             }
         } catch (err) {
-            res.status(500).json(err.stack);
+            res.json(err.stack);
             console.log(`GET /url/${name} error: ${err.stack}`);
         }
     }));
@@ -87,7 +87,7 @@ let endpoint = new cloud.HttpServer("my", () => {
             res.json({ shortenedURLName: name });
             console.log(`POST /url/${name} => ${url}`);
         } catch (err) {
-            res.status(500).json(err.stack);
+            res.json(err.stack);
             console.log(`POST /url/${name} => ${url} error: ${err.stack}`);
         }
     }));
@@ -113,60 +113,39 @@ let endpoint = new cloud.HttpServer("my", () => {
         res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl } });
     });
 
-    app.use(function (err: any, req: any, res: any, next: any) {
-        res.json({ finalinnerhandler: "triggered " + err + "\n" + err.stack });
-    });
+    // app.use(function (err: any, req: any, res: any, next: any) {
+    //     res.json({ finalinnerhandler: "triggered " + err + "\n" + err.stack });
+    // });
 
     return app;
 });
 
 function staticRoutes(app: express.Express, path: string, root: string) {
-    for (const child of fs.readdirSync(root)) {
+    for (const child of fs.readdirSync("./" + root)) {
         app.get(path + child, (req, res) => {
-            const path = root + "/" + child;
-            const contents = fs.readFileSync(path);
+            try
+            {
+                // console.log("Trying to serve: " + path + child)
+                // res.json({ serving: child });
+                const localPath = "./" + root + "/" + child;
+                const contents = fs.readFileSync(localPath);
 
-            var type = mime.contentType(child)
-            if (type) {
-                res.setHeader('Content-Type', type);
+                var type = mime.contentType(child)
+                if (type) {
+                    res.setHeader('Content-Type', type);
+                }
+
+                const stat = fs.statSync(path);
+
+                res.setHeader("Content-Length", stat.size);
+                res.end(contents);
             }
-
-            const stat = fs.statSync(path);
-
-            res.setHeader("Content-Length", stat.size);
-            // setHeaders(res, path, stat);
-            // res.write(contents);
-            res.end(contents);
+            catch (err) {
+                console.log(JSON.stringify({ message: err.message, stack: err.stack }));
+                res.json({ message: err.message, stack: err.stack });
+            }
         });
     }
 }
-
-function setHeaders(res: express.Response, path: string, stat: fs.Stats) {
-    // if (this._acceptRanges && !res.getHeader('Accept-Ranges')) {
-    //     res.setHeader('Accept-Ranges', 'bytes')
-    // }
-
-    // if (this._cacheControl && !res.getHeader('Cache-Control')) {
-    //     var cacheControl = 'public, max-age=' + Math.floor(this._maxage / 1000)
-
-    //     if (this._immutable) {
-    //         cacheControl += ', immutable'
-    //     }
-
-    //     res.setHeader('Cache-Control', cacheControl)
-    // }
-
-    if (this._lastModified && !res.getHeader('Last-Modified')) {
-        var modified = stat.mtime.toUTCString()
-        res.setHeader('Last-Modified', modified)
-    }
-
-    // if (this._etag && !res.getHeader('ETag')) {
-    //     var val = etag(stat)
-    //     debug('etag %s', val)
-    //     res.setHeader('ETag', val)
-    // }
-}
-
 
 export let endpointUrl = endpoint.url;

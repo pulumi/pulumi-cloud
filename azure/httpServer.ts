@@ -66,9 +66,9 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 const app = express();
                 app.use("/api", requestListener);
 
-                app.use(function (err: any, req: any, res: any, next: any) {
-                    res.json({ finaltophandler: "triggered" });
-                });
+                // app.use(function (err: any, req: any, res: any, next: any) {
+                //     res.json({ finaltophandler: "triggered" });
+                // });
 
                 handler = createHandler(app);
             }
@@ -81,6 +81,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
             return context => {
                 try {
+                    console.log("Incoming: " + JSON.stringify(context));
                     handler(context);
                     // context.log("Calling done synchronously.");
                     // context.done();
