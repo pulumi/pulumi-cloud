@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
-import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";
+import * as config from "./config";
 
 /**
  * Helper to create a name for resources with a name that should be unique to this stack.
@@ -66,8 +66,9 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
     return globalInfrastructureResource;
 }
 
-const config = new pulumi.Config("cloud-azure");
-export const location = config.require("location");
+export const location = config.location;
+
+const azureConfig = new pulumi.Config("cloud-azure");
 
 /**
  * The Azure Resource Group to use for all resources if a specific one is not specified. To use an
@@ -82,7 +83,7 @@ function getGlobalResourceGroup() {
     return pulumi.all([resourceGroupPromise]).apply(([rg]) => rg);
 
     async function getOrCreateGlobalResourceGroup() {
-        const resourceGroupName = config.get("resourceGroupName");
+        const resourceGroupName = azureConfig.get("resourceGroupName");
         if (resourceGroupName) {
             // User specified the resource group they want to use.  Go fetch that.
             const result = await azure.core.getResourceGroup({
@@ -119,7 +120,7 @@ export function getGlobalStorageAccount() {
 }
 
 function getOrCreateGlobalStorageAccount(): azure.storage.Account {
-    const storageAccountId = config.get("storageAccountId");
+    const storageAccountId = azureConfig.get("storageAccountId");
     if (storageAccountId) {
         return azure.storage.Account.get("global", storageAccountId);
     }
@@ -148,3 +149,8 @@ export function sha1hash(s: string): string {
     //     to collisions.  For now, limit the size of hashes to ensure we generate shorter/ resource names.
     return shasum.digest("hex").substring(0, 8);
 }
+
+export const defaultSubscriptionArgs = {
+    includePaths: config.functionIncludePaths,
+    includePackages: config.functionIncludePackages,
+};
