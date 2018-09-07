@@ -16,21 +16,19 @@ import * as cloud from "@pulumi/cloud";
 import * as express from "express";
 
 const server = new cloud.HttpServer("myexpress", () => {
+    // Testing.
     const app = express();
-    const router = express.Router();
 
-    app.use("/api", router);
-
-    router.get("/", (req, res) => {
+    app.get("/", (req, res) => {
         res.json({ succeeded: true });
     });
 
-    router.get("*", (req, res) => {
+    app.get("*", (req, res) => {
         res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl } });
     });
 
     return app;
 });
 
-// Export the URL for the express Endpoint.
+// Export the URL for the express Endpoint
 export let url = server.url;
