@@ -48,15 +48,42 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         const createHandler = azureFunctionExpress.createHandler;
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
-            const requestListener = createRequestListener();
+            let handler: any;
+            try {
+                // Ensure that node's current working dir (CWD) is the same as the where we're launching
+                // this module from.  We need this as Azure launches node from D:\windows\system32,
+                // causing any node modules that expect CWD to be where the original module is to break.
+                //
+                // For example, this impacts express.static which resolves files relative to CWD.
+                const dir = __dirname;
+                process.chdir(dir);
 
-            const app = express();
-            app.use("/api", requestListener);
+                const requestListener = createRequestListener();
 
-            const handler = createHandler(app);
+                // We're hosted at https://${n}.azurewebsites.net/api/ but we want to ensure any hits to
+                // that URL map to / not /api/.  To get that, we set up a simple route here that maps
+                // from /api to the request listener the client actually provides.
+                const app = express();
+                app.use("/api", requestListener);
 
-            return (context: subscription.Context) => {
-                return handler(context);
+                handler = createHandler(app);
+            }
+            catch (err) {
+                // If we failed to execute the function the caller provided, set up a simple handler
+                // that just indicates the problem.
+                return context => {
+                    context.log("Error occurred setting up factory function.");
+                    context.done();
+                };
+            }
+
+            return context => {
+                try {
+                    handler(context);
+                } catch (err) {
+                    context.log("Error executing handler.");
+                    context.done();
+                }
             };
         };
 
