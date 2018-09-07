@@ -4,6 +4,7 @@
 // Apache 2.0 licensed.
 
 import * as EventEmitter from "events";
+import { OutgoingMessage as NativeOutgoingMessage } from "http";
 
 const statusCodes = {
     100 : "Continue",
@@ -201,12 +202,13 @@ function writeHead(context: any, statusCode: any, statusMessage: any, headers: a
  *
  * @private
  */
-class OutgoingMessage {
+class OutgoingMessage extends NativeOutgoingMessage {
 
     /**
      * Original implementation: https://github.com/nodejs/node/blob/v6.x/lib/_http_outgoing.js#L48
      */
     constructor(context: any) {
+        super();
         (<any>this)._headers = null;
         (<any>this)._headerNames = {};
         (<any>this)._removedHeader = {};
@@ -217,27 +219,6 @@ class OutgoingMessage {
         (<any>this).writeHead = writeHead.bind(this, context);
         (<any>this).end = end.bind(this, context);
     }
-
-    /**
-     * Original implementation: https://github.com/nodejs/node/blob/v6.x/lib/_http_outgoing.js#L349
-     *
-     * Note: Although express overrides all prototypes, this method still needs to be added because
-     *       express may call setHeader right before overriding prototype (to set "X-Powered-By")
-     *       See https://github.com/expressjs/express/blob/master/lib/middleware/init.js#L23
-     *
-     * @param {string} name
-     * @param {string} value
-     */
-    setHeader(name: any, value: any) {
-        if (!(<any>this)._headers) {
-            (<any>this)._headers = {};
-        }
-
-        const key = name.toLowerCase();
-        (<any>this)._headers[key] = value;
-        (<any>this)._headerNames[key] = name;
-    }
-
 }
 
 /**
