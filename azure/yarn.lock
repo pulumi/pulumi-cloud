@@ -62,8 +62,8 @@
     "@pulumi/pulumi" "^0.15.0"
 
 "@pulumi/azure@^0.15.2-dev":
-  version "0.15.2-dev-1536271837-gfd927d2"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-dev-1536271837-gfd927d2.tgz#89f69c8bca61824e678a94b708c2e164ed44951a"
+  version "0.15.2-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-rc1.tgz#375b88fcbad4563f457c48e9b38859dc6c9ea065"
   dependencies:
     "@pulumi/pulumi" "^0.15.1-rc"
 
