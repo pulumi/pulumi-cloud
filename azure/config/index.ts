@@ -37,3 +37,5 @@ export let functionIncludePackages: string[] | undefined = undefined;
 if (functionIncludePackagesString) {
     functionIncludePackages = functionIncludePackagesString.split(",");
 }
+
+export const location = config.require("location");

@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.1-dev":
-  version "0.15.1-dev-1536201078-gac81127"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1536201078-gac81127.tgz#467b53556bc8021d2d9d7673f5db66d5ba97faf1"
+  version "0.15.1-dev-1536277770-g7099b8b"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.1-dev-1536277770-g7099b8b.tgz#fbf0979ac1bf9c66244178c5cf47389146f73a44"
   dependencies:
     "@pulumi/azure" "^0.15.0"
     "@pulumi/pulumi" "^0.15.1-dev"
@@ -62,10 +62,10 @@
     "@pulumi/pulumi" "^0.15.0"
 
 "@pulumi/azure@^0.15.2-dev":
-  version "0.15.2-dev-1535578965-g423227d"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-dev-1535578965-g423227d.tgz#3ea9a492d0cd19c906292ef1cb55a9533ad778d2"
+  version "0.15.2-dev-1536271837-gfd927d2"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2-dev-1536271837-gfd927d2.tgz#89f69c8bca61824e678a94b708c2e164ed44951a"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.15.1-rc"
 
 "@pulumi/docker@^0.15.1-dev":
   version "0.15.1-dev-1535584875-g0109adf"
@@ -101,9 +101,9 @@
     ts-node "^7.0.0"
     typescript "^3.0.0"
 
-"@pulumi/pulumi@^0.15.1-dev":
-  version "0.15.1-dev-1536195048-gf83d3239"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-dev-1536195048-gf83d3239.tgz#f9d165b810bb7a1bd8b2a4a86d81aabcfb02e5d8"
+"@pulumi/pulumi@^0.15.1-dev", "@pulumi/pulumi@^0.15.1-rc":
+  version "0.15.1-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-rc1.tgz#69a92fa2a65becdf481348f9ef154f7a1fdd6b4f"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -784,8 +784,8 @@ graceful-fs@^4.1.2:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
 grpc@^1.12.2:
-  version "1.14.1"
-  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.14.1.tgz#42d5900fd13a0daca1a58155cd4ab4d0c2f9c716"
+  version "1.14.2"
+  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.14.2.tgz#046f88cccc5a23470f67d480e320ec28a2dc3893"
   dependencies:
     lodash "^4.17.5"
     nan "^2.0.0"
