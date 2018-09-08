@@ -154,7 +154,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 ...shared.defaultSubscriptionArgs,
                 factoryFunc,
                 resourceGroup: shared.globalResourceGroup,
-                appSettings: pulumi.output({ "WEBSITE_NODE_DEFAULT_VERSION": "10.6.0" }),
             }, { parent: this });
 
         this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);
