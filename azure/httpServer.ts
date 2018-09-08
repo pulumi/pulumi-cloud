@@ -17,8 +17,10 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as express from "express";
 import * as http from "http";
-import * as azureFunctionExpress from "./azure-function-express";
+// import * as azureFunctionExpress from "./azure-function-express";
 import * as shared from "./shared";
+
+var x: http.OutgoingMessage
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
@@ -46,7 +48,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 "name"      : "res",
             }];
 
-        const createHandler = azureFunctionExpress.createHandler;
+        const azureFunctionExpress = require("azure-function-express");
         const factoryFunc: subscription.CallbackFactory<subscription.Context, any> = () => {
             let handler: any;
             try {
@@ -66,7 +68,12 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 const app = express();
                 app.use("/api", requestListener);
 
-                handler = createHandler(app);
+                handler = azureFunctionExpress.createHandler(
+                    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+                        (<any>res)._header = "";
+
+                        return app(req, res, next);
+                    });
             }
             catch (err) {
                 // If we failed to execute the function the caller provided, set up a simple handler
@@ -79,6 +86,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
             return context => {
                 try {
+                    console.log(JSON.stringify(context));
                     handler(context);
                 } catch (err) {
                     context.log("Error executing handler.");
@@ -92,6 +100,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 ...shared.defaultSubscriptionArgs,
                 factoryFunc,
                 resourceGroup: shared.globalResourceGroup,
+                appSettings: pulumi.output({ "WEBSITE_NODE_DEFAULT_VERSION": "10.6.0" }),
             }, { parent: this });
 
         this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);

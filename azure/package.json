@@ -19,6 +19,7 @@
         "azure-storage": "^2.10.1",
         "azure-sb": "^0.10.6",
         "azure-arm-containerinstance": "^3.0.0",
+        "azure-function-express": "^2.0.0",
         "ms-rest-azure": "^2.5.7",
         "mime": "^2.0.3",
         "semver": "^5.4.0",
@@ -43,7 +44,8 @@
             "ms-rest-azure": "^2.5.7",
             "azure-sb": "^0.10.6",
             "azure-storage": "^2.10.1",
-            "express": "^4.16.3"
+            "express": "^4.16.3",
+            "azure-function-express": "^2.0.0"
         }
     }
 }
