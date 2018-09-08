@@ -93,8 +93,8 @@ let endpoint = new cloud.HttpServer("urlshortener", () => {
     //      cloud-aws:functionIncludePaths or
     //      cloud-azure:functionIncludePaths
 
-    staticRoutes(app, "/", "www");
-    //app.use("/", express.static("www"));
+    // staticRoutes(app, "/", "www");
+    app.use("/", express.static("www"));
 
     app.get("*", (req, res) => {
         res.json({ uncaught: { url: req.url, baseUrl: req.baseUrl, originalUrl: req.originalUrl, version: process.version } });
