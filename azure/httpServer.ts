@@ -222,7 +222,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
             },
         };
 
-        // Now, call into the library to actually handle the ranslated Azure-to-AWS request.
+        // Now, call into the library to actually handle the translated Azure-to-AWS request.
         awsServerlessExpress.proxy(server, awsEvent, <any>awsContext);
     }
     catch (err) {
