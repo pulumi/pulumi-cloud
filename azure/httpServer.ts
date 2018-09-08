@@ -33,7 +33,8 @@ import * as shared from "./shared";
 // expects.  And we then map the result AWS type it produces over to the form Azure expects. The
 // code for both of these translation is very simple and easy to maintain.
 
-// The shape of an APIGateway incoming http event.  This is the incoming form that
+
+// The shape of an APIGateway incoming http request.  This is the incoming form that
 // "aws-serverless-express" expects.  We call it 'event' (as opposed to request) because that's the
 // name that library uses internally.  This helps keep it clear what maps to what.
 //
