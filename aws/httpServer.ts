@@ -30,7 +30,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
     public constructor(
         name: string,
-        createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
+        createRequestListener: cloud.RequestListenerFactory,
         opts: pulumi.ComponentResourceOptions) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
