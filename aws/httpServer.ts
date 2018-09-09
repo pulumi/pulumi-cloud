@@ -42,6 +42,9 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const server = serverlessExpress.createServer(requestListener);
 
             return (event: apigateway.APIGatewayRequest, context: aws.serverless.Context) => {
+                console.log("Context.succeed: " + (typeof (<any>context).succeed) + " " + ((<any>context).succeed instanceof Function));
+                console.log("Event1: " + JSON.stringify(event));
+                console.log("Context1: " + JSON.stringify(context));
                 serverlessExpress.proxy(server, event, <any>context);
             };
         }
