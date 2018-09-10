@@ -214,9 +214,6 @@ func Test_Examples(t *testing.T) {
 				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		},
-	}
-
-	longExamples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
@@ -262,6 +259,9 @@ func Test_Examples(t *testing.T) {
 			},
 			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
 		},
+	}
+
+	longExamples := []integration.ProgramTestOptions{
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-ec2"),
