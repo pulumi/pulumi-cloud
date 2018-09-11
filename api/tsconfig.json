@@ -16,7 +16,13 @@
         "strictNullChecks": true
     },
     "files": [
+        "api.ts",
+        "bucket.ts",
         "index.ts",
+        "service.ts",
+        "table.ts",
+        "timer.ts",
+        "topic.ts",
         "types.ts"
     ]
 }
