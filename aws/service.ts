@@ -15,7 +15,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import { RunError } from "@pulumi/pulumi/errors";
 import { CloudCluster, CloudNetwork } from "./shared";
 
 import * as docker from "@pulumi/docker";
@@ -67,7 +66,7 @@ function createLoadBalancer(
             useAppLoadBalancer = true;
             useCertificateARN = config.acmCertificateARN;
             if (!useCertificateARN) {
-                throw new RunError("Cannot create Service for HTTPS trafic. No ACM certificate ARN configured.");
+                throw new Error("Cannot create Service for HTTPS trafic. No ACM certificate ARN configured.");
             }
             break;
         case "http":
@@ -76,14 +75,14 @@ function createLoadBalancer(
             useAppLoadBalancer = true;
             break;
         case "udp":
-            throw new RunError("UDP protocol unsupported for Services");
+            throw new Error("UDP protocol unsupported for Services");
         case "tcp":
             protocol = "TCP";
             targetProtocol = "TCP";
             useAppLoadBalancer = false;
             break;
         default:
-            throw new RunError(`Unrecognized Service protocol: ${portMapping.protocol}`);
+            throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
 
     const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
@@ -164,7 +163,7 @@ function getImageName(container: cloud.Container): string {
         return "lukehoban/nodejsrunner";
     }
     else {
-        throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
+        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
 }
 
@@ -270,7 +269,7 @@ function computeImage(
 
     if (container.build) {
         if (!repository) {
-            throw new RunError("Expected a container repository for build image");
+            throw new Error("Expected a container repository for build image");
         }
 
         return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
@@ -282,7 +281,7 @@ function computeImage(
         return computeImageFromFunction(container.function, preEnv, imageName);
     }
     else {
-        throw new RunError("Invalid container definition: `image`, `build`, or `function` must be provided");
+        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
 }
 
@@ -325,13 +324,13 @@ function computeImageFromBuildWorker(
             //
             // See: http://docs.aws.amazon.com/cli/latest/reference/ecr/get-authorization-token.html
             if (!registryId) {
-                throw new RunError("Expected registry ID to be defined during push");
+                throw new Error("Expected registry ID to be defined during push");
             }
             const credentials = await aws.ecr.getCredentials({ registryId: registryId });
             const decodedCredentials = Buffer.from(credentials.authorizationToken, "base64").toString();
             const [username, password] = decodedCredentials.split(":");
             if (!password || !username) {
-                throw new RunError("Invalid credentials");
+                throw new Error("Invalid credentials");
             }
             return {
                 registry: credentials.proxyEndpoint,
@@ -662,7 +661,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster = getCluster();
         if (!cluster) {
-            throw new RunError("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
+            throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
 
@@ -713,7 +712,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             if (container.ports) {
                 for (const portMapping of container.ports) {
                     if (loadBalancers.length > 0) {
-                        throw new RunError("Only one port can currently be exposed per Service.");
+                        throw new Error("Only one port can currently be exposed per Service.");
                     }
                     const info = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
                     ports[containerName][portMapping.port] = {
@@ -776,18 +775,18 @@ function getEndpointHelper(
 
     containerName = containerName || Object.keys(endpoints)[0];
     if (!containerName)  {
-        throw new RunError(`No containers available in this service`);
+        throw new Error(`No containers available in this service`);
     }
 
     const containerPorts = endpoints[containerName] || {};
     containerPort = containerPort || +Object.keys(containerPorts)[0];
     if (!containerPort) {
-        throw new RunError(`No ports available in service container ${containerName}`);
+        throw new Error(`No ports available in service container ${containerName}`);
     }
 
     const endpoint = containerPorts[containerPort];
     if (!endpoint) {
-        throw new RunError(`No exposed port for ${containerName} port ${containerPort}`);
+        throw new Error(`No exposed port for ${containerName} port ${containerPort}`);
     }
 
     return endpoint;
@@ -826,7 +825,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         if (volumeNames.has(name)) {
-            throw new RunError("Must provide a unique volume name");
+            throw new Error("Must provide a unique volume name");
         }
         super("cloud:volume:Volume", name, {}, opts);
         this.kind = "SharedVolume";
@@ -843,7 +842,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
     getHostPath() {
         const cluster = getCluster();
         if (!cluster || !cluster.efsMountPath) {
-            throw new RunError(
+            throw new Error(
                 "Cannot use 'Volume'.  Configured cluster does not support EFS.",
             );
         }
