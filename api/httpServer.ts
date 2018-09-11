@@ -15,6 +15,11 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
 
+// Factory function for creating a requestListener function.  The returned function is the same
+// callback function that would be passed to http.createServer.  See:
+// https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener for more details.
+export type RequestListenerFactory = () => (req: http.IncomingMessage, res: http.ServerResponse) => void;
+
 export interface HttpServerConstructor {
     /**
      * @param createRequestListener Function that, when called, will produce the [[requestListener]]
@@ -23,9 +28,7 @@ export interface HttpServerConstructor {
      * computation (like setting up a set of routes).  The function returned can then utilize the
      * results of that computation.
      */
-    new (name: string,
-         createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void,
-         opts?: pulumi.ResourceOptions): HttpServer;
+    new (name: string, createRequestListener: RequestListenerFactory, opts?: pulumi.ResourceOptions): HttpServer;
 }
 
 // tslint:disable-next-line:variable-name
