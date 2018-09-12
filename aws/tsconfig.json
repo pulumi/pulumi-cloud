@@ -17,13 +17,15 @@
     "files": [
         "index.ts",
         "api.ts",
+        "bucket.ts",
         "function.ts",
+        "httpServer.ts",
+        "service.ts",
         "sns.ts",
         "table.ts",
         "timer.ts",
         "topic.ts",
-        "service.ts",
-        "utils.ts",
+        "shared.ts",
 
         "config/index.ts",
     ]
