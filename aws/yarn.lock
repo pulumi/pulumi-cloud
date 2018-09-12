@@ -52,20 +52,11 @@
     "@pulumi/aws" "^0.15.1-rc"
     "@pulumi/pulumi" "^0.15.1"
 
-"@pulumi/aws@^0.15.1":
+"@pulumi/aws@^0.15.1", "@pulumi/aws@^0.15.1-rc":
   version "0.15.1"
   resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.1.tgz#6c313b2ad082a956683c5cb0652e98ed41e581e7"
   dependencies:
     "@pulumi/pulumi" "^0.15.1"
-    builtin-modules "3.0.0"
-    read-package-tree "^5.2.1"
-    resolve "^1.7.1"
-
-"@pulumi/aws@^0.15.1-rc":
-  version "0.15.1-rc1"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.1-rc1.tgz#918d56c17c36ffc9913b2e0203bc066b7197a5b9"
-  dependencies:
-    "@pulumi/pulumi" "^0.15.1-rc"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
@@ -79,8 +70,8 @@
     semver "^5.4.0"
 
 "@pulumi/pulumi@^0.15.0", "@pulumi/pulumi@^0.15.1":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1.tgz#1b94077ec0bfb8fef868d6aa66643d7f726c0678"
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.2.tgz#940dfc4b7d64597674fccf58d510d4870889a9e7"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -93,13 +84,14 @@
     ts-node "^7.0.0"
     typescript "^3.0.0"
 
-"@pulumi/pulumi@^0.15.1-rc":
-  version "0.15.1-rc1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.1-rc1.tgz#69a92fa2a65becdf481348f9ef154f7a1fdd6b4f"
+"@pulumi/pulumi@^0.15.3-dev":
+  version "0.15.3-dev-1536727776-g1b0780af"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536727776-g1b0780af.tgz#10df5293554840646e418eccb7c8e5f299688f44"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
     minimist "^1.2.0"
+    normalize-package-data "^2.4.0"
     protobufjs "^6.8.6"
     read-package-tree "^5.2.1"
     require-from-string "^2.0.1"
@@ -244,8 +236,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.309.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.309.0.tgz#1da631f553e706249e62a33465b4490e9864bb7d"
+  version "2.313.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.313.0.tgz#3b125aaa5fa8cf5befefe6fcad96615d32d90df4"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -370,8 +362,8 @@ colour@~0.7.1:
   resolved "https://registry.yarnpkg.com/colour/-/colour-0.7.1.tgz#9cb169917ec5d12c0736d3e8685746df1cadf778"
 
 commander@^2.12.1:
-  version "2.17.1"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-2.17.1.tgz#bd77ab7de6de94205ceacc72f1716d29f20a77bf"
+  version "2.18.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.18.0.tgz#2bf063ddee7c7891176981a2cc798e5754bc6970"
 
 concat-map@0.0.1:
   version "0.0.1"
@@ -481,8 +473,8 @@ graceful-fs@^4.1.2:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
 grpc@^1.12.2:
-  version "1.14.1"
-  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.14.1.tgz#42d5900fd13a0daca1a58155cd4ab4d0c2f9c716"
+  version "1.14.2"
+  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.14.2.tgz#046f88cccc5a23470f67d480e320ec28a2dc3893"
   dependencies:
     lodash "^4.17.5"
     nan "^2.0.0"
@@ -667,8 +659,8 @@ nan@^2.0.0:
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.11.0.tgz#574e360e4d954ab16966ec102c0c049fd961a099"
 
 needle@^2.2.1:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.2.tgz#1120ca4c41f2fcc6976fd28a8968afe239929418"
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.3.tgz#c1b04da378cd634d8befe2de965dc2cfb0fd65ca"
   dependencies:
     debug "^2.1.2"
     iconv-lite "^0.4.4"
@@ -843,7 +835,7 @@ read-package-tree@^5.2.1:
 
 readable-stream@^2.0.6:
   version "2.3.6"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.6.tgz#b11c27d88b8ff1fbe070643cf94b0c79ae1b0aaf"
+  resolved "http://registry.npmjs.org/readable-stream/-/readable-stream-2.3.6.tgz#b11c27d88b8ff1fbe070643cf94b0c79ae1b0aaf"
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.3"
@@ -950,8 +942,8 @@ spdx-expression-parse@^3.0.0:
     spdx-license-ids "^3.0.0"
 
 spdx-license-ids@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.0.tgz#7a7cd28470cc6d3a1cfe6d66886f6bc430d3ac87"
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.1.tgz#e2a303236cac54b04031fa7a5a79c7e701df852f"
 
 sprintf-js@~1.0.2:
   version "1.0.3"

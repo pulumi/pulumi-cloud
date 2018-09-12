@@ -17,24 +17,13 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
-import * as utils from "./utils";
-
-interface ApigatewayIntegrationBase {
+interface ApigatewayIntegration {
     requestParameters?: any;
     passthroughBehavior?: string;
     httpMethod: string;
     type: string;
     responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
     connectionType?: string;
-}
-
-interface ApigatewayIntegration extends ApigatewayIntegrationBase {
-    uri: string;
-    credentials?: string;
-    connectionId?: string;
-}
-
-interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
     uri: pulumi.Output<string>;
     credentials?: pulumi.Output<string>;
     connectionId?: pulumi.Output<string>;
@@ -43,19 +32,13 @@ interface ApigatewayIntegrationAsync extends ApigatewayIntegrationBase {
 export interface SwaggerSpec {
     swagger: string;
     info: SwaggerInfo;
-    paths: { [path: string]: { [method: string]: SwaggerOperationAsync; }; };
+    paths: { [path: string]: { [method: string]: SwaggerOperation; }; };
     "x-amazon-apigateway-binary-media-types"?: string[];
 }
 
 interface SwaggerInfo {
     title: string;
     version: string;
-}
-
-interface SwaggerOperationAsync {
-    parameters?: any[];
-    responses?: { [code: string]: SwaggerResponse };
-    "x-amazon-apigateway-integration": ApigatewayIntegrationAsync;
 }
 
 interface SwaggerOperation {
@@ -142,19 +125,12 @@ export interface APIGatewayResponse {
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
 export function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
-    const pathsDeps = pulumi.all(utils.apply(spec.paths, p => {
-        const temp: pulumi.Output<Record<string, SwaggerOperation>> =
-            pulumi.all(utils.apply(p, x => resolveOperationDependencies(x)));
-        return temp;
-    }));
-
-    // After all values have settled, we can produce the resulting string.
-    return pathsDeps.apply(paths =>
-        JSON.stringify({
-            swagger: spec.swagger,
-            info: spec.info,
-            paths: paths,
-            "x-amazon-apigateway-binary-media-types": spec["x-amazon-apigateway-binary-media-types"],
+    return pulumi.output(spec).apply(s => {
+        return JSON.stringify({
+            swagger: s.swagger,
+            info: s.info,
+            paths: s.paths,
+            "x-amazon-apigateway-binary-media-types": s["x-amazon-apigateway-binary-media-types"],
             // Map paths the user doesn't have access to as 404.
             // http://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html
             "x-amazon-apigateway-gateway-responses": {
@@ -171,32 +147,8 @@ export function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
                     },
                 },
             },
-        }));
-
-    // local functions
-    function resolveOperationDependencies(op: SwaggerOperationAsync): pulumi.Output<SwaggerOperation> {
-        return resolveIntegrationDependencies(op["x-amazon-apigateway-integration"]).apply(
-            integration => ({
-                    parameters: op.parameters,
-                    responses: op.responses,
-                    "x-amazon-apigateway-integration": integration,
-                }));
-    }
-
-    function resolveIntegrationDependencies(op: ApigatewayIntegrationAsync): pulumi.Output<ApigatewayIntegration> {
-        return pulumi.all([op.uri, op.credentials, op.connectionId])
-                     .apply(([uri, credentials, connectionId]) => ({
-                requestParameters: op.requestParameters,
-                passthroughBehavior: op.passthroughBehavior,
-                httpMethod: op.httpMethod,
-                type: op.type,
-                responses: op.responses,
-                connectionType: op.connectionType,
-                uri: uri,
-                credentials: credentials,
-                connectionId: connectionId,
-            }));
-    }
+        });
+    });
 }
 
 export function createBaseSpec(apiName: string): SwaggerSpec {
@@ -208,7 +160,7 @@ export function createBaseSpec(apiName: string): SwaggerSpec {
     };
 }
 
-export function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperationAsync {
+export function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperation {
     const region = aws.config.requireRegion();
     const uri = lambda.arn.apply(lambdaARN =>
         "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
@@ -226,7 +178,7 @@ export function createPathSpecLambda(lambda: aws.lambda.Function): SwaggerOperat
 export function createPathSpecProxy(
     target: string | pulumi.Output<cloud.Endpoint>,
     vpcLink: aws.apigateway.VpcLink | undefined,
-    useProxyPathParameter: boolean): SwaggerOperationAsync {
+    useProxyPathParameter: boolean): SwaggerOperation {
 
     const uri =
         pulumi.all([<string>target, <pulumi.Output<cloud.Endpoint>>target])
@@ -250,7 +202,7 @@ export function createPathSpecProxy(
                   }
               });
 
-    const result: SwaggerOperationAsync = {
+    const result: SwaggerOperation = {
         "x-amazon-apigateway-integration": {
             responses: {
                 default: {
@@ -283,14 +235,14 @@ export function createPathSpecObject(
         bucket: aws.s3.Bucket,
         key: string,
         role: aws.iam.Role,
-        pathParameter?: string): SwaggerOperationAsync {
+        pathParameter?: string): SwaggerOperation {
 
     const region = aws.config.requireRegion();
 
     const uri = bucket.bucket.apply(bucketName =>
         `arn:aws:apigateway:${region}:s3:path/${bucketName}/${key}${(pathParameter ? `/{${pathParameter}}` : ``)}`);
 
-    const result: SwaggerOperationAsync = {
+    const result: SwaggerOperation = {
         responses: {
             "200": {
                 description: "200 response",
