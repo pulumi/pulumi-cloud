@@ -414,9 +414,8 @@ function computeContainerDefinitions(
                 hostPort: p.targetPort || p.port,
             }));
 
-            return pulumi.all([imageOptions, container.command, container.cpu, container.memory,
-                               container.memoryReservation, logGroup.id, container.dockerLabels])
-                         .apply(([imageOptions, command, cpu, memory, memoryReservation, logGroupId, dockerLabels]) => {
+            return pulumi.all([imageOptions, container, logGroup.id])
+                         .apply(([imageOptions, container, logGroupId]) => {
                 const keyValuePairs: { name: string, value: string }[] = [];
                 for (const key of Object.keys(imageOptions.environment)) {
                     keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
@@ -425,10 +424,10 @@ function computeContainerDefinitions(
                 const containerDefinition: aws.ecs.ContainerDefinition = {
                     name: containerName,
                     image: imageOptions.image,
-                    command: command,
-                    cpu: cpu,
-                    memory: memory,
-                    memoryReservation: memoryReservation,
+                    command: container.command,
+                    cpu: container.cpu,
+                    memory: container.memory,
+                    memoryReservation: container.memoryReservation,
                     portMappings: portMappings,
                     environment: keyValuePairs,
                     mountPoints: (container.volumes || []).map(v => ({
@@ -443,7 +442,7 @@ function computeContainerDefinitions(
                             "awslogs-stream-prefix": containerName,
                         },
                     },
-                    dockerLabels: dockerLabels,
+                    dockerLabels: container.dockerLabels,
                 };
                 return containerDefinition;
             });
@@ -759,7 +758,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         this.endpoints = localEndpoints;
 
         this.defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
-            ? pulumi.output<Endpoint>(undefined!)
+            ? pulumi.output(<Endpoint>undefined!)
             : this.endpoints.apply(
                 ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
 

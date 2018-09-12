@@ -80,7 +80,7 @@ export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
 function getGlobalResourceGroup() {
     const resourceGroupPromise = getOrCreateGlobalResourceGroup();
-    return pulumi.all([resourceGroupPromise]).apply(([rg]) => rg);
+    return pulumi.output(resourceGroupPromise);
 
     async function getOrCreateGlobalResourceGroup() {
         const resourceGroupName = azureConfig.get("resourceGroupName");
