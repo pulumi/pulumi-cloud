@@ -18,7 +18,7 @@
     "devDependencies": {
         "@types/node": "^8.0.27",
         "tslint": "^5.7.0",
-        "typescript": "^2.1.4"
+        "typescript": "^3.0.3"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
