@@ -13,25 +13,33 @@
 // limitations under the License.
 
 import * as cloud from "@pulumi/cloud";
-import { Output } from "@pulumi/pulumi";
 import * as nodeFetchModule from "node-fetch";
 import { canonicalUrl, hostname} from "./support";
+import * as express from "express";
 
 // Pending sites to be processed
 let sites = new cloud.Topic<string>("examples-sites-to-process");
-// Documents and assocaited metadata for crawled sites
+
+// Documents and associated metadata for crawled sites
 let documents = new cloud.Table("examples-documents");
 
 // Front end API and console
-let frontEnd = new cloud.API("examples-crawler-front-end");
-frontEnd.post("/queue", async (req, res) => {
-    let url = req.body.toString();
-    console.log(`Pushing ${url} to processing queue`);
-    await sites.publish(url);
-    res.status(200).json("success");
+let frontEnd = new cloud.HttpServer("examples-crawler-front-end", () => {
+    const app = express();
+
+    app.post("/queue", async (req, res) => {
+        let url = req.body.toString();
+        console.log(`Pushing ${url} to processing queue`);
+        await sites.publish(url);
+        res.status(200).json("success");
+    });
+
+    app.get("/documents/stats", async (_, res) => res.json({count: (await documents.scan()).length}));
+
+    return app;
 });
-frontEnd.get("/documents/stats", async (_, res) => res.json({count: (await documents.scan()).length}));
-export let publicURL = frontEnd.publish().url;
+
+export let publicURL = frontEnd.url;
 publicURL.apply(u => {
     console.log("Launched crawler front end @ " + u);
 });
