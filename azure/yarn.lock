@@ -45,9 +45,9 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/azure-serverless@^0.15.1":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.2.tgz#a1a1d9bf13bc9c51afefcbda833e6c0edddaefff"
+"@pulumi/azure-serverless@^0.15.3-dev":
+  version "0.15.3-dev-1536781994-gf49ce57"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536781994-gf49ce57.tgz#23bd6861d0e63dd98fff636b79f47acf82927a91"
   dependencies:
     "@pulumi/azure" "^0.15.2"
     "@pulumi/pulumi" "^0.15.1"
@@ -60,6 +60,12 @@
   resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2.tgz#ebd187efcc277d21c27f36284536324c1a749cb6"
   dependencies:
     "@pulumi/pulumi" "^0.15.1"
+
+"@pulumi/azure@^0.15.3-dev":
+  version "0.15.3-dev-1536879726-g9396ce7"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536879726-g9396ce7.tgz#795f25702041ba1bb1829fc4537b7791ef8f39ab"
+  dependencies:
+    "@pulumi/pulumi" "^0.15.3-dev"
 
 "@pulumi/docker@^0.15.1":
   version "0.15.1"
