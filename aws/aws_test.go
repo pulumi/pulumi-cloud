@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package examples
+package awstests
 
 import (
 	"crypto/rand"
@@ -35,6 +35,8 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
 	"github.com/pulumi/pulumi/pkg/util/contract"
+
+	"github.com/pulumi/pulumi-cloud/examples"
 )
 
 // Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
@@ -51,18 +53,13 @@ func Test_Examples(t *testing.T) {
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
-	examples := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(cwd, "../examples/crawler"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
+
+	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), func(config map[string]string) map[string]string {
+		config["aws:region"] = region
+		return config
+	})
+
+	shortTests := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
@@ -216,7 +213,7 @@ func Test_Examples(t *testing.T) {
 		},
 	}
 
-	longExamples := []integration.ProgramTestOptions{
+	longTests := []integration.ProgramTestOptions{
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-ec2"),
@@ -283,12 +280,14 @@ func Test_Examples(t *testing.T) {
 		},
 	}
 
+	allTests := shortTests
+
 	// Only include the long examples on non-Short test runs
 	if !testing.Short() {
-		examples = append(examples, longExamples...)
+		allTests = append(allTests, longTests...)
 	}
 
-	for _, ex := range examples {
+	for _, ex := range allTests {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
