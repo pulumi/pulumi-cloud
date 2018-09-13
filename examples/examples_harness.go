@@ -37,13 +37,19 @@ import (
 	// "github.com/pulumi/pulumi/pkg/util/contract"
 )
 
-func RunExamples(t *testing.T, provider, examplesDir string, setConfigVars func(config map[string]string) map[string]string) {
+func RunExamples(
+	t *testing.T,
+	provider, examplesDir string,
+	secrets map[string]string,
+	setConfigVars func(config map[string]string) map[string]string) {
+
 	examples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(examplesDir, "crawler"),
 			Config: setConfigVars(map[string]string{
 				"cloud:provider": provider,
 			}),
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-" + provider,

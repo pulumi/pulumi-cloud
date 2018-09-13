@@ -54,7 +54,8 @@ func Test_Examples(t *testing.T) {
 		return
 	}
 
-	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), func(config map[string]string) map[string]string {
+	var secrets map[string]string
+	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
 		config["aws:region"] = region
 		return config
 	})
