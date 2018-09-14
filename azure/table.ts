@@ -60,7 +60,9 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         const storageAccount = shared.getGlobalStorageAccount();
 
         // The underlying azure table that will store all the data.
-        this.table = new azure.storage.Table(name, {
+        // Table names must be alphanumeric.
+        const acceptableName = name.replace(/[^A-Za-z0-9]/g, "");
+        this.table = new azure.storage.Table(acceptableName, {
             resourceGroupName: shared.globalResourceGroupName,
             storageAccountName: storageAccount.name,
         }, { parent: this});
