@@ -55,6 +55,17 @@ func RunExamples(
 				"@pulumi/cloud-" + provider,
 			},
 		},
+		{
+			Dir: path.Join(examplesDir, "timers"),
+			Config: map[string]string{
+				"cloud:provider": provider,
+				"timers:message": "Hello, Pulumi Timers!",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+		},
 	}
 
 	longExamples := []integration.ProgramTestOptions{}

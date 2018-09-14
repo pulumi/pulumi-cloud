@@ -166,18 +166,6 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/timers"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-				"timers:message": "Hello, Pulumi Timers!",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
-		{
 			Dir: path.Join(cwd, "../examples/api"),
 			Config: map[string]string{
 				"aws:region":     region,
