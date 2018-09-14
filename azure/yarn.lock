@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.3-dev":
-  version "0.15.3-dev-1536905460-gd8ad144"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536905460-gd8ad144.tgz#9d3bc9d7a57d5ed85d4cca96d48a10e82a603bc7"
+  version "0.15.3-dev-1536910404-g9f7ad16"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536910404-g9f7ad16.tgz#35a345e1bc88f967767fc5669f4d6b79941e0050"
   dependencies:
     "@pulumi/azure" "^0.15.3-dev"
     "@pulumi/pulumi" "^0.15.3-dev"
@@ -56,8 +56,8 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1536907875-ga55f921"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536907875-ga55f921.tgz#fbda18f099bc9f4102badbb33df751173b5b5ad8"
+  version "0.15.3-dev-1536911394-g0324c5e"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536911394-g0324c5e.tgz#2597d191be8d8c03f4031ce9b7756cbb1e6f6b23"
   dependencies:
     "@pulumi/pulumi" "^0.15.3-dev"
 
