@@ -46,24 +46,18 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.3-dev":
-  version "0.15.3-dev-1536781994-gf49ce57"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536781994-gf49ce57.tgz#23bd6861d0e63dd98fff636b79f47acf82927a91"
+  version "0.15.3-dev-1536883430-g01a5790"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536883430-g01a5790.tgz#85136f1b85f630edf021e30af6f28a4efa753b81"
   dependencies:
-    "@pulumi/azure" "^0.15.2"
-    "@pulumi/pulumi" "^0.15.1"
+    "@pulumi/azure" "^0.15.3-dev"
+    "@pulumi/pulumi" "^0.15.3-dev"
     azure-functions-ts-essentials "^1.3.2"
     azure-storage "^2.10.1"
     read-package-tree "^5.2.1"
 
-"@pulumi/azure@^0.15.2":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.2.tgz#ebd187efcc277d21c27f36284536324c1a749cb6"
-  dependencies:
-    "@pulumi/pulumi" "^0.15.1"
-
 "@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1536879726-g9396ce7"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536879726-g9396ce7.tgz#795f25702041ba1bb1829fc4537b7791ef8f39ab"
+  version "0.15.3-dev-1536885009-gd017671"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536885009-gd017671.tgz#005878abceeb47c80cb29ae9f653b133ac647da0"
   dependencies:
     "@pulumi/pulumi" "^0.15.3-dev"
 
@@ -75,7 +69,7 @@
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0", "@pulumi/pulumi@^0.15.1":
+"@pulumi/pulumi@^0.15.0":
   version "0.15.2"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.2.tgz#940dfc4b7d64597674fccf58d510d4870889a9e7"
   dependencies:
@@ -91,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3-dev-1536862686-gc0102373"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536862686-gc0102373.tgz#34ff79f55b8e5aaa2e2042c63f75ad823dbffeaa"
+  version "0.15.3-dev-1536892560-g3642cca9"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536892560-g3642cca9.tgz#04f4760e0c2ebe2ea541caf14cc5a83d0dd512bc"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
