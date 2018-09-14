@@ -127,9 +127,8 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
 
     // Account name must be 24 chars or less and must be lowercase.
     // https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions#storage
-    const storageAccountName = createNameWithStackInfo("global" + sha1hash(pulumi.getStack()), 24, /*delim*/ "")
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .toLowerCase();
+    const storageAccountName = makeSafeStorageAccountName(
+        createNameWithStackInfo("global" + sha1hash(pulumi.getStack()), 24, /*delim*/ ""));
 
     return new azure.storage.Account("global", {
         resourceGroupName: globalResourceGroupName,
@@ -139,6 +138,10 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
         accountTier: "Standard",
         accountReplicationType: "LRS",
     }, { parent: getGlobalInfrastructureResource() });
+}
+
+export function makeSafeStorageAccountName(prefix: string) {
+    return prefix.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 }
 
 // sha1hash returns a partial SHA1 hash of the input string.

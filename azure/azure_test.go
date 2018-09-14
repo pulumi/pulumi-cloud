@@ -32,6 +32,8 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource/config"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
+
+	"github.com/pulumi/pulumi-cloud/examples"
 )
 
 func getRequiredEnvValue(t *testing.T, key string) string {
@@ -65,15 +67,23 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:tenantId":       tenantID,
 		"containers:redisPassword":   "REDIS_PASSWORD",
 	}
-	commonSecrets := map[string]string{
+	secrets := map[string]string{
 		"cloud-azure:clientSecret": clientSecret,
 	}
+
+	examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+		for k, v := range commonConfig {
+			config[k] = v
+		}
+
+		return config
+	})
 
 	examples := []integration.ProgramTestOptions{
 		{
 			Dir:     path.Join(cwd, "./examples/bucket"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -82,7 +92,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir:     path.Join(cwd, "./examples/table"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -91,7 +101,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -100,7 +110,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir:     path.Join(cwd, "./examples/containers"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -109,7 +119,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir:     path.Join(cwd, "./examples/express"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
@@ -118,7 +128,7 @@ func Test_Examples(t *testing.T) {
 		{
 			Dir:     path.Join(cwd, "./examples/topic"),
 			Config:  commonConfig,
-			Secrets: commonSecrets,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-azure",
