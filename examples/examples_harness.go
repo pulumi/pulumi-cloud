@@ -57,10 +57,10 @@ func RunExamples(
 		},
 		{
 			Dir: path.Join(examplesDir, "timers"),
-			Config: map[string]string{
+			Config: setConfigVars(map[string]string{
 				"cloud:provider": provider,
 				"timers:message": "Hello, Pulumi Timers!",
-			},
+			}),
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-" + provider,
