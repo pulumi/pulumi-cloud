@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.3-dev":
-  version "0.15.3-dev-1536914491-gb9c874c"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536914491-gb9c874c.tgz#bf8fc13c45d12f218e185764238c79c5fca6ff2b"
+  version "0.15.3-dev-1537003732-g9636b09"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1537003732-g9636b09.tgz#68782a09192e54faff2693c57c68141b6d7755d4"
   dependencies:
     "@pulumi/azure" "^0.15.3-dev"
     "@pulumi/pulumi" "^0.15.3-dev"
@@ -1663,7 +1663,7 @@ tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 
-tslint@^5.7.0:
+tslint@^5.11.0:
   version "5.11.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.11.0.tgz#98f30c02eae3cde7006201e4c33cb08b48581eed"
   dependencies:
