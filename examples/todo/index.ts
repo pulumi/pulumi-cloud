@@ -15,7 +15,7 @@
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
 import * as express from "express";
-
+import * as bodyParser from "body-parser";
 
 type AsyncRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
 
@@ -42,13 +42,13 @@ let server = new cloud.HttpServer("examples-todo", () => {
             res.status(500).json(err);
         }
     }));
-    app.post("/todo/:id", asyncMiddleware(async (req, res) => {
+    app.post("/todo/:id", bodyParser.urlencoded(), asyncMiddleware(async (req, res) => {
         console.log("POST /todo/" + req.params["id"]);
         try {
             await todos.insert({ id: req.params["id"], value: req.body.toString() });
             res.status(201).json({});
         } catch (err) {
-            res.status(500).json(err);
+            res.status(500).json({ err: err.toString(), req: require("json-cycle").stringify(req) });
         }
     }));
     app.get("/todo", asyncMiddleware(async (req, res) => {
