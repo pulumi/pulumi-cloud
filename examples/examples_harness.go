@@ -19,15 +19,15 @@ import (
 	// "encoding/hex"
 	// "encoding/json"
 	// "fmt"
-	// "io/ioutil"
-	// "net/http"
+	"io/ioutil"
+	"net/http"
 	// "os"
 	"path"
 	// "strings"
 	"testing"
 	// "time"
 
-	// "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 
 	// "github.com/pulumi/pulumi/pkg/operations"
 	// "github.com/pulumi/pulumi/pkg/resource"
@@ -66,6 +66,33 @@ func RunExamples(
 				"@pulumi/cloud-" + provider,
 			},
 		},
+		{
+			Dir: path.Join(examplesDir, "httpServer"),
+			Config: setConfigVars(map[string]string{
+				"cloud:provider": provider,
+			}),
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url1"].(string)
+				assert.True(t, ok, "expected a `url1` output string property")
+				testURLGet(t, baseURL, "test1.txt", "You got test1")
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Additive: true,
+					Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						baseURL, ok := stackInfo.Outputs["url2"].(string)
+						assert.True(t, ok, "expected a `url2` output string property")
+						testURLGet(t, baseURL, "test2.txt", "You got test2")
+					},
+				},
+			},
+		},
 	}
 
 	longExamples := []integration.ProgramTestOptions{}
@@ -88,4 +115,18 @@ func RunExamples(
 			integration.ProgramTest(t, &example)
 		})
 	}
+}
+
+func testURLGet(t *testing.T, baseURL string, path string, contents string) {
+	// Validate the GET /test1.txt endpoint
+	resp, err := http.Get(baseURL + path)
+	if !assert.NoError(t, err, "expected to be able to GET /"+path) {
+		return
+	}
+	contentType := resp.Header.Get("Content-Type")
+	assert.Equal(t, "text/html", contentType)
+	bytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
+	assert.Equal(t, contents, string(bytes))
 }
