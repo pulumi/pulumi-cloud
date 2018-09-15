@@ -18,7 +18,31 @@ import * as pulumi from "@pulumi/pulumi";
 let config = new pulumi.Config("timers:config");
 let message = config.require("message");
 
-cloud.timer.interval("examples-test-interval", { minutes: 1 }, async () => {
+cloud.timer.interval("examples-test-interval1", { minutes: 1 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval2", { minutes: 59 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval3", { minutes: 120 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval4", { minutes: 120, hours: 2 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval5", { days: 24 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval6", { days: 24, hours: 15, minutes: 15 }, async () => {
+    console.log(`test-interval[${Date.now()}]: ${message}`);
+});
+
+cloud.timer.interval("examples-test-interval7", { hours: 23, minutes: 59 }, async () => {
     console.log(`test-interval[${Date.now()}]: ${message}`);
 });
 

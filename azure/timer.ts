@@ -181,7 +181,7 @@ class Timer extends pulumi.ComponentResource {
         this.subscription = new subscription.EventSubscription<subscription.Context, any>(
             "cloud:timer:EventSubscription", name, [binding], {
                 ...shared.defaultSubscriptionArgs,
-                resourceGroup: shared.globalResourceGroup,
+
                 func: (context, data) => {
                     handler().then(() => context.done());
                 },
