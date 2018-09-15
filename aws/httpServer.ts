@@ -39,7 +39,11 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // funcion so that we can just run this code once and hook up to
         function entryPoint() {
             const requestListener = createRequestListener();
-            const server = serverlessExpress.createServer(requestListener);
+
+            // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
+            // treat all messages as binary and not reinterpret them.
+            const server = serverlessExpress.createServer(
+                requestListener, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
 
             return (event: apigateway.APIGatewayRequest, context: aws.serverless.Context) => {
                 serverlessExpress.proxy(server, event, <any>context);
