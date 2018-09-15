@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@^0.15.3-dev":
-  version "0.15.3-dev-1536914491-gb9c874c"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1536914491-gb9c874c.tgz#bf8fc13c45d12f218e185764238c79c5fca6ff2b"
+  version "0.15.3-dev-1537003732-g9636b09"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1537003732-g9636b09.tgz#68782a09192e54faff2693c57c68141b6d7755d4"
   dependencies:
     "@pulumi/azure" "^0.15.3-dev"
     "@pulumi/pulumi" "^0.15.3-dev"
@@ -56,37 +56,22 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1536914956-gca4e345"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1536914956-gca4e345.tgz#2aae5b8c12945d50245f72ae3778811d3ede6c5c"
+  version "0.15.3-dev-1537000169-gd099e85"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537000169-gd099e85.tgz#564fdcee7b180afcc029cb156a7d2f23280738b1"
   dependencies:
     "@pulumi/pulumi" "^0.15.3-dev"
 
-"@pulumi/docker@^0.15.1":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1.tgz#f8e2f2b0e9570f0b2e0e1490e35a58fd3a9bb973"
+"@pulumi/docker@^0.15.2-dev":
+  version "0.15.2-dev-1536934653-g6d71bb6"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2-dev-1536934653-g6d71bb6.tgz#3ac675418ba127c933f01ba28708ae799fc448dc"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.15.3-dev"
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.2.tgz#940dfc4b7d64597674fccf58d510d4870889a9e7"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
 "@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3-dev-1536897282-g792c316e"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536897282-g792c316e.tgz#9d8b437afea37c154004148692f9747f1b6e6d84"
+  version "0.15.3-dev-1536980346-gd67e0424"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536980346-gd67e0424.tgz#122e3f9b00b07f320b37f04845d5866a5c973f74"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -1678,7 +1663,7 @@ tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 
-tslint@^5.7.0:
+tslint@^5.11.0:
   version "5.11.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.11.0.tgz#98f30c02eae3cde7006201e4c33cb08b48581eed"
   dependencies:

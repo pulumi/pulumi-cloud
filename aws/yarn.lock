@@ -45,48 +45,33 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/aws-infra@^0.15.1":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.1.tgz#017d843e928023b5a2f62bcfe31d8d7f00729ec3"
+"@pulumi/aws-infra@^0.15.2-dev":
+  version "0.15.2-dev-1537003328-gae814e5"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537003328-gae814e5.tgz#1e41472219c6e3f929f9cf5d5df3ecd83b765568"
   dependencies:
-    "@pulumi/aws" "^0.15.1-rc"
-    "@pulumi/pulumi" "^0.15.1"
+    "@pulumi/aws" "^0.15.2-dev"
+    "@pulumi/pulumi" "^0.15.3-dev"
 
-"@pulumi/aws@^0.15.1", "@pulumi/aws@^0.15.1-rc":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.1.tgz#6c313b2ad082a956683c5cb0652e98ed41e581e7"
+"@pulumi/aws@^0.15.2-dev":
+  version "0.15.2-dev-1537000962-g395bf29"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537000962-g395bf29.tgz#9e0b7c1a2291faba16c1b883dd0820f0e4bc2a1f"
   dependencies:
-    "@pulumi/pulumi" "^0.15.1"
+    "@pulumi/pulumi" "^0.15.3-dev"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
-"@pulumi/docker@^0.15.1":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.1.tgz#f8e2f2b0e9570f0b2e0e1490e35a58fd3a9bb973"
+"@pulumi/docker@^0.15.2-dev":
+  version "0.15.2-dev-1536934653-g6d71bb6"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2-dev-1536934653-g6d71bb6.tgz#3ac675418ba127c933f01ba28708ae799fc448dc"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
+    "@pulumi/pulumi" "^0.15.3-dev"
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0", "@pulumi/pulumi@^0.15.1":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.2.tgz#940dfc4b7d64597674fccf58d510d4870889a9e7"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
 "@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3-dev-1536727776-g1b0780af"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536727776-g1b0780af.tgz#10df5293554840646e418eccb7c8e5f299688f44"
+  version "0.15.3-dev-1536980346-gd67e0424"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1536980346-gd67e0424.tgz#122e3f9b00b07f320b37f04845d5866a5c973f74"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -100,8 +85,8 @@
     typescript "^3.0.0"
 
 "@types/aws-lambda@*":
-  version "8.10.11"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.11.tgz#2c51a7dacb1abf880d35778aca68ed1075d0b300"
+  version "8.10.13"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.13.tgz#92cc06b1cc88b5d0b327d2671dcf3daea96923a5"
 
 "@types/aws-sdk@^2.7.0":
   version "2.7.0"
@@ -236,8 +221,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.313.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.313.0.tgz#3b125aaa5fa8cf5befefe6fcad96615d32d90df4"
+  version "2.315.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.315.0.tgz#7f393162af038cbef722374444a9bc9ae1bdbbe9"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -473,8 +458,8 @@ graceful-fs@^4.1.2:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
 grpc@^1.12.2:
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.14.2.tgz#046f88cccc5a23470f67d480e320ec28a2dc3893"
+  version "1.15.1"
+  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.15.1.tgz#046263d9b0c440c8e36fece03e227cb3afe28514"
   dependencies:
     lodash "^4.17.5"
     nan "^2.0.0"
@@ -584,8 +569,8 @@ lcid@^1.0.0:
     invert-kv "^1.0.0"
 
 lodash@^4.17.5:
-  version "4.17.10"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.10.tgz#1b7793cf7259ea38fb3661d4d38b3260af8ae4e7"
+  version "4.17.11"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
 
 long@^4.0.0:
   version "4.0.0"
@@ -1025,7 +1010,7 @@ tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 
-tslint@^5.7.0:
+tslint@^5.11.0:
   version "5.11.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.11.0.tgz#98f30c02eae3cde7006201e4c33cb08b48581eed"
   dependencies:
