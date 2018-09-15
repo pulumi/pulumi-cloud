@@ -33,7 +33,7 @@ let server = new cloud.HttpServer("examples-todo", () => {
     app.use("/", express.static("www"));
 
     // GET/POST todo handlers
-    app.get("/todo/{id}", authMiddleware, asyncMiddleware(async (req, res) => {
+    app.get("/todo/:id", authMiddleware, asyncMiddleware(async (req, res) => {
         console.log("GET /todo/" + req.params["id"]);
         try {
             let item = await todos.get({ id: req.params["id"] });
@@ -42,7 +42,7 @@ let server = new cloud.HttpServer("examples-todo", () => {
             res.status(500).json(err);
         }
     }));
-    app.post("/todo/{id}", asyncMiddleware(async (req, res) => {
+    app.post("/todo/:id", asyncMiddleware(async (req, res) => {
         console.log("POST /todo/" + req.params["id"]);
         try {
             await todos.insert({ id: req.params["id"], value: req.body.toString() });
