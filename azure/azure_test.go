@@ -80,51 +80,51 @@ func Test_Examples(t *testing.T) {
 	})
 
 	examples := []integration.ProgramTestOptions{
-	// {
-	// 	Dir:     path.Join(cwd, "./examples/bucket"),
-	// 	Config:  commonConfig,
-	// 	Secrets: secrets,
-	// 	Dependencies: []string{
-	// 		"@pulumi/cloud",
-	// 		"@pulumi/cloud-azure",
-	// 	},
-	// },
-	// {
-	// 	Dir:     path.Join(cwd, "./examples/table"),
-	// 	Config:  commonConfig,
-	// 	Secrets: secrets,
-	// 	Dependencies: []string{
-	// 		"@pulumi/cloud",
-	// 		"@pulumi/cloud-azure",
-	// 	},
-	// },
-	// {
-	// 	Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
-	// 	Config:  commonConfig,
-	// 	Secrets: secrets,
-	// 	Dependencies: []string{
-	// 		"@pulumi/cloud",
-	// 		"@pulumi/cloud-azure",
-	// 	},
-	// },
-	// {
-	// 	Dir:     path.Join(cwd, "./examples/containers"),
-	// 	Config:  commonConfig,
-	// 	Secrets: secrets,
-	// 	Dependencies: []string{
-	// 		"@pulumi/cloud",
-	// 		"@pulumi/cloud-azure",
-	// 	},
-	// },
-	// {
-	// 	Dir:     path.Join(cwd, "./examples/topic"),
-	// 	Config:  commonConfig,
-	// 	Secrets: secrets,
-	// 	Dependencies: []string{
-	// 		"@pulumi/cloud",
-	// 		"@pulumi/cloud-azure",
-	// 	},
-	// },
+		{
+			Dir:     path.Join(cwd, "./examples/bucket"),
+			Config:  commonConfig,
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/table"),
+			Config:  commonConfig,
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config:  commonConfig,
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/containers"),
+			Config:  commonConfig,
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
+		{
+			Dir:     path.Join(cwd, "./examples/topic"),
+			Config:  commonConfig,
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-azure",
+			},
+		},
 	}
 
 	longExamples := []integration.ProgramTestOptions{}

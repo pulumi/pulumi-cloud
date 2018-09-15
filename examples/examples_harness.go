@@ -44,55 +44,55 @@ func RunExamples(
 	setConfigVars func(config map[string]string) map[string]string) {
 
 	examples := []integration.ProgramTestOptions{
-		// {
-		// 	Dir: path.Join(examplesDir, "crawler"),
-		// 	Config: setConfigVars(map[string]string{
-		// 		"cloud:provider": provider,
-		// 	}),
-		// 	Secrets: secrets,
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-" + provider,
-		// 	},
-		// },
-		// {
-		// 	Dir: path.Join(examplesDir, "timers"),
-		// 	Config: setConfigVars(map[string]string{
-		// 		"cloud:provider": provider,
-		// 		"timers:message": "Hello, Pulumi Timers!",
-		// 	}),
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-" + provider,
-		// 	},
-		// },
-		// {
-		// 	Dir: path.Join(examplesDir, "httpServer"),
-		// 	Config: setConfigVars(map[string]string{
-		// 		"cloud:provider": provider,
-		// 	}),
-		// 	Secrets: secrets,
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-" + provider,
-		// 	},
-		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-		// 		baseURL, ok := stackInfo.Outputs["url1"].(string)
-		// 		assert.True(t, ok, "expected a `url1` output string property")
-		// 		testURLGet(t, baseURL, "test1.txt", "You got test1")
-		// 	},
-		// 	EditDirs: []integration.EditDir{
-		// 		{
-		// 			Additive: true,
-		// 			Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
-		// 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-		// 				baseURL, ok := stackInfo.Outputs["url2"].(string)
-		// 				assert.True(t, ok, "expected a `url2` output string property")
-		// 				testURLGet(t, baseURL, "test2.txt", "You got test2")
-		// 			},
-		// 		},
-		// 	},
-		// },
+		{
+			Dir: path.Join(examplesDir, "crawler"),
+			Config: setConfigVars(map[string]string{
+				"cloud:provider": provider,
+			}),
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+		},
+		{
+			Dir: path.Join(examplesDir, "timers"),
+			Config: setConfigVars(map[string]string{
+				"cloud:provider": provider,
+				"timers:message": "Hello, Pulumi Timers!",
+			}),
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+		},
+		{
+			Dir: path.Join(examplesDir, "httpServer"),
+			Config: setConfigVars(map[string]string{
+				"cloud:provider": provider,
+			}),
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url1"].(string)
+				assert.True(t, ok, "expected a `url1` output string property")
+				testURLGet(t, baseURL, "test1.txt", "You got test1")
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Additive: true,
+					Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						baseURL, ok := stackInfo.Outputs["url2"].(string)
+						assert.True(t, ok, "expected a `url2` output string property")
+						testURLGet(t, baseURL, "test2.txt", "You got test2")
+					},
+				},
+			},
+		},
 		{
 			Dir: path.Join(examplesDir, "todo"),
 			Config: setConfigVars(map[string]string{
