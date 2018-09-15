@@ -18,30 +18,75 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as shared from "./shared";
 
+const secondsInOneMinute = 60;
+const secondsInOneHour =  secondsInOneMinute * 60;
+
+const minutesInOneHour = 60;
+const minutesInOneDay = minutesInOneHour * 24;
+
+// yes, this is weird.  However, the 24 day interval is important to azure.  See comments below.
+const minutesIn24Days = 24 * minutesInOneDay;
+
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
 
-    if (options.days !== undefined) {
-        if (options.days !== 0) {
-            // Yes.  This is strange.  But it is how Azure interprets things:
-            // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
-            checkRange("options.days", options.days, 24, 100);
-        }
+    let minutes = 0;
+    if (options.minutes) {
+        minutes += options.minutes;
+    }
+    if (options.hours) {
+        minutes += options.hours * minutesInOneHour;
+    }
+    if (options.days) {
+        minutes += options.days * minutesInOneDay;
     }
 
-    if (options.minutes !== undefined) {
-        checkRange("options.minutes", options.minutes, 0, 60);
+    if (minutes < 1) {
+        throw new Error("Interval must be at least 1 minute");
     }
 
-    if (options.hours !== undefined) {
-        checkRange("options.hours", options.hours, 0, 24);
+    let timeSpan: string;
+    if (minutes >= minutesIn24Days) {
+        timeSpan = ConvertMinutesToDD_HH_MM(minutes);
     }
-
-    const timeSpan = options.days !== undefined
-        ? `${pad(options.days)}:${pad(options.hours)}:${pad(options.minutes)}`
-        : `${pad(options.hours)}:${pad(options.minutes)}:00`;
+    else if (minutes < minutesInOneDay) {
+        timeSpan = ConvertSecondsToHH_MM_SS(minutes * secondsInOneMinute);
+    }
+    else {
+        // Yes.  This is strange.  But it is how Azure interprets things:
+        // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
+        throw new Error("Azure only supports intervals less than 24 hours, or intervals greater than 24 days.");
+    }
 
     createScheduledEvent(name, timeSpan, handler, opts);
+}
+
+function ConvertMinutesToDD_HH_MM(minutes: number) {
+    // Ensure we're working with an integral number of minutes.  We're returning dd:hh:mm
+    // so we can't handle fractional minutes.
+    minutes = Math.floor(minutes);
+
+    const days = Math.floor(minutes / minutesInOneDay);
+    minutes = minutes % minutesInOneDay;
+
+    const hours = Math.floor(minutes / minutesInOneHour);
+    minutes = minutes % minutesInOneHour;
+
+    return `${pad(days)}:${pad(hours)}:${pad(minutes)}`;
+}
+
+function ConvertSecondsToHH_MM_SS(seconds: number) {
+    // Ensure we're working with an integral number of seconds.  We're returning hh:mm:ss
+    // so we can't handle fractional seconds.
+    seconds = Math.floor(seconds);
+
+    const hours = Math.floor(seconds / secondsInOneHour);
+    seconds = seconds % secondsInOneHour;
+
+    const minutes = Math.floor(seconds / secondsInOneMinute);
+    seconds = seconds % secondsInOneMinute;
+
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
 function pad(val: number | undefined): string {
@@ -54,20 +99,6 @@ function pad(val: number | undefined): string {
     }
 
     return val.toString();
-}
-
-function checkIntegral(name: string, val: number) {
-    if (!Number.isInteger(val)) {
-        throw new Error(`[${name}] must be an integer.`);
-    }
-}
-
-function checkRange(name: string, val: number, lowInclusive: number, highExclusive: number) {
-    checkIntegral(name, val);
-
-    if (val < lowInclusive || val >= highExclusive) {
-        throw new Error(`[${name}] must be in the range [${lowInclusive}, ${highExclusive}).`);
-    }
 }
 
 export function daily(name: string,
@@ -150,7 +181,7 @@ class Timer extends pulumi.ComponentResource {
         this.subscription = new subscription.EventSubscription<subscription.Context, any>(
             "cloud:timer:EventSubscription", name, [binding], {
                 ...shared.defaultSubscriptionArgs,
-                resourceGroup: shared.globalResourceGroup,
+
                 func: (context, data) => {
                     handler().then(() => context.done());
                 },

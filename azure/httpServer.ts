@@ -103,7 +103,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             "cloud:httpserver:EventSubscription", name, bindings, {
                 ...shared.defaultSubscriptionArgs,
                 factoryFunc,
-                resourceGroup: shared.globalResourceGroup,
             }, { parent: this });
 
         this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);

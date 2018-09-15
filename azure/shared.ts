@@ -140,7 +140,41 @@ function getOrCreateGlobalStorageAccount(): azure.storage.Account {
     }, { parent: getGlobalInfrastructureResource() });
 }
 
-export function makeSafeStorageAccountName(prefix: string) {
+let globalStorageContainer: azure.storage.Container;
+
+function getGlobalStorageContainer() {
+    if (!globalStorageContainer) {
+        globalStorageContainer = new azure.storage.Container("global", {
+            resourceGroupName: globalResourceGroupName,
+            storageAccountName: getGlobalStorageAccount().name,
+            containerAccessType: "private",
+        }, { parent: getGlobalInfrastructureResource() });
+    }
+
+    return globalStorageContainer;
+}
+
+let globalAppServicePlan: azure.appservice.Plan;
+
+function getGlobalAppServicePlan() {
+    if (!globalAppServicePlan) {
+        globalAppServicePlan = new azure.appservice.Plan("global", {
+            resourceGroupName: globalResourceGroupName,
+            location: location,
+
+            kind: "FunctionApp",
+
+            sku: {
+                tier: "Dynamic",
+                size: "Y1",
+            },
+        }, { parent: getGlobalInfrastructureResource() });
+    }
+
+    return globalAppServicePlan;
+}
+
+function makeSafeStorageAccountName(prefix: string) {
     return prefix.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 }
 
@@ -156,4 +190,9 @@ export function sha1hash(s: string): string {
 export const defaultSubscriptionArgs = {
     includePaths: config.functionIncludePaths,
     includePackages: config.functionIncludePackages,
+
+    resourceGroup: globalResourceGroup,
+    storageAccount: getGlobalStorageAccount(),
+    storageContainer: getGlobalStorageContainer(),
+    appServicePlan: getGlobalAppServicePlan(),
 };
