@@ -45,8 +45,9 @@ let server = new cloud.HttpServer("examples-todo", () => {
     app.post("/todo/:id", bodyParser.urlencoded(), asyncMiddleware(async (req, res) => {
         console.log("POST /todo/" + req.params["id"] + ":" + JSON.stringify(req.body) );
         try {
-            await todos.insert({ id: req.params["id"], value: Object.keys(req.body)[0] });
-            res.status(201).json({});
+            const val = { id: req.params["id"], value: Object.keys(req.body)[0] };
+            await todos.insert(val);
+            res.status(201).json(val);
         } catch (err) {
             res.status(500).json({ err: err.toString() });
         }
