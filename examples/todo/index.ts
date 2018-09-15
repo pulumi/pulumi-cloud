@@ -13,46 +13,56 @@
 // limitations under the License.
 
 import * as cloud from "@pulumi/cloud";
-import { Output } from "@pulumi/pulumi";
 import { authMiddleware } from "./middleware";
+import * as express from "express";
+
+
+type AsyncRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<void>;
+
+const asyncMiddleware = (fn: AsyncRequestHandler) =>
+    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
 
 let todos = new cloud.Table("examples-todo");
-// Note: Intentionally use the deprecated name for `cloud.API` to validate copmatibility.
-let api = new cloud.HttpEndpoint("examples-todo");  
+let server = new cloud.HttpServer("examples-todo", () => {
+    const app = express();
 
-// Serve all files in the 'www' folder under '/'
-// 'index.html' will be automatically served as '/' as well as '/index.html'.
-api.static("/", "www");
+    // Serve all files in the 'www' folder under '/'
+    // 'index.html' will be automatically served as '/' as well as '/index.html'.
+    app.use("/", express.static("www"));
 
-// GET/POST todo handlers
-api.get("/todo/{id}", authMiddleware, async (req, res) => {
-    console.log("GET /todo/" + req.params["id"]);
-    try {
-        let item = await todos.get({ id: req.params["id"] });
-        res.status(200).json(item.value);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-api.post("/todo/{id}", async (req, res) => {
-    console.log("POST /todo/" + req.params["id"]);
-    try {
-        await todos.insert({ id: req.params["id"], value: req.body.toString() });
-        res.status(201).json({});
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-api.get("/todo", async (req, res) => {
-    console.log("GET /todo");
-    try {
-        let items = await todos.scan();
-        res.status(200).json(items);
-    } catch (err) {
-        res.status(500).json(err);
-    }
+    // GET/POST todo handlers
+    app.get("/todo/{id}", authMiddleware, asyncMiddleware(async (req, res) => {
+        console.log("GET /todo/" + req.params["id"]);
+        try {
+            let item = await todos.get({ id: req.params["id"] });
+            res.status(200).json(item.value);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    }));
+    app.post("/todo/{id}", asyncMiddleware(async (req, res) => {
+        console.log("POST /todo/" + req.params["id"]);
+        try {
+            await todos.insert({ id: req.params["id"], value: req.body.toString() });
+            res.status(201).json({});
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    }));
+    app.get("/todo", asyncMiddleware(async (req, res) => {
+        console.log("GET /todo");
+        try {
+            let items = await todos.scan();
+            res.status(200).json(items);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    }));
+
+    return app;
 });
 
 // Publish
-export let url = api.publish().url;
-
+export let url = server.url;

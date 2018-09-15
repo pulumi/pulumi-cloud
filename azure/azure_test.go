@@ -117,15 +117,6 @@ func Test_Examples(t *testing.T) {
 			},
 		},
 		{
-			Dir:     path.Join(cwd, "./examples/express"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
-		{
 			Dir:     path.Join(cwd, "./examples/topic"),
 			Config:  commonConfig,
 			Secrets: secrets,
