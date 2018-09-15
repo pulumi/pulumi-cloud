@@ -153,7 +153,6 @@ func RunExamples(
 				// Validate the GET /todo endpoint
 				resp, err = http.Get(baseURL + "/todo/")
 				assert.NoError(t, err, "expected to be able to GET /todo")
-				assert.Equal(t, int64(-1), resp.ContentLength)
 				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
