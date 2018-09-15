@@ -15,7 +15,7 @@
 import * as cloud from "@pulumi/cloud";
 import * as express from "express";
 
-const api = new cloud.HttpServer("examples-test", () => {
+const server = new cloud.HttpServer("examples-test", () => {
     const app = express();
 
     app.get("/test2.txt", (req, res) => {
@@ -26,4 +26,4 @@ const api = new cloud.HttpServer("examples-test", () => {
     return app;
 });
 
-export let url2 = app.url;
+export let url2 = server.url;
