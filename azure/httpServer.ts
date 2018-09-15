@@ -212,7 +212,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
                 azureResponse.status = awsResponse.statusCode;
                 azureResponse.body = Buffer.from(
                     awsResponse.body,
-                    azureResponse.isRaw ? "base64" : "utf8");
+                    awsResponse.isBase64Encoded ? "base64" : "utf8");
                 azureResponse.isRaw = true;
 
                 // Merge any headers produced by the lib.
