@@ -27,4 +27,4 @@ const api = new cloud.HttpServer("examples-test", () => {
     return app;
 });
 
-export let url = app.url;
+export let url1 = app.url;

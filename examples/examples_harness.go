@@ -19,8 +19,8 @@ import (
 	// "encoding/hex"
 	// "encoding/json"
 	// "fmt"
-	// "io/ioutil"
-	// "net/http"
+	"io/ioutil"
+	"net/http"
 	// "os"
 	"path"
 	// "strings"
@@ -77,9 +77,19 @@ func RunExamples(
 				"@pulumi/cloud-" + provider,
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output string property")
+				baseURL, ok := stackInfo.Outputs["url1"].(string)
+				assert.True(t, ok, "expected a `url1` output string property")
 				testURLGet(t, baseURL, "test1.txt", "You got test1")
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: path.Join(examplesDir, "httpServer/variants/update1"),
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						baseURL, ok := stackInfo.Outputs["url2"].(string)
+						assert.True(t, ok, "expected a `url2` output string property")
+						testURLGet(t, baseURL, "test2.txt", "You got test2")
+					},
+				},
 			},
 		},
 	}
