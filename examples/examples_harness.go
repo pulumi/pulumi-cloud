@@ -83,7 +83,8 @@ func RunExamples(
 			},
 			EditDirs: []integration.EditDir{
 				{
-					Dir: path.Join(examplesDir, "httpServer/variants/update1"),
+					Additive: true,
+					Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
 					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 						baseURL, ok := stackInfo.Outputs["url2"].(string)
 						assert.True(t, ok, "expected a `url2` output string property")
