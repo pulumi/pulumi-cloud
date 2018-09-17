@@ -23,7 +23,7 @@ import (
 	"net/http"
 	// "os"
 	"path"
-	// "strings"
+	"strings"
 	"testing"
 	// "time"
 
@@ -91,6 +91,72 @@ func RunExamples(
 						testURLGet(t, baseURL, "test2.txt", "You got test2")
 					},
 				},
+			},
+		},
+		{
+			Dir: path.Join(examplesDir, "todo"),
+			Config: setConfigVars(map[string]string{
+				"cloud:provider":                              provider,
+				"cloud-" + provider + ":functionIncludePaths": "www",
+			}),
+			Secrets: secrets,
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-" + provider,
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				baseURL, ok := stackInfo.Outputs["url"].(string)
+				assert.True(t, ok, "expected a `url` output property of type string")
+
+				// Validate the GET / endpoint
+				resp, err := http.Get(baseURL)
+				assert.NoError(t, err, "expected to be able to GET /")
+				contentType := resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html; charset=UTF-8", contentType)
+				bytes, err := ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+
+				// Validate the GET /index.html endpoint
+				resp, err = http.Get(baseURL + "/index.html")
+				assert.NoError(t, err, "expected to be able to GET /index.html")
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "text/html; charset=UTF-8", contentType)
+				bytes, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+
+				// Validate the GET /favico.ico endpoint
+				resp, err = http.Get(baseURL + "/favicon.ico")
+				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
+				assert.Equal(t, int64(1150), resp.ContentLength)
+				contentType = resp.Header.Get("Content-Type")
+				assert.Equal(t, "image/x-icon", contentType)
+				t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
+
+				// Validate the POST /todo/{id} endpoint
+				resp, err = http.Post(baseURL+"/todo/abc",
+					"application/x-www-form-urlencoded", strings.NewReader("xyz"))
+				assert.NoError(t, err, "expected to be able to POST /todo/{id}")
+				assert.Equal(t, 201, resp.StatusCode)
+				t.Logf("POST %v [%v]: ...", baseURL+"/todo/abc", resp.StatusCode)
+
+				// Validate the GET /todo/{id} endpoint
+				resp, err = http.Get(baseURL + "/todo/abc")
+				assert.NoError(t, err, "expected to be able to GET /todo/{id}")
+				bytes, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				assert.Equal(t, 401, resp.StatusCode)
+				assert.Equal(t, "Authorization header required", string(bytes))
+				t.Logf("GET %v [%v]: %v", baseURL+"/todo/abc", resp.StatusCode, string(bytes))
+
+				// Validate the GET /todo endpoint
+				resp, err = http.Get(baseURL + "/todo/")
+				assert.NoError(t, err, "expected to be able to GET /todo")
+				bytes, err = ioutil.ReadAll(resp.Body)
+				assert.NoError(t, err)
+				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
+				assert.Equal(t, "[{\"id\":\"abc\",\"value\":\"xyz\"}]", string(bytes))
 			},
 		},
 	}

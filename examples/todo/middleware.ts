@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as cloud from "@pulumi/cloud";
+import * as express from "express";
 
-export let authMiddleware: cloud.RouteHandler = (req, res, next) => {
+export let authMiddleware: express.RequestHandler = (req, res, next) => {
     let auth = req.headers["authorization"];
     if (auth !== "Bearer SECRETPASSWORD") {
         res.status(401).end("Authorization header required");

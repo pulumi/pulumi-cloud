@@ -55,9 +55,7 @@ interface AWSResponse {
     statusCode: number;
     body: string;
     headers: Record<string, string>;
-
-    // Currently unused.  We may need to handle this to support binary data properly.
-    // isBase64Encoded?: boolean;
+    isBase64Encoded: boolean;
 }
 
 // This is the shape of the 'context' object that "aws-serverless-express" expects.  It does nothing
@@ -159,7 +157,11 @@ function createServer(createRequestListener: cloud.RequestListenerFactory) {
     // handler for all incoming messages.  When an incoming message (like /api/foo/bar) comes in, it
     // will first go to our /api handler.  This will then update the request to be /foo/bar and will
     // forward into the callers request handler.
-    const server = awsServerlessExpress.createServer(app);
+
+    // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
+    // treat all messages as binary and not reinterpret them.
+    const server = awsServerlessExpress.createServer(
+        app, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
     return server;
 }
 
@@ -200,7 +202,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
         };
 
         // Now create the context object to pass to the library.  The context is object is very
-        // simple.  We just listen for the 'succeed' call, and we then map the AWS reponse object
+        // simple.  We just listen for the 'succeed' call, and we then map the AWS response object
         // back to the form Azure wants.  As above, this is very simple and is effectively only name
         // changes.
         const awsContext: AWSContext = {
@@ -208,7 +210,9 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
                 // Copy values over.
                 const azureResponse = azureContext.res!;
                 azureResponse.status = awsResponse.statusCode;
-                azureResponse.body = awsResponse.body;
+                azureResponse.body = Buffer.from(
+                    awsResponse.body,
+                    awsResponse.isBase64Encoded ? "base64" : "utf8");
                 azureResponse.isRaw = true;
 
                 // Merge any headers produced by the lib.
