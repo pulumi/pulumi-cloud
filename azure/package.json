@@ -14,7 +14,7 @@
         "@pulumi/pulumi": "^0.15.3-dev",
         "@pulumi/azure": "^0.15.3-dev",
         "@pulumi/azure-serverless": "^0.15.3-dev",
-        "@pulumi/docker": "^0.15.1",
+        "@pulumi/docker": "^0.15.2-dev",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
         "azure-sb": "^0.10.6",
@@ -33,7 +33,7 @@
         "@types/azure-sb": "^0.0.32",
         "@types/express": "^4.16.0",
         "@types/aws-serverless-express": "^3.0.1",
-        "tslint": "^5.7.0",
+        "tslint": "^5.11.0",
         "typescript": "^3.0.3"
     },
     "peerDependencies": {
