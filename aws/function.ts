@@ -67,5 +67,9 @@ export class Function extends pulumi.ComponentResource {
         };
 
         this.lambda = new aws.lambda.CallbackFunction(name, args, { parent: this });
+
+        this.registerOutputs({
+            lambda: this.lambda,
+        });
     }
 }

@@ -41,6 +41,10 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
                 TopicArn: topicId.get(),
             }).promise();
         };
+
+        this.registerOutputs({
+            topic: this.topic,
+        });
     }
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
