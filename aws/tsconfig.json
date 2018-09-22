@@ -18,7 +18,6 @@
         "index.ts",
         "api.ts",
         "function.ts",
-        "sns.ts",
         "table.ts",
         "timer.ts",
         "topic.ts",
