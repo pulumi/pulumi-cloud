@@ -53,8 +53,8 @@
     "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev":
-  version "0.15.2-dev-1537639916-g62e912c"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537639916-g62e912c.tgz#b9b0cdebfd40b71ce539e784452e1bf9fe3a97de"
+  version "0.15.2-dev-1537656187-gab8f8b2"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537656187-gab8f8b2.tgz#6273a08ca31db04715653e2c88e579ab158944f6"
   dependencies:
     "@pulumi/pulumi" "^0.15.4-dev"
     builtin-modules "3.0.0"
@@ -85,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537556338-g2b610ce5"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537556338-g2b610ce5.tgz#e2e0dcf7d3c4ac761cad1e5577fb28fd294fdfa5"
+  version "0.15.4-dev-1537648471-ga977749b"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537648471-ga977749b.tgz#a5762e0281091d3a582e7483b859cb193baa0f4c"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
