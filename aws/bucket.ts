@@ -15,59 +15,8 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import { createFunction } from "./function";
-
-// See https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html.
-interface S3BucketNotificationEvent {
-    Records?: S3BucketNotificationEvent[];
-}
-
-interface S3BucketNotificationEvent {
-    eventVersion: string;
-    eventSource: string;
-    awsRegion: string;
-    eventTime: string;
-    eventName: string;
-    userIdentity: {
-        principalId: string;
-    };
-    requestParameters: {
-        sourceIPAddress: string;
-    };
-    responseElements: {
-        "x-amz-request-id": string;
-        "x-amz-id-2": string;
-    };
-    s3: {
-        s3SchemaVersion: string;
-        configurationId: string;
-        bucket: {
-            name: string;
-            ownerIdentity: {
-                principalId: string;
-            },
-            arn: string;
-        };
-        object: {
-            key: string;
-            size: number;
-            eTag: string;
-            versionId?: string;
-            sequencer: string;
-        };
-    };
-}
-
-interface Subscription {
-    events: string[];
-    filterPrefix?: string;
-    filterSuffix?: string;
-    lambdaFunctionArn: pulumi.Output<string>;
-    permission: aws.lambda.Permission;
-}
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
-    private subscriptions: Subscription[];
     public bucket: aws.s3.Bucket;
 
     public get: (key: string) => Promise<Buffer>;
@@ -76,7 +25,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:bucket:Bucket", name, {}, opts);
-        this.subscriptions = [];
 
         // If `protect` is true, we will prevent the bucket from being destroyed
         //
@@ -96,25 +44,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             // built-in `forceDestroy`. This means that by default, the bucket and all its contents can be deleted.
             forceDestroy: true,
         }, { parent: this, protect: preventDestroy });
-
-        // Create the bucket notification resource if needed once before process exit.
-        process.on("beforeExit", () => {
-            if (this.subscriptions.length > 0 ) {
-                const dependsOn = this.subscriptions.map(s => s.permission);
-                const _ = new aws.s3.BucketNotification(name, {
-                    bucket: this.bucket.id,
-                    lambdaFunctions: this.subscriptions.map(subscription => ({
-                        events: subscription.events,
-                        filterPrefix: subscription.filterPrefix,
-                        filterSuffix: subscription.filterSuffix,
-                        lambdaFunctionArn: subscription.lambdaFunctionArn,
-                    })),
-                }, { parent: this, dependsOn: dependsOn });
-                // Since we are generating more work on the event loop, we will casue `beforeExit` to be invoked again.
-                // Make sure to clear out eh pending subscrpitions array so that we don't try to apply them again.
-                this.subscriptions = [];
-            }
-        });
 
         const bucketName = this.bucket.id;
 
@@ -160,53 +89,33 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     }
 
     public addHandler(name: string, handler: cloud.BucketHandler, events: string[], filter?: cloud.BucketFilter) {
-
-        // Create the Lambda function to handle the event.
-        const f = createFunction(name, eventHandler, { parent: this });
-
-        // Give S3 permission to invoke the function.
-        const permission = new aws.lambda.Permission(name, {
-            function: f.lambda,
-            action: "lambda:InvokeFunction",
-            principal: "s3.amazonaws.com",
-            sourceArn: this.bucket.id.apply(bucketName => `arn:aws:s3:::${bucketName}`),
-        }, { parent: this });
-
-        // We must create only a single BucketNotification per Bucket per AWS API limitations.  See
-        // https://github.com/terraform-providers/terraform-provider-aws/issues/1715.  So we push the subscription
-        // information here, and then actually create the BucketNotification if needed on process `beforeExit`.
-        this.subscriptions.push({
-            events: events,
-            filterPrefix: filter && filter.keyPrefix,
-            filterSuffix: filter && filter.keySuffix,
-            lambdaFunctionArn: f.lambda.arn,
-            permission: permission,
-        });
-
-        function eventHandler(
-            event: S3BucketNotificationEvent,
-            context: aws.serverless.Context,
-            callback: (error: any, result: any) => void) {
-
-            const records = event.Records || [];
+        // Create the wrapper function that will convert from raw AWS S3 events to the form
+        // cloud.BucketHandler expects.
+        const eventHandler: aws.s3.BucketEventHandler = (ev, context, callback) => {
+            const records = ev.Records || [];
 
             const promises: Promise<void>[] = [];
             for (const record of records) {
-                // Construct an event arguments object.
-                const args: cloud.BucketHandlerArgs = {
+                // Construct an event arguments object and call the user handler.
+                promises.push(handler({
                     key: record.s3.object.key,
                     size: record.s3.object.size,
                     eventTime: record.eventTime,
-                };
-                // Call the user handler.
-                const promise = handler(args);
-                promises.push(promise);
+                }));
             }
 
             // Combine the results of all user handlers, and invoke the Lambda callback with results.
-            Promise.all(promises)
-            .then(() => callback(undefined, undefined))
-            .catch(err => callback(err, undefined));
-        }
+            Promise.all(promises).then(
+                _ => callback(undefined, undefined),
+                err => callback(err, undefined));
+        };
+
+        // Register for the raw s3 events from the bucket.
+        filter = filter || {};
+        this.bucket.onEvent(name, eventHandler, {
+            events: events,
+            filterPrefix: filter.keyPrefix,
+            filterSuffix: filter.keySuffix,
+        }, { parent: this });
     }
 }
