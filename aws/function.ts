@@ -17,8 +17,6 @@ import * as pulumi from "@pulumi/pulumi";
 import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
-export { Context, Handler } from "@pulumi/aws/serverless";
-
 export function createFunction(
         name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
     return new Function(name, handler, /*isFactoryFunction*/ false, opts);

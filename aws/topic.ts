@@ -44,12 +44,14 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
     }
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
+        const subscriptionName = this.name + "_" + name;
+
         const eventHandler: aws.sns.TopicEventHandler = (ev, context, callback) => {
             Promise.all(ev.Records.map(async (record) => {
                 await handler(JSON.parse(record.Sns.Message));
             })).then(() => callback(undefined, undefined), err => callback(err, undefined));
         };
 
-        this.topic.onEvent(name, eventHandler, {}, { parent: this });
+        this.topic.onEvent(subscriptionName, eventHandler, {}, { parent: this });
     }
 }
