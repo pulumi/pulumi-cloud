@@ -23,7 +23,7 @@ countDown.subscribe("watcher", async (num) => {
     }
 });
 
-pulumi.timer.interval("examples-heartbeat", {minutes: 5}, async () => {
+pulumi.timer.interval("examples-heartbeat", {minutes: 3}, async () => {
     await countDown.publish(25);
 });
 

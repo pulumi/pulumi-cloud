@@ -63,7 +63,7 @@ export class Function extends pulumi.ComponentResource {
             memorySize: functionMemorySize,
             includePaths: functionIncludePaths,
             includePackages: functionIncludePackages,
-            func: isFactoryFunction ? undefined : handler,
+            func: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
             factoryFunc: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
         };
 

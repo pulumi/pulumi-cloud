@@ -46,32 +46,32 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/aws-infra@^0.15.2-dev":
-  version "0.15.2-dev-1537004343-g9bdc327"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537004343-g9bdc327.tgz#ddcbecb6b214d1ae734ac9db48a744f9a5251f1e"
+  version "0.15.2-dev-1537646386-ge17c90a"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537646386-ge17c90a.tgz#46cbbef672caaf10249f1aa3e2d5ce968bde7b80"
   dependencies:
     "@pulumi/aws" "^0.15.2-dev"
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev":
-  version "0.15.2-dev-1537066737-gf3fdddb"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537066737-gf3fdddb.tgz#9434795ed15cbe37ecfa9fb621864b53456dcf13"
+  version "0.15.2-dev-1537656187-gab8f8b2"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537656187-gab8f8b2.tgz#6273a08ca31db04715653e2c88e579ab158944f6"
   dependencies:
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/pulumi" "^0.15.4-dev"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
 "@pulumi/docker@^0.15.2-dev":
-  version "0.15.2-dev-1536934653-g6d71bb6"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2-dev-1536934653-g6d71bb6.tgz#3ac675418ba127c933f01ba28708ae799fc448dc"
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2.tgz#60e0fc9c7f677e156cb147e66e89a82b8df4d77d"
   dependencies:
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/pulumi" "^0.15.0"
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3-dev-1537206611-gb98c5bb0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1537206611-gb98c5bb0.tgz#4a6debb34df9dada3b8d2d0d68ba73a8e0b50bc7"
+"@pulumi/pulumi@^0.15.0":
+  version "0.15.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3.tgz#2a4ee8f1270384b722fc6b18e5f98a3fa82a5619"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -85,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537556338-g2b610ce5"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537556338-g2b610ce5.tgz#e2e0dcf7d3c4ac761cad1e5577fb28fd294fdfa5"
+  version "0.15.4-dev-1537648471-ga977749b"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537648471-ga977749b.tgz#a5762e0281091d3a582e7483b859cb193baa0f4c"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -110,8 +110,8 @@
     aws-sdk "*"
 
 "@types/aws-serverless-express@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@types/aws-serverless-express/-/aws-serverless-express-3.0.1.tgz#ea29611d71370ecf3ca59a90d606af55da9abf01"
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@types/aws-serverless-express/-/aws-serverless-express-3.3.0.tgz#bd38ff4148a39ca1824def185655cae9695de9ba"
   dependencies:
     "@types/aws-lambda" "*"
     "@types/express" "*"
@@ -159,12 +159,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.10.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.1.tgz#d5c96ca246a418404914d180b7fdd625ad18eca6"
+  version "10.10.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.3.tgz#09c75a4ad84d6a3d286790bdd9489a4f8ee9906c"
 
 "@types/node@^8.0.26":
-  version "8.10.29"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.29.tgz#b3a13b58dd7b0682bf1b42022bef4a5a9718f687"
+  version "8.10.30"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.30.tgz#2c82cbed5f79d72280c131d2acffa88fbd8dd353"
 
 "@types/range-parser@*":
   version "1.2.2"
@@ -236,8 +236,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.315.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.315.0.tgz#7f393162af038cbef722374444a9bc9ae1bdbbe9"
+  version "2.320.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.320.0.tgz#8089976be31e170771652f62b6796aab5dd9d7b4"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -540,7 +540,7 @@ invert-kv@^1.0.0:
 
 is-builtin-module@^1.0.0:
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/is-builtin-module/-/is-builtin-module-1.0.0.tgz#540572d34f7ac3119f8f76c30cbc1b1e037affbe"
+  resolved "http://registry.npmjs.org/is-builtin-module/-/is-builtin-module-1.0.0.tgz#540572d34f7ac3119f8f76c30cbc1b1e037affbe"
   dependencies:
     builtin-modules "^1.0.0"
 
@@ -659,8 +659,8 @@ nan@^2.0.0:
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.11.0.tgz#574e360e4d954ab16966ec102c0c049fd961a099"
 
 needle@^2.2.1:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.3.tgz#c1b04da378cd634d8befe2de965dc2cfb0fd65ca"
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.4.tgz#51931bff82533b1928b7d1d69e01f1b00ffd2a4e"
   dependencies:
     debug "^2.1.2"
     iconv-lite "^0.4.4"
