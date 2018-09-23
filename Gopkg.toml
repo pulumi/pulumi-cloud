@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/pulumi/pulumi"
-  version = "v0.15.1"
+  revision = "e498cab2390aa24546fbc3d7950c4800b0ba3e5d"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
