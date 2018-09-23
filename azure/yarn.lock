@@ -56,22 +56,22 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1537193512-g0d5f6ab"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537193512-g0d5f6ab.tgz#7fb6724a8b060e801d974ab3a8c7860e76a1dcab"
+  version "0.15.3-dev-1537401066-gb1e466f"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537401066-gb1e466f.tgz#8d4cf2c8508a68c35d37d10927724f6af908e88c"
   dependencies:
     "@pulumi/pulumi" "^0.15.3-dev"
 
 "@pulumi/docker@^0.15.2-dev":
-  version "0.15.2-dev-1536934653-g6d71bb6"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2-dev-1536934653-g6d71bb6.tgz#3ac675418ba127c933f01ba28708ae799fc448dc"
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2.tgz#60e0fc9c7f677e156cb147e66e89a82b8df4d77d"
   dependencies:
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/pulumi" "^0.15.0"
     mime "^2.0.3"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3-dev-1537206611-gb98c5bb0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3-dev-1537206611-gb98c5bb0.tgz#4a6debb34df9dada3b8d2d0d68ba73a8e0b50bc7"
+"@pulumi/pulumi@^0.15.0", "@pulumi/pulumi@^0.15.3-dev":
+  version "0.15.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3.tgz#2a4ee8f1270384b722fc6b18e5f98a3fa82a5619"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -85,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537556338-g2b610ce5"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537556338-g2b610ce5.tgz#e2e0dcf7d3c4ac761cad1e5577fb28fd294fdfa5"
+  version "0.15.4-dev-1537681489-ge498cab2"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537681489-ge498cab2.tgz#088e3c3d3ef02bfc7efe64e991234d989461b8dc"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -104,8 +104,8 @@
   resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.13.tgz#92cc06b1cc88b5d0b327d2671dcf3daea96923a5"
 
 "@types/aws-serverless-express@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@types/aws-serverless-express/-/aws-serverless-express-3.0.1.tgz#ea29611d71370ecf3ca59a90d606af55da9abf01"
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@types/aws-serverless-express/-/aws-serverless-express-3.3.0.tgz#bd38ff4148a39ca1824def185655cae9695de9ba"
   dependencies:
     "@types/aws-lambda" "*"
     "@types/express" "*"
@@ -159,12 +159,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.10.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.1.tgz#d5c96ca246a418404914d180b7fdd625ad18eca6"
+  version "10.10.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.3.tgz#09c75a4ad84d6a3d286790bdd9489a4f8ee9906c"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
-  version "8.10.29"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.29.tgz#b3a13b58dd7b0682bf1b42022bef4a5a9718f687"
+  version "8.10.30"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.30.tgz#2c82cbed5f79d72280c131d2acffa88fbd8dd353"
 
 "@types/range-parser@*":
   version "1.2.2"
@@ -497,9 +497,15 @@ colour@~0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/colour/-/colour-0.7.1.tgz#9cb169917ec5d12c0736d3e8685746df1cadf778"
 
-combined-stream@1.0.6, combined-stream@~1.0.6:
+combined-stream@1.0.6:
   version "1.0.6"
-  resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.6.tgz#723e7df6e801ac5613113a7e445a9b69cb632818"
+  resolved "http://registry.npmjs.org/combined-stream/-/combined-stream-1.0.6.tgz#723e7df6e801ac5613113a7e445a9b69cb632818"
+  dependencies:
+    delayed-stream "~1.0.0"
+
+combined-stream@~1.0.6:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.7.tgz#2d1d24317afb8abe95d6d2c0b07b57813539d828"
   dependencies:
     delayed-stream "~1.0.0"
 
@@ -906,7 +912,7 @@ is-buffer@^1.1.6:
 
 is-builtin-module@^1.0.0:
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/is-builtin-module/-/is-builtin-module-1.0.0.tgz#540572d34f7ac3119f8f76c30cbc1b1e037affbe"
+  resolved "http://registry.npmjs.org/is-builtin-module/-/is-builtin-module-1.0.0.tgz#540572d34f7ac3119f8f76c30cbc1b1e037affbe"
   dependencies:
     builtin-modules "^1.0.0"
 
@@ -1133,8 +1139,8 @@ nan@^2.0.0:
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.11.0.tgz#574e360e4d954ab16966ec102c0c049fd961a099"
 
 needle@^2.2.1:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.3.tgz#c1b04da378cd634d8befe2de965dc2cfb0fd65ca"
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.4.tgz#51931bff82533b1928b7d1d69e01f1b00ffd2a4e"
   dependencies:
     debug "^2.1.2"
     iconv-lite "^0.4.4"

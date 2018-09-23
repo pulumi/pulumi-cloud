@@ -85,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537648471-ga977749b"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537648471-ga977749b.tgz#a5762e0281091d3a582e7483b859cb193baa0f4c"
+  version "0.15.4-dev-1537681489-ge498cab2"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537681489-ge498cab2.tgz#088e3c3d3ef02bfc7efe64e991234d989461b8dc"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
