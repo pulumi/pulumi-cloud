@@ -53,40 +53,24 @@
     "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev":
-  version "0.15.2-dev-1537656187-gab8f8b2"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537656187-gab8f8b2.tgz#6273a08ca31db04715653e2c88e579ab158944f6"
+  version "0.15.2-dev-1537685947-ge366126"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537685947-ge366126.tgz#878a60df8e9cb1f7c1fee7f13920fdf2e71d7aeb"
   dependencies:
     "@pulumi/pulumi" "^0.15.4-dev"
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
-"@pulumi/docker@^0.15.2-dev":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2.tgz#60e0fc9c7f677e156cb147e66e89a82b8df4d77d"
+"@pulumi/docker@^0.15.3-dev":
+  version "0.15.3-dev-1537838981-ga9bd46b"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537838981-ga9bd46b.tgz#8c5e0fe74646d4182796eba6492c137791553ff5"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
-    mime "^2.0.3"
+    "@pulumi/pulumi" "^0.15.4-dev"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0":
-  version "0.15.3"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3.tgz#2a4ee8f1270384b722fc6b18e5f98a3fa82a5619"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537648471-ga977749b"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537648471-ga977749b.tgz#a5762e0281091d3a582e7483b859cb193baa0f4c"
+  version "0.15.4-dev-1537833555-gd51e04f5"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537833555-gd51e04f5.tgz#3849f431823e82dd954f7d87fcc8b143c6853ed4"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -159,8 +143,8 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.10.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.3.tgz#09c75a4ad84d6a3d286790bdd9489a4f8ee9906c"
+  version "10.11.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.0.tgz#ddd0d67a3b6c3810dd1a59e36675fa82de5e19ae"
 
 "@types/node@^8.0.26":
   version "8.10.30"
@@ -236,8 +220,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.320.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.320.0.tgz#8089976be31e170771652f62b6796aab5dd9d7b4"
+  version "2.321.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.321.0.tgz#9661db58f2d01e20722691efb6e33114ee8739c1"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
