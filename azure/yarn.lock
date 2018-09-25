@@ -56,8 +56,8 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1537401066-gb1e466f"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537401066-gb1e466f.tgz#8d4cf2c8508a68c35d37d10927724f6af908e88c"
+  version "0.15.3-dev-1537864175-g4459083"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537864175-g4459083.tgz#c6195bdd7c7703e129f06daad7f4c5130d224056"
   dependencies:
     "@pulumi/pulumi" "^0.15.3-dev"
 
