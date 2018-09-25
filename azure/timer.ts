@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as subscription from "@pulumi/azure-serverless/subscription";
+import * as appservice from "@pulumi/azure/appservice";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
@@ -58,7 +59,7 @@ export function interval(name: string, options: timer.IntervalRate, handler: tim
         throw new Error("Azure only supports intervals less than 24 hours, or intervals greater than 24 days.");
     }
 
-    createScheduledEvent(name, timeSpan, handler, opts);
+    const t = new Timer(name, timeSpan, /*isTimeSpan:*/ true, handler, opts);
 }
 
 function ConvertMinutesToDD_HH_MM(minutes: number) {
@@ -148,12 +149,7 @@ export function hourly(name: string,
 
 export function cron(name: string, cronTab: string, handler: timer.Action,
                      opts?: pulumi.ResourceOptions): void {
-    createScheduledEvent(name, cronTab, handler, opts);
-}
-
-function createScheduledEvent(name: string, scheduleExpression: string, handler: timer.Action,
-                              opts?: pulumi.ResourceOptions): void {
-    const t = new Timer(name, scheduleExpression, handler, opts);
+    const t = new Timer(name, cronTab, /*isTimeSpan:*/ false, handler, opts);
 }
 
 interface TimerBinder extends subscription.Binding {
@@ -166,7 +162,8 @@ interface TimerBinder extends subscription.Binding {
 class Timer extends pulumi.ComponentResource {
     public readonly subscription: subscription.EventSubscription<subscription.Context, any>;
 
-    constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
+    constructor(name: string, scheduleExpression: string, isTimeSpan: boolean,
+                handler: timer.Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, {
             scheduleExpression: scheduleExpression,
         }, opts);
@@ -178,9 +175,37 @@ class Timer extends pulumi.ComponentResource {
             direction: "in",
         };
 
+        let appServicePlanId = shared.defaultSubscriptionArgs.appServicePlanId;
+        let siteConfig: subscription.EventSubscriptionArgs<subscription.Context, any>["siteConfig"] | undefined;
+
+        if (isTimeSpan) {
+            // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
+            // Timespan are only supported under non-consumption plans.
+            const plan = new appservice.Plan(name, {
+                resourceGroupName: shared.defaultSubscriptionArgs.resourceGroupName,
+                location: shared.defaultSubscriptionArgs.location,
+
+                kind: "App",
+
+                sku: {
+                    tier: "Standard",
+                    size: "S1",
+                },
+            }, { parent: this });
+            appServicePlanId = plan.id;
+
+            // https://github.com/Azure/azure-functions-host/wiki/Investigating-and-reporting-issues-with-timer-triggered-functions-not-firing
+            // For a timer, the FunctionApp must be 'always on' to work.
+            siteConfig = {
+                alwaysOn: true,
+            };
+        }
+
         this.subscription = new subscription.EventSubscription<subscription.Context, any>(
             "cloud:timer:EventSubscription", name, [binding], {
                 ...shared.defaultSubscriptionArgs,
+                appServicePlanId: appServicePlanId,
+                siteConfig: siteConfig,
 
                 func: (context, data) => {
                     handler().then(() => context.done());
