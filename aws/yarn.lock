@@ -53,8 +53,8 @@
     "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev":
-  version "0.15.2-dev-1537685947-ge366126"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537685947-ge366126.tgz#878a60df8e9cb1f7c1fee7f13920fdf2e71d7aeb"
+  version "0.15.2-dev-1537864160-g37e1f2c"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537864160-g37e1f2c.tgz#398c8c403c80b9cb45af126739825b7a91a76167"
   dependencies:
     "@pulumi/pulumi" "^0.15.4-dev"
     builtin-modules "3.0.0"
