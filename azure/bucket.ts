@@ -96,7 +96,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.onPut = async (putName, handler, filter) => {
-            const resourceGroup = shared.globalResourceGroup;
             filter = filter || {};
             serverless.storage.onBlobEvent(putName, storageAccount, {
                     ...shared.defaultSubscriptionArgs,
@@ -109,7 +108,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                     },
                     storageAccount: storageAccount,
                     containerName: container.name,
-                    resourceGroup: resourceGroup,
                     filterPrefix: filter.keyPrefix,
                     filterSuffix: filter.keySuffix,
                 },

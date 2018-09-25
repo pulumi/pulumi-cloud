@@ -191,8 +191,9 @@ export const defaultSubscriptionArgs = {
     includePaths: config.functionIncludePaths,
     includePackages: config.functionIncludePackages,
 
-    resourceGroup: globalResourceGroup,
+    resourceGroupName: globalResourceGroupName,
+    location: location,
     storageAccount: getGlobalStorageAccount(),
     storageContainer: getGlobalStorageContainer(),
-    appServicePlan: getGlobalAppServicePlan(),
+    appServicePlanId: getGlobalAppServicePlan().id,
 };
