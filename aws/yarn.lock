@@ -45,32 +45,32 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/aws-infra@^0.15.2-dev":
+"@pulumi/aws-infra@dev":
   version "0.15.2-dev-1537646386-ge17c90a"
   resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537646386-ge17c90a.tgz#46cbbef672caaf10249f1aa3e2d5ce968bde7b80"
   dependencies:
     "@pulumi/aws" "^0.15.2-dev"
     "@pulumi/pulumi" "^0.15.4-dev"
 
-"@pulumi/aws@^0.15.2-dev":
-  version "0.15.2-dev-1537864160-g37e1f2c"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537864160-g37e1f2c.tgz#398c8c403c80b9cb45af126739825b7a91a76167"
+"@pulumi/aws@^0.15.2-dev", "@pulumi/aws@dev":
+  version "0.15.2-dev-1537910355-g327c12d"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1537910355-g327c12d.tgz#e1c9c4301d5093f5188526c4b6f9e592cf6bb5c4"
   dependencies:
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/pulumi" dev
     builtin-modules "3.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
-"@pulumi/docker@^0.15.3-dev":
+"@pulumi/docker@dev":
   version "0.15.3-dev-1537850514-g9d22095"
   resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537850514-g9d22095.tgz#9857ca02398f4f4d2ba8d2186ac437018aefa05f"
   dependencies:
     "@pulumi/pulumi" "^0.15.4-dev"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537844791-g431f5b34"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537844791-g431f5b34.tgz#2c3d79515be81ab910f817376d32e8db83783cd3"
+"@pulumi/pulumi@^0.15.4-dev", "@pulumi/pulumi@dev":
+  version "0.15.4-dev-1537898302-g5d34e380"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537898302-g5d34e380.tgz#73e5507aa352d15602f3269c60aa1894f1d690e9"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -220,8 +220,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.321.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.321.0.tgz#9661db58f2d01e20722691efb6e33114ee8739c1"
+  version "2.322.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.322.0.tgz#d9245cbdab6134bc5967644fea85daa32fd03632"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
