@@ -45,48 +45,32 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/azure-serverless@^0.15.3-dev":
-  version "0.15.3-dev-1537214225-g454f356"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1537214225-g454f356.tgz#6e925c09700593042c95ff106a709385b16e63fa"
+"@pulumi/azure-serverless@dev":
+  version "0.15.3-dev-1537906675-g86ec877"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1537906675-g86ec877.tgz#c7716305550cc3919604e7cdae2f013b8d7d41b1"
   dependencies:
-    "@pulumi/azure" "^0.15.3-dev"
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/azure" dev
+    "@pulumi/pulumi" dev
     azure-functions-ts-essentials "^1.3.2"
     azure-storage "^2.10.1"
     read-package-tree "^5.2.1"
 
-"@pulumi/azure@^0.15.3-dev":
-  version "0.15.3-dev-1537401066-gb1e466f"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537401066-gb1e466f.tgz#8d4cf2c8508a68c35d37d10927724f6af908e88c"
+"@pulumi/azure@dev":
+  version "0.15.3-dev-1537908686-g0002f10"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1537908686-g0002f10.tgz#6db589a767e60a4bb0db67277d9cb1b5fe63287e"
   dependencies:
-    "@pulumi/pulumi" "^0.15.3-dev"
+    "@pulumi/pulumi" dev
 
-"@pulumi/docker@^0.15.2-dev":
-  version "0.15.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.2.tgz#60e0fc9c7f677e156cb147e66e89a82b8df4d77d"
+"@pulumi/docker@dev":
+  version "0.15.3-dev-1537850514-g9d22095"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537850514-g9d22095.tgz#9857ca02398f4f4d2ba8d2186ac437018aefa05f"
   dependencies:
-    "@pulumi/pulumi" "^0.15.0"
-    mime "^2.0.3"
+    "@pulumi/pulumi" "^0.15.4-dev"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.0", "@pulumi/pulumi@^0.15.3-dev":
-  version "0.15.3"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.3.tgz#2a4ee8f1270384b722fc6b18e5f98a3fa82a5619"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
-"@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537681489-ge498cab2"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537681489-ge498cab2.tgz#088e3c3d3ef02bfc7efe64e991234d989461b8dc"
+"@pulumi/pulumi@^0.15.4-dev", "@pulumi/pulumi@dev":
+  version "0.15.4-dev-1537898302-g5d34e380"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537898302-g5d34e380.tgz#73e5507aa352d15602f3269c60aa1894f1d690e9"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -159,8 +143,8 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.10.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.10.3.tgz#09c75a4ad84d6a3d286790bdd9489a4f8ee9906c"
+  version "10.11.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.0.tgz#ddd0d67a3b6c3810dd1a59e36675fa82de5e19ae"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
   version "8.10.30"
