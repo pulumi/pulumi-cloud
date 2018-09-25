@@ -22,39 +22,39 @@ cloud.timer.interval("examples-test-interval1", { minutes: 1 }, async () => {
     console.log(`test-interval[${Date.now()}]: ${message}`);
 });
 
-cloud.timer.interval("examples-test-interval2", { minutes: 59 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval2", { minutes: 59 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.interval("examples-test-interval3", { minutes: 120 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval3", { minutes: 120 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.interval("examples-test-interval4", { minutes: 120, hours: 2 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval4", { minutes: 120, hours: 2 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.interval("examples-test-interval5", { days: 24 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval5", { days: 24 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.interval("examples-test-interval6", { days: 24, hours: 15, minutes: 15 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval6", { days: 24, hours: 15, minutes: 15 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.interval("examples-test-interval7", { hours: 23, minutes: 59 }, async () => {
-    console.log(`test-interval[${Date.now()}]: ${message}`);
-});
+// cloud.timer.interval("examples-test-interval7", { hours: 23, minutes: 59 }, async () => {
+//     console.log(`test-interval[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.cron("examples-test-cron", "* * * * ? *", async () => {
-    console.log(`test-cron[${Date.now()}]: ${message}`);
-});
+// cloud.timer.cron("examples-test-cron", "* * * * ? *", async () => {
+//     console.log(`test-cron[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.daily("examples-test-daily", { hourUTC: 7, minuteUTC: 30 }, async () => {
-    console.log(`test-daily[${Date.now()}]: ${message}`);
-});
+// cloud.timer.daily("examples-test-daily", { hourUTC: 7, minuteUTC: 30 }, async () => {
+//     console.log(`test-daily[${Date.now()}]: ${message}`);
+// });
 
-cloud.timer.hourly("examples-test-hourly", { minuteUTC: 45 }, async () => {
-    console.log(`test-hourly[${Date.now()}]: ${message}`);
-});
+// cloud.timer.hourly("examples-test-hourly", { minuteUTC: 45 }, async () => {
+//     console.log(`test-hourly[${Date.now()}]: ${message}`);
+// });
 
