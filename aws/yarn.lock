@@ -62,15 +62,15 @@
     resolve "^1.7.1"
 
 "@pulumi/docker@^0.15.3-dev":
-  version "0.15.3-dev-1537838981-ga9bd46b"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537838981-ga9bd46b.tgz#8c5e0fe74646d4182796eba6492c137791553ff5"
+  version "0.15.3-dev-1537850514-g9d22095"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537850514-g9d22095.tgz#9857ca02398f4f4d2ba8d2186ac437018aefa05f"
   dependencies:
     "@pulumi/pulumi" "^0.15.4-dev"
     semver "^5.4.0"
 
 "@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4-dev-1537833555-gd51e04f5"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537833555-gd51e04f5.tgz#3849f431823e82dd954f7d87fcc8b143c6853ed4"
+  version "0.15.4-dev-1537844791-g431f5b34"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4-dev-1537844791-g431f5b34.tgz#2c3d79515be81ab910f817376d32e8db83783cd3"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
