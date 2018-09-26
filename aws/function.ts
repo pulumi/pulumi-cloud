@@ -13,12 +13,9 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import * as awsinfra from "@pulumi/aws-infra";
 import * as pulumi from "@pulumi/pulumi";
 import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
-
-export { Context, Handler } from "@pulumi/aws/serverless";
 
 export function createFunction(
         name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
@@ -57,16 +54,22 @@ export class Function extends pulumi.ComponentResource {
         }
 
         // First allocate a function.
-        const options: aws.serverless.FunctionOptions = {
+        const args: aws.lambda.CallbackFunctionArgs<any, any> = {
             policies,
             vpcConfig,
             memorySize: functionMemorySize,
-            includePaths: functionIncludePaths,
-            includePackages: functionIncludePackages,
-            func: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
-            factoryFunc: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
+            codePathOptions: {
+                extraIncludePaths: functionIncludePaths,
+                extraIncludePackages: functionIncludePackages,
+            },
+            callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
+            callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
         };
 
-        this.lambda = new aws.serverless.Function(name, options, undefined, { parent: this }).lambda;
+        this.lambda = new aws.lambda.CallbackFunction(name, args, { parent: this });
+
+        this.registerOutputs({
+            lambda: this.lambda,
+        });
     }
 }

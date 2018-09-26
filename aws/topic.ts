@@ -15,7 +15,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as sns from "./sns";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
@@ -42,15 +41,21 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
                 TopicArn: topicId.get(),
             }).promise();
         };
+
+        this.registerOutputs({
+            topic: this.topic,
+        });
     }
 
     public subscribe(name: string, handler: (item: T) => Promise<void>) {
         const subscriptionName = this.name + "_" + name;
-        const subscription = sns.createSubscription(subscriptionName, this.topic, async (snsItem: sns.SNSItem) => {
-            const item = JSON.parse(snsItem.Message);
-            await handler(item);
-        });
 
-        this.subscriptions.push(subscription);
+        const eventHandler: aws.sns.TopicEventHandler = (ev, context, callback) => {
+            Promise.all(ev.Records.map(async (record) => {
+                await handler(JSON.parse(record.Sns.Message));
+            })).then(() => callback(undefined, undefined), err => callback(err, undefined));
+        };
+
+        this.topic.onEvent(subscriptionName, eventHandler, {}, { parent: this });
     }
 }

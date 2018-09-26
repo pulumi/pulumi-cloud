@@ -103,6 +103,15 @@
   version = "v1.13.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/dustin/go-humanize"
+  packages = [
+    ".",
+    "english"
+  ]
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+
+[[projects]]
   name = "github.com/emirpasic/gods"
   packages = [
     "containers",
@@ -248,6 +257,7 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pulumi/pulumi"
   packages = [
     "pkg/apitype",
@@ -287,8 +297,7 @@
     "pkg/workspace",
     "sdk/proto/go"
   ]
-  revision = "c7d3cc5731d0ca2b26ad5e18e6a23b43b74b44b7"
-  version = "v0.15.1"
+  revision = "5d34e380abdef43f052578e589e73e2d4ba53718"
 
 [[projects]]
   branch = "master"
@@ -554,6 +563,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d8900f5e8b1daab3a9de8274f0c34cef34fa5be1a2cb64a3cd8bbb8c576c255e"
+  inputs-digest = "c94906542d26741038cefe199cbbdd3b13fb598607e4785b908b9bc3b2cff68b"
   solver-name = "gps-cdcl"
   solver-version = 1

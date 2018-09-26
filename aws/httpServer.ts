@@ -17,7 +17,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as http from "http";
 
 import * as apigateway from "./apigateway";
 import { createFactoryFunction } from "./function";
