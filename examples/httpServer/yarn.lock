@@ -45,14 +45,14 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/aws-infra@^0.15.2-dev":
+"@pulumi/aws-infra@dev":
   version "0.15.2-dev-1537646386-ge17c90a"
   resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537646386-ge17c90a.tgz#46cbbef672caaf10249f1aa3e2d5ce968bde7b80"
   dependencies:
     "@pulumi/aws" "^0.15.2-dev"
     "@pulumi/pulumi" "^0.15.4-dev"
 
-"@pulumi/aws@^0.15.2-dev":
+"@pulumi/aws@^0.15.2-dev", "@pulumi/aws@dev":
   version "0.15.2-dev-1538152290-g2159b44"
   resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1538152290-g2159b44.tgz#53dde3f4a39b73e7a4a4bad4983ca5769558477c"
   dependencies:
@@ -79,25 +79,25 @@
     "@pulumi/pulumi" dev
 
 "@pulumi/cloud-aws@dev":
-  version "0.15.2-dev-1537916644-g9ea6f9c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud-aws/-/cloud-aws-0.15.2-dev-1537916644-g9ea6f9c.tgz#ef329244140fe88828308ba8af5b478c24920b31"
+  version "0.15.2-dev-1538535654-g2909b3d"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud-aws/-/cloud-aws-0.15.2-dev-1538535654-g2909b3d.tgz#8cc2d0768fb206a54cd3abb2bc70c4c693c55a48"
   dependencies:
-    "@pulumi/aws" "^0.15.2-dev"
-    "@pulumi/aws-infra" "^0.15.2-dev"
-    "@pulumi/cloud" v0.15.2-dev-1537916644-g9ea6f9c
-    "@pulumi/docker" "^0.15.3-dev"
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/aws" dev
+    "@pulumi/aws-infra" dev
+    "@pulumi/cloud" v0.15.2-dev-1538535654-g2909b3d
+    "@pulumi/docker" dev
+    "@pulumi/pulumi" dev
     aws-serverless-express "^3.3.5"
     mime "^2.0.3"
     semver "^5.4.0"
 
 "@pulumi/cloud-azure@dev":
-  version "0.15.2-dev-1537916644-g9ea6f9c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud-azure/-/cloud-azure-0.15.2-dev-1537916644-g9ea6f9c.tgz#21f77c9a55ca2cc3c5e75f42848041c385587b01"
+  version "0.15.2-dev-1538535654-g2909b3d"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud-azure/-/cloud-azure-0.15.2-dev-1538535654-g2909b3d.tgz#eef357bc186f8cc13ad174852cbd02cfa18263e8"
   dependencies:
     "@pulumi/azure" dev
     "@pulumi/azure-serverless" dev
-    "@pulumi/cloud" v0.15.2-dev-1537916644-g9ea6f9c
+    "@pulumi/cloud" v0.15.2-dev-1538535654-g2909b3d
     "@pulumi/docker" dev
     "@pulumi/pulumi" dev
     aws-serverless-express "^3.3.5"
@@ -110,13 +110,13 @@
     semver "^5.4.0"
     stream-buffers "^3.0.2"
 
-"@pulumi/cloud@dev", "@pulumi/cloud@v0.15.2-dev-1537916644-g9ea6f9c":
-  version "0.15.2-dev-1537916644-g9ea6f9c"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.15.2-dev-1537916644-g9ea6f9c.tgz#c7c042dde4b86ca0ace0bba67b15bd69eed6b89f"
+"@pulumi/cloud@dev", "@pulumi/cloud@v0.15.2-dev-1538535654-g2909b3d":
+  version "0.15.2-dev-1538535654-g2909b3d"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloud/-/cloud-0.15.2-dev-1538535654-g2909b3d.tgz#bea517149faccab61efe0e9ce03997e071052453"
   dependencies:
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/pulumi" dev
 
-"@pulumi/docker@^0.15.3-dev", "@pulumi/docker@dev":
+"@pulumi/docker@dev":
   version "0.15.3-dev-1537850514-g9d22095"
   resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537850514-g9d22095.tgz#9857ca02398f4f4d2ba8d2186ac437018aefa05f"
   dependencies:
