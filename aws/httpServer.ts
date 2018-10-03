@@ -21,7 +21,6 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
 import { createFactoryFunction } from "./function";
-import { sha1hash } from "./utils";
 
 import * as serverlessExpress from "aws-serverless-express";
 
@@ -40,34 +39,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             () => createLambdaEntryPoint(createRequestListener),
             { parent: this });
 
-        // const lambdaOperation = createLambdaOperation(func.lambda);
-
-        // const swagger = {
-        //     swagger: "2.0",
-        //     info: { title: name, version: "1.0" },
-        //     "x-amazon-apigateway-binary-media-types": [ "*/*" ],
-        //     "x-amazon-apigateway-gateway-responses": {
-        //         "MISSING_AUTHENTICATION_TOKEN": {
-        //             "statusCode": 404,
-        //             "responseTemplates": {
-        //                 "application/json": "{\"message\": \"404 Not found\" }",
-        //             },
-        //         },
-        //         "ACCESS_DENIED": {
-        //             "statusCode": 404,
-        //             "responseTemplates": {
-        //                 "application/json": "{\"message\": \"404 Not found\" }",
-        //             },
-        //         },
-        //     },
-        //     paths: {
-        //         // Register two paths in the Swagger spec, for the root and for a catch all under the root
-        //         "/": { "x-amazon-apigateway-any-method": lambdaOperation },
-        //         "/{proxy+}": { "x-amazon-apigateway-any-method": lambdaOperation },
-        //     },
-        // };
-
-        // const stageName = "stage";
         const api = new aws.apigateway.x.API(name, {
             // Register two paths in the Swagger spec, for the root and for a catch all under the root
             routes: [
@@ -80,25 +51,11 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                     path: "/{proxy+}",
                     method: "ANY",
                     handler: func.lambda,
-                }
+                },
             ],
         }, { parent: this });
 
-        // // Ensure that the permissions allow the API Gateway to invoke the func.
-        // for (const path of Object.keys(swagger.paths)) {
-        //     const methodAndPath = "*:" + path;
-
-        //     const permissionName = name + "-" + sha1hash(methodAndPath);
-        //     const invokePermission = new aws.lambda.Permission(permissionName, {
-        //         action: "lambda:invokeFunction",
-        //         function: func.lambda,
-        //         principal: "apigateway.amazonaws.com",
-        //         // We use */* here to indicate permission to any stage and any method type.
-        //         sourceArn: api.deployment.executionArn.apply(arn => arn + "*/*" + path),
-        //     }, { parent: this });
-        // }
-
-        this.url = api.url; // .deployment.invokeUrl.apply(url => url + stageName + "/");
+        this.url = api.url;
         super.registerOutputs({
             url: this.url,
         });
@@ -117,31 +74,5 @@ function createLambdaEntryPoint(createRequestListener: cloud.RequestListenerFact
 
     return (event, context) => {
         serverlessExpress.proxy(server, event, <any>context);
-    };
-}
-
-interface ApigatewayIntegration {
-    passthroughBehavior: "when_no_match";
-    httpMethod: "POST";
-    type: "aws_proxy";
-    uri: pulumi.Output<string>;
-}
-
-interface SwaggerOperation {
-    "x-amazon-apigateway-integration": ApigatewayIntegration;
-}
-
-function createLambdaOperation(lambda: aws.lambda.Function): SwaggerOperation {
-    const region = aws.config.requireRegion();
-    const uri = lambda.arn.apply(lambdaARN =>
-        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
-
-    return {
-        "x-amazon-apigateway-integration": {
-            uri: uri,
-            passthroughBehavior: "when_no_match",
-            httpMethod: "POST",
-            type: "aws_proxy",
-        },
     };
 }
