@@ -13,6 +13,9 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
+import * as apigateway from "@pulumi/aws/apigateway";
+import { x } from "@pulumi/aws/apigateway";
+import * as lambda from "@pulumi/aws/lambda";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
@@ -23,7 +26,7 @@ import * as mime from "mime";
 import * as fspath from "path";
 import * as utils from "./utils";
 
-import * as apigateway from "./apigateway";
+// import * as apigateway from "./apigateway";
 import { createFunction, Function } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
@@ -147,221 +150,221 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly customDomainNames: pulumi.Output<string>[]; // any custom domain names.
     public /*out*/ readonly customDomains: aws.apigateway.DomainName[]; // AWS DomainName objects for custom domains.
 
-    private static registerStaticRoutes(parent: pulumi.Resource, apiName: string,
-                                        staticRoutes: StaticRoute[], swagger: apigateway.SwaggerSpec) {
-        // If there are no static files or directories, then we can bail out early.
-        if (staticRoutes.length === 0) {
-            return;
-        }
+    // private static registerStaticRoutes(parent: pulumi.Resource, apiName: string,
+    //                                     staticRoutes: StaticRoute[], swagger: apigateway.SwaggerSpec) {
+    //     // If there are no static files or directories, then we can bail out early.
+    //     if (staticRoutes.length === 0) {
+    //         return;
+    //     }
 
-        const method: string = apigateway.swaggerMethod("GET");
+    //     const method: string = apigateway.swaggerMethod("GET");
 
-        // Create a bucket to place all the static data under.
-        const bucket = new aws.s3.Bucket(safeS3BucketName(apiName), undefined, {parent});
+    //     // Create a bucket to place all the static data under.
+    //     const bucket = new aws.s3.Bucket(safeS3BucketName(apiName), undefined, {parent});
 
-        function createRole(key: string) {
-            // Create a role and attach it so that this route can access the AWS bucket.
-            const role = new aws.iam.Role(key, {
-                assumeRolePolicy: JSON.stringify(apigateway.assumeRolePolicyDocument),
-            }, {parent});
-            const attachment = new aws.iam.RolePolicyAttachment(key, {
-                role: role,
-                policyArn: aws.iam.AmazonS3FullAccess,
-            }, {parent});
+    //     function createRole(key: string) {
+    //         // Create a role and attach it so that this route can access the AWS bucket.
+    //         const role = new aws.iam.Role(key, {
+    //             assumeRolePolicy: JSON.stringify(apigateway.assumeRolePolicyDocument),
+    //         }, {parent});
+    //         const attachment = new aws.iam.RolePolicyAttachment(key, {
+    //             role: role,
+    //             policyArn: aws.iam.AmazonS3FullAccess,
+    //         }, {parent});
 
-            return role;
-        }
+    //         return role;
+    //     }
 
-        // For each static file, just make a simple bucket object to hold it, and create a swagger
-        // path that routes from the file path to the arn for the bucket object.
-        //
-        // For static directories, use greedy api-gateway path matching so that we can map a single
-        // api gateway route to all the s3 bucket objects we create for the files in these
-        // directories.
-        for (const route of staticRoutes) {
-            const stat = fs.statSync(route.localPath);
-            if (stat.isFile()) {
-                processFile(route);
-            }
-            else if (stat.isDirectory()) {
-                processDirectory(route);
-            }
-        }
+    //     // For each static file, just make a simple bucket object to hold it, and create a swagger
+    //     // path that routes from the file path to the arn for the bucket object.
+    //     //
+    //     // For static directories, use greedy api-gateway path matching so that we can map a single
+    //     // api gateway route to all the s3 bucket objects we create for the files in these
+    //     // directories.
+    //     for (const route of staticRoutes) {
+    //         const stat = fs.statSync(route.localPath);
+    //         if (stat.isFile()) {
+    //             processFile(route);
+    //         }
+    //         else if (stat.isDirectory()) {
+    //             processDirectory(route);
+    //         }
+    //     }
 
-        function createBucketObject(key: string, localPath: string, contentType?: string) {
-            const obj = new aws.s3.BucketObject(key, {
-                bucket: bucket,
-                key: key,
-                source: new pulumi.asset.FileAsset(localPath),
-                contentType: contentType || mime.getType(localPath) || undefined,
-            }, {parent});
-        }
+    //     function createBucketObject(key: string, localPath: string, contentType?: string) {
+    //         const obj = new aws.s3.BucketObject(key, {
+    //             bucket: bucket,
+    //             key: key,
+    //             source: new pulumi.asset.FileAsset(localPath),
+    //             contentType: contentType || mime.getType(localPath) || undefined,
+    //         }, {parent});
+    //     }
 
-        function processFile(route: StaticRoute) {
-            const key = apiName + sha1hash(method + ":" + route.path);
-            const role = createRole(key);
+    //     function processFile(route: StaticRoute) {
+    //         const key = apiName + sha1hash(method + ":" + route.path);
+    //         const role = createRole(key);
 
-            createBucketObject(key, route.localPath, route.options.contentType);
+    //         createBucketObject(key, route.localPath, route.options.contentType);
 
-            const pathSpec = apigateway.createPathSpecObject(bucket, key, role);
-            swagger.paths[route.path] = { [method]: pathSpec };
-        }
+    //         const pathSpec = apigateway.createPathSpecObject(bucket, key, role);
+    //         swagger.paths[route.path] = { [method]: pathSpec };
+    //     }
 
-        function processDirectory(directory: StaticRoute) {
-            const directoryServerPath = directory.path.endsWith("/")
-                ? directory.path
-                : directory.path + "/";
+    //     function processDirectory(directory: StaticRoute) {
+    //         const directoryServerPath = directory.path.endsWith("/")
+    //             ? directory.path
+    //             : directory.path + "/";
 
-            const directoryKey = apiName + sha1hash(method + ":" + directoryServerPath);
-            const role = createRole(directoryKey);
+    //         const directoryKey = apiName + sha1hash(method + ":" + directoryServerPath);
+    //         const role = createRole(directoryKey);
 
-            let startDir = directory.localPath.startsWith("/")
-                ? directory.localPath
-                : fspath.join(process.cwd(), directory.localPath);
+    //         let startDir = directory.localPath.startsWith("/")
+    //             ? directory.localPath
+    //             : fspath.join(process.cwd(), directory.localPath);
 
-            if (!startDir.endsWith(fspath.sep)) {
-                startDir = fspath.join(startDir, fspath.sep);
-            }
+    //         if (!startDir.endsWith(fspath.sep)) {
+    //             startDir = fspath.join(startDir, fspath.sep);
+    //         }
 
-            const options = directory.options;
+    //         const options = directory.options;
 
-            // If the user has supplied 'false' for options.index, then no speciam index file served
-            // at the root. Otherwise if they've supplied an actual filename to serve as the index
-            // file then use what they've provided.  Otherwise attempt to serve "index.html" at the
-            // root (if it exists).
-            const indexFile = options && options.index === false
-                ? undefined
-                : options !== undefined && typeof options.index === "string"
-                    ? options.index
-                    : "index.html";
+    //         // If the user has supplied 'false' for options.index, then no speciam index file served
+    //         // at the root. Otherwise if they've supplied an actual filename to serve as the index
+    //         // file then use what they've provided.  Otherwise attempt to serve "index.html" at the
+    //         // root (if it exists).
+    //         const indexFile = options && options.index === false
+    //             ? undefined
+    //             : options !== undefined && typeof options.index === "string"
+    //                 ? options.index
+    //                 : "index.html";
 
-            const indexPath = indexFile === undefined ? undefined : fspath.join(startDir, indexFile);
+    //         const indexPath = indexFile === undefined ? undefined : fspath.join(startDir, indexFile);
 
-            // Recursively walk the directory provided, creating bucket objects for all the files we
-            // encounter.
-            function walk(dir: string) {
-                const children = fs.readdirSync(dir);
+    //         // Recursively walk the directory provided, creating bucket objects for all the files we
+    //         // encounter.
+    //         function walk(dir: string) {
+    //             const children = fs.readdirSync(dir);
 
-                for (const childName of children) {
-                    const childPath = fspath.join(dir, childName);
-                    const stats = fs.statSync(childPath);
+    //             for (const childName of children) {
+    //                 const childPath = fspath.join(dir, childName);
+    //                 const stats = fs.statSync(childPath);
 
-                    if (stats.isDirectory()) {
-                        walk(childPath);
-                    }
-                    else if (stats.isFile()) {
-                        const childRelativePath = childPath.substr(startDir.length);
-                        const childUrn = directoryKey + "/" + childRelativePath;
+    //                 if (stats.isDirectory()) {
+    //                     walk(childPath);
+    //                 }
+    //                 else if (stats.isFile()) {
+    //                     const childRelativePath = childPath.substr(startDir.length);
+    //                     const childUrn = directoryKey + "/" + childRelativePath;
 
-                        createBucketObject(childUrn, childPath);
+    //                     createBucketObject(childUrn, childPath);
 
-                        if (childPath === indexPath) {
-                            // We hit the file that we also want to serve as the index file. Create
-                            // a specific swagger path from the server root path to it.
-                            const indexPathSpec = apigateway.createPathSpecObject(bucket, childUrn, role);
-                            swagger.paths[directoryServerPath] = { [method]: indexPathSpec };
-                        }
-                    }
-                }
-            }
+    //                     if (childPath === indexPath) {
+    //                         // We hit the file that we also want to serve as the index file. Create
+    //                         // a specific swagger path from the server root path to it.
+    //                         const indexPathSpec = apigateway.createPathSpecObject(bucket, childUrn, role);
+    //                         swagger.paths[directoryServerPath] = { [method]: indexPathSpec };
+    //                     }
+    //                 }
+    //             }
+    //         }
 
-            walk(startDir);
+    //         walk(startDir);
 
-            // Take whatever path the client wants to host this folder at, and add the
-            // greedy matching predicate to the end.
+    //         // Take whatever path the client wants to host this folder at, and add the
+    //         // greedy matching predicate to the end.
 
-            const swaggerPath = directoryServerPath + "{proxy+}";
-            const pathSpec = apigateway.createPathSpecObject(bucket, directoryKey, role, "proxy");
-            swagger.paths[swaggerPath] = { [apigateway.swaggerMethod("any")]: pathSpec };
-        }
-    }
+    //         const swaggerPath = directoryServerPath + "{proxy+}";
+    //         const pathSpec = apigateway.createPathSpecObject(bucket, directoryKey, role, "proxy");
+    //         swagger.paths[swaggerPath] = { [apigateway.swaggerMethod("any")]: pathSpec };
+    //     }
+    // }
 
-    private static registerProxyRoutes(parent: pulumi.Resource, apiName: string,
-                                       proxyRoutes: ProxyRoute[], swagger: apigateway.SwaggerSpec) {
-        const method = "x-amazon-apigateway-any-method";
-        for (const route of proxyRoutes) {
-            const swaggerPath = route.path.endsWith("/")
-                ? route.path
-                : route.path + "/";
-            const swaggerPathProxy = swaggerPath + "{proxy+}";
+    // private static registerProxyRoutes(parent: pulumi.Resource, apiName: string,
+    //                                    proxyRoutes: ProxyRoute[], swagger: apigateway.SwaggerSpec) {
+    //     const method = "x-amazon-apigateway-any-method";
+    //     for (const route of proxyRoutes) {
+    //         const swaggerPath = route.path.endsWith("/")
+    //             ? route.path
+    //             : route.path + "/";
+    //         const swaggerPathProxy = swaggerPath + "{proxy+}";
 
-            // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
-            let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
-            if (typeof route.target !== "string") {
-                const targetArn = route.target.apply(t => {
-                    const endpoint = t as Endpoint;
-                    if (!endpoint.loadBalancer) {
-                        throw new RunError("AWS endpoint proxy requires an AWS Endpoint");
-                    }
-                    return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
-                        if (loadBalancerType === "application") {
-                            // We can only support proxying to an Endpoint if it is backed by an
-                            // NLB, which will only be the case for cloud.Service ports exposed as
-                            // type "tcp".
-                            throw new RunError(
-                                "AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
-                        }
-                        return endpoint.loadBalancer.arn;
-                    });
-                });
-                const name = apiName + sha1hash(route.path);
-                vpcLink = new aws.apigateway.VpcLink(name, {
-                    targetArn: targetArn,
-                });
-            }
+    //         // If this is an Endpoint proxy, create a VpcLink to the load balancer in the VPC
+    //         let vpcLink: aws.apigateway.VpcLink | undefined = undefined;
+    //         if (typeof route.target !== "string") {
+    //             const targetArn = route.target.apply(t => {
+    //                 const endpoint = t as Endpoint;
+    //                 if (!endpoint.loadBalancer) {
+    //                     throw new RunError("AWS endpoint proxy requires an AWS Endpoint");
+    //                 }
+    //                 return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
+    //                     if (loadBalancerType === "application") {
+    //                         // We can only support proxying to an Endpoint if it is backed by an
+    //                         // NLB, which will only be the case for cloud.Service ports exposed as
+    //                         // type "tcp".
+    //                         throw new RunError(
+    //                             "AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'");
+    //                     }
+    //                     return endpoint.loadBalancer.arn;
+    //                 });
+    //             });
+    //             const name = apiName + sha1hash(route.path);
+    //             vpcLink = new aws.apigateway.VpcLink(name, {
+    //                 targetArn: targetArn,
+    //             });
+    //         }
 
-            // Register two paths in the Swagger spec, for the root and for a catch all under the root
-            swagger.paths[swaggerPath] = {
-                [method]: apigateway.createPathSpecProxy(route.target, vpcLink, false),
-            };
-            swagger.paths[swaggerPathProxy] = {
-                [method]: apigateway.createPathSpecProxy(route.target, vpcLink, true),
-            };
-        }
-    }
+    //         // Register two paths in the Swagger spec, for the root and for a catch all under the root
+    //         swagger.paths[swaggerPath] = {
+    //             [method]: apigateway.createPathSpecProxy(route.target, vpcLink, false),
+    //         };
+    //         swagger.paths[swaggerPathProxy] = {
+    //             [method]: apigateway.createPathSpecProxy(route.target, vpcLink, true),
+    //         };
+    //     }
+    // }
 
-    private static registerRoutes(parent: pulumi.Resource, apiName: string,
-                                  routes: Route[], swagger: apigateway.SwaggerSpec): {[key: string]: Function} {
-        const lambdas: {[key: string]: Function} = {};
-        for (const route of routes) {
-            const method = apigateway.swaggerMethod(route.method);
-            const lambda = createFunction(
-                apiName + sha1hash(method + ":" + route.path),
-                (ev: apigateway.APIGatewayRequest, ctx, cb) => {
-                    let body: Buffer;
-                    if (ev.body !== null) {
-                        if (ev.isBase64Encoded) {
-                            body = Buffer.from(ev.body, "base64");
-                        } else {
-                            body = Buffer.from(ev.body, "utf8");
-                        }
-                    } else {
-                        body = Buffer.from([]);
-                    }
+    // private static registerRoutes(parent: pulumi.Resource, apiName: string,
+    //                               routes: Route[], swagger: apigateway.SwaggerSpec): {[key: string]: Function} {
+    //     const lambdas: {[key: string]: Function} = {};
+    //     for (const route of routes) {
+    //         const method = apigateway.swaggerMethod(route.method);
+    //         const lambda = createFunction(
+    //             apiName + sha1hash(method + ":" + route.path),
+    //             (ev: apigateway.APIGatewayRequest, ctx, cb) => {
+    //                 let body: Buffer;
+    //                 if (ev.body !== null) {
+    //                     if (ev.isBase64Encoded) {
+    //                         body = Buffer.from(ev.body, "base64");
+    //                     } else {
+    //                         body = Buffer.from(ev.body, "utf8");
+    //                     }
+    //                 } else {
+    //                     body = Buffer.from([]);
+    //                 }
 
-                    ctx.callbackWaitsForEmptyEventLoop = false;
+    //                 ctx.callbackWaitsForEmptyEventLoop = false;
 
-                    const reqres = apiGatewayToRequestResponse(ev, body, cb);
-                    let i = 0;
-                    const next = () => {
-                        const nextHandler = route.handlers[i++];
-                        if (nextHandler !== undefined) {
-                            nextHandler(reqres.req, reqres.res, next);
-                        }
-                    };
-                    next();
-                },
-                { parent: parent },
-            );
-            lambdas[method + ":" + route.path] = lambda;
+    //                 const reqres = apiGatewayToRequestResponse(ev, body, cb);
+    //                 let i = 0;
+    //                 const next = () => {
+    //                     const nextHandler = route.handlers[i++];
+    //                     if (nextHandler !== undefined) {
+    //                         nextHandler(reqres.req, reqres.res, next);
+    //                     }
+    //                 };
+    //                 next();
+    //             },
+    //             { parent: parent },
+    //         );
+    //         lambdas[method + ":" + route.path] = lambda;
 
-            if (!swagger.paths[route.path]) {
-                swagger.paths[route.path] = {};
-            }
-            swagger.paths[route.path][method] = apigateway.createPathSpecLambda(lambda.lambda);
-        }
-        return lambdas;
-    }
+    //         if (!swagger.paths[route.path]) {
+    //             swagger.paths[route.path] = {};
+    //         }
+    //         swagger.paths[route.path][method] = apigateway.createPathSpecLambda(lambda.lambda);
+    //     }
+    //     return lambdas;
+    // }
 
     private static registerCustomDomains(parent: pulumi.Resource, apiName: string, api: aws.apigateway.RestApi,
                                          domains: Domain[]): aws.apigateway.DomainName[] {
@@ -417,91 +420,195 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         this.routes = routes;
         this.staticRoutes = staticRoutes;
 
-        // Create a SwaggerSpec and then expand out all of the static files and routes.
-        const swagger = apigateway.createBaseSpec(name);
-        HttpDeployment.registerStaticRoutes(this, name, staticRoutes, swagger);
-        HttpDeployment.registerProxyRoutes(this, name, proxyRoutes, swagger);
-        const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
+        const api2 = new x.API(name, {
+            staticRoutes: convertStaticRoutes(staticRoutes),
+            proxyRoutes: convertProxyRoutes(proxyRoutes),
+            routes: convertRoutes(routes),
+        }, { parent: this })
 
-        // Now stringify the resulting swagger specification and create the various API Gateway objects.
-        const swaggerStr = apigateway.createSwaggerString(swagger);
-        const api = new aws.apigateway.RestApi(name, {
-            body: swaggerStr,
-        }, { parent: this });
+        // // Create a SwaggerSpec and then expand out all of the static files and routes.
+        // const swagger = apigateway.createBaseSpec(name);
+        // HttpDeployment.registerStaticRoutes(this, name, staticRoutes, swagger);
+        // HttpDeployment.registerProxyRoutes(this, name, proxyRoutes, swagger);
+        // const lambdas: {[key: string]: Function} = HttpDeployment.registerRoutes(this, name, routes, swagger);
 
-        // bodyHash produces a hash that let's us know when any paths change in the swagger spec.
-        const bodyHash = swaggerStr.apply(s => sha1hash(s));
+        // // Now stringify the resulting swagger specification and create the various API Gateway objects.
+        // const swaggerStr = apigateway.createSwaggerString(swagger);
+        // const api = new aws.apigateway.RestApi(name, {
+        //     body: swaggerStr,
+        // }, { parent: this });
 
-        // we need to ensure a fresh deployment any time our body changes. So include the hash as
-        // part of the deployment urn.
-        const deployment = new aws.apigateway.Deployment(name, {
-            restApi: api,
-            stageName: "",
-            // Note: We set `variables` here because it forces recreation of the Deployment object
-            // whenever the body hash changes.  Because we use a blank stage name above, there will
-            // not actually be any stage created in AWS, and thus these variables will not actually
-            // end up anywhere.  But this will still cause the right replacement of the Deployment
-            // when needed.  The Stage allocated below will be the stable stage that always points
-            // to the latest deployment of the API.
-            variables: {
-                version: bodyHash,
-            },
-            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
-        }, { parent: this });
+        // // bodyHash produces a hash that let's us know when any paths change in the swagger spec.
+        // const bodyHash = swaggerStr.apply(s => sha1hash(s));
 
-        const stage = new aws.apigateway.Stage(name, {
-            stageName: stageName,
-            description: "The current deployment of the API.",
-            restApi: api,
-            deployment: deployment,
-        }, { parent: this });
+        // // we need to ensure a fresh deployment any time our body changes. So include the hash as
+        // // part of the deployment urn.
+        // const deployment = new aws.apigateway.Deployment(name, {
+        //     restApi: api,
+        //     stageName: "",
+        //     // Note: We set `variables` here because it forces recreation of the Deployment object
+        //     // whenever the body hash changes.  Because we use a blank stage name above, there will
+        //     // not actually be any stage created in AWS, and thus these variables will not actually
+        //     // end up anywhere.  But this will still cause the right replacement of the Deployment
+        //     // when needed.  The Stage allocated below will be the stable stage that always points
+        //     // to the latest deployment of the API.
+        //     variables: {
+        //         version: bodyHash,
+        //     },
+        //     description: bodyHash.apply(hash => `Deployment of version ${hash}`),
+        // }, { parent: this });
 
-        // Ensure that the permissions allow the API Gateway to invoke the lambdas.
-        for (const path of Object.keys(swagger.paths)) {
-            for (let method of Object.keys(swagger.paths[path])) {
-                const methodAndPath = method + ":" + path;
-                const lambda = lambdas[methodAndPath];
-                if (lambda !== undefined) {
-                    if (method === "x-amazon-apigateway-any-method") {
-                        method = "*";
-                    }
-                    else {
-                        method = method.toUpperCase();
-                    }
-                    const permissionName = name + "-" + sha1hash(methodAndPath);
-                    const invokePermission = new aws.lambda.Permission(permissionName, {
-                        action: "lambda:invokeFunction",
-                        function: lambda.lambda,
-                        principal: "apigateway.amazonaws.com",
-                        sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
-                    }, { parent: this });
-                }
-            }
-        }
+        // const stage = new aws.apigateway.Stage(name, {
+        //     stageName: stageName,
+        //     description: "The current deployment of the API.",
+        //     restApi: api,
+        //     deployment: deployment,
+        // }, { parent: this });
+
+        // // Ensure that the permissions allow the API Gateway to invoke the lambdas.
+        // for (const path of Object.keys(swagger.paths)) {
+        //     for (let method of Object.keys(swagger.paths[path])) {
+        //         const methodAndPath = method + ":" + path;
+        //         const lambda = lambdas[methodAndPath];
+        //         if (lambda !== undefined) {
+        //             if (method === "x-amazon-apigateway-any-method") {
+        //                 method = "*";
+        //             }
+        //             else {
+        //                 method = method.toUpperCase();
+        //             }
+        //             const permissionName = name + "-" + sha1hash(methodAndPath);
+        //             const invokePermission = new aws.lambda.Permission(permissionName, {
+        //                 action: "lambda:invokeFunction",
+        //                 function: lambda.lambda,
+        //                 principal: "apigateway.amazonaws.com",
+        //                 sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/" + method + path),
+        //             }, { parent: this });
+        //         }
+        //     }
+        // }
 
         // If there are any custom domains, attach them now.
         const awsDomains: aws.apigateway.DomainName[] =
-            HttpDeployment.registerCustomDomains(this, name, api, customDomains);
+            HttpDeployment.registerCustomDomains(this, name, api2.restAPI, customDomains);
 
         // Finally, manufacture a URL and set it as an output property.
-        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
+        this.url = api2.url;
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
         super.registerOutputs({
             url: this.url,
             customDomainNames: this.customDomainNames,
         });
+
+        return;
     }
 }
 
-interface RequestResponse {
-    req: cloud.Request;
-    res: cloud.Response;
+function convertStaticRoutes(routes: StaticRoute[]): x.StaticRoute[] | undefined {
+    if (!routes) {
+        return undefined;
+    }
+
+    return routes.map(convertStaticRoute);
 }
 
+function convertStaticRoute(route: StaticRoute): x.StaticRoute {
+    const options = route.options || {};
+    return {
+        path: route.path,
+        localPath: route.localPath,
+        contentType: options.contentType,
+        index: options.index,
+    };
+}
+
+function convertProxyRoutes(routes: ProxyRoute[]): x.ProxyRoute[] | undefined {
+    if (!routes) {
+        return undefined;
+    }
+
+    return routes.map(convertProxyRoute);
+}
+
+function convertProxyRoute(route: ProxyRoute): x.ProxyRoute {
+    return {
+        path: route.path,
+        target: convertProxyRouteTarget(route.target),
+    };
+}
+
+function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>): string | pulumi.Output<x.Endpoint> {
+    if (typeof target === "string") {
+        return target;
+    }
+
+    return target.apply(ep => {
+        const apiEndpoint: x.Endpoint = {
+            hostname: ep.hostname,
+            port: ep.port,
+            // note: if the endpoint passes in has no loadBalancer, this will fail with an
+            // appropriate error in apigateway.x.API.
+            loadBalancer: (ep as Endpoint).loadBalancer,
+        };
+
+        return apiEndpoint;
+    });
+}
+
+function convertRoutes(routes: Route[]): x.Route[] | undefined {
+    if (!routes) {
+        return undefined;
+    }
+
+    return routes.map(convertRoute);
+}
+
+function convertRoute(route: Route): x.Route {
+    return {
+        method: <x.Method>route.method,
+        path: route.path,
+        handler: convertHandlers(route.handlers),
+    };
+}
+
+function convertHandlers(handlers: cloud.RouteHandler[]): lambda.Callback<x.Request, x.Response> {
+    const result: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
+        let body: Buffer;
+        if (ev.body !== null) {
+            if (ev.isBase64Encoded) {
+                body = Buffer.from(ev.body, "base64");
+            } else {
+                body = Buffer.from(ev.body, "utf8");
+            }
+        } else {
+            body = Buffer.from([]);
+        }
+
+        ctx.callbackWaitsForEmptyEventLoop = false;
+
+        const [req, res] = apiGatewayToRequestResponse(ev, body, cb);
+        let i = 0;
+        const next = () => {
+            const nextHandler = handlers[i++];
+            if (nextHandler !== undefined) {
+                nextHandler(req, res, next);
+            }
+        };
+        next();
+    };
+
+    return result;
+}
+
+// interface RequestResponse {
+//     req: cloud.Request;
+//     res: cloud.Response;
+// }
+
 const stageName = "stage";
-function apiGatewayToRequestResponse(ev: apigateway.APIGatewayRequest, body: Buffer,
-                                     cb: (err: any, result: apigateway.APIGatewayResponse) => void): RequestResponse {
+function apiGatewayToRequestResponse(
+        ev: x.Request, body: Buffer, cb: (err: any, result: x.Response) => void): [cloud.Request, cloud.Response] {
     const response = {
         statusCode: 200,
         headers: <{[header: string]: string}>{},
@@ -586,12 +693,12 @@ function apiGatewayToRequestResponse(ev: apigateway.APIGatewayRequest, body: Buf
             res.end();
         },
     };
-    return { req, res };
+    return [req, res];
 }
 
-function safeS3BucketName(apiName: string): string {
-    return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
-}
+// function safeS3BucketName(apiName: string): string {
+//     return apiName.toLowerCase().replace(/[^a-z0-9\-]/g, "");
+// }
 
 /**
  * @deprecated HttpEndpoint has been renamed to API
