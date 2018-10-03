@@ -34,13 +34,29 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        // Create the actual lambda
-        const func =  createFactoryFunction(name,
-            () => createLambdaEntryPoint(createRequestListener),
-            { parent: this });
+        // Create the main aws lambda entrypoint factory function.  Note that this is a factory
+        // function so that we can create the underlying server once, and then call into it with
+        // each request we get.
+        const entryPointFactory: lambda.CallbackFactory<x.Request, x.Response> = () => {
+            // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
+            // treat all messages as binary and not reinterpret them.
+            const server = serverlessExpress.createServer(
+                createRequestListener(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+
+            // All the entrypoint function for the Lambda has to do is pass the events along to the
+            // server we created above.  That server will then forward the messages along to the
+            // request listener provided by the caller.
+            return (event, context) => {
+                serverlessExpress.proxy(server, event, <any>context);
+            };
+        };
+
+        // Now, create the actual AWS lambda from that factory function.
+        const func = createFactoryFunction(name, entryPointFactory, { parent: this });
 
         const api = new aws.apigateway.x.API(name, {
-            // Register two paths in the Swagger spec, for the root and for a catch all under the root
+            // Register two paths in the Swagger spec, for the root and for a catch all under the
+            // root.  Both paths will map to the single AWS lambda created above.
             routes: [
                 {
                     path: "/",
@@ -60,19 +76,4 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             url: this.url,
         });
     }
-}
-
-// Create the main aws lambda entrypoint factory function.  Note that this is a factory
-// function so that we can just run this code once and hook up to
-function createLambdaEntryPoint(createRequestListener: cloud.RequestListenerFactory): lambda.Callback<x.Request, x.Response> {
-    const requestListener = createRequestListener();
-
-    // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
-    // treat all messages as binary and not reinterpret them.
-    const server = serverlessExpress.createServer(
-        requestListener, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
-
-    return (event, context) => {
-        serverlessExpress.proxy(server, event, <any>context);
-    };
 }
