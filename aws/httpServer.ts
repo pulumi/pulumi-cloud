@@ -40,82 +40,65 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             () => createLambdaEntryPoint(createRequestListener),
             { parent: this });
 
-        const lambdaOperation = createLambdaOperation(func.lambda);
+        // const lambdaOperation = createLambdaOperation(func.lambda);
 
-        const swagger = {
-            swagger: "2.0",
-            info: { title: name, version: "1.0" },
-            "x-amazon-apigateway-binary-media-types": [ "*/*" ],
-            "x-amazon-apigateway-gateway-responses": {
-                "MISSING_AUTHENTICATION_TOKEN": {
-                    "statusCode": 404,
-                    "responseTemplates": {
-                        "application/json": "{\"message\": \"404 Not found\" }",
-                    },
+        // const swagger = {
+        //     swagger: "2.0",
+        //     info: { title: name, version: "1.0" },
+        //     "x-amazon-apigateway-binary-media-types": [ "*/*" ],
+        //     "x-amazon-apigateway-gateway-responses": {
+        //         "MISSING_AUTHENTICATION_TOKEN": {
+        //             "statusCode": 404,
+        //             "responseTemplates": {
+        //                 "application/json": "{\"message\": \"404 Not found\" }",
+        //             },
+        //         },
+        //         "ACCESS_DENIED": {
+        //             "statusCode": 404,
+        //             "responseTemplates": {
+        //                 "application/json": "{\"message\": \"404 Not found\" }",
+        //             },
+        //         },
+        //     },
+        //     paths: {
+        //         // Register two paths in the Swagger spec, for the root and for a catch all under the root
+        //         "/": { "x-amazon-apigateway-any-method": lambdaOperation },
+        //         "/{proxy+}": { "x-amazon-apigateway-any-method": lambdaOperation },
+        //     },
+        // };
+
+        // const stageName = "stage";
+        const api = new aws.apigateway.x.API(name, {
+            // Register two paths in the Swagger spec, for the root and for a catch all under the root
+            routes: [
+                {
+                    path: "/",
+                    method: "ANY",
+                    handler: func.lambda,
                 },
-                "ACCESS_DENIED": {
-                    "statusCode": 404,
-                    "responseTemplates": {
-                        "application/json": "{\"message\": \"404 Not found\" }",
-                    },
-                },
-            },
-            paths: {
-                // Register two paths in the Swagger spec, for the root and for a catch all under the root
-                "/": { "x-amazon-apigateway-any-method": lambdaOperation },
-                "/{proxy+}": { "x-amazon-apigateway-any-method": lambdaOperation },
-            },
-        };
-
-        // Now stringify the resulting swagger specification and create the various API Gateway objects.
-        const swaggerStr = pulumi.output(swagger).apply(JSON.stringify);
-        const api = new aws.apigateway.RestApi(name, {
-            body: swaggerStr,
+                {
+                    path: "/{proxy+}",
+                    method: "ANY",
+                    handler: func.lambda,
+                }
+            ],
         }, { parent: this });
 
-        // bodyHash produces a hash that let's us know when any paths change in the swagger spec.
-        const bodyHash = swaggerStr.apply(s => sha1hash(s));
+        // // Ensure that the permissions allow the API Gateway to invoke the func.
+        // for (const path of Object.keys(swagger.paths)) {
+        //     const methodAndPath = "*:" + path;
 
-        // we need to ensure a fresh deployment any time our body changes. So include the hash as
-        // part of the deployment urn.
-        const deployment = new aws.apigateway.Deployment(name, {
-            restApi: api,
-            stageName: "",
-            // Note: We set `variables` here because it forces recreation of the Deployment object
-            // whenever the body hash changes.  Because we use a blank stage name above, there will
-            // not actually be any stage created in AWS, and thus these variables will not actually
-            // end up anywhere.  But this will still cause the right replacement of the Deployment
-            // when needed.  The Stage allocated below will be the stable stage that always points
-            // to the latest deployment of the API.
-            variables: {
-                version: bodyHash,
-            },
-            description: bodyHash.apply(hash => `Deployment of version ${hash}`),
-        }, { parent: this });
+        //     const permissionName = name + "-" + sha1hash(methodAndPath);
+        //     const invokePermission = new aws.lambda.Permission(permissionName, {
+        //         action: "lambda:invokeFunction",
+        //         function: func.lambda,
+        //         principal: "apigateway.amazonaws.com",
+        //         // We use */* here to indicate permission to any stage and any method type.
+        //         sourceArn: api.deployment.executionArn.apply(arn => arn + "*/*" + path),
+        //     }, { parent: this });
+        // }
 
-        const stageName = "stage";
-        const stage = new aws.apigateway.Stage(name, {
-            stageName: stageName,
-            description: "The current deployment of the API.",
-            restApi: api,
-            deployment: deployment,
-        }, { parent: this });
-
-        // Ensure that the permissions allow the API Gateway to invoke the func.
-        for (const path of Object.keys(swagger.paths)) {
-            const methodAndPath = "*:" + path;
-
-            const permissionName = name + "-" + sha1hash(methodAndPath);
-            const invokePermission = new aws.lambda.Permission(permissionName, {
-                action: "lambda:invokeFunction",
-                function: func.lambda,
-                principal: "apigateway.amazonaws.com",
-                // We use */* here to indicate permission to any stage and any method type.
-                sourceArn: deployment.executionArn.apply(arn => arn + "*/*" + path),
-            }, { parent: this });
-        }
-
-        this.url = deployment.invokeUrl.apply(url => url + stageName + "/");
+        this.url = api.url; // .deployment.invokeUrl.apply(url => url + stageName + "/");
         super.registerOutputs({
             url: this.url,
         });
