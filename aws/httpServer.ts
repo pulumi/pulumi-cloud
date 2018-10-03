@@ -20,7 +20,6 @@ import * as lambda from "@pulumi/aws/lambda";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
-import * as apigateway from "./apigateway";
 import { createFactoryFunction } from "./function";
 import { sha1hash } from "./utils";
 
@@ -36,35 +35,40 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        // Create the main aws lambda entrypoint factory function.  Note that this is a factory
-        // funcion so that we can just run this code once and hook up to
-        function entryPoint(): lambda.Callback<x.Request, x.Response> {
-            const requestListener = createRequestListener();
+        // Create the actual lambda
+        const func =  createFactoryFunction(name,
+            () => createLambdaEntryPoint(createRequestListener),
+            { parent: this });
 
-            // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
-            // treat all messages as binary and not reinterpret them.
-            const server = serverlessExpress.createServer(
-                requestListener, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+        const lambdaOperation = createLambdaOperation(func.lambda);
 
-            return (event, context) => {
-                serverlessExpress.proxy(server, event, <any>context);
-            };
-        }
-
-        // Have to register two paths (that will point to the same lambda).  One for the root
-        // itself, and one for any path off of the root.
-        const swaggerPath = "/";
-        const swaggerPathProxy = "/{proxy+}";
-
-        const func =  createFactoryFunction(name, entryPoint, { parent: this });
-
-        // Register two paths in the Swagger spec, for the root and for a catch all under the root
-        const swagger = apigateway.createBaseSpec(name);
-        swagger.paths[swaggerPath] = { "x-amazon-apigateway-any-method": apigateway.createPathSpecLambda(func.lambda) };
-        swagger.paths[swaggerPathProxy] = { "x-amazon-apigateway-any-method": apigateway.createPathSpecLambda(func.lambda) };
+        const swagger = {
+            swagger: "2.0",
+            info: { title: name, version: "1.0" },
+            "x-amazon-apigateway-binary-media-types": [ "*/*" ],
+            "x-amazon-apigateway-gateway-responses": {
+                "MISSING_AUTHENTICATION_TOKEN": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
+                },
+                "ACCESS_DENIED": {
+                    "statusCode": 404,
+                    "responseTemplates": {
+                        "application/json": "{\"message\": \"404 Not found\" }",
+                    },
+                },
+            },
+            paths: {
+                // Register two paths in the Swagger spec, for the root and for a catch all under the root
+                "/": { "x-amazon-apigateway-any-method": lambdaOperation },
+                "/{proxy+}": { "x-amazon-apigateway-any-method": lambdaOperation },
+            },
+        };
 
         // Now stringify the resulting swagger specification and create the various API Gateway objects.
-        const swaggerStr = apigateway.createSwaggerString(swagger);
+        const swaggerStr = pulumi.output(swagger).apply(JSON.stringify);
         const api = new aws.apigateway.RestApi(name, {
             body: swaggerStr,
         }, { parent: this });
@@ -106,7 +110,8 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 action: "lambda:invokeFunction",
                 function: func.lambda,
                 principal: "apigateway.amazonaws.com",
-                sourceArn: deployment.executionArn.apply(arn => arn + stageName + "/*" + path),
+                // We use */* here to indicate permission to any stage and any method type.
+                sourceArn: deployment.executionArn.apply(arn => arn + "*/*" + path),
             }, { parent: this });
         }
 
@@ -115,4 +120,45 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             url: this.url,
         });
     }
+}
+
+// Create the main aws lambda entrypoint factory function.  Note that this is a factory
+// function so that we can just run this code once and hook up to
+function createLambdaEntryPoint(createRequestListener: cloud.RequestListenerFactory): lambda.Callback<x.Request, x.Response> {
+    const requestListener = createRequestListener();
+
+    // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
+    // treat all messages as binary and not reinterpret them.
+    const server = serverlessExpress.createServer(
+        requestListener, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+
+    return (event, context) => {
+        serverlessExpress.proxy(server, event, <any>context);
+    };
+}
+
+interface ApigatewayIntegration {
+    passthroughBehavior: "when_no_match";
+    httpMethod: "POST";
+    type: "aws_proxy";
+    uri: pulumi.Output<string>;
+}
+
+interface SwaggerOperation {
+    "x-amazon-apigateway-integration": ApigatewayIntegration;
+}
+
+function createLambdaOperation(lambda: aws.lambda.Function): SwaggerOperation {
+    const region = aws.config.requireRegion();
+    const uri = lambda.arn.apply(lambdaARN =>
+        "arn:aws:apigateway:" + region + ":lambda:path/2015-03-31/functions/" + lambdaARN + "/invocations");
+
+    return {
+        "x-amazon-apigateway-integration": {
+            uri: uri,
+            passthroughBehavior: "when_no_match",
+            httpMethod: "POST",
+            type: "aws_proxy",
+        },
+    };
 }
