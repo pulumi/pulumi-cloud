@@ -15,6 +15,8 @@
 // tslint:disable:max-line-length
 
 import * as aws from "@pulumi/aws";
+import { x } from "@pulumi/aws/apigateway";
+import * as lambda from "@pulumi/aws/lambda";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -36,7 +38,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         // Create the main aws lambda entrypoint factory function.  Note that this is a factory
         // funcion so that we can just run this code once and hook up to
-        function entryPoint() {
+        function entryPoint(): lambda.Callback<x.Request, x.Response> {
             const requestListener = createRequestListener();
 
             // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
@@ -44,7 +46,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
             const server = serverlessExpress.createServer(
                 requestListener, /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
 
-            return (event: apigateway.APIGatewayRequest, context: aws.serverless.Context) => {
+            return (event, context) => {
                 serverlessExpress.proxy(server, event, <any>context);
             };
         }

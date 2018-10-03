@@ -72,56 +72,6 @@ interface SwaggerAPIGatewayIntegrationResponse {
     responseParameters?: { [key: string]: string };
 }
 
-export interface APIGatewayRequest {
-    resource: string;
-    path: string;
-    httpMethod: string;
-    // Note: cloud.Request.headers is typed as { [header: string]: string | string[]; }.  However,
-    // currently AWS does not support duplicated headers.  See:
-    //
-    // https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-known-issues.html
-    // > Duplicated headers are not supported."
-    headers: { [header: string]: string; };
-    queryStringParameters: { [param: string]: string; };
-    pathParameters: { [param: string]: string; };
-    stageVariables: { [name: string]: string; };
-    requestContext: APIGatewayRequestContext;
-    body: string;
-    isBase64Encoded: boolean;
-}
-
-interface APIGatewayRequestContext {
-    accountId: string;
-    resourceId: string;
-    stage: string;
-    requestId: string;
-    identity: APIGatewayIdentity;
-    resourcePath: string;
-    httpMethod: string;
-    apiId: string;
-}
-
-interface APIGatewayIdentity {
-    cognitoIdentityPoolId?: string;
-    accountId?: string;
-    cognitoIdentityId?: string;
-    caller?: string;
-    apiKey?: string;
-    sourceIp?: string;
-    cognitoAuthenticationType?: string;
-    cognitoAuthenticationProvider?: string;
-    userArn?: string;
-    userAgent?: string;
-    user?: string;
-}
-
-export interface APIGatewayResponse {
-    isBase64Encoded?: boolean;
-    statusCode: number;
-    headers?: { [header: string]: string; };
-    body: string;
-}
-
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
 // an ordinary JSON.stringify because the spec contains computed values.
 export function createSwaggerString(spec: SwaggerSpec): pulumi.Output<string> {
