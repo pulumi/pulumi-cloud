@@ -13,20 +13,13 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
-import { RunError } from "@pulumi/pulumi/errors";
 
 interface ApigatewayIntegration {
-    requestParameters?: any;
     passthroughBehavior?: string;
     httpMethod: string;
     type: string;
-    responses?: { [pattern: string]: SwaggerAPIGatewayIntegrationResponse };
-    connectionType?: string;
     uri: pulumi.Output<string>;
-    credentials?: pulumi.Output<string>;
-    connectionId?: pulumi.Output<string>;
 }
 
 export interface SwaggerSpec {
@@ -42,34 +35,7 @@ interface SwaggerInfo {
 }
 
 interface SwaggerOperation {
-    parameters?: any[];
-    responses?: { [code: string]: SwaggerResponse };
     "x-amazon-apigateway-integration": ApigatewayIntegration;
-}
-
-interface SwaggerResponse {
-    description: string;
-    schema?: SwaggerSchema;
-    headers?: { [header: string]: SwaggerHeader };
-}
-
-interface SwaggerSchema {
-    type: string;
-}
-
-interface SwaggerHeader {
-    type: "string" | "number" | "integer" | "boolean" | "array";
-    items?: SwaggerItems;
-}
-
-interface SwaggerItems {
-    type: "string" | "number" | "integer" | "boolean" | "array";
-    items?: SwaggerItems;
-}
-
-interface SwaggerAPIGatewayIntegrationResponse {
-    statusCode: string;
-    responseParameters?: { [key: string]: string };
 }
 
 // createSwaggerString creates a JSON string out of a Swagger spec object.  This is required versus
