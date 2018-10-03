@@ -145,6 +145,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
 
     private static registerCustomDomains(parent: pulumi.Resource, apiName: string, api: aws.apigateway.RestApi,
                                          domains: Domain[]): aws.apigateway.DomainName[] {
+
         const awsDomains: aws.apigateway.DomainName[] = [];
         for (const domain of domains) {
             // Ensure this pair of api-domain name doesn't conflict with anything else.  i.e. there
@@ -163,7 +164,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                     certificatePrivateKey: domain.certificatePrivateKey,
                     certificateChain: domain.certificateChain,
                 };
-            } else {
+            }
+            else {
                 domainArgs = {
                     domainName: domain.domainName,
                     certificateArn: domain.certificateArn,
@@ -198,9 +200,9 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         this.staticRoutes = staticRoutes;
 
         this.api = new x.API(name, {
-            staticRoutes: convertStaticRoutes(staticRoutes),
-            proxyRoutes: convertProxyRoutes(proxyRoutes),
-            routes: convertRoutes(routes),
+            staticRoutes: staticRoutes ? staticRoutes.map(convertStaticRoute) : undefined,
+            proxyRoutes: proxyRoutes ? proxyRoutes.map(convertProxyRoute) : undefined,
+            routes: routes ? routes.map(convertRoute) : undefined,
         }, { parent: this });
 
         // If there are any custom domains, attach them now.
@@ -220,14 +222,6 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 }
 
-function convertStaticRoutes(routes: StaticRoute[]): x.StaticRoute[] | undefined {
-    if (!routes) {
-        return undefined;
-    }
-
-    return routes.map(convertStaticRoute);
-}
-
 function convertStaticRoute(route: StaticRoute): x.StaticRoute {
     const options = route.options || {};
     return {
@@ -236,14 +230,6 @@ function convertStaticRoute(route: StaticRoute): x.StaticRoute {
         contentType: options.contentType,
         index: options.index,
     };
-}
-
-function convertProxyRoutes(routes: ProxyRoute[]): x.ProxyRoute[] | undefined {
-    if (!routes) {
-        return undefined;
-    }
-
-    return routes.map(convertProxyRoute);
 }
 
 function convertProxyRoute(route: ProxyRoute): x.ProxyRoute {
@@ -269,14 +255,6 @@ function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>)
 
         return apiEndpoint;
     });
-}
-
-function convertRoutes(routes: Route[]): x.Route[] | undefined {
-    if (!routes) {
-        return undefined;
-    }
-
-    return routes.map(convertRoute);
 }
 
 function convertRoute(route: Route): x.Route {
