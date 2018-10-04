@@ -53,8 +53,8 @@
     "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev", "@pulumi/aws@dev":
-  version "0.15.2-dev-1538152290-g2159b44"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1538152290-g2159b44.tgz#53dde3f4a39b73e7a4a4bad4983ca5769558477c"
+  version "0.15.2-dev-1538597689-gaabba16"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1538597689-gaabba16.tgz#c9f9a58f11fafcbc296ba00d6de6c46b8830a794"
   dependencies:
     "@pulumi/pulumi" dev
     builtin-modules "3.0.0"
@@ -85,8 +85,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@dev":
-  version "0.15.5-dev-1538521683-g5ed33c69"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.5-dev-1538521683-g5ed33c69.tgz#46630b5386acc5a02e3533c11e3301dc502912d8"
+  version "0.15.5-dev-1538597180-g16ae1f2a"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.5-dev-1538597180-g16ae1f2a.tgz#c59922ad0df786119a037e1fabfae80808b4526c"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -98,6 +98,7 @@
     source-map-support "^0.4.16"
     ts-node "^7.0.0"
     typescript "^3.0.0"
+    upath "^1.1.0"
 
 "@types/aws-lambda@*":
   version "8.10.13"
@@ -159,12 +160,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.11.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.3.tgz#c055536ac8a5e871701aa01914be5731539d01ee"
+  version "10.11.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.4.tgz#e8bd933c3f78795d580ae41d86590bfc1f4f389d"
 
 "@types/node@^8.0.26":
-  version "8.10.32"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.32.tgz#f8df7c32975e36e1215d22ae5f087752931c1e4a"
+  version "8.10.34"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.34.tgz#a94d9f3767fe45f211e09e49af598bb84822280c"
 
 "@types/range-parser@*":
   version "1.2.2"
@@ -1058,6 +1059,10 @@ type-is@^1.6.16:
 typescript@^3.0.0, typescript@^3.0.3:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.1.tgz#3362ba9dd1e482ebb2355b02dfe8bcd19a2c7c96"
+
+upath@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/upath/-/upath-1.1.0.tgz#35256597e46a581db4793d0ce47fa9aebfc9fabd"
 
 url@0.10.3:
   version "0.10.3"
