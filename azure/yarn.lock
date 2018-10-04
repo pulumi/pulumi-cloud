@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/azure-serverless@dev":
-  version "0.15.3-dev-1537906675-g86ec877"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1537906675-g86ec877.tgz#c7716305550cc3919604e7cdae2f013b8d7d41b1"
+  version "0.15.3-dev-1538601828-g09c9abb"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-serverless/-/azure-serverless-0.15.3-dev-1538601828-g09c9abb.tgz#3ffcb4645d9cad5f2a97e567a5ab0f6f231eb7b7"
   dependencies:
     "@pulumi/azure" dev
     "@pulumi/pulumi" dev
@@ -56,8 +56,8 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@dev":
-  version "0.15.3-dev-1538443669-ge934631"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1538443669-ge934631.tgz#0c9b751836259faffe4dc4bdb24aaacfd7c440fc"
+  version "0.15.3-dev-1538597537-g32a9a61"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.15.3-dev-1538597537-g32a9a61.tgz#b13bb2521c7f80d3f4da5df20cdd3a9d2b33fe1c"
   dependencies:
     "@pulumi/pulumi" dev
 
@@ -84,8 +84,8 @@
     typescript "^3.0.0"
 
 "@pulumi/pulumi@dev":
-  version "0.15.5-dev-1538521683-g5ed33c69"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.5-dev-1538521683-g5ed33c69.tgz#46630b5386acc5a02e3533c11e3301dc502912d8"
+  version "0.15.5-dev-1538597180-g16ae1f2a"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.5-dev-1538597180-g16ae1f2a.tgz#c59922ad0df786119a037e1fabfae80808b4526c"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -97,6 +97,7 @@
     source-map-support "^0.4.16"
     ts-node "^7.0.0"
     typescript "^3.0.0"
+    upath "^1.1.0"
 
 "@types/aws-lambda@*":
   version "8.10.13"
@@ -158,12 +159,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.11.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.3.tgz#c055536ac8a5e871701aa01914be5731539d01ee"
+  version "10.11.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.4.tgz#e8bd933c3f78795d580ae41d86590bfc1f4f389d"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
-  version "8.10.32"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.32.tgz#f8df7c32975e36e1215d22ae5f087752931c1e4a"
+  version "8.10.34"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.34.tgz#a94d9f3767fe45f211e09e49af598bb84822280c"
 
 "@types/range-parser@*":
   version "1.2.2"
@@ -1751,6 +1752,10 @@ underscore@~1.8.3:
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
+
+upath@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/upath/-/upath-1.1.0.tgz#35256597e46a581db4793d0ce47fa9aebfc9fabd"
 
 util-deprecate@~1.0.1:
   version "1.0.2"
