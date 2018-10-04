@@ -200,9 +200,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         this.staticRoutes = staticRoutes;
 
         this.api = new x.API(name, {
-            staticRoutes: staticRoutes ? staticRoutes.map(convertStaticRoute) : undefined,
-            proxyRoutes: proxyRoutes ? proxyRoutes.map(convertProxyRoute) : undefined,
-            routes: routes ? routes.map(convertRoute) : undefined,
+            routes: [
+                ...staticRoutes.map(convertStaticRoute),
+                ...proxyRoutes.map(convertProxyRoute),
+                ...routes.map(convertRoute),
+            ],
         }, { parent: this });
 
         // If there are any custom domains, attach them now.
@@ -261,7 +263,7 @@ function convertRoute(route: Route): x.Route {
     return {
         method: <x.Method>route.method,
         path: route.path,
-        handler: convertHandlers(route.handlers),
+        eventHandler: convertHandlers(route.handlers),
     };
 }
 

@@ -53,8 +53,8 @@
     "@pulumi/pulumi" "^0.15.4-dev"
 
 "@pulumi/aws@^0.15.2-dev", "@pulumi/aws@dev":
-  version "0.15.2-dev-1538597689-gaabba16"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1538597689-gaabba16.tgz#c9f9a58f11fafcbc296ba00d6de6c46b8830a794"
+  version "0.15.2-dev-1538687869-ge256ca2"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1538687869-ge256ca2.tgz#edc20f86a9af354254b71d91c509baeb8d2e266b"
   dependencies:
     "@pulumi/pulumi" dev
     builtin-modules "3.0.0"
@@ -237,8 +237,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.327.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.327.0.tgz#0192f71f764182bd2f81a65851071ed5265121bd"
+  version "2.328.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.328.0.tgz#5b9320f9dad3125af5ebac08b11eb0e66343a6d5"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -925,8 +925,8 @@ source-map@^0.6.0:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
 
 spdx-correct@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/spdx-correct/-/spdx-correct-3.0.1.tgz#434434ff9d1726b4d9f4219d1004813d80639e30"
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/spdx-correct/-/spdx-correct-3.0.2.tgz#19bb409e91b47b1ad54159243f7312a858db3c2e"
   dependencies:
     spdx-expression-parse "^3.0.0"
     spdx-license-ids "^3.0.0"

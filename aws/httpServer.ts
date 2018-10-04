@@ -61,12 +61,12 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 {
                     path: "/",
                     method: "ANY",
-                    handler: func.lambda,
+                    eventHandler: func.lambda,
                 },
                 {
                     path: "/{proxy+}",
                     method: "ANY",
-                    handler: func.lambda,
+                    eventHandler: func.lambda,
                 },
             ],
         }, { parent: this });
