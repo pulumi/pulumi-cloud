@@ -20,7 +20,7 @@ import * as lambda from "@pulumi/aws/lambda";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
-import { createFactoryFunction } from "./function";
+import { createCallbackFactoryFunction, getOrCreateAwsCallbackData } from "./callback";
 
 import * as serverlessExpress from "aws-serverless-express";
 
@@ -34,14 +34,17 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        // Create the main aws lambda entrypoint factory function.  Note that this is a factory
+        const callbackData = getOrCreateAwsCallbackData(createRequestListener);
+        const factoryFunction = callbackData.function;
+
+        // Create the main aws lambda entry-point factory function.  Note that this is a factory
         // function so that we can create the underlying server once, and then call into it with
         // each request we get.
         const entryPointFactory: lambda.CallbackFactory<x.Request, x.Response> = () => {
             // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
             // treat all messages as binary and not reinterpret them.
             const server = serverlessExpress.createServer(
-                createRequestListener(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+                factoryFunction(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
 
             // All the entrypoint function for the Lambda has to do is pass the events along to the
             // server we created above.  That server will then forward the messages along to the
@@ -52,7 +55,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         };
 
         // Now, create the actual AWS lambda from that factory function.
-        const func = createFactoryFunction(name, entryPointFactory, { parent: this });
+        const lambda = createCallbackFactoryFunction(name, entryPointFactory, callbackData, { parent: this });
 
         const api = new aws.apigateway.x.API(name, {
             // Register two paths in the Swagger spec, for the root and for a catch all under the
@@ -61,12 +64,12 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 {
                     path: "/",
                     method: "ANY",
-                    eventHandler: func.lambda,
+                    eventHandler: lambda,
                 },
                 {
                     path: "/{proxy+}",
                     method: "ANY",
-                    eventHandler: func.lambda,
+                    eventHandler: lambda,
                 },
             ],
         }, { parent: this });

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
+import { Callback } from "./callback";
 
 export interface TopicConstructor {
     /**
@@ -26,31 +27,7 @@ export interface TopicConstructor {
 
 export let Topic: TopicConstructor; // tslint:disable-line
 
-/**
- * A Topic<T> is used to distribute work which will be run concurrently by any
- * susbcribed handlers.  Producers can [[publish]] to the topic, and consumers
- * can [[subscribe]] to be notified when new items are published.
- *
- * @param T The type of items published to the topic.
- */
-export interface Topic<T> extends Stream<T> {
-    /**
-     * Publish an item to this Topic.
-     *
-     * @param item The item to publish.
-     */
-    publish: (item: T) => Promise<void>;
-
-    /**
-     * Subscribe to items published to this topic.
-     *
-     * Each subscription receives all items published to the topic.
-     *
-     * @param name The name of the subscription.
-     * @param handler A callback to handle each item published to the topic.
-     */
-    subscribe(name: string, handler: (item: T) => Promise<void>): void;
-}
+export type StreamHandler<T> = Callback<(item: T) => Promise<void>>;
 
 /**
  * A Stream<T> provides access to listen to an (infinite) stream of items coming
@@ -72,5 +49,21 @@ export interface Stream<T> {
      * @param name The name of the subscription.
      * @param handler A callback to handle each item published to the stream.
      */
-    subscribe(name: string, handler: (item: T) => Promise<void>): void;
+    subscribe(name: string, handler: StreamHandler<T>): void;
+}
+
+/**
+ * A Topic<T> is used to distribute work which will be run concurrently by any
+ * subscribed handlers.  Producers can [[publish]] to the topic, and consumers
+ * can [[subscribe]] to be notified when new items are published.
+ *
+ * @param T The type of items published to the topic.
+ */
+export interface Topic<T> extends Stream<T> {
+    /**
+     * Publish an item to this Topic.
+     *
+     * @param item The item to publish.
+     */
+    publish: (item: T) => Promise<void>;
 }

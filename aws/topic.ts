@@ -16,6 +16,10 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
+import { AwsCallback, createCallbackFunction, getOrCreateAwsCallbackData } from "./callback";
+
+export type StreamHandler<T> = AwsCallback<(item: T) => Promise<void>>;
+
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
@@ -47,15 +51,19 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         });
     }
 
-    public subscribe(name: string, handler: (item: T) => Promise<void>) {
+    public subscribe(name: string, handler: StreamHandler<T>) {
         const subscriptionName = this.name + "_" + name;
+
+        const data = getOrCreateAwsCallbackData(handler);
+        const handlerFunc = data.function;
 
         const eventHandler: aws.sns.TopicEventHandler = (ev, context, callback) => {
             Promise.all(ev.Records.map(async (record) => {
-                await handler(JSON.parse(record.Sns.Message));
+                await handlerFunc(JSON.parse(record.Sns.Message));
             })).then(() => callback(undefined, undefined), err => callback(err, undefined));
         };
 
-        this.topic.onEvent(subscriptionName, eventHandler, {}, { parent: this });
+        const lambda = createCallbackFunction(subscriptionName, eventHandler, data, { parent: this });
+        this.topic.onEvent(subscriptionName, lambda, {}, { parent: this });
     }
 }

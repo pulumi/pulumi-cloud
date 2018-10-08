@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
+import { Callback } from "./callback";
 
 /**
  * Action is a handler that performs an action in response to a timer firing.
  */
-export type Action = () => Promise<void>;
+export type Action = Callback<() => Promise<void>>;
 
 /**
  * IntervalRate describes the rate at which a timer will fire.

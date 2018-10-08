@@ -14,11 +14,12 @@
 
 import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
+import { Callback } from "./callback";
 
 // Factory function for creating a requestListener function.  The returned function is the same
 // callback function that would be passed to http.createServer.  See:
 // https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener for more details.
-export type RequestListenerFactory = () => (req: http.IncomingMessage, res: http.ServerResponse) => void;
+export type RequestListenerFactory = Callback<() => (req: http.IncomingMessage, res: http.ServerResponse) => void>;
 
 export interface HttpServerConstructor {
     /**

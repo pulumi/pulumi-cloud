@@ -20,6 +20,7 @@
 // actually exports the API types.
 
 export * from "./bucket";
+export { AwsCallbackData } from "./callback";
 export * from "./function";
 export * from "./api";
 export * from "./httpServer";

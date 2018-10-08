@@ -39,6 +39,8 @@ export class Function extends pulumi.ComponentResource {
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
+        
+
         const policies = [...getComputeIAMRolePolicies()];
         let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
 

@@ -17,6 +17,7 @@
     "files": [
         "index.ts",
         "api.ts",
+        "callback.ts",
         "function.ts",
         "table.ts",
         "timer.ts",

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
+import { Callback } from "./callback";
 
 /**
  * BucketHandlerArgs are the arguments passed to an [onPut] or [onDelete] handler.
@@ -35,7 +36,7 @@ export interface BucketHandlerArgs {
 /**
  * BucketHandler is the callback that handles an [onPut] or [onDelete] event.
  */
-export type BucketHandler = (args: BucketHandlerArgs) => Promise<void>;
+export type BucketHandler = Callback<(args: BucketHandlerArgs) => Promise<void>>;
 
 /**
  * BucketFilter specifies filters to apply to an [onPut] or [onDelete] subscription.
@@ -92,7 +93,7 @@ export interface Bucket {
     /**
      * Insert a blob into the bucket.
      *
-     * @param key The key to use for retreiving this blob later.
+     * @param key The key to use for retrieving this blob later.
      * @returns A promise for the success or failure of the put.
      */
     put(key: string, contents: Buffer): Promise<void>;

@@ -15,6 +15,7 @@
 // types.ts is declared in package.json as: types: "types.ts'. As such, this becomes the file that
 // typescript itself uses to determine the shape of this module.
 
+export * from "./callback";
 export * from "./bucket";
 export * from "./api";
 export * from "./httpServer";

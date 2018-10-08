@@ -16,6 +16,10 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
+import { AwsCallback, createCallbackFunction, getOrCreateAwsCallbackData } from "./callback";
+
+export type BucketHandler = AwsCallback<(args: cloud.BucketHandlerArgs) => Promise<void>>;
+
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public bucket: aws.s3.Bucket;
 
@@ -80,15 +84,18 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
     }
 
-    public onPut(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter) {
+    public onPut(name: string, handler: BucketHandler, filter?: cloud.BucketFilter) {
         this.addHandler(name, handler, ["s3:ObjectCreated:*"], filter);
     }
 
-    public onDelete(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter) {
+    public onDelete(name: string, handler: BucketHandler, filter?: cloud.BucketFilter) {
         this.addHandler(name, handler, ["s3:ObjectRemoved:*"], filter);
     }
 
-    public addHandler(name: string, handler: cloud.BucketHandler, events: string[], filter?: cloud.BucketFilter) {
+    public addHandler(name: string, handler: BucketHandler, events: string[], filter?: cloud.BucketFilter) {
+        const data = getOrCreateAwsCallbackData(handler);
+        const handlerFunc = data.function;
+
         // Create the wrapper function that will convert from raw AWS S3 events to the form
         // cloud.BucketHandler expects.
         const eventHandler: aws.s3.BucketEventHandler = (ev, context, callback) => {
@@ -97,7 +104,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             const promises: Promise<void>[] = [];
             for (const record of records) {
                 // Construct an event arguments object and call the user handler.
-                promises.push(handler({
+                promises.push(handlerFunc({
                     key: record.s3.object.key,
                     size: record.s3.object.size,
                     eventTime: record.eventTime,
@@ -110,9 +117,11 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 err => callback(err, undefined));
         };
 
+        const lambda = createCallbackFunction(name, eventHandler, data, { parent: this });
+
         // Register for the raw s3 events from the bucket.
         filter = filter || {};
-        this.bucket.onEvent(name, eventHandler, {
+        this.bucket.onEvent(name, lambda, {
             events: events,
             filterPrefix: filter.keyPrefix,
             filterSuffix: filter.keySuffix,

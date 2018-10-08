@@ -18,6 +18,7 @@
     "files": [
         "api.ts",
         "bucket.ts",
+        "callback.ts",
         "index.ts",
         "service.ts",
         "table.ts",
