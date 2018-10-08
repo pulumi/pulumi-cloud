@@ -17,9 +17,9 @@ import { CallbackData, timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
-import { AwsCallback, createCallbackFunction, getOrCreateAwsCallbackData } from "./callback";
+import * as callback from "./callback";
 
-export type Action = AwsCallback<() => Promise<void>>;
+export type Action = callback.AwsCallback<() => Promise<void>>;
 
 export function interval(name: string, options: timer.IntervalRate, handler: Action,
                          opts?: pulumi.ResourceOptions): void {
@@ -112,10 +112,10 @@ class Timer extends pulumi.ComponentResource {
 
         this.scheduleExpression = scheduleExpression;
 
-        const data = getOrCreateAwsCallbackData(handler);
+        const data = callback.getOrCreateAwsCallbackData(handler);
         const handlerFunc = data.function;
 
-        this.function = createCallbackFunction(
+        this.function = callback.createCallbackFunction(
             name,
             (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 handlerFunc().then(

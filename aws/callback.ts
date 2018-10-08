@@ -20,7 +20,9 @@ import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from ".
 
 /**
  * AWS-specific data to create an AWS lambda out of a callback function.  Can be passed to any
- * functions in pulumi/cloud-aws that can take a cloud.Callback<T> argument.
+ * functions in pulumi/cloud-aws that can take a cloud.Callback<T> argument.  To create the same
+ * default AwsCallbackData Pulumi creates when given a simple JavaScript function, use
+ * [createCallbackData].
  */
 export interface AwsCallbackData<T extends Function> extends cloud.CallbackData<T>, aws.lambda.CallbackFunctionArgs<any, any> {
     /**
@@ -39,7 +41,7 @@ export interface AwsCallbackData<T extends Function> extends cloud.CallbackData<
  */
 export type AwsCallback<T extends Function> = T | AwsCallbackData<T>;
 
-function createDefaultCallbackData<T extends Function>(func: T): AwsCallbackData<T> {
+export function createCallbackData<T extends Function>(func: T): AwsCallbackData<T> {
     const policies = [...getComputeIAMRolePolicies()];
     let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
 
@@ -70,7 +72,6 @@ function createDefaultCallbackData<T extends Function>(func: T): AwsCallbackData
 }
 
 function createCallbackFunctionArgs<E, R>(data: AwsCallbackData<any>): aws.lambda.CallbackFunctionArgs<E, R> {
-
     const copy = {...data};
     delete copy.function;
     const args = <aws.lambda.CallbackFunctionArgs<E, R>>copy;
@@ -103,7 +104,7 @@ export function createCallbackFactoryFunction<E, R>(
 
 export function getOrCreateAwsCallbackData<T extends Function>(callback: AwsCallback<T>): AwsCallbackData<T> {
     if (callback instanceof Function) {
-        const data = createDefaultCallbackData(callback);
+        const data = createCallbackData(callback);
         return data;
     }
 

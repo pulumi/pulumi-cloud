@@ -14,21 +14,22 @@
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
-import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
+import * as callback from "./callback";
+
+/** @deprecated No longer needed. Use [aws.lambda.CallbackFunction] instead. */
 export function createFunction(
         name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
     return new Function(name, handler, /*isFactoryFunction*/ false, opts);
 }
 
+/** @deprecated No longer needed. Use [aws.lambda.CallbackFunction] instead. */
 export function createFactoryFunction(
         name: string, handler: aws.serverless.HandlerFactory, opts?: pulumi.ResourceOptions): Function {
     return new Function(name, handler, /*isFactoryFunction*/ true, opts);
 }
 
-// Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
-// `@pulumi/cloud` configuration.
+/** @deprecated No longer needed. Use [aws.lambda.CallbackFunction] instead. */
 export class Function extends pulumi.ComponentResource {
     public readonly handler: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
@@ -39,36 +40,10 @@ export class Function extends pulumi.ComponentResource {
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
-        
-
-        const policies = [...getComputeIAMRolePolicies()];
-        let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
-
-        if (runLambdaInVPC) {
-            const network = getOrCreateNetwork();
-            // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
-            //     add VPC access will currently fail due to an issue in the Terraform provider.
-            policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
-            vpcConfig = {
-                securityGroupIds: pulumi.all(network.securityGroupIds),
-                subnetIds: pulumi.all(network.subnetIds),
-            };
-        }
-
-        // First allocate a function.
-        const args: aws.lambda.CallbackFunctionArgs<any, any> = {
-            policies,
-            vpcConfig,
-            memorySize: functionMemorySize,
-            codePathOptions: {
-                extraIncludePaths: functionIncludePaths,
-                extraIncludePackages: functionIncludePackages,
-            },
-            callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
-            callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
-        };
-
-        this.lambda = new aws.lambda.CallbackFunction(name, args, { parent: this });
+        const data = callback.createCallbackData(handler);
+        this.lambda = isFactoryFunction
+            ? callback.createCallbackFactoryFunction(name, <aws.serverless.HandlerFactory>handler, data, { parent: this })
+            : callback.createCallbackFunction(name, <aws.serverless.Handler>handler, data, { parent: this });
 
         this.registerOutputs({
             lambda: this.lambda,

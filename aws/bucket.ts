@@ -16,9 +16,9 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
-import { AwsCallback, createCallbackFunction, getOrCreateAwsCallbackData } from "./callback";
+import * as callback from "./callback";
 
-export type BucketHandler = AwsCallback<(args: cloud.BucketHandlerArgs) => Promise<void>>;
+export type BucketHandler = callback.AwsCallback<(args: cloud.BucketHandlerArgs) => Promise<void>>;
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public bucket: aws.s3.Bucket;
@@ -93,7 +93,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     }
 
     public addHandler(name: string, handler: BucketHandler, events: string[], filter?: cloud.BucketFilter) {
-        const data = getOrCreateAwsCallbackData(handler);
+        const data = callback.getOrCreateAwsCallbackData(handler);
         const handlerFunc = data.function;
 
         // Create the wrapper function that will convert from raw AWS S3 events to the form
@@ -117,7 +117,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 err => callback(err, undefined));
         };
 
-        const lambda = createCallbackFunction(name, eventHandler, data, { parent: this });
+        const lambda = callback.createCallbackFunction(name, eventHandler, data, { parent: this });
 
         // Register for the raw s3 events from the bucket.
         filter = filter || {};
