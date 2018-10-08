@@ -43,4 +43,5 @@ import * as thisModule from "./index";
 let apiShape: typeof apiModule = undefined as any;
 const thisShape: typeof thisModule = undefined as any;
 
+// This line ensures that our exported API is a superset of the framework API.
 apiShape = thisShape;
