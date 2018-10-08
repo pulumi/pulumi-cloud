@@ -116,12 +116,12 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             const subscriptionArgs = callback.createCallbackEventSubscriptionArgs(entryPoint, data);
 
             serverless.storage.onBlobEvent(putName, storageAccount, {
-                ...subscriptionArgs,
-                storageAccount: storageAccount,
-                containerName: container.name,
-                filterPrefix: filter.keyPrefix,
-                filterSuffix: filter.keySuffix,
-            }, { parent: this });
+                    ...subscriptionArgs,
+                    storageAccount: storageAccount,
+                    containerName: container.name,
+                    filterPrefix: filter.keyPrefix,
+                    filterSuffix: filter.keySuffix,
+                }, { parent: this });
         };
 
         this.onDelete = async (delName, handler, filter) => {
