@@ -18,9 +18,9 @@ import * as pulumi from "@pulumi/pulumi";
 import * as shared from "./shared";
 
 /**
- * Azure-specific data to create an AWS lambda out of a callback function.  Can be passed to any
+ * Azure-specific data to create an FunctionApp out of a callback function.  Can be passed to any
  * functions in pulumi/cloud-aws that can take a cloud.Callback<T> argument.  To create the same
- * default AwsCallbackData Pulumi creates when given a simple JavaScript function, use
+ * default AzureCallbackData Pulumi creates when given a simple JavaScript function, use
  * [createCallbackData].
  */
 export interface AzureCallbackData<T extends Function> extends cloud.CallbackData<T>, EventSubscriptionArgs<any, any> {
@@ -36,7 +36,7 @@ export interface AzureCallbackData<T extends Function> extends cloud.CallbackDat
 
 /**
  * Type for parameters that will be converted into serverless function.  Either a simple JavaScript
- * function, or an object with information necessary to create an AWS Lambda can be used.
+ * function, or an object with information necessary to create an Azure FunctionApp can be used.
  */
 export type AzureCallback<T extends Function> = T | AzureCallbackData<T>;
 
@@ -48,13 +48,6 @@ export function createCallbackData<T extends Function>(func: T): AzureCallbackDa
 
     return data;
 }
-
-// function createEventSubscriptionArgs<E extends Context, R>(data: AzureCallback<any>): EventSubscriptionArgs<E, R> {
-//     const copy = {...data};
-//     delete copy.function;
-//     const args = <EventSubscriptionArgs<E, R>>copy;
-//     return args;
-// }
 
 export function createCallbackEventSubscriptionArgs<E extends Context, R>(
         callback: Callback<E, R>, data: AzureCallback<any>): EventSubscriptionArgs<E, R> {
@@ -74,36 +67,12 @@ export function createCallbackFactoryEventSubscriptionArgs<E extends Context, R>
     return args;
 }
 
-/**
- * Creates an [aws.lambda.CallbackFunction] from the callback function and callback data provided.
- * The callback function becomes the entry-point for the AWS lambda.  The callback data is used to
- * provided specialized configuration of that lambda (for example, specifying the desired
- * [memorySize]).
- */
-// export function createEventSubscription<E extends Context, R>(
-//         name: string, callback: Callback<E, R>,
-//         data: AzureCallbackData<any>, opts?: pulumi.ResourceOptions): EventSubscription<E, R> {
-
-//     const args = createEventSubscriptionArgs(data);
-//     args.func = callback;
-//     return new EventSubscription<E, R>(.lambda.CallbackFunction(name, args, opts);
-// }
-
-// export function createCallbackFactoryFunction<E, R>(
-//         name: string, callbackFactory: aws.lambda.CallbackFactory<E, R>,
-//         data: AwsCallbackData<any>, opts?: pulumi.ResourceOptions): aws.lambda.CallbackFunction<E, R> {
-
-//     const args = createCallbackFunctionArgs(data);
-//     args.callbackFactory = callbackFactory;
-//     return new aws.lambda.CallbackFunction(name, args, opts);
-// }
-
 export function getOrCreateAzureCallbackData<T extends Function>(callback: AzureCallback<T>): AzureCallbackData<T> {
     if (callback instanceof Function) {
         const data = createCallbackData(callback);
         return data;
     }
 
-    // Already in AwsCallbackData form.
+    // Already in AzureCallbackData form.
     return callback;
 }
