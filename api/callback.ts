@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as pulumi from "@pulumi/pulumi";
-
 /**
  * A cloud.CallbackData represents the full data  Pulumi needs  to create an appropriate serverless
  * callback at runtime. For example, all the data necessary to create an AWS Lambda, or an Azure
