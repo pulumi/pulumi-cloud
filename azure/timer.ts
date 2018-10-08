@@ -105,6 +105,8 @@ function pad(val: number | undefined): string {
     return val.toString();
 }
 
+export function daily(name: string, handler: Action, opts?: pulumi.ResourceOptions): void;
+export function daily(name: string, schedule: timer.DailySchedule, handler: Action, opts?: pulumi.ResourceOptions): void;
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | Action,
                       handlerOrOptions?: Action | pulumi.ResourceOptions,
@@ -129,6 +131,8 @@ export function daily(name: string,
     cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
+export function hourly(name: string, handler: Action, opts?: pulumi.ResourceOptions): void;
+export function hourly(name: string, schedule: timer.HourlySchedule, handler: Action, opts?: pulumi.ResourceOptions): void;
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | Action,
                        handlerOrOptions?: Action | pulumi.ResourceOptions,

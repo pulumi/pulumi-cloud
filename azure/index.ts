@@ -43,6 +43,4 @@ import * as thisModule from "./index";
 let apiShape: typeof apiModule = undefined as any;
 const thisShape: typeof thisModule = undefined as any;
 
-// This line ensures that our exported API is a superset of the framework API. right now we can't
-// uncomment it because we provide more specific subtypes of certain cloud-api types at this level.
-// thisShape = frameworkShape;
+apiShape = thisShape;

@@ -50,6 +50,8 @@ export function cron(name: string, cronTab: string, handler: Action,
     createScheduledEvent(name, `cron(${cronTab})`, handler, opts);
 }
 
+export function daily(name: string, handler: Action, opts?: pulumi.ResourceOptions): void;
+export function daily(name: string, schedule: timer.DailySchedule, handler: Action, opts?: pulumi.ResourceOptions): void;
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | Action,
                       handlerOrOptions?: Action | pulumi.ResourceOptions,
@@ -78,6 +80,8 @@ function isAction(val: any): val is Action {
     return val instanceof Function || !!(<callback.AwsCallbackData<any>>val).function;
 }
 
+export function hourly(name: string, handler: Action, opts?: pulumi.ResourceOptions): void;
+export function hourly(name: string, schedule: timer.HourlySchedule, handler: Action, opts?: pulumi.ResourceOptions): void;
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | Action,
                        handlerOrOptions?: Action | pulumi.ResourceOptions,
