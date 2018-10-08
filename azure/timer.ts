@@ -17,6 +17,7 @@ import * as appservice from "@pulumi/azure/appservice";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
+import * as callback from "./callback";
 import * as shared from "./shared";
 
 const secondsInOneMinute = 60;
@@ -28,7 +29,9 @@ const minutesInOneDay = minutesInOneHour * 24;
 // yes, this is weird.  However, the 24 day interval is important to azure.  See comments below.
 const minutesIn24Days = 24 * minutesInOneDay;
 
-export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
+export type Action = callback.AzureCallback<() => Promise<void>>;
+
+export function interval(name: string, options: timer.IntervalRate, handler: Action,
                          opts?: pulumi.ResourceOptions): void {
 
     let minutes = 0;
@@ -103,16 +106,16 @@ function pad(val: number | undefined): string {
 }
 
 export function daily(name: string,
-                      scheduleOrHandler: timer.DailySchedule | timer.Action,
-                      handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
+                      scheduleOrHandler: timer.DailySchedule | Action,
+                      handlerOrOptions?: Action | pulumi.ResourceOptions,
                       opts?: pulumi.ResourceOptions): void {
     let hour: number;
     let minute: number;
-    let handler: timer.Action;
-    if (typeof scheduleOrHandler === "function") {
+    let handler: Action;
+    if (isAction(scheduleOrHandler)) {
         hour = 0;
         minute = 0;
-        handler = scheduleOrHandler as timer.Action;
+        handler = scheduleOrHandler as Action;
         opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
@@ -121,20 +124,20 @@ export function daily(name: string,
     else {
         hour = scheduleOrHandler.hourUTC || 0;
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrOptions as timer.Action;
+        handler = handlerOrOptions as Action;
     }
     cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
 export function hourly(name: string,
-                       scheduleOrHandler: timer.HourlySchedule | timer.Action,
-                       handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
+                       scheduleOrHandler: timer.HourlySchedule | Action,
+                       handlerOrOptions?: Action | pulumi.ResourceOptions,
                        opts?: pulumi.ResourceOptions): void {
     let minute: number;
-    let handler: timer.Action;
-    if (typeof scheduleOrHandler === "function") {
+    let handler: Action;
+    if (isAction(scheduleOrHandler)) {
         minute = 0;
-        handler = scheduleOrHandler as timer.Action;
+        handler = scheduleOrHandler as Action;
         opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
     }
     else if (!scheduleOrHandler) {
@@ -142,12 +145,16 @@ export function hourly(name: string,
     }
     else {
         minute = scheduleOrHandler.minuteUTC || 0;
-        handler = handlerOrOptions as timer.Action;
+        handler = handlerOrOptions as Action;
     }
     cron(name, `${minute} * * * ? *`, handler, opts);
 }
 
-export function cron(name: string, cronTab: string, handler: timer.Action,
+function isAction(val: any): val is Action {
+    return val instanceof Function || !!(<callback.AzureCallbackData<any>>val).function;
+}
+
+export function cron(name: string, cronTab: string, handler: Action,
                      opts?: pulumi.ResourceOptions): void {
     const t = new Timer(name, cronTab, /*isTimeSpan:*/ false, handler, opts);
 }
@@ -163,7 +170,7 @@ class Timer extends pulumi.ComponentResource {
     public readonly subscription: subscription.EventSubscription<subscription.Context, any>;
 
     constructor(name: string, scheduleExpression: string, isTimeSpan: boolean,
-                handler: timer.Action, opts?: pulumi.ResourceOptions) {
+                handler: Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, {
             scheduleExpression: scheduleExpression,
         }, opts);
@@ -201,15 +208,21 @@ class Timer extends pulumi.ComponentResource {
             };
         }
 
+        const data = callback.getOrCreateAzureCallbackData(handler);
+        const handlerFunc = data.function;
+
+        // Wrap the cloud handler with an appropriate Azure FunctionApp entrypoint.
+        function entryPoint(context: subscription.Context, val: any)  {
+            handlerFunc().then(() => context.done(), err => context.done(err));
+        }
+
+        const subscriptionArgs = callback.createCallbackEventSubscriptionArgs(entryPoint, data);
+
         this.subscription = new subscription.EventSubscription<subscription.Context, any>(
             "cloud:timer:EventSubscription", name, [binding], {
-                ...shared.defaultSubscriptionArgs,
+                ...subscriptionArgs,
                 appServicePlanId: appServicePlanId,
                 siteConfig: siteConfig,
-
-                func: context => {
-                    handler().then(() => context.done());
-                },
             }, { parent: this });
     }
 }

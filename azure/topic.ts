@@ -17,7 +17,10 @@ import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as azuresb from "azure-sb";
+import * as callback from "./callback";
 import * as shared from "./shared";
+
+export type StreamHandler<T> = callback.AzureCallback<(item: T) => Promise<void>>;
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     public readonly namespace: azure.eventhub.Namespace;
@@ -27,7 +30,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
     public readonly publish: (item: T) => Promise<void>;
 
     // Outside API (constructor and methods)
-    public readonly subscribe: (name: string, handler: (item: T) => Promise<void>) => void;
+    public readonly subscribe: (name: string, handler: StreamHandler<T>) => void;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:topic:Topic", name, {}, opts);
@@ -48,13 +51,18 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         this.topic = topic;
 
         this.subscribe = (name, handler) => {
+            const data = callback.getOrCreateAzureCallbackData(handler);
+            const handlerFunc = data.function;
+
+            // Wrap the cloud handler with an appropriate Azure FunctionApp entrypoint.
+            function entryPoint(context: serverless.subscription.Context, val: T) {
+                handlerFunc(val).then(() => context.done(), err => context.done(err));
+            }
+
+            const subscriptionArgs = callback.createCallbackEventSubscriptionArgs(entryPoint, data);
+
             const subscription = serverless.eventhub.onTopicEvent(
-                name, namespace, topic, {
-                    ...shared.defaultSubscriptionArgs,
-                    func: (context, val) => {
-                        handler(val).then(() => context.done());
-                    },
-                }, { parent: this });
+                name, namespace, topic, subscriptionArgs, { parent: this });
 
             this.subscriptions.push(subscription);
         };

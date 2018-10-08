@@ -17,18 +17,21 @@ import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as stream from "stream";
+import * as callback from "./callback";
 import * as shared from "./shared";
 
 import * as azStorage from "azure-storage";
 import * as streamBuffers from "stream-buffers";
+
+export type BucketHandler = callback.AzureCallback<(args: cloud.BucketHandlerArgs) => Promise<void>>;
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public readonly storageAccount: azure.storage.Account;
     public readonly container: azure.storage.Container;
 
     // deployment-time api:
-    public onPut: (name: string, handler: cloud.BucketHandler, filter: cloud.BucketFilter | undefined) => void;
-    public onDelete: (name: string, handler: cloud.BucketHandler, filter: cloud.BucketFilter | undefined) => void;
+    public onPut: (name: string, handler: BucketHandler, filter: cloud.BucketFilter | undefined) => void;
+    public onDelete: (name: string, handler: BucketHandler, filter: cloud.BucketFilter | undefined) => void;
 
     // run-time api
     public get: (key: string) => Promise<Buffer>;
@@ -97,21 +100,28 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         this.onPut = async (putName, handler, filter) => {
             filter = filter || {};
+
+            const data = callback.getOrCreateAzureCallbackData(handler);
+            const handlerFunc = data.function;
+
+            // Wrap the cloud function with an appropriate azure FunctionApp entrypoint.
+            function entryPoint(context: serverless.subscription.Context, buffer: Buffer) {
+                handlerFunc({
+                    key: context.bindingData.blobTrigger,
+                    eventTime: context.bindingData.sys.utcNow,
+                    size: buffer.length,
+                }).then(() => context.done(), err => context.done(err));
+            }
+
+            const subscriptionArgs = callback.createCallbackEventSubscriptionArgs(entryPoint, data);
+
             serverless.storage.onBlobEvent(putName, storageAccount, {
-                    ...shared.defaultSubscriptionArgs,
-                    func: (context, buffer) => {
-                        handler({
-                            key: context.bindingData.blobTrigger,
-                            eventTime: context.bindingData.sys.utcNow,
-                            size: buffer.length,
-                        }).then(() => context.done());
-                    },
-                    storageAccount: storageAccount,
-                    containerName: container.name,
-                    filterPrefix: filter.keyPrefix,
-                    filterSuffix: filter.keySuffix,
-                },
-                { parent: this });
+                ...subscriptionArgs,
+                storageAccount: storageAccount,
+                containerName: container.name,
+                filterPrefix: filter.keyPrefix,
+                filterSuffix: filter.keySuffix,
+            }, { parent: this });
         };
 
         this.onDelete = async (delName, handler, filter) => {

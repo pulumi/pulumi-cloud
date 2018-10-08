@@ -19,6 +19,7 @@ import * as awsServerlessExpress from "aws-serverless-express";
 import * as express from "express";
 import * as http from "http";
 import * as url from "url";
+import * as callback from "./callback";
 import * as shared from "./shared";
 
 // Our implementation of httpServer is interesting in that we defer to the same shared helper lib we
@@ -65,11 +66,13 @@ interface AWSContext {
     succeed: (awsResponse: AWSResponse) => void;
 }
 
+export type RequestListenerFactory = callback.AzureCallback<() => (req: http.IncomingMessage, res: http.ServerResponse) => void>;
+
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 
     public constructor(
-        name: string, createRequestListener: cloud.RequestListenerFactory, opts: pulumi.ComponentResourceOptions) {
+        name: string, createRequestListener: RequestListenerFactory, opts: pulumi.ComponentResourceOptions) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 
@@ -89,19 +92,22 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 "name"      : "res",
             }];
 
+        const data = callback.getOrCreateAzureCallbackData(createRequestListener);
+        const handlerFunc = data.function;
+
         // Setup the top level factory function for the FunctionApp we're creating. That factory
         // function will end up launching a real node http server locally.  Once that's done it will
         // return the incoming message handler.  This handler will translate incoming azure message
         // to normal node http requests that it will send to that server.  When it gets a normal
         // http response back, it will translate that back to a form azure expects as an http
         // response.
-        const factoryFunc = createFactoryFunction(createRequestListener);
+        const factoryFunc = createFactoryFunction(handlerFunc);
+
+        const eventSubscriptionArgs = callback.createCallbackFactoryEventSubscriptionArgs<subscription.Context, any>(
+            factoryFunc, data);
 
         const eventSubscription = new subscription.EventSubscription<subscription.Context, any>(
-            "cloud:httpserver:EventSubscription", name, bindings, {
-                ...shared.defaultSubscriptionArgs,
-                factoryFunc,
-            }, { parent: this });
+            "cloud:httpserver:EventSubscription", name, bindings, eventSubscriptionArgs, { parent: this });
 
         this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);
         super.registerOutputs({
@@ -111,7 +117,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 }
 
 function createFactoryFunction(
-    createRequestListener: cloud.RequestListenerFactory): subscription.CallbackFactory<subscription.Context, any> {
+    createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void): subscription.CallbackFactory<subscription.Context, any> {
 
     return () => {
         // First, setup the server.  This will only happen once when the module loads.
@@ -133,7 +139,7 @@ function createFactoryFunction(
     };
 }
 
-function createServer(createRequestListener: cloud.RequestListenerFactory) {
+function createServer(createRequestListener: () => (req: http.IncomingMessage, res: http.ServerResponse) => void) {
     // Ensure that node's current working dir (CWD) is the same as the where we're launching
     // this module from.  We need this as Azure launches node from D:\windows\system32,
     // causing any node modules that expect CWD to be where the original module is to break.

@@ -14,6 +14,8 @@
 
 // tslint:disable:max-line-length
 
+import * as http from "http";
+
 import * as aws from "@pulumi/aws";
 import { x } from "@pulumi/aws/apigateway";
 import * as lambda from "@pulumi/aws/lambda";
@@ -24,12 +26,14 @@ import * as callback from "./callback";
 
 import * as serverlessExpress from "aws-serverless-express";
 
+export type RequestListenerFactory = callback.AwsCallback<() => (req: http.IncomingMessage, res: http.ServerResponse) => void>;
+
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 
     public constructor(
         name: string,
-        createRequestListener: cloud.RequestListenerFactory,
+        createRequestListener: RequestListenerFactory,
         opts: pulumi.ComponentResourceOptions) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);

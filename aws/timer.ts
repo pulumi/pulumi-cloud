@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import { CallbackData, timer } from "@pulumi/cloud";
+import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
@@ -57,7 +57,7 @@ export function daily(name: string,
     let hour: number;
     let minute: number;
     let handler: Action;
-    if (scheduleOrHandler instanceof Function || isCallbackData(scheduleOrHandler)) {
+    if (isAction(scheduleOrHandler)) {
         hour = 0;
         minute = 0;
         handler = scheduleOrHandler as Action;
@@ -74,8 +74,8 @@ export function daily(name: string,
     cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
-function isCallbackData(val: any): val is CallbackData<any> {
-    return !!(<CallbackData<any>>val).function;
+function isAction(val: any): val is Action {
+    return val instanceof Function || !!(<callback.AwsCallbackData<any>>val).function;
 }
 
 export function hourly(name: string,
@@ -84,7 +84,7 @@ export function hourly(name: string,
                        opts?: pulumi.ResourceOptions): void {
     let minute: number;
     let handler: Action;
-    if (scheduleOrHandler instanceof Function || isCallbackData(scheduleOrHandler)) {
+    if (isAction(scheduleOrHandler)) {
         minute = 0;
         handler = scheduleOrHandler as Action;
         opts = handlerOrOptions as pulumi.ResourceOptions | undefined;
