@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as pulumi from "@pulumi/pulumi";
-import { Callback } from "./callback";
 import { Endpoint } from "./service";
 
 /**
