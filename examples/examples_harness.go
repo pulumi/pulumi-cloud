@@ -15,26 +15,16 @@
 package examples
 
 import (
-	// "crypto/rand"
-	// "encoding/hex"
-	// "encoding/json"
-	// "fmt"
 	"io/ioutil"
 	"net/http"
-	// "os"
 	"path"
 	"strings"
 	"testing"
-	// "time"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
-	// "github.com/pulumi/pulumi/pkg/operations"
-	// "github.com/pulumi/pulumi/pkg/resource"
-	// "github.com/pulumi/pulumi/pkg/resource/config"
-	// "github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
-	// "github.com/pulumi/pulumi/pkg/util/contract"
 )
 
 func RunExamples(
@@ -184,11 +174,25 @@ func RunExamples(
 }
 
 func testURLGet(t *testing.T, baseURL string, path string, contents string) {
-	// Validate the GET /test1.txt endpoint
-	resp, err := http.Get(baseURL + path)
+	// Validate the GET endpoint
+
+	var resp *http.Response
+	var err error
+	for i := 0; i <= 2; i++ {
+		resp, err = http.Get(baseURL + path)
+		if err == nil {
+			break
+		}
+
+		// azure and aws can take a while to get a website ready.  wait a bit and try again.
+		t.Logf("GET %v failed with code %v.  Trying again in a minute.", baseURL+path, resp.StatusCode)
+		time.Sleep(1 * time.Minute)
+	}
+
 	if !assert.NoError(t, err, "expected to be able to GET /"+path) {
 		return
 	}
+
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
 	bytes, err := ioutil.ReadAll(resp.Body)
