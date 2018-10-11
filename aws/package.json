@@ -11,10 +11,10 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/aws": "dev",
-        "@pulumi/aws-infra": "dev",
-        "@pulumi/docker": "dev",
+        "@pulumi/pulumi": "^0.16.0-rc",
+        "@pulumi/aws": "^0.16.0-rc",
+        "@pulumi/aws-infra": "^0.16.0-rc",
+        "@pulumi/docker": "^0.16.0-rc",
         "aws-serverless-express": "^3.3.5",
         "mime": "^2.0.3",
         "semver": "^5.4.0"

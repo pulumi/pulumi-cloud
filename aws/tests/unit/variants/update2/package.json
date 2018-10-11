@@ -8,7 +8,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
+        "@pulumi/pulumi": "^0.16.0-rc",
         "chai": "^4.1.2",
         "mocha": "^3.5.3",
         "supertest": "^3.0.0"
@@ -20,7 +20,7 @@
         "@types/supertest": "^2.0.3"
     },
     "peerDependencies": {
-        "@pulumi/aws-infra": "^0.15.2-dev",
+        "@pulumi/aws-infra": "^0.16.0-rc",
         "@pulumi/cloud": "latest",
         "@pulumi/cloud-aws": "latest"
     }

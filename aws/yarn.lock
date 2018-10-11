@@ -45,48 +45,33 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
-"@pulumi/aws-infra@dev":
-  version "0.15.2-dev-1537646386-ge17c90a"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1537646386-ge17c90a.tgz#46cbbef672caaf10249f1aa3e2d5ce968bde7b80"
+"@pulumi/aws-infra@^0.16.0-rc":
+  version "0.16.0-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.16.0-rc1.tgz#87af4fdec85da1dcff45ffd5d16de1a6bda7c322"
   dependencies:
-    "@pulumi/aws" "^0.15.2-dev"
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/aws" "^0.16.0-rc"
+    "@pulumi/pulumi" "^0.16.0-rc"
 
-"@pulumi/aws@^0.15.2-dev", "@pulumi/aws@dev":
-  version "0.15.2-dev-1539195847-g9abeb1b"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.15.2-dev-1539195847-g9abeb1b.tgz#cd7210edb5bac4aa34968e8b2223f97ee44b13e9"
+"@pulumi/aws@^0.16.0-rc":
+  version "0.16.0-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.0-rc1.tgz#8886c5b7f0e2a6c7746dfac35fc0fcfd62f08124"
   dependencies:
-    "@pulumi/pulumi" dev
+    "@pulumi/pulumi" "^0.16.0-rc1"
     builtin-modules "3.0.0"
     mime "^2.0.0"
     read-package-tree "^5.2.1"
     resolve "^1.7.1"
 
-"@pulumi/docker@dev":
-  version "0.15.3-dev-1537850514-g9d22095"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.15.3-dev-1537850514-g9d22095.tgz#9857ca02398f4f4d2ba8d2186ac437018aefa05f"
+"@pulumi/docker@^0.16.0-rc":
+  version "0.16.0-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.0-rc1.tgz#1ff3312220aebc49ab8b2772176f7c3c7f7dac21"
   dependencies:
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/pulumi" "^0.16.0-rc"
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4.tgz#d4eb95d0b29fb092efa63f119cdd83661b694057"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
-"@pulumi/pulumi@dev":
-  version "0.15.5-dev-1539190917-g6707accd"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.5-dev-1539190917-g6707accd.tgz#3cad41d14db35f7e656546cdf9404dba17701c54"
+"@pulumi/pulumi@^0.16.0-rc", "@pulumi/pulumi@^0.16.0-rc1":
+  version "0.16.0-rc1"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.0-rc1.tgz#8e53c1b5b4d914738544a9ca164e4a38bedb6f2f"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
