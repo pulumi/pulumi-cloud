@@ -298,9 +298,9 @@ function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOption
 
     const routeName = name + sha1hash(route.method + ":" + route.path);
 
-    // Create the CallbackFunction in the cloud layer as opposed to just passing the callback down
-    // to pulumi-aws.  This ensures that the right configuration values are used that will
-    // appropriately respect user settings around things like codepaths/policies etc.
+    // Create the CallbackFunction in the cloud layer as opposed to just passing 'callback' as-is to
+    // apigateway.x.API to do it. This ensures that the right configuration values are used that
+    // will appropriately respect user settings around things like codepaths/policies etc.
     const callbackFunction = createCallbackFunction(
         routeName, callback, /*isFactoryFunction:*/ false, opts);
 

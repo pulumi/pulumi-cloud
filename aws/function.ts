@@ -34,7 +34,7 @@ export function createCallbackFunction(
         opts?: pulumi.ResourceOptions): aws.lambda.CallbackFunction<any, any> {
 
     const policies = [...getComputeIAMRolePolicies()];
-    let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
+    let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"];
 
     if (runLambdaInVPC) {
         const network = getOrCreateNetwork();
