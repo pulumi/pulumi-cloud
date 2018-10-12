@@ -99,8 +99,7 @@ func RunExamples(
 				assert.True(t, ok, "expected a `url` output property of type string")
 
 				// Validate the GET / endpoint
-				resp, err := http.Get(baseURL)
-				assert.NoError(t, err, "expected to be able to GET /")
+				resp := GetHTTP(t, baseURL, 200)
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html; charset=UTF-8", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
@@ -108,8 +107,7 @@ func RunExamples(
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
 				// Validate the GET /index.html endpoint
-				resp, err = http.Get(baseURL + "/index.html")
-				assert.NoError(t, err, "expected to be able to GET /index.html")
+				resp = GetHTTP(t, baseURL+"/index.html", 200)
 				contentType = resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html; charset=UTF-8", contentType)
 				bytes, err = ioutil.ReadAll(resp.Body)
@@ -117,8 +115,7 @@ func RunExamples(
 				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
 				// Validate the GET /favico.ico endpoint
-				resp, err = http.Get(baseURL + "/favicon.ico")
-				assert.NoError(t, err, "expected to be able to GET /favicon.ico")
+				resp = GetHTTP(t, baseURL+"/favicon.ico", 200)
 				assert.Equal(t, int64(1150), resp.ContentLength)
 				contentType = resp.Header.Get("Content-Type")
 				assert.Equal(t, "image/x-icon", contentType)
@@ -132,16 +129,15 @@ func RunExamples(
 				t.Logf("POST %v [%v]: ...", baseURL+"/todo/abc", resp.StatusCode)
 
 				// Validate the GET /todo/{id} endpoint
-				resp, err = http.Get(baseURL + "/todo/abc")
+				resp = GetHTTP(t, baseURL+"/todo/abc", 401)
 				assert.NoError(t, err, "expected to be able to GET /todo/{id}")
 				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
-				assert.Equal(t, 401, resp.StatusCode)
 				assert.Equal(t, "Authorization header required", string(bytes))
 				t.Logf("GET %v [%v]: %v", baseURL+"/todo/abc", resp.StatusCode, string(bytes))
 
 				// Validate the GET /todo endpoint
-				resp, err = http.Get(baseURL + "/todo/")
+				resp = GetHTTP(t, baseURL+"/todo/", 200)
 				assert.NoError(t, err, "expected to be able to GET /todo")
 				bytes, err = ioutil.ReadAll(resp.Body)
 				assert.NoError(t, err)
@@ -173,25 +169,39 @@ func RunExamples(
 	}
 }
 
-func testURLGet(t *testing.T, baseURL string, path string, contents string) {
-	// Validate the GET endpoint
-
+func GetHTTP(t *testing.T, url string, statusCode int) *http.Response {
 	var resp *http.Response
 	var err error
-	for i := 0; i <= 2; i++ {
-		resp, err = http.Get(baseURL + path)
-		if err == nil {
-			break
+	for i := 0; i <= 3; i++ {
+		resp, err = http.Get(url)
+		if err == nil && resp.StatusCode == statusCode {
+			return resp
 		}
 
-		// azure and aws can take a while to get a website ready.  wait a bit and try again.
-		t.Logf("GET %v failed with code %v.  Trying again in a minute.", baseURL+path, resp.StatusCode)
+		if err != nil {
+			t.Logf("Got error trying to get %v. %v", url, err.Error())
+		}
+
+		if resp != nil && resp.StatusCode != statusCode {
+			t.Logf("Expected to get status code %v for %v. Got: %v", statusCode, url, resp.StatusCode)
+		}
+
 		time.Sleep(1 * time.Minute)
 	}
 
-	if !assert.NoError(t, err, "expected to be able to GET /"+path) {
-		return
+	if !assert.NoError(t, err, "expected to be able to GET "+url) ||
+		!assert.Equal(t, statusCode, resp.StatusCode, "Got unexpected status code") {
+
+		t.FailNow()
 	}
+
+	return nil
+}
+
+func testURLGet(t *testing.T, baseURL string, path string, contents string) {
+	// Validate the GET endpoint
+
+	resp := GetHTTP(t, baseURL+path, 200)
 
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
