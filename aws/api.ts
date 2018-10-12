@@ -19,7 +19,6 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
-import { createCallbackFunction } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
@@ -204,7 +203,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             routes: [
                 ...staticRoutes.map(convertStaticRoute),
                 ...proxyRoutes.map(convertProxyRoute),
-                ...routes.map(r => convertRoute(name, r, { parent: this })),
+                ...routes.map(convertRoute),
             ],
         }, { parent: this });
 
@@ -260,18 +259,16 @@ function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>)
     });
 }
 
-function convertRoute(name: string, route: Route, opts: pulumi.ResourceOptions): x.Route {
+function convertRoute(route: Route): x.Route {
     return {
         method: <x.Method>route.method,
         path: route.path,
-        eventHandler: convertHandlers(name, route, opts),
+        eventHandler: convertHandlers(route.handlers),
     };
 }
 
-function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOptions): lambda.Function {
-    const handlers = route.handlers;
-
-    const callback: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
+function convertHandlers(handlers: cloud.RouteHandler[]): lambda.Callback<x.Request, x.Response> {
+    const result: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
         let body: Buffer;
         if (ev.body !== null) {
             if (ev.isBase64Encoded) {
@@ -296,15 +293,7 @@ function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOption
         next();
     };
 
-    const routeName = name + sha1hash(route.method + ":" + route.path);
-
-    // Create the CallbackFunction in the cloud layer as opposed to just passing the callback down
-    // to pulumi-aws.  This ensures that the right configuration values are used that will
-    // appropriately respect user settings around things like codepaths/policies etc.
-    const callbackFunction = createCallbackFunction(
-        routeName, callback, /*isFactoryFunction:*/ false, opts);
-
-    return callbackFunction;
+    return result;
 }
 
 const stageName = "stage";

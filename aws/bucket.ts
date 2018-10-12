@@ -16,8 +16,6 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
-import { createCallbackFunction } from "./function";
-
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public bucket: aws.s3.Bucket;
 
@@ -112,19 +110,12 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 err => callback(err, undefined));
         };
 
-        // Create the CallbackFunction in the cloud layer as opposed to just the callback down to
-        // pulumi-aws.  This ensures that the right configuration values are used that will
-        // appropriately respect user settings around things like codepaths/policies etc.
-        const opts = { parent: this };
-        const lambda = createCallbackFunction(
-            name, eventHandler, /*isFactoryFunction:*/ false, opts);
-
         // Register for the raw s3 events from the bucket.
         filter = filter || {};
-        this.bucket.onEvent(name, lambda, {
+        this.bucket.onEvent(name, eventHandler, {
             events: events,
             filterPrefix: filter.keyPrefix,
             filterSuffix: filter.keySuffix,
-        }, opts);
+        }, { parent: this });
     }
 }
