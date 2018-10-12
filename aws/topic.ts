@@ -58,8 +58,8 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             })).then(() => callback(undefined, undefined), err => callback(err, undefined));
         };
 
-        // Create the CallbackFunction in the cloud layer as opposed to just the callback down to
-        // pulumi-aws.  This ensures that the right configuration values are used that will
+        // Create the CallbackFunction in the cloud layer as opposed to just passing the callback
+        // down to pulumi-aws.  This ensures that the right configuration values are used that will
         // appropriately respect user settings around things like codepaths/policies etc.
         const opts = { parent: this };
         const lambda = createCallbackFunction(
