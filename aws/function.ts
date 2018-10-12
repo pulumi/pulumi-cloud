@@ -27,6 +27,42 @@ export function createFactoryFunction(
     return new Function(name, handler, /*isFactoryFunction*/ true, opts);
 }
 
+export function createCallbackFunction(
+        name: string,
+        handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
+        isFactoryFunction: boolean,
+        opts?: pulumi.ResourceOptions): aws.lambda.CallbackFunction<any, any> {
+
+    const policies = [...getComputeIAMRolePolicies()];
+    let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
+
+    if (runLambdaInVPC) {
+        const network = getOrCreateNetwork();
+        // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
+        //     add VPC access will currently fail due to an issue in the Terraform provider.
+        policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+        vpcConfig = {
+            securityGroupIds: pulumi.all(network.securityGroupIds),
+            subnetIds: pulumi.all(network.subnetIds),
+        };
+    }
+
+    // First allocate a function.
+    const args: aws.lambda.CallbackFunctionArgs<any, any> = {
+        policies,
+        vpcConfig,
+        memorySize: functionMemorySize,
+        codePathOptions: {
+            extraIncludePaths: functionIncludePaths,
+            extraIncludePackages: functionIncludePackages,
+        },
+        callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
+        callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
+    };
+
+    return new aws.lambda.CallbackFunction(name, args, opts);
+}
+
 // Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
 // `@pulumi/cloud` configuration.
 export class Function extends pulumi.ComponentResource {
@@ -39,34 +75,7 @@ export class Function extends pulumi.ComponentResource {
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { handler: handler }, opts);
 
-        const policies = [...getComputeIAMRolePolicies()];
-        let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"] | undefined;
-
-        if (runLambdaInVPC) {
-            const network = getOrCreateNetwork();
-            // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
-            //     add VPC access will currently fail due to an issue in the Terraform provider.
-            policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
-            vpcConfig = {
-                securityGroupIds: pulumi.all(network.securityGroupIds),
-                subnetIds: pulumi.all(network.subnetIds),
-            };
-        }
-
-        // First allocate a function.
-        const args: aws.lambda.CallbackFunctionArgs<any, any> = {
-            policies,
-            vpcConfig,
-            memorySize: functionMemorySize,
-            codePathOptions: {
-                extraIncludePaths: functionIncludePaths,
-                extraIncludePackages: functionIncludePackages,
-            },
-            callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
-            callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
-        };
-
-        this.lambda = new aws.lambda.CallbackFunction(name, args, { parent: this });
+        this.lambda = createCallbackFunction(name, handler, isFactoryFunction, { parent: this });
 
         this.registerOutputs({
             lambda: this.lambda,
