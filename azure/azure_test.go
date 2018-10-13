@@ -178,10 +178,7 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 
 func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 	// Validate the GET /test1.txt endpoint
-	resp, err := http.Get(baseURL + path)
-	if !assert.NoError(t, err, "expected to be able to GET /"+path) {
-		return
-	}
+	resp := examples.GetHTTP(t, baseURL+path, 200)
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
 	bytes, err := ioutil.ReadAll(resp.Body)
@@ -205,9 +202,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 
 		// Validate the GET /test endpoint
 		{
-			resp, err := http.Get(baseURL + "test")
-			assert.NoError(t, err, "expected to be able to GET /test")
-			assert.Equal(t, 200, resp.StatusCode, "expected 200")
+			resp := examples.GetHTTP(t, baseURL+"test", 200)
 			contentType := resp.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
 			bytes, err := ioutil.ReadAll(resp.Body)
@@ -222,9 +217,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 		{
 			// Call the endpoint twice so that things have time to warm up.
 			http.Get(baseURL)
-			resp, err := http.Get(baseURL)
-			assert.NoError(t, err, "expected to be able to GET /")
-			assert.Equal(t, 200, resp.StatusCode, "expected 200")
+			resp := examples.GetHTTP(t, baseURL, 200)
 			contentType := resp.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
 			bytes, err := ioutil.ReadAll(resp.Body)
@@ -235,9 +228,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 		// Validate the GET /nginx endpoint
 		{
 			{
-				resp, err := http.Get(baseURL + "nginx")
-				assert.NoError(t, err, "expected to be able to GET /nginx")
-				assert.Equal(t, 200, resp.StatusCode, "expected 200")
+				resp := examples.GetHTTP(t, baseURL+"nginx", 200)
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
@@ -245,9 +236,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 				t.Logf("GET %v [%v/%v]: %v", baseURL+"nginx", resp.StatusCode, contentType, string(bytes))
 			}
 			{
-				resp, err := http.Get(baseURL + "nginx/doesnotexist")
-				assert.NoError(t, err, "expected to be able to GET /nginx/doesnotexist")
-				assert.Equal(t, 404, resp.StatusCode, "expected 404")
+				resp := examples.GetHTTP(t, baseURL+"nginx/doesnotexist", 404)
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
 				bytes, err := ioutil.ReadAll(resp.Body)
@@ -258,9 +247,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 
 		// Validate the GET /run endpoint
 		{
-			resp, err := http.Get(baseURL + "run")
-			assert.NoError(t, err, "expected to be able to GET /run")
-			assert.Equal(t, 200, resp.StatusCode, "expected 200")
+			resp := examples.GetHTTP(t, baseURL+"run", 200)
 			contentType := resp.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
 			bytes, err := ioutil.ReadAll(resp.Body)
@@ -276,9 +263,7 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 
 		// Validate the GET /custom endpoint
 		{
-			resp, err := http.Get(baseURL + "custom")
-			assert.NoError(t, err, "expected to be able to GET /custom")
-			assert.Equal(t, 200, resp.StatusCode, "expected 200")
+			resp := examples.GetHTTP(t, baseURL+"custom", 200)
 			contentType := resp.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
 			bytes, err := ioutil.ReadAll(resp.Body)
