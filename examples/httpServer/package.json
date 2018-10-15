@@ -8,7 +8,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^0.16.0-rc",
+        "@pulumi/pulumi": "^0.16.0",
         "@pulumi/cloud": "dev",
         "@pulumi/cloud-aws": "dev",
         "@pulumi/cloud-azure": "dev",

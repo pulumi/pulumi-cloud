@@ -138,9 +138,9 @@
     ts-node "^7.0.0"
     typescript "^3.0.0"
 
-"@pulumi/pulumi@^0.16.0-rc":
-  version "0.16.0-rc1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.0-rc1.tgz#8e53c1b5b4d914738544a9ca164e4a38bedb6f2f"
+"@pulumi/pulumi@^0.16.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.0.tgz#8c199cadffe93d5407bfbf19fbe1e41a39b01bcc"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
