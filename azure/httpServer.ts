@@ -69,7 +69,8 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 
     public constructor(
-        name: string, createRequestListener: cloud.RequestListenerFactory, opts: pulumi.ComponentResourceOptions) {
+        name: string, createRequestListener: cloud.RequestListenerFactory,
+        opts: pulumi.ComponentResourceOptions = {}) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 

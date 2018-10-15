@@ -16,6 +16,8 @@ import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
+import { createCallbackFunction } from "./function";
+
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
@@ -56,6 +58,14 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             })).then(() => callback(undefined, undefined), err => callback(err, undefined));
         };
 
-        this.topic.onEvent(subscriptionName, eventHandler, {}, { parent: this });
+        // Create the CallbackFunction in the cloud layer as opposed to just passing the javascript
+        // callback down to pulumi-aws directly.  This ensures that the right configuration values
+        // are used that will appropriately respect user settings around things like
+        // codepaths/policies etc.
+        const opts = { parent: this };
+        const lambda = createCallbackFunction(
+            name, eventHandler, /*isFactoryFunction:*/ false, opts);
+
+        this.topic.onEvent(subscriptionName, eventHandler, {}, opts);
     }
 }
