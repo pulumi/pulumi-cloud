@@ -62,30 +62,15 @@
     "@pulumi/pulumi" dev
 
 "@pulumi/docker@dev":
-  version "0.16.1-dev"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev.tgz#eb01630af825d5c6c2c75cc7d84b36912d800d7d"
+  version "0.16.1-dev-1539384558-g8716afc"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev-1539384558-g8716afc.tgz#60077959d8f3f0749e5f00cf99e888c0152e7381"
   dependencies:
-    "@pulumi/pulumi" "^0.15.4-dev"
+    "@pulumi/pulumi" dev
     semver "^5.4.0"
 
-"@pulumi/pulumi@^0.15.4-dev":
-  version "0.15.4"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.15.4.tgz#d4eb95d0b29fb092efa63f119cdd83661b694057"
-  dependencies:
-    google-protobuf "^3.5.0"
-    grpc "^1.12.2"
-    minimist "^1.2.0"
-    normalize-package-data "^2.4.0"
-    protobufjs "^6.8.6"
-    read-package-tree "^5.2.1"
-    require-from-string "^2.0.1"
-    source-map-support "^0.4.16"
-    ts-node "^7.0.0"
-    typescript "^3.0.0"
-
 "@pulumi/pulumi@dev":
-  version "0.16.1-dev-1539367749-ga71db160"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539367749-ga71db160.tgz#b67f9e5f171e5498a675b0c902d14972020a96c7"
+  version "0.16.1-dev-1539622375-g730a929c"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539622375-g730a929c.tgz#8b069fc000171cf7d5691732c5b279ad26462369"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
