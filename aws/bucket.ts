@@ -117,7 +117,12 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 err => callback(err, undefined));
         };
 
-        const lambda = callback.createCallbackFunction(name, eventHandler, data, { parent: this });
+        // Create the CallbackFunction in the cloud layer as opposed to just passing the javascript
+        // callback down to pulumi-aws directly.  This ensures that the right configuration values
+        // are used that will appropriately respect user settings around things like
+        // codepaths/policies etc.
+        const opts = { parent: this };
+        const lambda = callback.createCallbackFunction(name, eventHandler, data, opts);
 
         // Register for the raw s3 events from the bucket.
         filter = filter || {};
@@ -125,6 +130,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             events: events,
             filterPrefix: filter.keyPrefix,
             filterSuffix: filter.keySuffix,
-        }, { parent: this });
+        }, opts);
     }
 }

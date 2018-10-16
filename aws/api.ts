@@ -19,6 +19,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
+import * as callback from "./callback";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
@@ -203,7 +204,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
             routes: [
                 ...staticRoutes.map(convertStaticRoute),
                 ...proxyRoutes.map(convertProxyRoute),
-                ...routes.map(convertRoute),
+                ...routes.map(r => convertRoute(name, r, { parent: this })),
             ],
         }, { parent: this });
 
@@ -259,16 +260,18 @@ function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>)
     });
 }
 
-function convertRoute(route: Route): x.Route {
+function convertRoute(name: string, route: Route, opts: pulumi.ResourceOptions): x.Route {
     return {
         method: <x.Method>route.method,
         path: route.path,
-        eventHandler: convertHandlers(route.handlers),
+        eventHandler: convertHandlers(name, route, opts),
     };
 }
 
-function convertHandlers(handlers: cloud.RouteHandler[]): lambda.Callback<x.Request, x.Response> {
-    const result: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
+function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOptions): lambda.Function {
+    const handlers = route.handlers;
+
+    const totalHandler: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
         let body: Buffer;
         if (ev.body !== null) {
             if (ev.isBase64Encoded) {
@@ -293,7 +296,17 @@ function convertHandlers(handlers: cloud.RouteHandler[]): lambda.Callback<x.Requ
         next();
     };
 
-    return result;
+    const routeName = name + sha1hash(route.method + ":" + route.path);
+
+    const data = callback.getOrCreateAwsCallbackData(totalHandler);
+
+    // Create the CallbackFunction in the cloud layer as opposed to just passing 'callback' as-is to
+    // apigateway.x.API to do it. This ensures that the right configuration values are used that
+    // will appropriately respect user settings around things like codepaths/policies etc.
+    const callbackFunction = callback.createCallbackFunction(
+        routeName, totalHandler, data, opts);
+
+    return callbackFunction;
 }
 
 const stageName = "stage";

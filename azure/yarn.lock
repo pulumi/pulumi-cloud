@@ -62,15 +62,15 @@
     "@pulumi/pulumi" dev
 
 "@pulumi/docker@dev":
-  version "0.16.1-dev-1539384558-g8716afc"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev-1539384558-g8716afc.tgz#60077959d8f3f0749e5f00cf99e888c0152e7381"
+  version "0.16.1-dev-1539709205-g92baf85"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev-1539709205-g92baf85.tgz#fa21dd6c42cd32af68821f848e2f1434f7f6383d"
   dependencies:
     "@pulumi/pulumi" dev
     semver "^5.4.0"
 
 "@pulumi/pulumi@dev":
-  version "0.16.1-dev-1539367749-ga71db160"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539367749-ga71db160.tgz#b67f9e5f171e5498a675b0c902d14972020a96c7"
+  version "0.16.1-dev-1539638908-g00a22b27"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539638908-g00a22b27.tgz#9578f8fefe7680de1c243e72834e462d162c7838"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -144,8 +144,8 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.11.7"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.7.tgz#0e75ca9357d646ca754016ca1d68a127ad7e7300"
+  version "10.12.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.0.tgz#ea6dcbddbc5b584c83f06c60e82736d8fbb0c235"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
   version "8.10.36"
@@ -337,11 +337,11 @@ azure-sb@^0.10.6:
     wns "~0.5.3"
 
 azure-storage@^2.10.1:
-  version "2.10.1"
-  resolved "https://registry.yarnpkg.com/azure-storage/-/azure-storage-2.10.1.tgz#f8c1780bda97bb803e5a4bf7d6aad7862301cd81"
+  version "2.10.2"
+  resolved "https://registry.yarnpkg.com/azure-storage/-/azure-storage-2.10.2.tgz#3bcabdbf10e72fd0990db81116e49023c4a675b6"
   dependencies:
     browserify-mime "~1.2.9"
-    extend "~1.2.1"
+    extend "^3.0.2"
     json-edm-parser "0.1.2"
     md5.js "1.3.4"
     readable-stream "~2.0.0"
@@ -350,7 +350,7 @@ azure-storage@^2.10.1:
     uuid "^3.0.0"
     validator "~9.4.1"
     xml2js "0.2.8"
-    xmlbuilder "0.4.3"
+    xmlbuilder "^9.0.7"
 
 babel-code-frame@^6.22.0:
   version "6.26.0"
@@ -673,11 +673,7 @@ express@^4.16.3:
     utils-merge "1.0.1"
     vary "~1.1.2"
 
-extend@~1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/extend/-/extend-1.2.1.tgz#a0f5fd6cfc83a5fe49ef698d60ec8a624dd4576c"
-
-extend@~3.0.2:
+extend@^3.0.2, extend@~3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.2.tgz#f8b1136b4071fbd8eb140aff858b1019ec2915fa"
 
@@ -1793,6 +1789,10 @@ xml2js@0.2.8:
 xmlbuilder@0.4.3:
   version "0.4.3"
   resolved "http://registry.npmjs.org/xmlbuilder/-/xmlbuilder-0.4.3.tgz#c4614ba74e0ad196e609c9272cd9e1ddb28a8a58"
+
+xmlbuilder@^9.0.7:
+  version "9.0.7"
+  resolved "http://registry.npmjs.org/xmlbuilder/-/xmlbuilder-9.0.7.tgz#132ee63d2ec5565c557e20f4c22df9aca686b10d"
 
 "xmldom@>= 0.1.x":
   version "0.1.27"

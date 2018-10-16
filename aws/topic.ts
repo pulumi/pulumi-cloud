@@ -63,7 +63,13 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
             })).then(() => callback(undefined, undefined), err => callback(err, undefined));
         };
 
-        const lambda = callback.createCallbackFunction(subscriptionName, eventHandler, data, { parent: this });
-        this.topic.onEvent(subscriptionName, lambda, {}, { parent: this });
+        // Create the CallbackFunction in the cloud layer as opposed to just passing the javascript
+        // callback down to pulumi-aws directly.  This ensures that the right configuration values
+        // are used that will appropriately respect user settings around things like
+        // codepaths/policies etc.
+        const opts = { parent: this };
+        const lambda = callback.createCallbackFunction(name, eventHandler, data, opts);
+
+        this.topic.onEvent(subscriptionName, lambda, {}, opts);
     }
 }
