@@ -24,15 +24,7 @@ import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from ".
  * default AwsCallbackData Pulumi creates when given a simple JavaScript function, use
  * [createCallbackData].
  */
-export interface AwsCallbackData<T extends Function> extends cloud.CallbackData<T>, aws.lambda.CallbackFunctionArgs<any, any> {
-    /**
-     * Not used.  Provide [function] instead.
-     */
-    callback?: never;
-    /**
-     * Not used.  Provide [function] instead.
-     */
-    callbackFactory?: never;
+export interface AwsCallbackData<T extends Function> extends cloud.CallbackData<T>, aws.lambda.BaseCallbackFunctionArgs {
 }
 
 /**
