@@ -296,8 +296,9 @@ function computeImageFromBuild(
     pulumi.log.debug(`Building container image at '${build}'`, repository);
     const { repositoryUrl, registryId } = repository;
 
-    return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
-        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
+    return pulumi.all([repositoryUrl, registryId])
+                 .apply(([repositoryUrl, registryId]) =>
+                     computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
 }
 
 function computeImageFromBuildWorker(
@@ -309,16 +310,16 @@ function computeImageFromBuildWorker(
         logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
     // See if we've already built this.
-    let imageDigest = buildImageCache.get(imageName);
-    if (imageDigest) {
-        imageDigest.apply(d =>
+    let uniqueImageName = buildImageCache.get(imageName);
+    if (uniqueImageName) {
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
-    } else {
-        // If we haven't, build and push the local build context to the ECR repository, wait for
-        // that to complete, then return the image name pointing to the ECT repository along
-        // with an environment variable for the image digest to ensure the TaskDefinition get's
-        // replaced IFF the built image changes.
-        imageDigest = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
+    }
+    else {
+        // If we haven't, build and push the local build context to the ECR repository.  Then return
+        // the unique image name we pushed to.  The name will change if the image changes ensuring
+        // the TaskDefinition get's replaced IFF the built image changes.
+        uniqueImageName = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
             // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
             // extracting the username/password pair after base64-decoding the token.
             //
@@ -339,15 +340,13 @@ function computeImageFromBuildWorker(
             };
         });
 
+        buildImageCache.set(imageName, uniqueImageName);
 
-        buildImageCache.set(imageName, imageDigest);
-
-        imageDigest.apply(d =>
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
     }
 
-    preEnv.IMAGE_DIGEST = imageDigest;
-    return createImageOptions(repositoryUrl, preEnv);
+    return createImageOptions(uniqueImageName, preEnv);
 }
 
 function computeImageFromImage(
@@ -369,10 +368,10 @@ function computeImageFromFunction(
 }
 
 function createImageOptions(
-    image: string,
-    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+    image: pulumi.Input<string>,
+    environment: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
-    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+    return pulumi.output({ image, environment });
 }
 
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
