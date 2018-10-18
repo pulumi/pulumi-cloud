@@ -542,26 +542,26 @@ function computeImageFromBuildWorker(
     dockerRegistry: docker.Registry,
     logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
-    let imageDigest = buildImageCache.get(imageName);
+    let uniqueImageName = buildImageCache.get(imageName);
     // See if we've already built this.
-    if (imageDigest) {
-        imageDigest.apply(d =>
+    if (uniqueImageName) {
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
-    } else {
-        // If we haven't, build and push the local build context to the ECR repository, wait for
-        // that to complete, then return the image name pointing to the ECT repository along
-        // with an environment variable for the image digest to ensure the TaskDefinition get's
-        // replaced IFF the built image changes.
-        imageDigest = docker.buildAndPushImage(
+    }
+    else {
+        // If we haven't, build and push the local build context to the azure docker repository.
+        // Then return the unique name given to this image in that repository. The name will change
+        // if the image changes ensuring the TaskDefinition get's replaced IFF the built image
+        // changes.
+        uniqueImageName = docker.buildAndPushImage(
             imageName, build, repositoryUrl, logResource,
             async () => dockerRegistry);
 
-        imageDigest.apply(d =>
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
     }
 
-    preEnv.IMAGE_DIGEST = imageDigest;
-    return createImageOptions(repositoryUrl, preEnv);
+    return createImageOptions(uniqueImageName, preEnv);
 }
 
 function computeImageFromImage(
@@ -583,8 +583,9 @@ function computeImageFromFunction(
 }
 
 function createImageOptions(
-    image: string,
-    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+    image: pulumi.Input<string>,
+    environment: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
-    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+    return pulumi.all([image, environment])
+                 .apply(([image, environment]) => ({ image, environment }));
 }
