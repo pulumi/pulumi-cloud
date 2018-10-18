@@ -586,6 +586,5 @@ function createImageOptions(
     image: pulumi.Input<string>,
     environment: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
-    return pulumi.all([image, environment])
-                 .apply(([image, environment]) => ({ image, environment }));
+    return pulumi.output({ image, environment });
 }
