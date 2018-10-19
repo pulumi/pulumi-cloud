@@ -637,6 +637,14 @@ export interface Endpoint extends cloud.Endpoint {
 
 export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
 
+export interface ServiceArguments extends cloud.ServiceArguments {
+    /**
+     * Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent
+     * premature shutdown, up to 7200. Only valid for services configured to use load balancers.
+     */
+    healthCheckGracePeriodSeconds?: pulumi.Input<number>;
+}
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -656,7 +664,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         return getTaskRole();
     }
 
-    constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
+    constructor(name: string, args: ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
@@ -745,6 +753,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             loadBalancers: loadBalancers,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: args.waitForSteadyState === undefined ? true : args.waitForSteadyState,
+            healthCheckGracePeriodSeconds: args.healthCheckGracePeriodSeconds,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
                 assignPublicIp: config.useFargate && !network.usePrivateSubnets,
