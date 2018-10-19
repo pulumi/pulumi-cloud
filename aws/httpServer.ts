@@ -23,13 +23,14 @@ import * as pulumi from "@pulumi/pulumi";
 import { createFactoryFunction } from "./function";
 
 import * as serverlessExpress from "aws-serverless-express";
+import { Server } from "http";
 
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 
     public constructor(
         name: string,
-        createRequestListener: cloud.RequestListenerFactory,
+        createRequestListener: cloud.RequestListenerFactory | Promise<cloud.RequestListenerFactory>,
         opts: pulumi.ComponentResourceOptions = {}) {
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
@@ -38,16 +39,28 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // function so that we can create the underlying server once, and then call into it with
         // each request we get.
         const entryPointFactory: lambda.CallbackFactory<x.Request, x.Response> = () => {
-            // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
-            // treat all messages as binary and not reinterpret them.
-            const server = serverlessExpress.createServer(
-                createRequestListener(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+            const serverPromiseFactory: () => Promise<Server> = async () => {
+                // This allows us to safely treat the value as a Promise regardless of whether
+                // or not is was passed in as an actual Promise or a synchronous factory
+                const requestListener = await Promise.resolve(createRequestListener);
+                
+                // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
+                // treat all messages as binary and not reinterpret them.
+                const server = serverlessExpress.createServer(
+                    requestListener(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
+
+                return server;
+            } 
+            
+            const serverPromise = serverPromiseFactory();
 
             // All the entrypoint function for the Lambda has to do is pass the events along to the
             // server we created above.  That server will then forward the messages along to the
             // request listener provided by the caller.
             return (event, context) => {
-                serverlessExpress.proxy(server, event, <any>context);
+                // This only incurs the cost of running the async server init once and then on
+                // all subsequent calls returns the already initialized instance to handle the call
+                serverPromise.then(server => serverlessExpress.proxy(server, event, <any>context));
             };
         };
 
