@@ -43,15 +43,15 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 // This allows us to safely treat the value as a Promise regardless of whether
                 // or not is was passed in as an actual Promise or a synchronous factory
                 const requestListener = await Promise.resolve(createRequestListener);
-                
+
                 // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
                 // treat all messages as binary and not reinterpret them.
                 const server = serverlessExpress.createServer(
                     requestListener(), /*serverListenCallback*/ undefined, /*binaryMimeTypes*/ ["*/*"]);
 
                 return server;
-            } 
-            
+            };
+
             const serverPromise = serverPromiseFactory();
 
             // All the entrypoint function for the Lambda has to do is pass the events along to the
