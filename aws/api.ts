@@ -253,7 +253,7 @@ function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>)
             port: ep.port,
             // note: if the endpoint passes in has no loadBalancer, this will fail with an
             // appropriate error in apigateway.x.API.
-            loadBalancer: (ep as Endpoint).loadBalancer,
+            loadBalancer: (ep as Endpoint).loadBalancer!!,
         };
 
         return apiEndpoint;

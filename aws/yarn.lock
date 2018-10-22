@@ -53,8 +53,8 @@
     "@pulumi/pulumi" dev
 
 "@pulumi/aws@dev":
-  version "0.16.1-dev-1539712276-g0907029"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.1-dev-1539712276-g0907029.tgz#32a736b726d1795a229b39bd372885e1ace6c6ff"
+  version "0.16.1-dev-1540214720-g276c743"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.1-dev-1540214720-g276c743.tgz#d08cff8f3feb2ddfbd53b692c96824f4cf84e7b0"
   dependencies:
     "@pulumi/pulumi" dev
     builtin-modules "3.0.0"
@@ -70,8 +70,8 @@
     semver "^5.4.0"
 
 "@pulumi/pulumi@dev":
-  version "0.16.1-dev-1539886907-g19a313b6"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539886907-g19a313b6.tgz#8c0fe71dbb42588cf84a4664a4375a1c8613c97a"
+  version "0.16.2-dev-1540246995-ga31cf4ff"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.2-dev-1540246995-ga31cf4ff.tgz#6f2a32e43dbf8306057cf49dbde9d909d643bd67"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -222,8 +222,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.338.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.338.0.tgz#f1b1347f78defa27b92b030b5787fad0f89ac83b"
+  version "2.340.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.340.0.tgz#17799ee456793248eae10c8c3847f59d5b6a27c7"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -587,17 +587,17 @@ make-error@^1.1.1:
 
 media-typer@0.3.0:
   version "0.3.0"
-  resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
+  resolved "http://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
 
-mime-db@~1.36.0:
-  version "1.36.0"
-  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.36.0.tgz#5020478db3c7fe93aad7bbcc4dcf869c43363397"
+mime-db@~1.37.0:
+  version "1.37.0"
+  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.37.0.tgz#0b6a0ce6fdbe9576e25f1f2d2fde8830dc0ad0d8"
 
 mime-types@~2.1.18:
-  version "2.1.20"
-  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.20.tgz#930cb719d571e903738520f8470911548ca2cc19"
+  version "2.1.21"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.21.tgz#28995aa1ecb770742fe6ae7e58f9181c744b3f96"
   dependencies:
-    mime-db "~1.36.0"
+    mime-db "~1.37.0"
 
 mime@^2.0.0, mime@^2.0.3:
   version "2.3.1"

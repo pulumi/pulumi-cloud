@@ -234,7 +234,7 @@ function computeImage(
             const serviceEnv = makeServiceEnvName(service);
             for (const port of Object.keys(ports[service])) {
                 const info = ports[service][parseInt(port, 10)];
-                const hostname = info.host.dnsName;
+                const hostname = info.host ? info.host.dnsName : pulumi.output("");
                 const hostport = info.hostPort.toString();
                 const hostproto = info.hostProtocol;
                 // Populate Kubernetes and Docker links compatible environment variables.  These take the form:
@@ -625,14 +625,14 @@ interface ExposedPorts {
 }
 
 interface ExposedPort {
-    host: aws.elasticloadbalancingv2.LoadBalancer;
+    host: aws.elasticloadbalancingv2.LoadBalancer | undefined;
     hostPort: number;
     hostProtocol: cloud.ContainerProtocol;
 }
 
 // The AWS-specific Endpoint interface includes additional AWS implementation details for the exposed Endpoint.
 export interface Endpoint extends cloud.Endpoint {
-    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
+    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer | undefined;
 }
 
 export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
@@ -643,6 +643,12 @@ export interface ServiceArguments extends cloud.ServiceArguments {
      * premature shutdown, up to 7200. Only valid for services configured to use load balancers.
      */
     healthCheckGracePeriodSeconds?: pulumi.Input<number>;
+
+    /**
+     * Whether or not a load balancer should be put in front of the [Service].  Defaults to 'true'
+     * if not specified.
+     */
+    useLoadBalancer?: boolean;
 }
 
 export class Service extends pulumi.ComponentResource implements cloud.Service {
@@ -720,17 +726,30 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                     if (loadBalancers.length > 0) {
                         throw new Error("Only one port can currently be exposed per Service.");
                     }
-                    const info = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
-                    ports[containerName][portMapping.port] = {
-                        host: info.loadBalancer,
-                        hostPort: portMapping.port,
-                        hostProtocol: info.protocol,
-                    };
-                    loadBalancers.push({
-                        containerName: containerName,
-                        containerPort: portMapping.targetPort || portMapping.port,
-                        targetGroupArn: info.targetGroup.arn,
-                    });
+                    const loadBalancerInfo = args.useLoadBalancer === false
+                        ? null
+                        : createLoadBalancer(this, cluster, name, containerName, portMapping, network);
+
+                    if (!loadBalancerInfo) {
+                        ports[containerName][portMapping.port] = {
+                            host: undefined,
+                            hostPort: portMapping.port,
+                            hostProtocol: portMapping.protocol || "tcp",
+                        };
+                    }
+                    else {
+                        ports[containerName][portMapping.port] = {
+                            host: loadBalancerInfo.loadBalancer,
+                            hostPort: portMapping.port,
+                            hostProtocol: loadBalancerInfo.protocol,
+                        };
+
+                        loadBalancers.push({
+                            containerName: containerName,
+                            containerPort: portMapping.targetPort || portMapping.port,
+                            targetGroupArn: loadBalancerInfo.targetGroup.arn,
+                        });
+                    }
                 }
             }
         }
@@ -800,15 +819,17 @@ function getEndpointHelper(
 }
 
 function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
-    return pulumi.all(utils.apply(ports, portToExposedPort => {
-        const inner: pulumi.Output<{ [port: string]: Endpoint }> =
-            pulumi.all(utils.apply(portToExposedPort, exposedPort =>
-                exposedPort.host.dnsName.apply(d => ({
-                    port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d,
-                }))));
+    const wrapped = utils.apply(ports, portToExposedPort => {
+        return utils.apply(portToExposedPort, exposedPort => {
+            return {
+                port: exposedPort.hostPort,
+                loadBalancer: exposedPort.host,
+                hostname: exposedPort.host ? exposedPort.host.dnsName : pulumi.output(""),
+            };
+        });
+    });
 
-        return inner;
-    }));
+    return pulumi.output(wrapped);
 }
 
 const volumeNames = new Set<string>();
