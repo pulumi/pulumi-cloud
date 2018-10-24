@@ -46,15 +46,15 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/aws-infra@dev":
-  version "0.15.2-dev-1539374157-g0b12426"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1539374157-g0b12426.tgz#5e2352a202915aba1eea9113fd343b43422547fe"
+  version "0.16.1-dev-1540408120-g0f78af2"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.16.1-dev-1540408120-g0f78af2.tgz#79be57c59399ad73d399f2a9f55c7691987743a7"
   dependencies:
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
 
 "@pulumi/aws@dev":
-  version "0.16.1-dev-1539712276-g0907029"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.1-dev-1539712276-g0907029.tgz#32a736b726d1795a229b39bd372885e1ace6c6ff"
+  version "0.16.1-dev-1540214720-g276c743"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.1-dev-1540214720-g276c743.tgz#d08cff8f3feb2ddfbd53b692c96824f4cf84e7b0"
   dependencies:
     "@pulumi/pulumi" dev
     builtin-modules "3.0.0"
@@ -70,8 +70,8 @@
     semver "^5.4.0"
 
 "@pulumi/pulumi@dev":
-  version "0.16.1-dev-1539886907-g19a313b6"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.1-dev-1539886907-g19a313b6.tgz#8c0fe71dbb42588cf84a4664a4375a1c8613c97a"
+  version "0.16.2-dev-1540414314-gc1bef7a8"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.2-dev-1540414314-gc1bef7a8.tgz#ea89824d6715d66573425c3824f04acf82f2ccf8"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -86,8 +86,8 @@
     upath "^1.1.0"
 
 "@types/aws-lambda@*":
-  version "8.10.13"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.13.tgz#92cc06b1cc88b5d0b327d2671dcf3daea96923a5"
+  version "8.10.14"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.14.tgz#979eaa4abafff8de93854fe5cc1ae6e0bb888913"
 
 "@types/aws-sdk@^2.7.0":
   version "2.7.0"
@@ -222,8 +222,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.338.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.338.0.tgz#f1b1347f78defa27b92b030b5787fad0f89ac83b"
+  version "2.342.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.342.0.tgz#87566a054db0373221de1c958e1d34db1dcb0818"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -587,17 +587,17 @@ make-error@^1.1.1:
 
 media-typer@0.3.0:
   version "0.3.0"
-  resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
+  resolved "http://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
 
-mime-db@~1.36.0:
-  version "1.36.0"
-  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.36.0.tgz#5020478db3c7fe93aad7bbcc4dcf869c43363397"
+mime-db@~1.37.0:
+  version "1.37.0"
+  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.37.0.tgz#0b6a0ce6fdbe9576e25f1f2d2fde8830dc0ad0d8"
 
 mime-types@~2.1.18:
-  version "2.1.20"
-  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.20.tgz#930cb719d571e903738520f8470911548ca2cc19"
+  version "2.1.21"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.21.tgz#28995aa1ecb770742fe6ae7e58f9181c744b3f96"
   dependencies:
-    mime-db "~1.36.0"
+    mime-db "~1.37.0"
 
 mime@^2.0.0, mime@^2.0.3:
   version "2.3.1"
@@ -618,8 +618,8 @@ minimist@^1.2.0:
   resolved "http://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
 
 minipass@^2.2.1, minipass@^2.3.3:
-  version "2.3.4"
-  resolved "https://registry.yarnpkg.com/minipass/-/minipass-2.3.4.tgz#4768d7605ed6194d6d576169b9e12ef71e9d9957"
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/minipass/-/minipass-2.3.5.tgz#cacebe492022497f656b0f0f51e2682a9ed2d848"
   dependencies:
     safe-buffer "^5.1.2"
     yallist "^3.0.0"

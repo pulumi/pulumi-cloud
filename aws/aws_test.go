@@ -62,6 +62,17 @@ func Test_Examples(t *testing.T) {
 
 	shortTests := []integration.ProgramTestOptions{
 		{
+			Dir: path.Join(cwd, "tests/topic"),
+			Config: map[string]string{
+				"aws:region":     fargateRegion,
+				"cloud:provider": "aws",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+		},
+		{
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
 				"aws:region":                  region,
