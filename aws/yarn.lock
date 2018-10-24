@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/aws-infra@dev":
-  version "0.15.2-dev-1539374157-g0b12426"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.15.2-dev-1539374157-g0b12426.tgz#5e2352a202915aba1eea9113fd343b43422547fe"
+  version "0.16.1-dev-1540408120-g0f78af2"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.16.1-dev-1540408120-g0f78af2.tgz#79be57c59399ad73d399f2a9f55c7691987743a7"
   dependencies:
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
@@ -70,8 +70,8 @@
     semver "^5.4.0"
 
 "@pulumi/pulumi@dev":
-  version "0.16.2-dev-1540331970-gb14d2593"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.2-dev-1540331970-gb14d2593.tgz#97911f1cb8610636c1f83922d18dae673496b6b5"
+  version "0.16.2-dev-1540414314-gc1bef7a8"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.2-dev-1540414314-gc1bef7a8.tgz#ea89824d6715d66573425c3824f04acf82f2ccf8"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -86,8 +86,8 @@
     upath "^1.1.0"
 
 "@types/aws-lambda@*":
-  version "8.10.13"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.13.tgz#92cc06b1cc88b5d0b327d2671dcf3daea96923a5"
+  version "8.10.14"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.14.tgz#979eaa4abafff8de93854fe5cc1ae6e0bb888913"
 
 "@types/aws-sdk@^2.7.0":
   version "2.7.0"
@@ -222,8 +222,8 @@ ascli@~1:
     optjs "~3.2.2"
 
 aws-sdk@*:
-  version "2.341.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.341.0.tgz#56fcbd8d6bbade746c9c781f71df0a99ff0de407"
+  version "2.342.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.342.0.tgz#87566a054db0373221de1c958e1d34db1dcb0818"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
