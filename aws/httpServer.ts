@@ -20,7 +20,7 @@ import * as lambda from "@pulumi/aws/lambda";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
-import { createFactoryFunction } from "./function";
+import { createCallbackFunction } from "./function";
 
 import * as serverlessExpress from "aws-serverless-express";
 
@@ -52,7 +52,8 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         };
 
         // Now, create the actual AWS lambda from that factory function.
-        const func = createFactoryFunction(name, entryPointFactory, { parent: this });
+        const callbackFunction = createCallbackFunction(
+            name, entryPointFactory, /*isFactoryFunction:*/ true, { parent: this });
 
         const api = new aws.apigateway.x.API(name, {
             // Register two paths in the Swagger spec, for the root and for a catch all under the
@@ -61,12 +62,12 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 {
                     path: "/",
                     method: "ANY",
-                    eventHandler: func.lambda,
+                    eventHandler: callbackFunction,
                 },
                 {
                     path: "/{proxy+}",
                     method: "ANY",
-                    eventHandler: func.lambda,
+                    eventHandler: callbackFunction,
                 },
             ],
         }, { parent: this });

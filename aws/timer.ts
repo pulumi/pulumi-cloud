@@ -16,7 +16,7 @@ import * as aws from "@pulumi/aws";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
-import { createFunction, Function } from "./function";
+import { createCallbackFunction } from "./function";
 
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
@@ -96,7 +96,7 @@ class Timer extends pulumi.ComponentResource {
     public readonly scheduleExpression: string;
     public readonly rule: aws.cloudwatch.EventRule;
     public readonly target: aws.cloudwatch.EventTarget;
-    public readonly function: Function;
+    public readonly function: aws.lambda.Function;
 
     constructor(name: string, scheduleExpression: string, handler: timer.Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, {
@@ -105,7 +105,7 @@ class Timer extends pulumi.ComponentResource {
 
         this.scheduleExpression = scheduleExpression;
 
-        this.function = createFunction(
+        this.function = createCallbackFunction(
             name,
             (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
                 handler().then(() => {
@@ -114,6 +114,7 @@ class Timer extends pulumi.ComponentResource {
                     cb(err, null);
                 });
             },
+            /*isFactoryFunction:*/ false,
             { parent: this },
         );
 
@@ -122,12 +123,12 @@ class Timer extends pulumi.ComponentResource {
         }, { parent: this });
         this.target = new aws.cloudwatch.EventTarget(name, {
             rule: this.rule.name,
-            arn: this.function.lambda.arn,
+            arn: this.function.arn,
             targetId: name,
         }, { parent: this });
         const permission = new aws.lambda.Permission(name, {
             action: "lambda:invokeFunction",
-            function: this.function.lambda,
+            function: this.function,
             principal: "events.amazonaws.com",
             sourceArn: this.rule.arn,
         }, { parent: this });

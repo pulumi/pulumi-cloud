@@ -17,16 +17,6 @@ import * as pulumi from "@pulumi/pulumi";
 import { functionIncludePackages, functionIncludePaths, functionMemorySize } from "./config";
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
-export function createFunction(
-        name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
-    return new Function(name, handler, /*isFactoryFunction*/ false, opts);
-}
-
-export function createFactoryFunction(
-        name: string, handler: aws.serverless.HandlerFactory, opts?: pulumi.ResourceOptions): Function {
-    return new Function(name, handler, /*isFactoryFunction*/ true, opts);
-}
-
 export function createCallbackFunction(
         name: string,
         handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
@@ -63,8 +53,24 @@ export function createCallbackFunction(
     return new aws.lambda.CallbackFunction(name, args, opts);
 }
 
-// Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
-// `@pulumi/cloud` configuration.
+/** @deprecated Use [createCallbackFunction] instead. */
+export function createFunction(
+        name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
+    return new Function(name, handler, /*isFactoryFunction*/ false, opts);
+}
+
+/** @deprecated Use [createCallbackFunction] instead. */
+export function createFactoryFunction(
+        name: string, handler: aws.serverless.HandlerFactory, opts?: pulumi.ResourceOptions): Function {
+    return new Function(name, handler, /*isFactoryFunction*/ true, opts);
+}
+
+/**
+ * [Function] is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
+ * `@pulumi/cloud` configuration.
+ *
+ * @deprecated Use [createCallbackFunction] instead.
+ */
 export class Function extends pulumi.ComponentResource {
     public readonly handler: aws.serverless.Handler;
     public readonly lambda: aws.lambda.Function;
