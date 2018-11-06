@@ -52,6 +52,17 @@
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
 
+"@pulumi/aws@0.16.2-dev-1541462444-g3dc2e3bf":
+  version "0.16.2-dev-1541462444-g3dc2e3bf"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541462444-g3dc2e3bf.tgz#c5da7152be14f81ede124fb8577a5c00fdf7f7aa"
+  dependencies:
+    "@pulumi/pulumi" dev
+    aws-sdk "^2.0.0"
+    builtin-modules "3.0.0"
+    mime "^2.0.0"
+    read-package-tree "^5.2.1"
+    resolve "^1.7.1"
+
 "@pulumi/aws@dev":
   version "0.16.2-dev-1540850639-g0e25935"
   resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1540850639-g0e25935.tgz#b2d8c3bee83bc2df7ee74e45ce5b92dd61b94f06"
@@ -224,6 +235,20 @@ ascli@~1:
 aws-sdk@*:
   version "2.344.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.344.0.tgz#950516888e9e8a85c006f3eb6b7fda28646f5c01"
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.8"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.1.0"
+    xml2js "0.4.19"
+
+aws-sdk@^2.0.0:
+  version "2.349.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.349.0.tgz#8486ecacd5daf15db6fb37e37122a7836357a176"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
