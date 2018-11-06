@@ -56,21 +56,21 @@
     read-package-tree "^5.2.1"
 
 "@pulumi/azure@dev":
-  version "0.16.3-dev-1540408773-ga0270a9"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.16.3-dev-1540408773-ga0270a9.tgz#ad708fb2e8f5fdb8c8d92acc1f5e6751b9c7ca0a"
+  version "0.16.4-dev-1541452740-g66ddfb4"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-0.16.4-dev-1541452740-g66ddfb4.tgz#1a70cf847cb0b727059cdadfb789cfae960dc6b9"
   dependencies:
     "@pulumi/pulumi" dev
 
 "@pulumi/docker@dev":
-  version "0.16.1-dev-1540920513-gbaa8c1f"
-  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev-1540920513-gbaa8c1f.tgz#83a796d76f3d5efd9c1aec118de8d2b96ee9e925"
+  version "0.16.1-dev-1540920920-ge3768d1"
+  resolved "https://registry.yarnpkg.com/@pulumi/docker/-/docker-0.16.1-dev-1540920920-ge3768d1.tgz#9d6ed977f0fc9803976cd8ebf92dedfa7940fcc4"
   dependencies:
     "@pulumi/pulumi" dev
     semver "^5.4.0"
 
 "@pulumi/pulumi@dev":
-  version "0.16.3-dev-1540908796-g0ac0cae7"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.3-dev-1540908796-g0ac0cae7.tgz#6815af7ad7c865455561fd9eff2800227c2754ee"
+  version "0.16.3-dev-1541532751-gc7fe2a74"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.3-dev-1541532751-gc7fe2a74.tgz#7d122aca512aefc2237005800891d805a21aa0eb"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -85,8 +85,8 @@
     upath "^1.1.0"
 
 "@types/aws-lambda@*":
-  version "8.10.14"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.14.tgz#979eaa4abafff8de93854fe5cc1ae6e0bb888913"
+  version "8.10.15"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.15.tgz#ea7094e9cacbcfa5e1b6b15baa12b7a438857fc7"
 
 "@types/aws-serverless-express@^3.0.1":
   version "3.3.0"
@@ -144,12 +144,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
 
 "@types/node@*", "@types/node@^10.1.0":
-  version "10.12.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.1.tgz#da61b64a2930a80fa708e57c45cd5441eb379d5b"
+  version "10.12.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.2.tgz#d77f9faa027cadad9c912cd47f4f8b07b0fb0864"
 
 "@types/node@^8.0.26", "@types/node@^8.0.47":
-  version "8.10.36"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.36.tgz#eac05d576fbcd0b4ea3c912dc58c20475c08d9e4"
+  version "8.10.37"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.37.tgz#d2db49dc6a4e087c3245f22b92061f22494771e5"
 
 "@types/range-parser@*":
   version "1.2.2"
@@ -448,7 +448,7 @@ chalk@^2.3.0:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-chownr@^1.0.1:
+chownr@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.1.1.tgz#54726b8b8fff4df053c42187e801fb4412df1494"
 
@@ -764,12 +764,12 @@ google-protobuf@^3.5.0:
   resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.6.1.tgz#7ef58e2bea137a93cdaf5cfd5afa5f6abdd92025"
 
 graceful-fs@^4.1.2:
-  version "4.1.11"
-  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
+  version "4.1.15"
+  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.15.tgz#ffb703e1066e8a0eeaa4c8b80ba9253eeefbfb00"
 
 grpc@^1.12.2:
-  version "1.15.1"
-  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.15.1.tgz#046263d9b0c440c8e36fece03e227cb3afe28514"
+  version "1.16.0"
+  resolved "https://registry.yarnpkg.com/grpc/-/grpc-1.16.0.tgz#cdf56d6ede2f1b6ab5224ad467cb22e1b3ec36fc"
   dependencies:
     lodash "^4.17.5"
     nan "^2.0.0"
@@ -1044,14 +1044,14 @@ minimist@^1.2.0:
   version "1.2.0"
   resolved "http://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
 
-minipass@^2.2.1, minipass@^2.3.3:
+minipass@^2.2.1, minipass@^2.3.4:
   version "2.3.5"
   resolved "https://registry.yarnpkg.com/minipass/-/minipass-2.3.5.tgz#cacebe492022497f656b0f0f51e2682a9ed2d848"
   dependencies:
     safe-buffer "^5.1.2"
     yallist "^3.0.0"
 
-minizlib@^1.1.0:
+minizlib@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/minizlib/-/minizlib-1.1.1.tgz#6734acc045a46e61d596a43bb9d9cd326e19cc42"
   dependencies:
@@ -1512,8 +1512,8 @@ spdx-expression-parse@^3.0.0:
     spdx-license-ids "^3.0.0"
 
 spdx-license-ids@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.1.tgz#e2a303236cac54b04031fa7a5a79c7e701df852f"
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.2.tgz#a59efc09784c2a5bada13cfeaf5c75dd214044d2"
 
 sprintf-js@~1.0.2:
   version "1.0.3"
@@ -1597,13 +1597,13 @@ supports-color@^5.3.0:
     has-flag "^3.0.0"
 
 tar@^4:
-  version "4.4.6"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-4.4.6.tgz#63110f09c00b4e60ac8bcfe1bf3c8660235fbc9b"
+  version "4.4.7"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-4.4.7.tgz#14df45023ffdcd0c233befa2fc01ebb76ee39e7c"
   dependencies:
-    chownr "^1.0.1"
+    chownr "^1.1.1"
     fs-minipass "^1.2.5"
-    minipass "^2.3.3"
-    minizlib "^1.1.0"
+    minipass "^2.3.4"
+    minizlib "^1.1.1"
     mkdirp "^0.5.0"
     safe-buffer "^5.1.2"
     yallist "^3.0.2"
@@ -1685,8 +1685,8 @@ type-is@^1.6.16, type-is@~1.6.16:
     mime-types "~2.1.18"
 
 typescript@^3.0.0, typescript@^3.0.3:
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.4.tgz#c74ef7b3c2da65beff548b903022cb8c3cd997ed"
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.6.tgz#b6543a83cfc8c2befb3f4c8fba6896f5b0c9be68"
 
 underscore@1.4.x:
   version "1.4.4"
