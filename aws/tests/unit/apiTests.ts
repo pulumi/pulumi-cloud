@@ -208,7 +208,7 @@ namespace updateProgramTests {
 
     export async function testInitialGet(args: TestArgs) {
         const address = deployment.url.get();
-        await args.supertest(address).get("/persistent1").expect(200, { version: "0" });
+        await args.supertest(address).get("/persistent1").expect(200, { version: 0 });
         await args.supertest(address).get("/persistent2").expect(404);
     }
 
