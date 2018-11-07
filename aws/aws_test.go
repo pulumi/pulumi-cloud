@@ -210,9 +210,9 @@ func Test_Examples(t *testing.T) {
 	allTests := shortTests
 
 	// Only include the long examples on non-Short test runs
-	if !testing.Short() {
-		allTests = append(allTests, longTests...)
-	}
+	// if !testing.Short() {
+	allTests = append(allTests, longTests...)
+	//}
 
 	for _, ex := range allTests {
 		example := ex.With(integration.ProgramTestOptions{
