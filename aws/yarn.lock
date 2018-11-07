@@ -52,9 +52,9 @@
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
 
-"@pulumi/aws@0.16.2-dev-1541547400-g23d0a030":
-  version "0.16.2-dev-1541547400-g23d0a030"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541547400-g23d0a030.tgz#b80024e370100d2a380ebbb08d48ea2b2aa0eb75"
+"@pulumi/aws@0.16.2-dev-1541570323-g439eb2a1":
+  version "0.16.2-dev-1541570323-g439eb2a1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541570323-g439eb2a1.tgz#917d50eed069d3cde4db97edc63d06e924242c7d"
   dependencies:
     "@pulumi/pulumi" dev
     aws-sdk "^2.0.0"
