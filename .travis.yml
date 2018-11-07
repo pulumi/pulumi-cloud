@@ -7,6 +7,7 @@ git:
   depth: false
 before_install:
     - git clone https://github.com/pulumi/scripts ${GOPATH}/src/github.com/pulumi/scripts
+    - git -C ${GOPATH}/src/github.com/pulumi/scripts checkout ellismg/add-nightly-run
     - source ${GOPATH}/src/github.com/pulumi/scripts/ci/prepare-environment.sh
     - source ${PULUMI_SCRIPTS}/ci/keep-failed-tests.sh
 install:
@@ -23,7 +24,7 @@ install:
 before_script:
     - ${PULUMI_SCRIPTS}/ci/ensure-dependencies
 script:
-    - make travis_${TRAVIS_EVENT_TYPE}
+    - ${PULUMI_SCRIPTS}/run-latest/run-nightly.sh
 after_failure:
     - ${PULUMI_SCRIPTS}/ci/upload-failed-tests
 notifications:
