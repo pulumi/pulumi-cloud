@@ -54,11 +54,11 @@ func Test_Examples(t *testing.T) {
 		return
 	}
 
-	var secrets map[string]string
-	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
-		config["aws:region"] = region
-		return config
-	})
+	// var secrets map[string]string
+	// examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+	// 	config["aws:region"] = region
+	// 	return config
+	// })
 
 	shortTests := []integration.ProgramTestOptions{
 		{
@@ -214,6 +214,38 @@ func Test_Examples(t *testing.T) {
 		allTests = append(allTests, longTests...)
 	}
 
+	allTests = []integration.ProgramTestOptions{
+		{
+			Dir: path.Join(cwd, "tests/unit"),
+			Config: map[string]string{
+				"aws:region":                  fargateRegion,
+				"cloud:provider":              "aws",
+				"cloud-aws:useFargate":        "true",
+				"cloud-aws:usePrivateNetwork": "true",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+				hitUnitTestsEndpoint(t, stackInfo)
+			},
+			EditDirs: []integration.EditDir{
+				{
+					Dir: cwd + "/tests/unit/variants/update1",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+				{
+					Dir: cwd + "/tests/unit/variants/update2",
+					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						hitUnitTestsEndpoint(t, stackInfo)
+					},
+				},
+			},
+		},
+	}
 	for _, ex := range allTests {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
