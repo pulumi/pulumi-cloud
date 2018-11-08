@@ -71,13 +71,13 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:clientSecret": clientSecret,
 	}
 
-	examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
-		for k, v := range commonConfig {
-			config[k] = v
-		}
+	// examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+	// 	for k, v := range commonConfig {
+	// 		config[k] = v
+	// 	}
 
-		return config
-	})
+	// 	return config
+	// })
 
 	examples := []integration.ProgramTestOptions{
 		{
