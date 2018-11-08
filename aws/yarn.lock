@@ -46,26 +46,15 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/aws-infra@dev":
-  version "0.16.1-dev-1540408120-g0f78af2"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.16.1-dev-1540408120-g0f78af2.tgz#79be57c59399ad73d399f2a9f55c7691987743a7"
+  version "0.16.1-dev-1541660707-gf952cbc"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws-infra/-/aws-infra-0.16.1-dev-1541660707-gf952cbc.tgz#9ee7a2c21c6e70b9e110fdccd49259418d936a61"
   dependencies:
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
 
-"@pulumi/aws@0.16.2-dev-1541570323-g439eb2a1":
-  version "0.16.2-dev-1541570323-g439eb2a1"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541570323-g439eb2a1.tgz#917d50eed069d3cde4db97edc63d06e924242c7d"
-  dependencies:
-    "@pulumi/pulumi" dev
-    aws-sdk "^2.0.0"
-    builtin-modules "3.0.0"
-    mime "^2.0.0"
-    read-package-tree "^5.2.1"
-    resolve "^1.7.1"
-
-"@pulumi/aws@dev":
-  version "0.16.2-dev-1541570323-g439eb2a1"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541570323-g439eb2a1.tgz#917d50eed069d3cde4db97edc63d06e924242c7d"
+"@pulumi/aws@0.16.2-dev-1541660738-ge4c5468c", "@pulumi/aws@dev":
+  version "0.16.2-dev-1541660738-ge4c5468c"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541660738-ge4c5468c.tgz#5427545448eacd08dfd05d7b83c45d2ce41a8772"
   dependencies:
     "@pulumi/pulumi" dev
     aws-sdk "^2.0.0"
