@@ -46,8 +46,8 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
 
 "@pulumi/pulumi@dev":
-  version "0.16.3-dev-1541532751-gc7fe2a74"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.3-dev-1541532751-gc7fe2a74.tgz#7d122aca512aefc2237005800891d805a21aa0eb"
+  version "0.16.4-dev-1541651056-g08fc305b"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.4-dev-1541651056-g08fc305b.tgz#f9d7fa0363b29b8709ce1c7962cc1c95603f4b23"
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -66,8 +66,8 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.0.tgz#719551d2352d301ac8b81db732acb6bdc28dbdef"
 
 "@types/node@^10.1.0":
-  version "10.12.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.2.tgz#d77f9faa027cadad9c912cd47f4f8b07b0fb0864"
+  version "10.12.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.3.tgz#3918b73ceed484e58367be5acb79d1775239e393"
 
 "@types/node@^8.0.26":
   version "8.10.37"
