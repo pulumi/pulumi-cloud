@@ -133,7 +133,7 @@ func Test_Examples(t *testing.T) {
 	if !testing.Short() {
 		examples = append(examples, longExamples...)
 	}
-	examples = []integration.ProgramTestOptions{}
+
 	for _, ex := range examples {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),

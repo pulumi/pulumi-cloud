@@ -12,7 +12,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/pulumi": "dev",
-        "@pulumi/aws": "0.16.2-dev-1541570323-g439eb2a1",
+        "@pulumi/aws": "0.16.2-dev-1541660738-ge4c5468c",
         "@pulumi/aws-infra": "dev",
         "@pulumi/docker": "dev",
         "aws-serverless-express": "^3.3.5",
