@@ -49,13 +49,8 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         const bucketName = this.bucket.id;
 
-        async function s3Client() {
-            const awssdk = await import("aws-sdk");
-            return new awssdk.S3();
-        }
-
         this.get = async (key: string) => {
-            const s3 = await s3Client();
+            const s3 = new aws.runtime.S3();
             const res = await s3.getObject({
                 Bucket: bucketName.get(),
                 Key: key,
@@ -64,7 +59,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.put = async (key: string, contents: Buffer) => {
-            const s3 = await s3Client();
+            const s3 = new aws.runtime.S3();
             const res = await s3.putObject({
                 Bucket: bucketName.get(),
                 Key: key,
@@ -73,7 +68,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         };
 
         this.delete = async (key: string) => {
-            const s3 = await s3Client();
+            const s3 = new aws.runtime.S3();
             const res = await s3.deleteObject({
                 Bucket: bucketName.get(),
                 Key: key,
