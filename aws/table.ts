@@ -68,7 +68,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         const tableName = this.dynamodbTable.name;
 
         this.get = async (query) => {
-            const db = new aws.runtime.DynamoDB.DocumentClient();
+            const db = new aws.sdk.DynamoDB.DocumentClient();
             const result = await db.get({
                 TableName: tableName.get(),
                 Key: query,
@@ -78,7 +78,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             return result.Item;
         };
         this.insert = async (item) => {
-            const db = new aws.runtime.DynamoDB.DocumentClient();
+            const db = new aws.sdk.DynamoDB.DocumentClient();
             await db.put({
                 TableName: tableName.get(),
                 Item: item,
@@ -94,7 +94,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 };
             }
 
-            const db = new aws.runtime.DynamoDB.DocumentClient();
+            const db = new aws.sdk.DynamoDB.DocumentClient();
             const params: any = {
                 TableName: tableName.get(),
                 ConsistentRead: consistentRead,
@@ -128,7 +128,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 updateExpression += `${key} = :${key}`;
                 attributeValues[`:${key}`] = val;
             }
-            const db = new aws.runtime.DynamoDB.DocumentClient();
+            const db = new aws.sdk.DynamoDB.DocumentClient();
             await db.update({
                 TableName: tableName.get(),
                 Key: query,
@@ -137,7 +137,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             }).promise();
         };
         this.delete = async (query) => {
-            const db = new aws.runtime.DynamoDB.DocumentClient();
+            const db = new aws.sdk.DynamoDB.DocumentClient();
             await db.delete({
                 TableName: tableName.get(),
                 Key: query,
