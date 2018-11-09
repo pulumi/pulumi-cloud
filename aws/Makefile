@@ -18,7 +18,7 @@ lint::
 	tslint -c ../tslint.json -p tsconfig.json
 
 test_all::
-	PATH=$(PULUMI_BIN):$(PATH) go test -v -cover -timeout 2h -parallel ${TESTPARALLELISM} .
+	PATH=$(PULUMI_BIN):$(PATH) go test -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
 
 test_fast::
-	PATH=$(PULUMI_BIN):$(PATH) go test -short -v -cover -timeout 2h -parallel ${TESTPARALLELISM} .
+	PATH=$(PULUMI_BIN):$(PATH) go test -short -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
