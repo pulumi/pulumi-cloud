@@ -63,18 +63,6 @@
     "@pulumi/aws" dev
     "@pulumi/pulumi" dev
 
-"@pulumi/aws@0.16.2-dev-1541713835-g878f0699":
-  version "0.16.2-dev-1541713835-g878f0699"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541713835-g878f0699.tgz#c3badf323f2542965c859b6d32c8084fba281473"
-  integrity sha512-vUy1GcUUD4eBmaVY8ysiaqS6/UleQGpDTLgP+igG/arGproOeBD6Lwmw2hQSpA9EQTZDv9XSEdz/hFALHZ05EA==
-  dependencies:
-    "@pulumi/pulumi" dev
-    aws-sdk "^2.0.0"
-    builtin-modules "3.0.0"
-    mime "^2.0.0"
-    read-package-tree "^5.2.1"
-    resolve "^1.7.1"
-
 "@pulumi/aws@dev":
   version "0.16.2-dev-1541745660-g0572be04"
   resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-0.16.2-dev-1541745660-g0572be04.tgz#bf0822668fff8981aa1d4cce10a01a8e59259815"
