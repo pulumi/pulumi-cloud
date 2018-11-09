@@ -56,14 +56,9 @@
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
 "@pulumi/pulumi@dev":
-<<<<<<< HEAD
-  version "0.16.4-dev-1541707761-gadb0d9ae"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.4-dev-1541707761-gadb0d9ae.tgz#b378d696bce0b519fda8be5541754f06d9e562ff"
-=======
   version "0.16.4-dev-1541730373-gb7533416"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-0.16.4-dev-1541730373-gb7533416.tgz#e44b118281495c1a3848aa2649b041b40bacfa21"
   integrity sha512-BtAtlddOECh6kv7mYEa6g0ID8bPliBRl0xQVwKk4Ts8FVPdBtjPYK6Wf7aa/HNS2tkyfQ1CCllL+rDZOlK4LOg==
->>>>>>> master
   dependencies:
     google-protobuf "^3.5.0"
     grpc "^1.12.2"
@@ -662,12 +657,8 @@ optjs@~3.2.2:
 
 os-homedir@^1.0.0:
   version "1.0.2"
-<<<<<<< HEAD
-  resolved "http://registry.npmjs.org/os-homedir/-/os-homedir-1.0.2.tgz#ffbc4988336e0e833de0c168c7ef152121aa7fb3"
-=======
   resolved "https://registry.yarnpkg.com/os-homedir/-/os-homedir-1.0.2.tgz#ffbc4988336e0e833de0c168c7ef152121aa7fb3"
   integrity sha1-/7xJiDNuDoM94MFox+8VISGqf7M=
->>>>>>> master
 
 os-locale@^1.4.0:
   version "1.4.0"
@@ -678,12 +669,8 @@ os-locale@^1.4.0:
 
 os-tmpdir@^1.0.0:
   version "1.0.2"
-<<<<<<< HEAD
-  resolved "http://registry.npmjs.org/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
-=======
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha1-u+Z0BseaqFxc/sdm/lc0VV36EnQ=
->>>>>>> master
 
 osenv@^0.1.4:
   version "0.1.5"
@@ -695,12 +682,8 @@ osenv@^0.1.4:
 
 path-is-absolute@^1.0.0:
   version "1.0.1"
-<<<<<<< HEAD
-  resolved "http://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
-=======
   resolved "https://registry.yarnpkg.com/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
   integrity sha1-F0uSaHNVNP+8es5r9TpanhtcX18=
->>>>>>> master
 
 path-parse@^1.0.5:
   version "1.0.6"
