@@ -36,8 +36,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         const topicId = this.topic.id;
 
         this.publish = async (item) => {
-            const awssdk = await import("aws-sdk");
-            const snsconn = new awssdk.SNS();
+            const snsconn = new aws.sdk.SNS();
             const result = await snsconn.publish({
                 Message: JSON.stringify(item),
                 TopicArn: topicId.get(),
@@ -64,7 +63,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         // codepaths/policies etc.
         const opts = { parent: this };
         const lambda = createCallbackFunction(
-            name, eventHandler, /*isFactoryFunction:*/ false, opts);
+            subscriptionName, eventHandler, /*isFactoryFunction:*/ false, opts);
 
         this.topic.onEvent(subscriptionName, eventHandler, {}, opts);
     }

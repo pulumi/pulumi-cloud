@@ -296,8 +296,9 @@ function computeImageFromBuild(
     pulumi.log.debug(`Building container image at '${build}'`, repository);
     const { repositoryUrl, registryId } = repository;
 
-    return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
-        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
+    return pulumi.all([repositoryUrl, registryId])
+                 .apply(([repositoryUrl, registryId]) =>
+                     computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
 }
 
 function computeImageFromBuildWorker(
@@ -309,16 +310,16 @@ function computeImageFromBuildWorker(
         logResource: pulumi.Resource): pulumi.Output<ImageOptions> {
 
     // See if we've already built this.
-    let imageDigest = buildImageCache.get(imageName);
-    if (imageDigest) {
-        imageDigest.apply(d =>
+    let uniqueImageName = buildImageCache.get(imageName);
+    if (uniqueImageName) {
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
-    } else {
-        // If we haven't, build and push the local build context to the ECR repository, wait for
-        // that to complete, then return the image name pointing to the ECT repository along
-        // with an environment variable for the image digest to ensure the TaskDefinition get's
-        // replaced IFF the built image changes.
-        imageDigest = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
+    }
+    else {
+        // If we haven't, build and push the local build context to the ECR repository.  Then return
+        // the unique image name we pushed to.  The name will change if the image changes ensuring
+        // the TaskDefinition get's replaced IFF the built image changes.
+        uniqueImageName = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
             // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
             // extracting the username/password pair after base64-decoding the token.
             //
@@ -339,15 +340,13 @@ function computeImageFromBuildWorker(
             };
         });
 
+        buildImageCache.set(imageName, uniqueImageName);
 
-        buildImageCache.set(imageName, imageDigest);
-
-        imageDigest.apply(d =>
+        uniqueImageName.apply(d =>
             pulumi.log.debug(`    build complete: ${imageName} (${d})`, logResource));
     }
 
-    preEnv.IMAGE_DIGEST = imageDigest;
-    return createImageOptions(repositoryUrl, preEnv);
+    return createImageOptions(uniqueImageName, preEnv);
 }
 
 function computeImageFromImage(
@@ -369,10 +368,10 @@ function computeImageFromFunction(
 }
 
 function createImageOptions(
-    image: string,
-    env: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
+    image: pulumi.Input<string>,
+    environment: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
-    return pulumi.all(env).apply(e => ({ image: image, environment: e }));
+    return pulumi.output({ image, environment });
 }
 
 // computeContainerDefinitions builds a ContainerDefinition for a provided Containers and LogGroup.
@@ -638,6 +637,14 @@ export interface Endpoint extends cloud.Endpoint {
 
 export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
 
+export interface ServiceArguments extends cloud.ServiceArguments {
+    /**
+     * Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent
+     * premature shutdown, up to 7200. Only valid for services configured to use load balancers.
+     */
+    healthCheckGracePeriodSeconds?: pulumi.Input<number>;
+}
+
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -657,7 +664,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         return getTaskRole();
     }
 
-    constructor(name: string, args: cloud.ServiceArguments, opts?: pulumi.ResourceOptions) {
+    constructor(name: string, args: ServiceArguments, opts?: pulumi.ResourceOptions) {
         const cluster = getCluster();
         if (!cluster) {
             throw new Error("Cannot create 'Service'.  Missing cluster config 'cloud-aws:ecsClusterARN'" +
@@ -746,6 +753,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             loadBalancers: loadBalancers,
             placementConstraints: placementConstraintsForHost(args.host),
             waitForSteadyState: args.waitForSteadyState === undefined ? true : args.waitForSteadyState,
+            healthCheckGracePeriodSeconds: args.healthCheckGracePeriodSeconds,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
                 assignPublicIp: config.useFargate && !network.usePrivateSubnets,
