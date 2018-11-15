@@ -14,7 +14,7 @@
         "@pulumi/pulumi": "dev",
         "@pulumi/azure": "dev",
         "@pulumi/azure-serverless": "dev",
-        "@pulumi/docker": "dev",
+        "@pulumi/docker": "0.16.1-1542310055-gd96f822",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.1",
         "azure-sb": "^0.10.6",
