@@ -155,10 +155,29 @@ function getGlobalStorageContainer() {
 }
 
 let globalAppServicePlan: azure.appservice.Plan;
+let globalFunctionAppServicePlan: azure.appservice.Plan;
 
-function getGlobalAppServicePlan() {
+export function getGlobalAppServicePlan() {
     if (!globalAppServicePlan) {
-        globalAppServicePlan = new azure.appservice.Plan("global", {
+        globalAppServicePlan = new azure.appservice.Plan("global-app", {
+            resourceGroupName: globalResourceGroupName,
+            location: location,
+
+            kind: "App",
+
+            sku: {
+                tier: "Standard",
+                size: "S1",
+            },
+        }, { parent: getGlobalInfrastructureResource() });
+    }
+
+    return globalAppServicePlan;
+}
+
+export function getGlobalFunctionAppServicePlan() {
+    if (!globalFunctionAppServicePlan) {
+        globalFunctionAppServicePlan = new azure.appservice.Plan("global-function-app", {
             resourceGroupName: globalResourceGroupName,
             location: location,
 
@@ -171,7 +190,7 @@ function getGlobalAppServicePlan() {
         }, { parent: getGlobalInfrastructureResource() });
     }
 
-    return globalAppServicePlan;
+    return globalFunctionAppServicePlan;
 }
 
 function makeSafeStorageAccountName(prefix: string) {
@@ -195,5 +214,5 @@ export const defaultSubscriptionArgs = {
     location: location,
     storageAccount: getGlobalStorageAccount(),
     storageContainer: getGlobalStorageContainer(),
-    appServicePlanId: getGlobalAppServicePlan().id,
+    appServicePlanId: getGlobalFunctionAppServicePlan().id,
 };
