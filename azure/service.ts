@@ -205,13 +205,11 @@ function createGroup(
         }
 
         const imageName = getImageName(container);
-        if (!imageName) {
-            throw new Error("[getImageName] should have always produced an image name.");
-        }
 
         const registry = container.build ? getOrCreateGlobalRegistry() : undefined;
 
-        const imageOptions = computeImage(this, imageName, container, registry);
+        const imageOptions = pulumi.output(imageName).apply(
+            i => computeImage(this, i, container, registry));
 
         const memoryInGB = pulumi.output(container.memoryReservation).apply(
             r => r === undefined ? 1 : r / 1024);
@@ -283,13 +281,11 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         }
 
         const imageName = getImageName(container);
-        if (!imageName) {
-            throw new Error("[getImageName] should have always produced an image name.");
-        }
 
         const registry = container.build ? getOrCreateGlobalRegistry() : undefined;
 
-        const imageOptions = computeImage(this, imageName, container, registry);
+        const imageOptions = pulumi.output(imageName).apply(i =>
+             computeImage(this, i, container, registry));
 
         const globalResourceGroupName = shared.globalResourceGroupName;
         const memory = pulumi.output(container.memoryReservation);
@@ -422,7 +418,7 @@ export class HostPathVolume implements cloud.HostPathVolume {
 // that build the same location on disk.
 //
 // TODO(cyrusn): Share this with AWS impl.
-function getImageName(container: cloud.Container): string {
+function getImageName(container: cloud.Container): pulumi.Input<string> {
     if (container.image) {
         // In the event of an image, just use it.
         return container.image;
@@ -492,6 +488,10 @@ function computeImage(
     imageName: string,
     container: cloud.Container,
     repository: azure.containerservice.Registry | undefined): pulumi.Output<ImageOptions> {
+
+    if (!imageName) {
+        throw new Error("[getImageName] should have always produced an image name.");
+    }
 
     // Start with a copy from the container specification.
     const preEnv: Record<string, pulumi.Input<string>> =
