@@ -131,51 +131,6 @@ function createLoadBalancer(
     };
 }
 
-// getImageName generates an image name from a container definition.  It uses a combination of the container's name and
-// container specification to normalize the names of resulting repositories.  Notably, this leads to better caching in
-// the event that multiple container specifications exist that build the same location on disk.
-function getImageNameAndRepository(container: cloud.Container):
-        { imageName: pulumi.Input<string>, repository?: aws.ecr.Repository } {
-    if (container.image) {
-        // In the event of an image, just use it.
-        return { imageName: container.image };
-    }
-    else if (container.function) {
-        // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
-        return { imageName: "lukehoban/nodejsrunner" };
-    }
-    else if (container.build) {
-        return getBuildImageNameAndRepository(container.build);
-    }
-    else {
-        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
-    }
-}
-
-function getBuildImageNameAndRepository(build: string | cloud.ContainerBuild) {
-    // Produce a hash of the build context and use that for the image name.
-    let buildSig: string;
-    if (typeof build === "string") {
-        buildSig = build;
-    }
-    else {
-        buildSig = build.context || ".";
-        if (build.dockerfile ) {
-            buildSig += `;dockerfile=${build.dockerfile}`;
-        }
-        if (build.args) {
-            for (const arg of Object.keys(build.args)) {
-                buildSig += `;arg[${arg}]=${build.args[arg]}`;
-            }
-        }
-    }
-
-    const imageName = createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
-    const repository = getOrCreateRepository(imageName);
-
-    return { imageName, repository };
-}
-
 // repositories contains a cache of already created ECR repositories.
 const repositories = new Map<string, aws.ecr.Repository>();
 
@@ -227,10 +182,8 @@ interface ImageOptions {
 // name and environment which can be used in an ECS TaskDefinition.
 function computeImage(
         parent: pulumi.Resource,
-        imageName: pulumi.Input<string>,
         container: cloud.Container,
-        ports: ExposedPorts | undefined,
-        repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
+        ports: ExposedPorts | undefined): pulumi.Output<ImageOptions> {
 
     // Start with a copy from the container specification.
     const preEnv: Record<string, pulumi.Input<string>> =
@@ -277,17 +230,13 @@ function computeImage(
     }
 
     if (container.build) {
-        if (!repository) {
-            throw new Error("Expected a container repository for build image");
-        }
-
-        return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
+        return computeImageFromBuild(parent, preEnv, container.build);
     }
     else if (container.image) {
-        return computeImageFromImage(preEnv, imageName);
+        return createImageOptions(container.image, preEnv);
     }
     else if (container.function) {
-        return computeImageFromFunction(container.function, preEnv, imageName);
+        return computeImageFromFunction(container.function, preEnv);
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -297,9 +246,10 @@ function computeImage(
 function computeImageFromBuild(
         parent: pulumi.Resource,
         preEnv: Record<string, pulumi.Input<string>>,
-        build: string | cloud.ContainerBuild,
-        imageName: pulumi.Input<string>,
-        repository: aws.ecr.Repository): pulumi.Output<ImageOptions> {
+        build: string | cloud.ContainerBuild): pulumi.Output<ImageOptions> {
+
+    const imageName = getBuildImageName(build);
+    const repository = getOrCreateRepository(imageName);
 
     // This is a container to build; produce a name, either user-specified or auto-computed.
     pulumi.log.debug(`Building container image at '${build}'`, repository);
@@ -308,6 +258,27 @@ function computeImageFromBuild(
     return pulumi.all([repositoryUrl, registryId, imageName])
                  .apply(([repositoryUrl, registryId, imageName]) =>
                      computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
+}
+
+function getBuildImageName(build: string | cloud.ContainerBuild) {
+    // Produce a hash of the build context and use that for the image name.
+    let buildSig: string;
+    if (typeof build === "string") {
+        buildSig = build;
+    }
+    else {
+        buildSig = build.context || ".";
+        if (build.dockerfile ) {
+            buildSig += `;dockerfile=${build.dockerfile}`;
+        }
+        if (build.args) {
+            for (const arg of Object.keys(build.args)) {
+                buildSig += `;arg[${arg}]=${build.args[arg]}`;
+            }
+        }
+    }
+
+    return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
 }
 
 function computeImageFromBuildWorker(
@@ -358,22 +329,16 @@ function computeImageFromBuildWorker(
     return createImageOptions(uniqueImageName, preEnv);
 }
 
-function computeImageFromImage(
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: pulumi.Input<string>): pulumi.Output<ImageOptions> {
-
-    return createImageOptions(imageName, preEnv);
-}
-
 function computeImageFromFunction(
         func: () => void,
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: pulumi.Input<string>): pulumi.Output<ImageOptions> {
+        preEnv: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
     // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
     // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
     preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
-    return createImageOptions(imageName, preEnv);
+
+    // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
+    return createImageOptions("lukehoban/nodejsrunner", preEnv);
 }
 
 function createImageOptions(
@@ -408,9 +373,7 @@ function computeContainerDefinition(
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition> {
 
-    const { imageName, repository } = getImageNameAndRepository(container);
-
-    const imageOptions = computeImage(parent, imageName, container, ports, repository);
+    const imageOptions = computeImage(parent, container, ports);
     const portMappings = (container.ports || []).map(p => ({
         containerPort: p.targetPort || p.port,
         // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:

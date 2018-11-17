@@ -451,7 +451,31 @@ function computeImage(
     }
 }
 
-function computeImageNameForBuild(build: string | cloud.ContainerBuild) {
+function computeImageFromBuild(
+    parent: pulumi.Resource,
+    preEnv: Record<string, pulumi.Input<string>>,
+    build: string | cloud.ContainerBuild) {
+
+    const imageName = getBuildImageName(build);
+    const registry = getOrCreateGlobalRegistry();
+
+    // This is a container to build; produce a name, either user-specified or auto-computed.
+    pulumi.log.debug(`Building container image at '${build}'`, registry);
+
+    const dockerRegistry =
+        pulumi.output({ registry: registry.loginServer, username: registry.adminUsername, password: registry.adminPassword });
+
+    const imageOptions =
+        pulumi.all([registry.loginServer, dockerRegistry, imageName])
+              .apply(([loginServer, dockerRegistry, imageName]) =>
+                    computeImageFromBuildWorker(
+                        preEnv, build, imageName, loginServer + "/" + imageName,
+                        dockerRegistry, parent));
+
+    return { imageOptions, registry };
+}
+
+function getBuildImageName(build: string | cloud.ContainerBuild) {
     // Produce a hash of the build context and use that for the image name.
     let buildSig: string;
     if (typeof build === "string") {
@@ -474,30 +498,6 @@ function computeImageNameForBuild(build: string | cloud.ContainerBuild) {
     const imageName = shared.createNameWithStackInfo(`container-${shared.sha1hash(buildSig)}`, 63, "-");
     const disallowedChars = /[^-a-zA-Z0-9]/g;
     return imageName.replace(disallowedChars, "-");
-}
-
-function computeImageFromBuild(
-    parent: pulumi.Resource,
-    preEnv: Record<string, pulumi.Input<string>>,
-    build: string | cloud.ContainerBuild) {
-
-    const imageName = computeImageNameForBuild(build);
-    const registry = getOrCreateGlobalRegistry();
-
-    // This is a container to build; produce a name, either user-specified or auto-computed.
-    pulumi.log.debug(`Building container image at '${build}'`, registry);
-
-    const dockerRegistry =
-        pulumi.output({ registry: registry.loginServer, username: registry.adminUsername, password: registry.adminPassword });
-
-    const imageOptions =
-        pulumi.all([registry.loginServer, dockerRegistry, imageName])
-              .apply(([loginServer, dockerRegistry, imageName]) =>
-                    computeImageFromBuildWorker(
-                        preEnv, build, imageName, loginServer + "/" + imageName,
-                        dockerRegistry, parent));
-
-    return { imageOptions, registry };
 }
 
 function computeImageFromBuildWorker(
