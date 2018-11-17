@@ -131,6 +131,27 @@ function createLoadBalancer(
     };
 }
 
+function getBuildImageName(build: string | cloud.ContainerBuild) {
+    // Produce a hash of the build context and use that for the image name.
+    let buildSig: string;
+    if (typeof build === "string") {
+        buildSig = build;
+    }
+    else {
+        buildSig = build.context || ".";
+        if (build.dockerfile ) {
+            buildSig += `;dockerfile=${build.dockerfile}`;
+        }
+        if (build.args) {
+            for (const arg of Object.keys(build.args)) {
+                buildSig += `;arg[${arg}]=${build.args[arg]}`;
+            }
+        }
+    }
+
+    return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
+}
+
 // repositories contains a cache of already created ECR repositories.
 const repositories = new Map<string, aws.ecr.Repository>();
 
@@ -258,27 +279,6 @@ function computeImageFromBuild(
     return pulumi.all([repositoryUrl, registryId])
                  .apply(([repositoryUrl, registryId]) =>
                      computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
-}
-
-function getBuildImageName(build: string | cloud.ContainerBuild) {
-    // Produce a hash of the build context and use that for the image name.
-    let buildSig: string;
-    if (typeof build === "string") {
-        buildSig = build;
-    }
-    else {
-        buildSig = build.context || ".";
-        if (build.dockerfile ) {
-            buildSig += `;dockerfile=${build.dockerfile}`;
-        }
-        if (build.args) {
-            for (const arg of Object.keys(build.args)) {
-                buildSig += `;arg[${arg}]=${build.args[arg]}`;
-            }
-        }
-    }
-
-    return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
 }
 
 function computeImageFromBuildWorker(
