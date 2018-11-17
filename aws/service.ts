@@ -134,37 +134,46 @@ function createLoadBalancer(
 // getImageName generates an image name from a container definition.  It uses a combination of the container's name and
 // container specification to normalize the names of resulting repositories.  Notably, this leads to better caching in
 // the event that multiple container specifications exist that build the same location on disk.
-function getImageName(container: cloud.Container): pulumi.Input<string> {
+function getImageNameAndRepository(container: cloud.Container):
+        { imageName: pulumi.Input<string>, repository?: aws.ecr.Repository } {
     if (container.image) {
         // In the event of an image, just use it.
-        return container.image;
-    }
-    else if (container.build) {
-        // Produce a hash of the build context and use that for the image name.
-        let buildSig: string;
-        if (typeof container.build === "string") {
-            buildSig = container.build;
-        }
-        else {
-            buildSig = container.build.context || ".";
-            if (container.build.dockerfile ) {
-                buildSig += `;dockerfile=${container.build.dockerfile}`;
-            }
-            if (container.build.args) {
-                for (const arg of Object.keys(container.build.args)) {
-                    buildSig += `;arg[${arg}]=${container.build.args[arg]}`;
-                }
-            }
-        }
-        return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
+        return { imageName: container.image };
     }
     else if (container.function) {
         // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
-        return "lukehoban/nodejsrunner";
+        return { imageName: "lukehoban/nodejsrunner" };
+    }
+    else if (container.build) {
+        return getBuildImageNameAndRepository(container.build);
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
     }
+}
+
+function getBuildImageNameAndRepository(build: string | cloud.ContainerBuild) {
+    // Produce a hash of the build context and use that for the image name.
+    let buildSig: string;
+    if (typeof build === "string") {
+        buildSig = build;
+    }
+    else {
+        buildSig = build.context || ".";
+        if (build.dockerfile ) {
+            buildSig += `;dockerfile=${build.dockerfile}`;
+        }
+        if (build.args) {
+            for (const arg of Object.keys(build.args)) {
+                buildSig += `;arg[${arg}]=${build.args[arg]}`;
+            }
+        }
+    }
+
+    const imageName = createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
+    const repository = getOrCreateRepository(imageName);
+
+    return { imageName, repository };
 }
 
 // repositories contains a cache of already created ECR repositories.
@@ -384,10 +393,8 @@ function computeContainerDefinitions(
     const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] = [];
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
-        const imageName = pulumi.output(getImageName(container));
-        const containerDefinition = imageName.apply(
-            i => computeContainerDefinition(parent, containerName, container, i, ports, logGroup));
-
+        const containerDefinition = computeContainerDefinition(
+            parent, containerName, container, ports, logGroup);
         containerDefinitions.push(containerDefinition);
     }
 
@@ -398,23 +405,10 @@ function computeContainerDefinition(
         parent: pulumi.Resource,
         containerName: string,
         container: cloud.Container,
-        imageName: string,
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition> {
 
-    if (!imageName) {
-        throw new Error("[getImageName] should have always produced an image name.");
-    }
-
-    let repository: aws.ecr.Repository | undefined;
-    if (container.build) {
-        // Create the repository.  Note that we must do this in the current turn, before we hit any
-        // awaits. The reason is subtle; however, if we do not, we end up with a circular reference
-        // between the TaskDefinition that depends on this repository and the repository waiting for
-        // the TaskDefinition, simply because permitting a turn in between lets the TaskDefinition's
-        // registration race ahead of us.
-        repository = getOrCreateRepository(imageName);
-    }
+    const { imageName, repository } = getImageNameAndRepository(container);
 
     const imageOptions = computeImage(parent, imageName, container, ports, repository);
     const portMappings = (container.ports || []).map(p => ({
