@@ -381,8 +381,6 @@ function computeContainerDefinitions(
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
 
-    const containerImageNames = getContainerImageNames(containers);
-
     const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] = [];
     for (const containerName of Object.keys(containers)) {
         const container = containers[containerName];
@@ -466,19 +464,6 @@ function computeContainerDefinition(
 
         return containerDefinition;
     });
-}
-
-/**
- * Returns a mapping from a container name to the image name for it.
- */
-function getContainerImageNames(containers: cloud.Containers): pulumi.Output<Record<string, string>> {
-    const result: Record<string, pulumi.Input<string>> = {};
-
-    for (const containerName of Object.keys(containers)) {
-        result[containerName] = getImageName(containers[containerName]);
-    }
-
-    return pulumi.all(result);
 }
 
 // The ECS Task assume role policy for Task Roles
