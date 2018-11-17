@@ -255,8 +255,8 @@ function computeImageFromBuild(
     pulumi.log.debug(`Building container image at '${build}'`, repository);
     const { repositoryUrl, registryId } = repository;
 
-    return pulumi.all([repositoryUrl, registryId, imageName])
-                 .apply(([repositoryUrl, registryId, imageName]) =>
+    return pulumi.all([repositoryUrl, registryId])
+                 .apply(([repositoryUrl, registryId]) =>
                      computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
 }
 
