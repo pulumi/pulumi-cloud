@@ -490,12 +490,8 @@ function computeImageFromBuild(
     const dockerRegistry =
         pulumi.output({ registry: registry.loginServer, username: registry.adminUsername, password: registry.adminPassword });
 
-    const imageOptions =
-        pulumi.all([registry.loginServer, dockerRegistry])
-              .apply(([loginServer, dockerRegistry]) =>
-                    computeImageFromBuildWorker(
-                        preEnv, build, imageName, loginServer + "/" + imageName,
-                        dockerRegistry, parent));
+    const imageOptions = pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
+        computeImageFromBuildWorker(preEnv, build, imageName, loginServer + "/" + imageName, dockerRegistry, parent));
 
     return { imageOptions, registry };
 }
