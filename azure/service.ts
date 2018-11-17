@@ -402,6 +402,31 @@ export class HostPathVolume implements cloud.HostPathVolume {
     }
 }
 
+function getBuildImageName(build: string | cloud.ContainerBuild) {
+    // Produce a hash of the build context and use that for the image name.
+    let buildSig: string;
+    if (typeof build === "string") {
+        buildSig = build;
+    }
+    else {
+        buildSig = build.context || ".";
+        if (build.dockerfile) {
+            buildSig += `;dockerfile=${build.dockerfile}`;
+        }
+        if (build.args) {
+            for (const arg of Object.keys(build.args)) {
+                buildSig += `;arg[${arg}]=${build.args[arg]}`;
+            }
+        }
+    }
+
+    // The container name must contain no more than 63 characters and must match the regex
+    // '[a-z0-9]([-a-z0-9]*[a-z0-9])?' (e.g. 'my-name')."
+    const imageName = shared.createNameWithStackInfo(`container-${shared.sha1hash(buildSig)}`, 63, "-");
+    const disallowedChars = /[^-a-zA-Z0-9]/g;
+    return imageName.replace(disallowedChars, "-");
+}
+
 let globalRegistry: azure.containerservice.Registry | undefined;
 function getOrCreateGlobalRegistry(): azure.containerservice.Registry {
     if (!globalRegistry) {
@@ -473,31 +498,6 @@ function computeImageFromBuild(
                         dockerRegistry, parent));
 
     return { imageOptions, registry };
-}
-
-function getBuildImageName(build: string | cloud.ContainerBuild) {
-    // Produce a hash of the build context and use that for the image name.
-    let buildSig: string;
-    if (typeof build === "string") {
-        buildSig = build;
-    }
-    else {
-        buildSig = build.context || ".";
-        if (build.dockerfile) {
-            buildSig += `;dockerfile=${build.dockerfile}`;
-        }
-        if (build.args) {
-            for (const arg of Object.keys(build.args)) {
-                buildSig += `;arg[${arg}]=${build.args[arg]}`;
-            }
-        }
-    }
-
-    // The container name must contain no more than 63 characters and must match the regex
-    // '[a-z0-9]([-a-z0-9]*[a-z0-9])?' (e.g. 'my-name')."
-    const imageName = shared.createNameWithStackInfo(`container-${shared.sha1hash(buildSig)}`, 63, "-");
-    const disallowedChars = /[^-a-zA-Z0-9]/g;
-    return imageName.replace(disallowedChars, "-");
 }
 
 function computeImageFromBuildWorker(
