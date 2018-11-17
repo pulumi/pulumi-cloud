@@ -204,7 +204,7 @@ function createGroup(
             throw new RunError("Only public ip address types are supported by Azure currently.");
         }
 
-        const { imageOptions, registry } = computeImage(this, container);
+        const { imageOptions, registry } = computeImageOptionsAndRegistry(this, container);
 
         const memoryInGB = pulumi.output(container.memoryReservation).apply(
             r => r === undefined ? 1 : r / 1024);
@@ -275,7 +275,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             throw new RunError("Tasks should not be given any [ports] in their Container definition.");
         }
 
-        const { imageOptions, registry } = computeImage(this, container);
+        const { imageOptions, registry } = computeImageOptionsAndRegistry(this, container);
 
         const globalResourceGroupName = shared.globalResourceGroupName;
         const memory = pulumi.output(container.memoryReservation);
@@ -454,7 +454,7 @@ interface ImageOptions {
     environment: Record<string, string>;
 }
 
-function computeImage(
+function computeImageOptionsAndRegistry(
     parent: pulumi.Resource,
     container: cloud.Container) {
 
