@@ -181,18 +181,7 @@ class Timer extends pulumi.ComponentResource {
         if (isTimeSpan) {
             // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
             // TimeSpan expression are only supported under non-consumption plans.
-            const plan = new appservice.Plan(name, {
-                resourceGroupName: shared.defaultSubscriptionArgs.resourceGroupName,
-                location: shared.defaultSubscriptionArgs.location,
-
-                kind: "App",
-
-                sku: {
-                    tier: "Standard",
-                    size: "S1",
-                },
-            }, { parent: this });
-            appServicePlanId = plan.id;
+            appServicePlanId = shared.getGlobalAppServicePlan().id;
 
             // https://github.com/Azure/azure-functions-host/wiki/Investigating-and-reporting-issues-with-timer-triggered-functions-not-firing
             // For a TimeSpan timer, the FunctionApp must be 'always on' to work.
