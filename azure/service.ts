@@ -487,8 +487,11 @@ function computeImageFromBuild(
     // This is a container to build; produce a name, either user-specified or auto-computed.
     pulumi.log.debug(`Building container image at '${build}'`, registry);
 
-    const dockerRegistry =
-        pulumi.output({ registry: registry.loginServer, username: registry.adminUsername, password: registry.adminPassword });
+    const dockerRegistry = pulumi.output({
+        registry: registry.loginServer,
+        username: registry.adminUsername,
+        password: registry.adminPassword,
+    });
 
     const imageOptions = pulumi.all([registry.loginServer, dockerRegistry]).apply(([loginServer, dockerRegistry]) =>
         computeImageFromBuildWorker(preEnv, build, imageName, loginServer + "/" + imageName, dockerRegistry, parent));
