@@ -891,8 +891,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
         this.cluster = cluster;
-        this.taskDefinition = createTaskDefinition(
-            this, name, { container: container }, /*exposedPortOpt:*/ undefined).task;
+        this.taskDefinition = createTaskDefinition(this, name, { container: container }, /*exposedPortOpt:*/ undefined).task;
 
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
