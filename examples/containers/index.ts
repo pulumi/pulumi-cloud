@@ -241,6 +241,9 @@ api.get("/custom", async (req, res) => {
     }
 });
 
+
+// https://github.com/pulumi/pulumi-cloud/issues/666
+// We are only making the proxy route in fargate testing.
 const awsConfig = new pulumi.Config("cloud-aws");
 if (awsConfig.getBoolean("useFargate")) {
     api.proxy("/nginx", nginx.defaultEndpoint);

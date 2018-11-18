@@ -331,6 +331,8 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 
 		// Validate the GET /nginx endpoint
 		{
+			// https://github.com/pulumi/pulumi-cloud/issues/666
+			// We are only making the proxy route in fargate testing.
 			if isFargate {
 				resp := examples.GetHTTP(t, baseURL+"nginx", 200)
 				contentType := resp.Header.Get("Content-Type")
@@ -395,6 +397,9 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 
 		// NGINX logs
 		//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+
+		// https://github.com/pulumi/pulumi-cloud/issues/666
+		// We are only making the proxy route in fargate testing.
 		if isFargate {
 			nginxLogs, exists := logsByResource["examples-nginx"]
 			if !assert.True(t, exists) {
