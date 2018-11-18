@@ -67,64 +67,64 @@ func Test_Examples(t *testing.T) {
 		"cloud-azure:tenantId":       tenantID,
 		"containers:redisPassword":   "REDIS_PASSWORD",
 	}
-	secrets := map[string]string{
-		"cloud-azure:clientSecret": clientSecret,
-	}
+	// secrets := map[string]string{
+	// 	"cloud-azure:clientSecret": clientSecret,
+	// }
 
-	examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
-		for k, v := range commonConfig {
-			config[k] = v
-		}
+	// examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+	// 	for k, v := range commonConfig {
+	// 		config[k] = v
+	// 	}
 
-		return config
-	})
+	// 	return config
+	// })
 
 	examples := []integration.ProgramTestOptions{
-		{
-			Dir:     path.Join(cwd, "./examples/bucket"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
-		{
-			Dir:     path.Join(cwd, "./examples/table"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
-		{
-			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
-		{
-			Dir:     path.Join(cwd, "./examples/containers"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
-		{
-			Dir:     path.Join(cwd, "./examples/topic"),
-			Config:  commonConfig,
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-azure",
-			},
-		},
+		// {
+		// 	Dir:     path.Join(cwd, "./examples/bucket"),
+		// 	Config:  commonConfig,
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-azure",
+		// 	},
+		// },
+		// {
+		// 	Dir:     path.Join(cwd, "./examples/table"),
+		// 	Config:  commonConfig,
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-azure",
+		// 	},
+		// },
+		// {
+		// 	Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+		// 	Config:  commonConfig,
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-azure",
+		// 	},
+		// },
+		// {
+		// 	Dir:     path.Join(cwd, "./examples/containers"),
+		// 	Config:  commonConfig,
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-azure",
+		// 	},
+		// },
+		// {
+		// 	Dir:     path.Join(cwd, "./examples/topic"),
+		// 	Config:  commonConfig,
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-azure",
+		// 	},
+		// },
 	}
 
 	longExamples := []integration.ProgramTestOptions{}
