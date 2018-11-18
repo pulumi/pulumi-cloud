@@ -690,27 +690,25 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         // Get the network to create the Service within.
         const network = getOrCreateNetwork();
 
-        // Create load balancer listeners/targets for each exposed port.
+        // AWS only supports a single load balancer per Service, as per:
+        // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html
+        //
+        // So we find the single container that wants to expose a port (and throw if we see more
+        // than one).  We then create a load balancer that maps accordingly.
+        //
+        // We only use an array here to properly serialize into the aws.ecs.Service we're creating
+        // below.
         const loadBalancers = [];
 
-        let firstContainerName: string | undefined;
-        let firstContainerPort: number | undefined;
         let exposedPortOpt: ExposedPort | undefined;
-
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
-            if (firstContainerName === undefined) {
-                firstContainerName = containerName;
-                if (container.ports && container.ports.length > 0) {
-                    firstContainerPort = container.ports[0].port;
-                }
-            }
-
             if (container.ports) {
                 for (const portMapping of container.ports) {
                     if (loadBalancers.length > 0) {
                         throw new Error("Only one port can currently be exposed per Service.");
                     }
+
                     const loadBalancer = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
                     exposedPortOpt = {
                         loadBalancer,
@@ -754,12 +752,13 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             },
         }, { parent: this, dependsOn: serviceDependsOn });
 
-        const localEndpoints = exposedPortOpt
-            ? getEndpoints(exposedPortOpt)
-            : pulumi.output<Endpoints>({});
+        const localEndpoints = !exposedPortOpt
+            ? pulumi.output<Endpoints>({})
+            : getEndpoints(exposedPortOpt);
+
         this.endpoints = localEndpoints;
 
-        this.defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
+        this.defaultEndpoint = !exposedPortOpt
             ? pulumi.output(<Endpoint>undefined!)
             : this.endpoints.apply(
                 ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
