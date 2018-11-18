@@ -749,13 +749,13 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             },
         }, { parent: this, dependsOn: serviceDependsOn });
 
-        const localEndpoints = !exposedPortOpt
+        const localEndpoints = exposedPortOpt === undefined
             ? pulumi.output<Endpoints>({})
             : getEndpoints(exposedPortOpt);
 
         this.endpoints = localEndpoints;
 
-        this.defaultEndpoint = !exposedPortOpt
+        this.defaultEndpoint = exposedPortOpt === undefined
             ? pulumi.output(<Endpoint>undefined!)
             : this.endpoints.apply(
                 ep => getEndpointHelper(ep, /*containerName:*/ undefined, /*containerPort:*/ undefined));
