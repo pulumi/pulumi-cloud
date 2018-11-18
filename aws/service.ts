@@ -531,8 +531,7 @@ function createTaskDefinition(
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(
-        parent, containers, exposedPortOpt, logGroup);
+    const containerDefinitions = computeContainerDefinitions(parent, containers, exposedPortOpt, logGroup);
 
     // Compute the memory and CPU requirements of the task for Fargate
     const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
