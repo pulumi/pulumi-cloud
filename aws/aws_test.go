@@ -61,86 +61,83 @@ func Test_Examples(t *testing.T) {
 	})
 
 	shortTests := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(cwd, "tests/topic"),
-			Config: map[string]string{
-				"aws:region":     fargateRegion,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-		},
-		{
-			Dir: path.Join(cwd, "../examples/countdown"),
-			Config: map[string]string{
-				"aws:region":                  region,
-				"cloud:provider":              "aws",
-				"cloud-aws:usePrivateNetwork": "true",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
-				time.Sleep(6 * time.Minute)
+		// {
+		// 	Dir: path.Join(cwd, "tests/topic"),
+		// 	Config: map[string]string{
+		// 		"aws:region":     fargateRegion,
+		// 		"cloud:provider": "aws",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(cwd, "../examples/countdown"),
+		// 	Config: map[string]string{
+		// 		"aws:region":                  region,
+		// 		"cloud:provider":              "aws",
+		// 		"cloud-aws:usePrivateNetwork": "true",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
+		// 		time.Sleep(6 * time.Minute)
 
-				// Validate logs from example
-				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-				if !assert.NotNil(t, logs, "expected logs to be produced") {
-					return
-				}
+		// 		// Validate logs from example
+		// 		logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+		// 		if !assert.NotNil(t, logs, "expected logs to be produced") {
+		// 			return
+		// 		}
 
-				logLength := len(*logs)
-				t.Logf("Got %v logs", logLength)
-				if !assert.True(t, logLength >= 26, "expected at least 26 logs entries from countdown, got %v", logLength) {
-					return
-				}
-				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
-					"expected ID of logs to match the topic+subscription name")
-				assert.Equal(t, "25", (*logs)[0].Message)
-			},
-		},
-		{
-			Dir: path.Join(cwd, "../examples/api"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output string property")
-				testURLGet(t, baseURL, "test1.txt", "You got test1")
-			},
-		},
-		{
-			Dir: path.Join(cwd, "../examples/simplecontainers"),
-			Config: map[string]string{
-				"aws:region":           region,
-				"cloud:provider":       "aws",
-				"cloud-aws:useFargate": "true",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
-				if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
-					return
-				}
-				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
-			},
-		},
-	}
-
-	longTests := []integration.ProgramTestOptions{
+		// 		logLength := len(*logs)
+		// 		t.Logf("Got %v logs", logLength)
+		// 		if !assert.True(t, logLength >= 26, "expected at least 26 logs entries from countdown, got %v", logLength) {
+		// 			return
+		// 		}
+		// 		assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
+		// 			"expected ID of logs to match the topic+subscription name")
+		// 		assert.Equal(t, "25", (*logs)[0].Message)
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(cwd, "../examples/api"),
+		// 	Config: map[string]string{
+		// 		"aws:region":     region,
+		// 		"cloud:provider": "aws",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		baseURL, ok := stackInfo.Outputs["url"].(string)
+		// 		assert.True(t, ok, "expected a `url` output string property")
+		// 		testURLGet(t, baseURL, "test1.txt", "You got test1")
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(cwd, "../examples/simplecontainers"),
+		// 	Config: map[string]string{
+		// 		"aws:region":           region,
+		// 		"cloud:provider":       "aws",
+		// 		"cloud-aws:useFargate": "true",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
+		// 		if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
+		// 			return
+		// 		}
+		// 		testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
+		// 	},
+		// },
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-ec2"),
@@ -160,6 +157,9 @@ func Test_Examples(t *testing.T) {
 			},
 			ExtraRuntimeValidation: containersRuntimeValidator(region),
 		},
+	}
+
+	longTests := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
