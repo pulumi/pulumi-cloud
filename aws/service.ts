@@ -502,11 +502,8 @@ interface TaskDefinition {
 }
 
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(
-        parent: pulumi.Resource,
-        name: string,
-        containers: cloud.Containers,
-        exposedPortOpt: ExposedPort | undefined): TaskDefinition {
+function createTaskDefinition(parent: pulumi.Resource, name: string,
+                              containers: cloud.Containers, exposedPortOpt: ExposedPort | undefined): TaskDefinition {
 
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {
