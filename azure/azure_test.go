@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"testing"
 	"time"
@@ -46,27 +45,27 @@ func getRequiredEnvValue(t *testing.T, key string) string {
 }
 
 func Test_Examples(t *testing.T) {
-	cwd, err := os.Getwd()
+	_, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
 
-	environ := getRequiredEnvValue(t, "ARM_ENVIRONMENT")
-	location := getRequiredEnvValue(t, "ARM_LOCATION")
-	subscriptionID := getRequiredEnvValue(t, "ARM_SUBSCRIPTION_ID")
-	clientID := getRequiredEnvValue(t, "ARM_CLIENT_ID")
-	clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
-	tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
+	// environ := getRequiredEnvValue(t, "ARM_ENVIRONMENT")
+	// location := getRequiredEnvValue(t, "ARM_LOCATION")
+	// subscriptionID := getRequiredEnvValue(t, "ARM_SUBSCRIPTION_ID")
+	// clientID := getRequiredEnvValue(t, "ARM_CLIENT_ID")
+	// clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
+	// tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
 
-	commonConfig := map[string]string{
-		"cloud:provider":             "azure",
-		"azure:environment":          environ,
-		"cloud-azure:location":       location,
-		"cloud-azure:subscriptionId": subscriptionID,
-		"cloud-azure:clientId":       clientID,
-		"cloud-azure:tenantId":       tenantID,
-		"containers:redisPassword":   "REDIS_PASSWORD",
-	}
+	// commonConfig := map[string]string{
+	// 	"cloud:provider":             "azure",
+	// 	"azure:environment":          environ,
+	// 	"cloud-azure:location":       location,
+	// 	"cloud-azure:subscriptionId": subscriptionID,
+	// 	"cloud-azure:clientId":       clientID,
+	// 	"cloud-azure:tenantId":       tenantID,
+	// 	"containers:redisPassword":   "REDIS_PASSWORD",
+	// }
 	// secrets := map[string]string{
 	// 	"cloud-azure:clientSecret": clientSecret,
 	// }
