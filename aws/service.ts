@@ -220,7 +220,7 @@ function computeImage(
         parent: pulumi.Resource,
         imageName: string,
         container: cloud.Container,
-        ports: ExposedPorts | undefined,
+        exposedPortOpt: ExposedPort | undefined,
         repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
 
     // Start with a copy from the container specification.
@@ -228,43 +228,36 @@ function computeImage(
         Object.assign({}, container.environment || {});
 
     // Now add entries for service discovery amongst containers exposing endpoints.
-    if (ports) {
-        for (const service of Object.keys(ports)) {
-            let firstPort = true;
-            const serviceEnv = makeServiceEnvName(service);
-            for (const port of Object.keys(ports[service])) {
-                const info = ports[service][parseInt(port, 10)];
-                const hostname = info.host.dnsName;
-                const hostport = info.hostPort.toString();
-                const hostproto = info.hostProtocol;
-                // Populate Kubernetes and Docker links compatible environment variables.  These take the form:
-                //
-                //     Kubernetes:
-                //         {SVCNAME}_SERVICE_HOST=10.0.0.11 (or DNS name)
-                //         {SVCNAME}_SERVICE_PORT=6379
-                //     Docker links:
-                //         {SVCNAME}_PORT=tcp://10.0.0.11:6379 (or DNS address)
-                //         {SVCNAME}_PORT_6379_TCP=tcp://10.0.0.11:6379 (or DNS address)
-                //         {SVCNAME}_PORT_6379_TCP_PROTO=tcp
-                //         {SVCNAME}_PORT_6379_TCP_PORT=6379
-                //         {SVCNAME}_PORT_6379_TCP_ADDR=10.0.0.11 (or DNS name)
-                //
-                // See https://kubernetes.io/docs/concepts/services-networking/service/#discovering-services and
-                // https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/ for more info.
-                if (firstPort) {
-                    preEnv[`${serviceEnv}_SERVICE_HOST`] = hostname;
-                    preEnv[`${serviceEnv}_SERVICE_PORT`] = hostport;
-                }
-                firstPort = false;
+    if (exposedPortOpt) {
+        const serviceEnv = makeServiceEnvName(exposedPortOpt.containerName);
 
-                const fullHost = hostname.apply(h => `${hostproto}://${h}:${hostport}`);
-                preEnv[`${serviceEnv}_PORT`] = fullHost;
-                preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
-                preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
-                preEnv[`${serviceEnv}_PORT_${port}_TCP_PORT`] = hostport;
-                preEnv[`${serviceEnv}_PORT_${port}_TCP_ADDR`] = hostname;
-            }
-        }
+        const info = exposedPortOpt.loadBalancer;
+        const hostname = info.loadBalancer.dnsName;
+        const hostport = exposedPortOpt.containerPort.toString();
+        const hostproto = info.protocol;
+        // Populate Kubernetes and Docker links compatible environment variables.  These take the form:
+        //
+        //     Kubernetes:
+        //         {SVCNAME}_SERVICE_HOST=10.0.0.11 (or DNS name)
+        //         {SVCNAME}_SERVICE_PORT=6379
+        //     Docker links:
+        //         {SVCNAME}_PORT=tcp://10.0.0.11:6379 (or DNS address)
+        //         {SVCNAME}_PORT_6379_TCP=tcp://10.0.0.11:6379 (or DNS address)
+        //         {SVCNAME}_PORT_6379_TCP_PROTO=tcp
+        //         {SVCNAME}_PORT_6379_TCP_PORT=6379
+        //         {SVCNAME}_PORT_6379_TCP_ADDR=10.0.0.11 (or DNS name)
+        //
+        // See https://kubernetes.io/docs/concepts/services-networking/service/#discovering-services and
+        // https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/ for more info.
+        preEnv[`${serviceEnv}_SERVICE_HOST`] = hostname;
+        preEnv[`${serviceEnv}_SERVICE_PORT`] = hostport;
+
+        const fullHost = hostname.apply(h => `${hostproto}://${h}:${hostport}`);
+        preEnv[`${serviceEnv}_PORT`] = fullHost;
+        preEnv[`${serviceEnv}_PORT_${hostport}_TCP`] = fullHost;
+        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_PROTO`]= hostproto;
+        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_PORT`] = hostport;
+        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_ADDR`] = hostname;
     }
 
     if (container.build) {
@@ -378,7 +371,7 @@ function createImageOptions(
 function computeContainerDefinitions(
         parent: pulumi.Resource,
         containers: cloud.Containers,
-        ports: ExposedPorts | undefined,
+        exposedPortOpt: ExposedPort | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
 
     const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] =
@@ -398,7 +391,7 @@ function computeContainerDefinitions(
                 repository = getOrCreateRepository(imageName);
             }
 
-            const imageOptions = computeImage(parent, imageName, container, ports, repository);
+            const imageOptions = computeImage(parent, imageName, container, exposedPortOpt, repository);
             const portMappings = (container.ports || []).map(p => ({
                 containerPort: p.targetPort || p.port,
                 // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
@@ -508,8 +501,12 @@ interface TaskDefinition {
 }
 
 // createTaskDefinition builds an ECS TaskDefinition object from a collection of `cloud.Containers`.
-function createTaskDefinition(parent: pulumi.Resource, name: string,
-                              containers: cloud.Containers, ports?: ExposedPorts): TaskDefinition {
+function createTaskDefinition(
+        parent: pulumi.Resource,
+        name: string,
+        containers: cloud.Containers,
+        exposedPortOpt: ExposedPort | undefined): TaskDefinition {
+
     // Create a single log group for all logging associated with the Service
     const logGroup = new aws.cloudwatch.LogGroup(name, {
         retentionInDays: 1,
@@ -533,7 +530,8 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }
 
     // Create the task definition for the group of containers associated with this Service.
-    const containerDefinitions = computeContainerDefinitions(parent, containers, ports, logGroup);
+    const containerDefinitions = computeContainerDefinitions(
+        parent, containers, exposedPortOpt, logGroup);
 
     // Compute the memory and CPU requirements of the task for Fargate
     const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
@@ -618,16 +616,10 @@ function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
     return undefined;
 }
 
-interface ExposedPorts {
-    [name: string]: {
-        [port: string]: ExposedPort;
-    };
-}
-
 interface ExposedPort {
-    host: aws.elasticloadbalancingv2.LoadBalancer;
-    hostPort: number;
-    hostProtocol: cloud.ContainerProtocol;
+    loadBalancer: ContainerPortLoadBalancer;
+    containerName: string;
+    containerPort: number;
 }
 
 // The AWS-specific Endpoint interface includes additional AWS implementation details for the exposed Endpoint.
@@ -686,7 +678,6 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         }
 
         const replicas = args.replicas === undefined ? 1 : args.replicas;
-        const ports: ExposedPorts = {};
 
         super("cloud:service:Service", name, {
             containers: containers,
@@ -704,6 +695,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
 
         let firstContainerName: string | undefined;
         let firstContainerPort: number | undefined;
+        let exposedPortOpt: ExposedPort | undefined;
 
         for (const containerName of Object.keys(containers)) {
             const container = containers[containerName];
@@ -714,29 +706,29 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
                 }
             }
 
-            ports[containerName] = {};
             if (container.ports) {
                 for (const portMapping of container.ports) {
                     if (loadBalancers.length > 0) {
                         throw new Error("Only one port can currently be exposed per Service.");
                     }
-                    const info = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
-                    ports[containerName][portMapping.port] = {
-                        host: info.loadBalancer,
-                        hostPort: portMapping.port,
-                        hostProtocol: info.protocol,
+                    const loadBalancer = createLoadBalancer(this, cluster, name, containerName, portMapping, network);
+                    exposedPortOpt = {
+                        loadBalancer,
+                        containerName,
+                        containerPort: portMapping.port,
                     };
+
                     loadBalancers.push({
                         containerName: containerName,
                         containerPort: portMapping.targetPort || portMapping.port,
-                        targetGroupArn: info.targetGroup.arn,
+                        targetGroupArn: loadBalancer.targetGroup.arn,
                     });
                 }
             }
         }
 
         // Create the task definition, parented to this component.
-        const taskDefinition = createTaskDefinition(this, name, containers, ports);
+        const taskDefinition = createTaskDefinition(this, name, containers, exposedPortOpt);
 
         // If the cluster has an autoscaling group, ensure the service depends on it being created.
         const serviceDependsOn = [];
@@ -762,7 +754,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             },
         }, { parent: this, dependsOn: serviceDependsOn });
 
-        const localEndpoints = getEndpoints(ports);
+        const localEndpoints = exposedPortOpt
+            ? getEndpoints(exposedPortOpt)
+            : pulumi.output<Endpoints>({});
         this.endpoints = localEndpoints;
 
         this.defaultEndpoint = firstContainerName === undefined || firstContainerPort === undefined
@@ -799,16 +793,16 @@ function getEndpointHelper(
     return endpoint;
 }
 
-function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
-    return pulumi.all(utils.apply(ports, portToExposedPort => {
-        const inner: pulumi.Output<{ [port: string]: Endpoint }> =
-            pulumi.all(utils.apply(portToExposedPort, exposedPort =>
-                exposedPort.host.dnsName.apply(d => ({
-                    port: exposedPort.hostPort, loadBalancer: exposedPort.host, hostname: d,
-                }))));
-
-        return inner;
-    }));
+function getEndpoints(exposedPort: ExposedPort): pulumi.Output<Endpoints> {
+    return pulumi.output({
+        [exposedPort.containerName]: {
+            [exposedPort.containerPort]: {
+                port: exposedPort.containerPort,
+                loadBalancer: exposedPort.loadBalancer.loadBalancer,
+                hostname: exposedPort.loadBalancer.loadBalancer.dnsName,
+            },
+        },
+    });
 }
 
 const volumeNames = new Set<string>();
@@ -901,7 +895,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
         this.cluster = cluster;
-        this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
+        this.taskDefinition = createTaskDefinition(
+            this, name, { container: container }, /*exposedPortOpt:*/ undefined).task;
 
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
