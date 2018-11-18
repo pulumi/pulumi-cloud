@@ -235,6 +235,7 @@ function computeImage(
         const hostname = info.loadBalancer.dnsName;
         const hostport = exposedPortOpt.containerPort.toString();
         const hostproto = info.protocol;
+        const port = hostport;
         // Populate Kubernetes and Docker links compatible environment variables.  These take the form:
         //
         //     Kubernetes:
@@ -254,10 +255,10 @@ function computeImage(
 
         const fullHost = hostname.apply(h => `${hostproto}://${h}:${hostport}`);
         preEnv[`${serviceEnv}_PORT`] = fullHost;
-        preEnv[`${serviceEnv}_PORT_${hostport}_TCP`] = fullHost;
-        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_PROTO`]= hostproto;
-        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_PORT`] = hostport;
-        preEnv[`${serviceEnv}_PORT_${hostport}_TCP_ADDR`] = hostname;
+        preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
+        preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
+        preEnv[`${serviceEnv}_PORT_${port}_TCP_PORT`] = hostport;
+        preEnv[`${serviceEnv}_PORT_${port}_TCP_ADDR`] = hostname;
     }
 
     if (container.build) {
