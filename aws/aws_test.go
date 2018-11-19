@@ -157,6 +157,21 @@ func Test_Examples(t *testing.T) {
 		// 	},
 		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
 		// },
+		{
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: addRandomSuffix("containers-fargate"),
+			Config: map[string]string{
+				"aws:region":               fargateRegion,
+				"cloud:provider":           "aws",
+				"cloud-aws:useFargate":     "true",
+				"containers:redisPassword": "SECRETPASSWORD",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion, true /*isFargates*/),
+		},
 	}
 
 	longTests := []integration.ProgramTestOptions{
@@ -189,21 +204,6 @@ func Test_Examples(t *testing.T) {
 					},
 				},
 			},
-		},
-		{
-			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: addRandomSuffix("containers-fargate"),
-			Config: map[string]string{
-				"aws:region":               fargateRegion,
-				"cloud:provider":           "aws",
-				"cloud-aws:useFargate":     "true",
-				"containers:redisPassword": "SECRETPASSWORD",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion, true /*isFargates*/),
 		},
 	}
 

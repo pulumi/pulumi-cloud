@@ -131,40 +131,25 @@ function createLoadBalancer(
     };
 }
 
-// getImageName generates an image name from a container definition.  It uses a combination of the container's name and
-// container specification to normalize the names of resulting repositories.  Notably, this leads to better caching in
-// the event that multiple container specifications exist that build the same location on disk.
-function getImageName(container: cloud.Container): string {
-    if (container.image) {
-        // In the event of an image, just use it.
-        return container.image;
-    }
-    else if (container.build) {
-        // Produce a hash of the build context and use that for the image name.
-        let buildSig: string;
-        if (typeof container.build === "string") {
-            buildSig = container.build;
-        }
-        else {
-            buildSig = container.build.context || ".";
-            if (container.build.dockerfile ) {
-                buildSig += `;dockerfile=${container.build.dockerfile}`;
-            }
-            if (container.build.args) {
-                for (const arg of Object.keys(container.build.args)) {
-                    buildSig += `;arg[${arg}]=${container.build.args[arg]}`;
-                }
-            }
-        }
-        return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
-    }
-    else if (container.function) {
-        // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
-        return "lukehoban/nodejsrunner";
+function getBuildImageName(build: string | cloud.ContainerBuild) {
+    // Produce a hash of the build context and use that for the image name.
+    let buildSig: string;
+    if (typeof build === "string") {
+        buildSig = build;
     }
     else {
-        throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
+        buildSig = build.context || ".";
+        if (build.dockerfile ) {
+            buildSig += `;dockerfile=${build.dockerfile}`;
+        }
+        if (build.args) {
+            for (const arg of Object.keys(build.args)) {
+                buildSig += `;arg[${arg}]=${build.args[arg]}`;
+            }
+        }
     }
+
+    return createNameWithStackInfo(`${utils.sha1hash(buildSig)}-container`);
 }
 
 // repositories contains a cache of already created ECR repositories.
@@ -218,10 +203,8 @@ interface ImageOptions {
 // name and environment which can be used in an ECS TaskDefinition.
 function computeImage(
         parent: pulumi.Resource,
-        imageName: string,
         container: cloud.Container,
-        ports: ExposedPorts | undefined,
-        repository: aws.ecr.Repository | undefined): pulumi.Output<ImageOptions> {
+        ports: ExposedPorts | undefined): pulumi.Output<ImageOptions> {
 
     // Start with a copy from the container specification.
     const preEnv: Record<string, pulumi.Input<string>> =
@@ -268,17 +251,13 @@ function computeImage(
     }
 
     if (container.build) {
-        if (!repository) {
-            throw new Error("Expected a container repository for build image");
-        }
-
-        return computeImageFromBuild(parent, preEnv, container.build, imageName, repository);
+        return computeImageFromBuild(parent, preEnv, container.build);
     }
     else if (container.image) {
-        return computeImageFromImage(preEnv, imageName);
+        return createImageOptions(container.image, preEnv);
     }
     else if (container.function) {
-        return computeImageFromFunction(container.function, preEnv, imageName);
+        return computeImageFromFunction(container.function, preEnv);
     }
     else {
         throw new Error("Invalid container definition: `image`, `build`, or `function` must be provided");
@@ -288,17 +267,17 @@ function computeImage(
 function computeImageFromBuild(
         parent: pulumi.Resource,
         preEnv: Record<string, pulumi.Input<string>>,
-        build: string | cloud.ContainerBuild,
-        imageName: string,
-        repository: aws.ecr.Repository): pulumi.Output<ImageOptions> {
+        build: string | cloud.ContainerBuild): pulumi.Output<ImageOptions> {
+
+    const imageName = getBuildImageName(build);
+    const repository = getOrCreateRepository(imageName);
 
     // This is a container to build; produce a name, either user-specified or auto-computed.
     pulumi.log.debug(`Building container image at '${build}'`, repository);
     const { repositoryUrl, registryId } = repository;
 
-    return pulumi.all([repositoryUrl, registryId])
-                 .apply(([repositoryUrl, registryId]) =>
-                     computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
+    return pulumi.all([repositoryUrl, registryId]).apply(([repositoryUrl, registryId]) =>
+        computeImageFromBuildWorker(preEnv, build, imageName, repositoryUrl, registryId, parent));
 }
 
 function computeImageFromBuildWorker(
@@ -349,22 +328,16 @@ function computeImageFromBuildWorker(
     return createImageOptions(uniqueImageName, preEnv);
 }
 
-function computeImageFromImage(
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: string): pulumi.Output<ImageOptions> {
-
-    return createImageOptions(imageName, preEnv);
-}
-
 function computeImageFromFunction(
         func: () => void,
-        preEnv: Record<string, pulumi.Input<string>>,
-        imageName: string): pulumi.Output<ImageOptions> {
+        preEnv: Record<string, pulumi.Input<string>>): pulumi.Output<ImageOptions> {
 
     // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
     // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
     preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
-    return createImageOptions(imageName, preEnv);
+
+    // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
+    return createImageOptions("lukehoban/nodejsrunner", preEnv);
 }
 
 function createImageOptions(
@@ -381,73 +354,72 @@ function computeContainerDefinitions(
         ports: ExposedPorts | undefined,
         logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition[]> {
 
-    const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] =
-        Object.keys(containers).map(containerName => {
-            const container = containers[containerName];
-            const imageName = getImageName(container);
-            if (!imageName) {
-                throw new Error("[getImageName] should have always produced an image name.");
-            }
-
-            let repository: aws.ecr.Repository | undefined;
-            if (container.build) {
-                // Create the repository.  Note that we must do this in the current turn, before we hit any awaits.
-                // The reason is subtle; however, if we do not, we end up with a circular reference between the
-                // TaskDefinition that depends on this repository and the repository waiting for the TaskDefinition,
-                // simply because permitting a turn in between lets the TaskDefinition's registration race ahead of us.
-                repository = getOrCreateRepository(imageName);
-            }
-
-            const imageOptions = computeImage(parent, imageName, container, ports, repository);
-            const portMappings = (container.ports || []).map(p => ({
-                containerPort: p.targetPort || p.port,
-                // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
-                // > For task definitions that use the awsvpc network mode, you should only specify the containerPort.
-                // > The hostPort can be left blank or it must be the same value as the containerPort.
-                //
-                // However, if left blank, it will be automatically populated by AWS, potentially leading to dirty
-                // diffs even when no changes have been made. Since we are currently always using `awsvpc` mode, we
-                // go ahead and populate it with the same value as `containerPort`.
-                //
-                // See https://github.com/terraform-providers/terraform-provider-aws/issues/3401.
-                hostPort: p.targetPort || p.port,
-            }));
-
-            return pulumi.all([imageOptions, container, logGroup.id])
-                         .apply(([imageOptions, container, logGroupId]) => {
-                const keyValuePairs: { name: string, value: string }[] = [];
-                for (const key of Object.keys(imageOptions.environment)) {
-                    keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
-                }
-
-                const containerDefinition: aws.ecs.ContainerDefinition = {
-                    name: containerName,
-                    image: imageOptions.image,
-                    command: container.command,
-                    cpu: container.cpu,
-                    memory: container.memory,
-                    memoryReservation: container.memoryReservation,
-                    portMappings: portMappings,
-                    environment: keyValuePairs,
-                    mountPoints: (container.volumes || []).map(v => ({
-                        containerPath: v.containerPath,
-                        sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
-                    })),
-                    logConfiguration: {
-                        logDriver: "awslogs",
-                        options: {
-                            "awslogs-group": logGroupId,
-                            "awslogs-region": aws.config.requireRegion(),
-                            "awslogs-stream-prefix": containerName,
-                        },
-                    },
-                    dockerLabels: container.dockerLabels,
-                };
-                return containerDefinition;
-            });
-        });
+    const containerDefinitions: pulumi.Output<aws.ecs.ContainerDefinition>[] = [];
+    for (const containerName of Object.keys(containers)) {
+        const container = containers[containerName];
+        const containerDefinition = computeContainerDefinition(
+            parent, containerName, container, ports, logGroup);
+        containerDefinitions.push(containerDefinition);
+    }
 
     return pulumi.all(containerDefinitions);
+}
+
+function computeContainerDefinition(
+        parent: pulumi.Resource,
+        containerName: string,
+        container: cloud.Container,
+        ports: ExposedPorts | undefined,
+        logGroup: aws.cloudwatch.LogGroup): pulumi.Output<aws.ecs.ContainerDefinition> {
+
+    const imageOptions = computeImage(parent, container, ports);
+    const portMappings = (container.ports || []).map(p => ({
+        containerPort: p.targetPort || p.port,
+        // From https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html:
+        // > For task definitions that use the awsvpc network mode, you should only specify the containerPort.
+        // > The hostPort can be left blank or it must be the same value as the containerPort.
+        //
+        // However, if left blank, it will be automatically populated by AWS, potentially leading to dirty
+        // diffs even when no changes have been made. Since we are currently always using `awsvpc` mode, we
+        // go ahead and populate it with the same value as `containerPort`.
+        //
+        // See https://github.com/terraform-providers/terraform-provider-aws/issues/3401.
+        hostPort: p.targetPort || p.port,
+    }));
+
+    return pulumi.all([imageOptions, container, logGroup.id])
+                 .apply(([imageOptions, container, logGroupId]) => {
+        const keyValuePairs: { name: string, value: string }[] = [];
+        for (const key of Object.keys(imageOptions.environment)) {
+            keyValuePairs.push({ name: key, value: imageOptions.environment[key] });
+        }
+
+        const containerDefinition: aws.ecs.ContainerDefinition = {
+            name: containerName,
+            image: imageOptions.image,
+            command: container.command,
+            cpu: container.cpu,
+            memory: container.memory,
+            memoryReservation: container.memoryReservation,
+            portMappings: portMappings,
+            environment: keyValuePairs,
+            mountPoints: (container.volumes || []).map(v => ({
+                containerPath: v.containerPath,
+                sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
+            })),
+            logConfiguration: {
+                logDriver: "awslogs",
+                options: {
+                    "awslogs-group": logGroupId,
+                    "awslogs-region": aws.config.requireRegion(),
+                    "awslogs-stream-prefix": containerName,
+                },
+            },
+            dockerLabels: container.dockerLabels,
+        };
+
+        return containerDefinition;
+    });
 }
 
 // The ECS Task assume role policy for Task Roles

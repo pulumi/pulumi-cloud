@@ -44,7 +44,7 @@ export interface Container {
      * pulled from the Docker Hub.  If `image` *and* `build` are specified, the `image` controls the
      * resulting image tag for the build image that gets pushed.
      */
-    image?: string;
+    image?: pulumi.Input<string>;
     /**
      * Either a path to a folder in which a Docker build should be run to construct the image for this
      * Container, or a ContainerBuild object with more detailed build instructions.  If `image` is also specified, the
