@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as pulumi from "@pulumi/pulumi";
 import * as cloud from "@pulumi/cloud";
 import { Config, Output } from "@pulumi/pulumi";
 
@@ -239,5 +240,13 @@ api.get("/custom", async (req, res) => {
         res.status(500).json(errorJSON(err));
     }
 });
-api.proxy("/nginx", nginx.defaultEndpoint);
+
+
+// https://github.com/pulumi/pulumi-cloud/issues/666
+// We are only making the proxy route in fargate testing.
+const awsConfig = new pulumi.Config("cloud-aws");
+if (awsConfig.getBoolean("useFargate")) {
+    api.proxy("/nginx", nginx.defaultEndpoint);
+}
+
 export let frontendURL = api.publish().url;

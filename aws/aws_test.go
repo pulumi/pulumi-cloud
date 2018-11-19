@@ -138,28 +138,43 @@ func Test_Examples(t *testing.T) {
 				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		},
-	}
-
-	longTests := []integration.ProgramTestOptions{
+		// {
+		// 	Dir:       path.Join(cwd, "../examples/containers"),
+		// 	StackName: addRandomSuffix("containers-ec2"),
+		// 	Config: map[string]string{
+		// 		"aws:region":                          region,
+		// 		"cloud:provider":                      "aws",
+		// 		"cloud-aws:ecsAutoCluster":            "true",
+		// 		"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
+		// 		"cloud-aws:ecsAutoInstanceType":       "t2.medium",
+		// 		"cloud-aws:ecsAutoClusterMinSize":     "20",
+		// 		"cloud-aws:ecsAutoClusterUseEFS":      "false",
+		// 		"containers:redisPassword":            "SECRETPASSWORD",
+		// 	},
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-aws",
+		// 	},
+		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
+		// },
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: addRandomSuffix("containers-ec2"),
+			StackName: addRandomSuffix("containers-fargate"),
 			Config: map[string]string{
-				"aws:region":                          region,
-				"cloud:provider":                      "aws",
-				"cloud-aws:ecsAutoCluster":            "true",
-				"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
-				"cloud-aws:ecsAutoInstanceType":       "t2.medium",
-				"cloud-aws:ecsAutoClusterMinSize":     "20",
-				"cloud-aws:ecsAutoClusterUseEFS":      "false",
-				"containers:redisPassword":            "SECRETPASSWORD",
+				"aws:region":               fargateRegion,
+				"cloud:provider":           "aws",
+				"cloud-aws:useFargate":     "true",
+				"containers:redisPassword": "SECRETPASSWORD",
 			},
 			Dependencies: []string{
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: containersRuntimeValidator(region),
+			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion, true /*isFargates*/),
 		},
+	}
+
+	longTests := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
@@ -189,21 +204,6 @@ func Test_Examples(t *testing.T) {
 					},
 				},
 			},
-		},
-		{
-			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: addRandomSuffix("containers-fargate"),
-			Config: map[string]string{
-				"aws:region":               fargateRegion,
-				"cloud:provider":           "aws",
-				"cloud-aws:useFargate":     "true",
-				"containers:redisPassword": "SECRETPASSWORD",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion),
 		},
 	}
 
@@ -299,7 +299,7 @@ func getAllMessageText(logs []operations.LogEntry) string {
 	return allMessageText
 }
 
-func containersRuntimeValidator(region string) func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 	return func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 		baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
 		assert.True(t, ok, "expected a `frontendURL` output property of type string")
@@ -331,7 +331,9 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 
 		// Validate the GET /nginx endpoint
 		{
-			{
+			// https://github.com/pulumi/pulumi-cloud/issues/666
+			// We are only making the proxy route in fargate testing.
+			if isFargate {
 				resp := examples.GetHTTP(t, baseURL+"nginx", 200)
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
@@ -395,7 +397,10 @@ func containersRuntimeValidator(region string) func(t *testing.T, stackInfo inte
 
 		// NGINX logs
 		//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
-		{
+
+		// https://github.com/pulumi/pulumi-cloud/issues/666
+		// We are only making the proxy route in fargate testing.
+		if isFargate {
 			nginxLogs, exists := logsByResource["examples-nginx"]
 			if !assert.True(t, exists) {
 				return
