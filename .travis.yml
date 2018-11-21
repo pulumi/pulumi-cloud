@@ -22,9 +22,11 @@ install:
     - export PATH=$HOME/.pulumi/bin:$PATH
 before_script:
     - ${PULUMI_SCRIPTS}/ci/ensure-dependencies
+    - ls -l "$HOME/.pulumi/plugins"
 script:
     - make travis_${TRAVIS_EVENT_TYPE}
 after_failure:
+    - ls -l "$HOME/.pulumi/plugins"
     - ${PULUMI_SCRIPTS}/ci/upload-failed-tests
 notifications:
     webhooks: https://ufci1w66n3.execute-api.us-west-2.amazonaws.com/stage/travis
