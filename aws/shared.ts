@@ -18,6 +18,8 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
+import * as utils from "./utils";
+
 export interface CloudNetwork extends awsinfra.ClusterNetworkArgs {
     /**
      * Whether the network includes private subnets.
@@ -108,12 +110,12 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
     return computePolicies;
 }
 
-let network: CloudNetwork;
+let network: awsinfra.Network;
 
 /**
  * Get or create the network to use for container and lambda compute.
  */
-export function getOrCreateNetwork(): CloudNetwork {
+export function getOrCreateNetwork(): awsinfra.Network {
     if (!network) {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
@@ -153,56 +155,132 @@ export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
-export interface CloudCluster {
-    readonly ecsClusterARN: pulumi.Output<string>;
-    readonly securityGroupId?: pulumi.Output<string>;
-    readonly efsMountPath?: string;
-    readonly autoScalingGroupStack?: any;
-}
+// export interface CloudCluster {
+//     readonly ecsClusterARN: pulumi.Output<string>;
+//     readonly securityGroupId?: pulumi.Output<string>;
+//     readonly efsMountPath?: string;
+//     readonly autoScalingGroupStack?: any;
+// }
 
 // The cluster to use for container compute or undefined if containers are unsupported.
-let cluster: CloudCluster | undefined;
-export function getCluster(): CloudCluster | undefined {
+let cluster: awsinfra.x.Cluster | undefined;
+let fileSystem: awsinfra.x.ClusterFileSystem | undefined;
+let autoScalingGroup: awsinfra.x.ClusterAutoScalingGroup | undefined;
+export function getCluster() {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {
+        const globalStackName = createNameWithStackInfo("global");
+
         if (config.ecsAutoCluster) {
-            // Translate the comma-seperated list into an array or undefined.
-            let instanceRolePolicyARNs;
+            // Translate the comma-separated list into an array or undefined.
+            let instanceRolePolicyARNs: string[] = [];
             if  (config.ecsAutoClusterInstanceRolePolicyARNs) {
                 instanceRolePolicyARNs = (config.ecsAutoClusterInstanceRolePolicyARNs || "").split(",");
             }
 
-            // If we are asked to provision a cluster, then we will have created a network
-            // above - create a cluster in that network.
-            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsinfra.x.Cluster(globalStackName, {
                 network: getOrCreateNetwork(),
-                addEFS: config.ecsAutoClusterUseEFS,
-                instanceType: config.ecsAutoClusterInstanceType,
-                instanceRolePolicyARNs: instanceRolePolicyARNs,
-                instanceRootVolumeSize: config.ecsAutoClusterInstanceRootVolumeSize,
-                instanceDockerImageVolumeSize: config.ecsAutoClusterInstanceDockerImageVolumeSize,
-                instanceSwapVolumeSize: config.ecsAutoClusterInstanceSwapVolumeSize,
-                minSize: config.ecsAutoClusterMinSize,
-                maxSize: config.ecsAutoClusterMaxSize,
-                publicKey: config.ecsAutoClusterPublicKey,
             });
+
+            if (config.ecsAutoClusterUseEFS) {
+                fileSystem = new awsinfra.x.ClusterFileSystem(globalStackName, {
+                    cluster,
+                });
+            }
+
+            if (config.ecsAutoClusterMaxSize) {
+                const keyName = config.ecsAutoClusterPublicKey === undefined
+                    ? undefined
+                    : new aws.ec2.KeyPair(name, {
+                            publicKey: config.ecsAutoClusterPublicKey,
+                        }, { parent: cluster }).keyName;
+
+                const instanceProfile = getInstanceProfile(globalStackName, instanceRolePolicyARNs);
+
+                autoScalingGroup = new awsinfra.x.ClusterAutoScalingGroup(globalStackName, {
+                    cluster,
+                    templateParameters: {
+                        minSize: config.ecsAutoClusterMaxSize,
+                        maxSize: config.ecsAutoClusterMinSize,
+                    },
+                    launchConfigurationArgs: {
+                        cluster,
+                        keyName,
+                        fileSystem,
+                        instanceProfile,
+                        instanceType: <aws.ec2.InstanceType>config.ecsAutoClusterInstanceType,
+                        rootBlockDevice: {
+                            volumeSize: config.ecsAutoClusterInstanceRootVolumeSize || 8, // GiB
+                            volumeType: "gp2", // default is "standard"
+                            deleteOnTermination: true,
+                        },
+                        ebsBlockDevices: [{
+                                // Swap volume
+                                deviceName: "/dev/xvdb",
+                                volumeSize: config.ecsAutoClusterInstanceSwapVolumeSize || 5, // GiB
+                                volumeType: "gp2", // default is "standard"
+                                deleteOnTermination: true,
+                            }, {
+                                // Docker image and metadata volume
+                                deviceName: "/dev/xvdcz",
+                                volumeSize: config.ecsAutoClusterInstanceDockerImageVolumeSize || 50, // GiB
+                                volumeType: "gp2",
+                                deleteOnTermination: true,
+                            }],
+                    },
+                });
+            }
         } else if (config.ecsClusterARN) {
             // Else if we have an externally provided cluster and can use that.
-            cluster = {
-                ecsClusterARN: pulumi.output(config.ecsClusterARN),
-                securityGroupId: config.ecsClusterSecurityGroup
-                    ? pulumi.output(config.ecsClusterSecurityGroup) : undefined,
-                efsMountPath: config.ecsClusterEfsMountPath,
-            };
+            const ecsCluster = aws.ecs.Cluster.get(globalStackName, config.ecsClusterARN);
+            const securityGroup = config.ecsClusterSecurityGroup
+                ? aws.ec2.SecurityGroup.get(globalStackName, config.ecsClusterSecurityGroup)
+                : undefined;
+            cluster = new awsinfra.x.Cluster(globalStackName, {
+                instance: ecsCluster,
+                instanceSecurityGroup: securityGroup,
+            });
+            fileSystem = new awsinfra.x.ClusterFileSystem(globalStackName, {
+                cluster,
+                mountPath: config.ecsClusterEfsMountPath,
+            });
         } else if (config.useFargate) {
             // Else, allocate a Fargate-only cluster.
-            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsinfra.x.Cluster(globalStackName, {
                 network: getOrCreateNetwork(),
-                maxSize: 0, // Don't allocate any EC2 instances
-                addEFS: false,
             });
         }
     }
 
     return cluster;
+}
+
+export function getAutoScalingGroup() {
+    getCluster();
+    return autoScalingGroup;
+}
+
+export function getFileSystem() {
+    getCluster();
+    return fileSystem;
+}
+
+function getInstanceProfile(name: string, policyARNs: string[]) {
+    const instanceRole = new aws.iam.Role("autoscaling", {
+        assumeRolePolicy: JSON.stringify(awsinfra.x.ClusterAutoScalingLaunchConfiguration.defaultInstanceProfilePolicyDocument()),
+    }, { parent: cluster });
+
+    const instanceRolePolicies: aws.iam.RolePolicyAttachment[] = [];
+    for (let i = 0; i < policyARNs.length; i++) {
+        const policyARN = policyARNs[i];
+
+        instanceRolePolicies.push(new aws.iam.RolePolicyAttachment(`${name}-${utils.sha1hash(policyARN)}`, {
+            role: instanceRole,
+            policyArn: policyARN,
+        }, { parent: cluster }));
+    }
+
+    return new aws.iam.InstanceProfile(name, {
+        role: instanceRole,
+    }, { parent: cluster , dependsOn: instanceRolePolicies } );
 }
