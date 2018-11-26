@@ -269,7 +269,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         this.infraTaskDefinition = infraTaskDefinition;
         this.taskDefinition = infraTaskDefinition.instance;
-        this.run = async (options: cloud.TaskRunOptions = { }) => {
+        this.run = async (options: cloud.TaskRunOptions) => {
+            options = options || {};
             options.host = options.host || {};
 
             const environment = convertEnvironment(options.environment || {});
