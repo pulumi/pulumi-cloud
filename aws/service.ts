@@ -91,7 +91,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const parentOpts = { parent: this };
         const containers = createContainers(cluster, cloudContainers);
 
-        const taskRole = createTaskRole(parentOpts);
+        const taskRole = createTaskRole(name, parentOpts);
         const taskArgs = { containers, taskRole };
         const taskDefinition = config.useFargate
             ? new awsinfra.x.FargateTaskDefinition(name, taskArgs, parentOpts)
@@ -260,7 +260,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         this.cluster = cluster;
         const containers = createContainers(cluster, { container: container });
 
-        const taskRole = createTaskRole(parentOpts);
+        const taskRole = createTaskRole(name, parentOpts);
         const taskDefArgs = { containers, taskRole };
 
         const infraTaskDefinition = config.useFargate
@@ -279,8 +279,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     }
 }
 
-function createTaskRole(opts: pulumi.ResourceOptions): aws.iam.Role {
-    const taskRole = new aws.iam.Role(`task`, {
+function createTaskRole(name: string, opts: pulumi.ResourceOptions): aws.iam.Role {
+    const taskRole = new aws.iam.Role(`task-${utils.sha1hash(name)}`, {
         assumeRolePolicy: JSON.stringify(awsinfra.x.TaskDefinition.defaultRoleAssumeRolePolicy()),
     }, opts);
 
@@ -290,7 +290,7 @@ function createTaskRole(opts: pulumi.ResourceOptions): aws.iam.Role {
     for (let i = 0; i < policies.length; i++) {
         const policyArn = policies[i];
         const _ = new aws.iam.RolePolicyAttachment(
-            `task-${utils.sha1hash(policyArn)}`, {
+            `task-${utils.sha1hash(name + policyArn)}`, {
                 role: taskRole,
                 policyArn: policyArn,
             }, opts);
