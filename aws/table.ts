@@ -61,8 +61,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 type: pulumi.output(primaryKeyType).apply(t => pulumiKeyTypeToDynamoKeyType(t)),
             }],
             hashKey: primaryKey,
-            readCapacity: 5,
-            writeCapacity: 5,
+            billingMode: "PAY_PER_REQUEST",
         }, { parent: this });
 
         const tableName = this.dynamodbTable.name;
