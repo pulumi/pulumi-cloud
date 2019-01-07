@@ -47,6 +47,7 @@ func getRequiredEnvValue(t *testing.T, key string) string {
 
 func RunAzureTests(t *testing.T) {
 	cwd, err := os.Getwd()
+	cwd = path.Join(cwd, "azure")
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}

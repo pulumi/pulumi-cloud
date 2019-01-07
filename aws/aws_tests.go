@@ -50,6 +50,7 @@ func RunAwsTests(t *testing.T) {
 	fmt.Printf("AWS Region: %v\n", region)
 
 	cwd, err := os.Getwd()
+	cwd = path.Join(cwd, "azure")
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
