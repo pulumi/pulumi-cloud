@@ -15,12 +15,10 @@
 package cloudtests
 
 import (
+	"testing"
+
 	aws "github.com/pulumi/pulumi-cloud/aws"
 	azure "github.com/pulumi/pulumi-cloud/azure"
-
-	"testing"
-	// pulumi_cloud_azure "azure"
-	// pulumi_cloud_aws "./aws"
 )
 
 // Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
