@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package awstests
+package azuretests
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -34,187 +32,109 @@ import (
 	"github.com/pulumi/pulumi/pkg/resource/config"
 	"github.com/pulumi/pulumi/pkg/resource/stack"
 	"github.com/pulumi/pulumi/pkg/testing/integration"
-	"github.com/pulumi/pulumi/pkg/util/contract"
 
 	"github.com/pulumi/pulumi-cloud/examples"
 )
 
-// Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
-const fargateRegion = "us-east-1"
-
-func Test_Examples(t *testing.T) {
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		t.Skipf("Skipping test due to missing AWS_REGION environment variable")
+func getRequiredEnvValue(t *testing.T, key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		t.Skipf("Skipping test due to missing %v variable", key)
 	}
-	fmt.Printf("AWS Region: %v\n", region)
+	fmt.Printf("%v: %v\n", key, value)
+	return value
+}
 
+func RunAzureTests(t *testing.T) {
 	cwd, err := os.Getwd()
 	if !assert.NoError(t, err, "expected a valid working directory: %v", err) {
 		return
 	}
 
-	var secrets map[string]string
-	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
-		config["aws:region"] = region
+	environ := getRequiredEnvValue(t, "ARM_ENVIRONMENT")
+	location := getRequiredEnvValue(t, "ARM_LOCATION")
+	subscriptionID := getRequiredEnvValue(t, "ARM_SUBSCRIPTION_ID")
+	clientID := getRequiredEnvValue(t, "ARM_CLIENT_ID")
+	clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
+	tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
+
+	commonConfig := map[string]string{
+		"cloud:provider":             "azure",
+		"azure:environment":          environ,
+		"cloud-azure:location":       location,
+		"cloud-azure:subscriptionId": subscriptionID,
+		"cloud-azure:clientId":       clientID,
+		"cloud-azure:tenantId":       tenantID,
+		"containers:redisPassword":   "REDIS_PASSWORD",
+	}
+	secrets := map[string]string{
+		"cloud-azure:clientSecret": clientSecret,
+	}
+
+	examples.RunExamples(t, "azure", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+		for k, v := range commonConfig {
+			config[k] = v
+		}
+
 		return config
 	})
 
-	shortTests := []integration.ProgramTestOptions{
+	examples := []integration.ProgramTestOptions{
 		{
-			Dir: path.Join(cwd, "tests/topic"),
-			Config: map[string]string{
-				"aws:region":     fargateRegion,
-				"cloud:provider": "aws",
-			},
+			Dir:     path.Join(cwd, "./examples/bucket"),
+			Config:  commonConfig,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
+				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/countdown"),
-			Config: map[string]string{
-				"aws:region":                  region,
-				"cloud:provider":              "aws",
-				"cloud-aws:usePrivateNetwork": "true",
-			},
+			Dir:     path.Join(cwd, "./examples/table"),
+			Config:  commonConfig,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
-				time.Sleep(6 * time.Minute)
-
-				// Validate logs from example
-				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-				if !assert.NotNil(t, logs, "expected logs to be produced") {
-					return
-				}
-
-				logLength := len(*logs)
-				t.Logf("Got %v logs", logLength)
-				if !assert.True(t, logLength >= 26, "expected at least 26 logs entries from countdown, got %v", logLength) {
-					return
-				}
-				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
-					"expected ID of logs to match the topic+subscription name")
-				assert.Equal(t, "25", (*logs)[0].Message)
+				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/api"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
+			Dir:     path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
+			Config:  commonConfig,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output string property")
-				testURLGet(t, baseURL, "test1.txt", "You got test1")
+				"@pulumi/cloud-azure",
 			},
 		},
 		{
-			Dir: path.Join(cwd, "../examples/simplecontainers"),
-			Config: map[string]string{
-				"aws:region":           region,
-				"cloud:provider":       "aws",
-				"cloud-aws:useFargate": "true",
-			},
+			Dir:     path.Join(cwd, "./examples/containers"),
+			Config:  commonConfig,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
-				if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
-					return
-				}
-				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
+				"@pulumi/cloud-azure",
 			},
 		},
-		// {
-		// 	Dir:       path.Join(cwd, "../examples/containers"),
-		// 	StackName: addRandomSuffix("containers-ec2"),
-		// 	Config: map[string]string{
-		// 		"aws:region":                          region,
-		// 		"cloud:provider":                      "aws",
-		// 		"cloud-aws:ecsAutoCluster":            "true",
-		// 		"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
-		// 		"cloud-aws:ecsAutoInstanceType":       "t2.medium",
-		// 		"cloud-aws:ecsAutoClusterMinSize":     "20",
-		// 		"cloud-aws:ecsAutoClusterUseEFS":      "false",
-		// 		"containers:redisPassword":            "SECRETPASSWORD",
-		// 	},
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-aws",
-		// 	},
-		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
-		// },
 		{
-			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: addRandomSuffix("containers-fargate"),
-			Config: map[string]string{
-				"aws:region":               fargateRegion,
-				"cloud:provider":           "aws",
-				"cloud-aws:useFargate":     "true",
-				"containers:redisPassword": "SECRETPASSWORD",
-			},
+			Dir:     path.Join(cwd, "./examples/topic"),
+			Config:  commonConfig,
+			Secrets: secrets,
 			Dependencies: []string{
 				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion, true /*isFargates*/),
-		},
-	}
-
-	longTests := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(cwd, "tests/unit"),
-			Config: map[string]string{
-				"aws:region":                  fargateRegion,
-				"cloud:provider":              "aws",
-				"cloud-aws:useFargate":        "true",
-				"cloud-aws:usePrivateNetwork": "true",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				hitUnitTestsEndpoint(t, stackInfo)
-			},
-			EditDirs: []integration.EditDir{
-				{
-					Dir: cwd + "/tests/unit/variants/update1",
-					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-						hitUnitTestsEndpoint(t, stackInfo)
-					},
-				},
-				{
-					Dir: cwd + "/tests/unit/variants/update2",
-					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-						hitUnitTestsEndpoint(t, stackInfo)
-					},
-				},
+				"@pulumi/cloud-azure",
 			},
 		},
 	}
 
-	allTests := shortTests
+	longExamples := []integration.ProgramTestOptions{}
 
 	// Only include the long examples on non-Short test runs
 	if !testing.Short() {
-		allTests = append(allTests, longTests...)
+		examples = append(examples, longExamples...)
 	}
 
-	for _, ex := range allTests {
+	for _, ex := range examples {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
@@ -245,9 +165,7 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 	if !assert.NotNil(t, tree) {
 		return nil
 	}
-	cfg := map[config.Key]string{
-		config.MustMakeKey("aws", "region"): region,
-	}
+	cfg := map[config.Key]string{}
 	ops := tree.OperationsProvider(cfg)
 
 	// Validate logs from example
@@ -261,34 +179,12 @@ func getLogs(t *testing.T, region string, stackInfo integration.RuntimeValidatio
 func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 	// Validate the GET /test1.txt endpoint
 	resp := examples.GetHTTP(t, baseURL+path, 200)
-
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
 	bytes, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
 	assert.Equal(t, contents, string(bytes))
-}
-
-func hitUnitTestsEndpoint(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-	const urlPortion = "/unittests"
-
-	baseURL, ok := stackInfo.Outputs["url"].(string)
-	if !assert.True(t, ok, fmt.Sprintf("expected a `url` output property of type string")) {
-		return
-	}
-
-	// Validate the GET /unittests endpoint.  We allow this to potentially fail once with a 504 to avoid cold-start
-	// issues.
-	// TODO[pulumi/pulumi-cloud#440] Remove this workaround once we structure the unit tests to be resilient to this.
-	resp := examples.GetHTTP(t, baseURL+urlPortion, 200)
-
-	contentType := resp.Header.Get("Content-Type")
-	assert.Equal(t, "application/json", contentType)
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	t.Logf("GET %v [%v/%v]: %v", baseURL+urlPortion, resp.StatusCode, contentType, string(bytes))
 }
 
 func getAllMessageText(logs []operations.LogEntry) string {
@@ -299,7 +195,7 @@ func getAllMessageText(logs []operations.LogEntry) string {
 	return allMessageText
 }
 
-func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+func containersRuntimeValidator(region string) func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 	return func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 		baseURL, ok := stackInfo.Outputs["frontendURL"].(string)
 		assert.True(t, ok, "expected a `frontendURL` output property of type string")
@@ -331,9 +227,7 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 
 		// Validate the GET /nginx endpoint
 		{
-			// https://github.com/pulumi/pulumi-cloud/issues/666
-			// We are only making the proxy route in fargate testing.
-			if isFargate {
+			{
 				resp := examples.GetHTTP(t, baseURL+"nginx", 200)
 				contentType := resp.Header.Get("Content-Type")
 				assert.Equal(t, "text/html", contentType)
@@ -397,10 +291,7 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 
 		// NGINX logs
 		//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
-
-		// https://github.com/pulumi/pulumi-cloud/issues/666
-		// We are only making the proxy route in fargate testing.
-		if isFargate {
+		{
 			nginxLogs, exists := logsByResource["examples-nginx"]
 			if !assert.True(t, exists) {
 				return
@@ -437,11 +328,4 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 			assert.Contains(t, getAllMessageText(redisLogs), "Redis is starting")
 		}
 	}
-}
-
-func addRandomSuffix(s string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	contract.AssertNoError(err)
-	return s + "-" + hex.EncodeToString(b)
 }
