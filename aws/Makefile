@@ -6,8 +6,6 @@ VERSION := $(shell ../scripts/get-version)
 
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
-TESTPARALLELISM := 20
-
 build::
 	yarn link @pulumi/cloud
 	tsc
@@ -17,8 +15,3 @@ build::
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
 
-test_all::
-	PATH=$(PULUMI_BIN):$(PATH) go test -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
-
-test_fast::
-	PATH=$(PULUMI_BIN):$(PATH) go test -short -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
