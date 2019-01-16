@@ -11,11 +11,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "types": "types.d.ts",
     "dependencies": {
-<<<<<<< HEAD
         "@pulumi/pulumi": "dev"
-=======
-        "@pulumi/pulumi": "^0.16.10"
->>>>>>> master
     },
     "devDependencies": {
         "@types/node": "^10.0.0",
