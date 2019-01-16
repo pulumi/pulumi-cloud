@@ -8,11 +8,11 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@types/node": "^8.0.26"
+        "@pulumi/pulumi": "dev"
     },
     "devDependencies": {
-        "typescript": "^3.0.3"
+        "typescript": "^3.0.3",
+        "@types/node": "^10.0.0"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest"
