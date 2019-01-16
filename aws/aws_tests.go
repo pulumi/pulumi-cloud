@@ -195,12 +195,14 @@ func RunAwsTests(t *testing.T) {
 				{
 					Dir: cwd + "/tests/unit/variants/update1",
 					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						t.Log("Running variant 1")
 						hitUnitTestsEndpoint(t, stackInfo)
 					},
 				},
 				{
 					Dir: cwd + "/tests/unit/variants/update2",
 					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+						t.Log("Running variant 2")
 						hitUnitTestsEndpoint(t, stackInfo)
 					},
 				},
