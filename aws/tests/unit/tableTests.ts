@@ -28,6 +28,14 @@ namespace basicApiTests {
 
     const table2 = new cloud.Table("tests-table" + uniqueId++);
     export async function testShouldReturnUndefinedWithPrimaryKeyNotPresent(args: TestArgs) {
+        if (table2 === undefined || table2 === null) {
+            throw new Error("table2 was undefined");
+        }
+
+        if (table2.primaryKey === undefined || table2.primaryKey === null) {
+            throw new Error("table2.primaryKey was undefined");
+        }
+
         const val = await table2.get({[table2.primaryKey.get()]: "val"});
         args.assert.strictEqual(val, undefined);
     }
