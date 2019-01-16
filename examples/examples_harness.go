@@ -86,7 +86,7 @@ func RunExamples(
 		{
 			Dir: path.Join(examplesDir, "todo"),
 			Config: setConfigVars(map[string]string{
-				"cloud:provider":                              provider,
+				"cloud:provider": provider,
 				"cloud-" + provider + ":functionIncludePaths": "www",
 			}),
 			Secrets: secrets,
@@ -189,9 +189,14 @@ func GetHTTP(t *testing.T, url string, statusCode int) *http.Response {
 		time.Sleep(1 * time.Minute)
 	}
 
-	if !assert.NoError(t, err, "expected to be able to GET "+url) ||
-		!assert.Equal(t, statusCode, resp.StatusCode, "Got unexpected status code") {
+	if !assert.NoError(t, err, "expected to be able to GET "+url) {
+		t.FailNow()
+	}
 
+	if !assert.Equal(t, statusCode, resp.StatusCode, "Got unexpected status code. Body was:") {
+		contentType := resp.Header.Get("Content-Type")
+		bytes, _ := ioutil.ReadAll(resp.Body)
+		t.Logf("GET %v [%v/%v]: %v", url, resp.StatusCode, contentType, string(bytes))
 		t.FailNow()
 	}
 

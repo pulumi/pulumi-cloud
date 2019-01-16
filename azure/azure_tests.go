@@ -68,6 +68,7 @@ func RunAzureTests(t *testing.T) {
 		"cloud-azure:tenantId":       tenantID,
 		"containers:redisPassword":   "REDIS_PASSWORD",
 	}
+
 	secrets := map[string]string{
 		"cloud-azure:clientSecret": clientSecret,
 	}

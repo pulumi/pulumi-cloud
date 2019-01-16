@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	aws "github.com/pulumi/pulumi-cloud/aws"
-	azure "github.com/pulumi/pulumi-cloud/azure"
 )
 
 // Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
@@ -27,5 +26,5 @@ const fargateRegion = "us-east-1"
 func Test_Examples(t *testing.T) {
 	t.Parallel()
 	aws.RunAwsTests(t)
-	azure.RunAzureTests(t)
+	// azure.RunAzureTests(t)
 }
