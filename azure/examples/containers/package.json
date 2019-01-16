@@ -15,12 +15,12 @@
         "redis": "^2.8.0"
     },
     "devDependencies": {
-        "@types/node": "^8.0.27",
+        "@types/node": "^10.0.0",
         "@types/node-fetch": "^1.6.7",
         "typescript": "^3.0.3"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
-        "@pulumi/cloud-aws": "latest"
+        "@pulumi/cloud-azure": "latest"
     }
 }

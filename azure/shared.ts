@@ -78,7 +78,7 @@ const azureConfig = new pulumi.Config("cloud-azure");
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
-function getGlobalResourceGroup() {
+function getGlobalResourceGroup(): pulumi.Output<azure.core.ResourceGroup> {
     const resourceGroupPromise = getOrCreateGlobalResourceGroup();
     return pulumi.output(resourceGroupPromise);
 
