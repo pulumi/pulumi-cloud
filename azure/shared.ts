@@ -206,7 +206,15 @@ export function sha1hash(s: string): string {
     return shasum.digest("hex").substring(0, 8);
 }
 
-export const defaultSubscriptionArgs = {
+export const defaultSubscriptionArgs: {
+    includePaths: string[] | undefined,
+    includePackages: string[] | undefined,
+    resourceGroupName: pulumi.Output<string>,
+    location: string,
+    storageAccount: azure.storage.Account,
+    storageContainer: azure.storage.Container,
+    appServicePlanId: pulumi.Output<string>,
+} = {
     includePaths: config.functionIncludePaths,
     includePackages: config.functionIncludePackages,
 
