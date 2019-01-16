@@ -15,6 +15,7 @@
 import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { interpolate } from "@pulumi/pulumi";
 import * as awsServerlessExpress from "aws-serverless-express";
 import * as express from "express";
 import * as http from "http";
@@ -104,7 +105,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
                 factoryFunc,
             }, { parent: this });
 
-        this.url = eventSubscription.functionApp.name.apply(n => `https://${n}.azurewebsites.net/api/`);
+        this.url = interpolate `https://${eventSubscription.functionApp.name}.azurewebsites.net/api/`;
         super.registerOutputs({
             url: this.url,
         });

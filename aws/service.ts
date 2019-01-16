@@ -15,6 +15,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
+import { interpolate } from "@pulumi/pulumi";
 import { CloudCluster, CloudNetwork } from "./shared";
 
 import * as docker from "@pulumi/docker";
@@ -240,7 +241,7 @@ function computeImage(
                 }
                 firstPort = false;
 
-                const fullHost = hostname.apply(h => `${hostproto}://${h}:${hostport}`);
+                const fullHost = interpolate `${hostproto}://${hostname}:${hostport}`;
                 preEnv[`${serviceEnv}_PORT`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP`] = fullHost;
                 preEnv[`${serviceEnv}_PORT_${port}_TCP_PROTO`]= hostproto;
