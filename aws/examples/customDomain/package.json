@@ -8,14 +8,14 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev"
+        "@pulumi/pulumi": "dev",
+        "@pulumi/aws-infra": "dev"
     },
     "devDependencies": {
-        "@types/node": "^8.0.27",
+        "@types/node": "^10.0.0",
         "typescript": "^3.0.3"
     },
     "peerDependencies": {
-        "@pulumi/aws-infra": "^0.15.2-dev",
         "@pulumi/cloud": "latest",
         "@pulumi/cloud-aws": "latest"
     }
