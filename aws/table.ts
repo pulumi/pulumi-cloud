@@ -144,8 +144,8 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         };
 
         this.registerOutputs({
-            primaryKey,
-            primaryKeyType,
+            primaryKey: this.primaryKey,
+            primaryKeyType: this.primaryKeyType,
             dynamodbTable: this.dynamodbTable,
         });
     }

@@ -54,7 +54,8 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
 
         this.primaryKey = pulumi.output(primaryKey);
         this.primaryKeyType = pulumi.output(primaryKeyType);
-        const primaryKeyOutput = this.primaryKeyType;
+
+        const primaryKeyOutput = this.primaryKey;
 
         const storageAccount = shared.getGlobalStorageAccount();
 
@@ -206,9 +207,9 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         });
 
         this.registerOutputs({
-            table: this.table,
             primaryKey: this.primaryKey,
             primaryKeyType: this.primaryKeyType,
+            table: this.table,
         });
     }
 }
