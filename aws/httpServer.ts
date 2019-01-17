@@ -73,6 +73,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         this.url = api.url;
         this.registerOutputs({
+            api,
             url: this.url,
         });
     }

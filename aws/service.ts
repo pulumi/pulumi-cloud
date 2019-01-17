@@ -811,7 +811,8 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
         this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
-        this.registerOutputs();
+
+        this.registerOutputs({ kind: this.kind, name: this.name });
     }
 
     getVolumeName() {
@@ -937,6 +938,6 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
             }
         };
 
-        this.registerOutputs();
+        this.registerOutputs({ cluster, taskDefinition: this.taskDefinition });
     }
 }

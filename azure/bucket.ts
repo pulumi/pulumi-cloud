@@ -118,7 +118,9 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             throw new Error("@Bucket.onDelete is not yet implemented for @pulumi/cloud-azure.");
         };
 
-        this.registerOutputs();
+        this.registerOutputs({
+            container: this.container,
+        });
     }
 }
 

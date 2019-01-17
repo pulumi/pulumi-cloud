@@ -391,7 +391,7 @@ export class SharedVolume extends pulumi.ComponentResource implements cloud.Shar
 
         throw new Error("Method not implemented.");
 
-        this.registerOutputs();
+        this.registerOutputs({ kind: this.kind, name: this.name });
     }
 }
 

@@ -205,7 +205,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             }
         });
 
-        this.registerOutputs();
+        this.registerOutputs({
+            table: this.table,
+            primaryKey: this.primaryKey,
+            primaryKeyType: this.primaryKeyType,
+        });
     }
 }
 function convertToDescriptor(

@@ -199,6 +199,6 @@ class Timer extends pulumi.ComponentResource {
                 },
             }, { parent: this });
 
-        this.registerOutputs();
+        this.registerOutputs({ subscription: this.subscription });
     }
 }

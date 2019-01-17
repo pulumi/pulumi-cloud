@@ -79,6 +79,7 @@ export class Function extends pulumi.ComponentResource {
         this.lambda = createCallbackFunction(name, handler, isFactoryFunction, { parent: this });
 
         this.registerOutputs({
+            handler: this.handler,
             lambda: this.lambda,
         });
     }

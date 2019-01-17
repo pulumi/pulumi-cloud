@@ -132,7 +132,12 @@ class Timer extends pulumi.ComponentResource {
 
         this.scheduleExpression = scheduleExpression;
 
-        this.registerOutputs();
+        this.registerOutputs({
+            scheduleExpression,
+            rule: this.rule,
+            target: this.target,
+            permission: permission,
+        });
     }
 }
 
