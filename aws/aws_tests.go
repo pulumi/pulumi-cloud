@@ -139,25 +139,25 @@ func RunAwsTests(t *testing.T) {
 				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		},
-		// {
-		// 	Dir:       path.Join(cwd, "../examples/containers"),
-		// 	StackName: addRandomSuffix("containers-ec2"),
-		// 	Config: map[string]string{
-		// 		"aws:region":                          region,
-		// 		"cloud:provider":                      "aws",
-		// 		"cloud-aws:ecsAutoCluster":            "true",
-		// 		"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
-		// 		"cloud-aws:ecsAutoInstanceType":       "t2.medium",
-		// 		"cloud-aws:ecsAutoClusterMinSize":     "20",
-		// 		"cloud-aws:ecsAutoClusterUseEFS":      "false",
-		// 		"containers:redisPassword":            "SECRETPASSWORD",
-		// 	},
-		// 	Dependencies: []string{
-		// 		"@pulumi/cloud",
-		// 		"@pulumi/cloud-aws",
-		// 	},
-		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
-		// },
+		{
+			Dir:       path.Join(cwd, "../examples/containers"),
+			StackName: addRandomSuffix("containers-ec2"),
+			Config: map[string]string{
+				"aws:region":                          region,
+				"cloud:provider":                      "aws",
+				"cloud-aws:ecsAutoCluster":            "true",
+				"cloud-aws:ecsAutoClusterNumberOfAZs": "2",
+				"cloud-aws:ecsAutoInstanceType":       "t2.medium",
+				"cloud-aws:ecsAutoClusterMinSize":     "20",
+				"cloud-aws:ecsAutoClusterUseEFS":      "false",
+				"containers:redisPassword":            "SECRETPASSWORD",
+			},
+			Dependencies: []string{
+				"@pulumi/cloud",
+				"@pulumi/cloud-aws",
+			},
+			ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
+		},
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-fargate"),
