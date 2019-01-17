@@ -66,18 +66,20 @@ export function createCallbackFunction(
 // Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
 // `@pulumi/cloud` configuration.
 export class Function extends pulumi.ComponentResource {
-    public readonly handler: aws.serverless.Handler;
+    public readonly handler: aws.serverless.Handler | aws.serverless.HandlerFactory;
     public readonly lambda: aws.lambda.Function;
 
     constructor(name: string,
                 handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
                 isFactoryFunction: boolean,
                 opts?: pulumi.ResourceOptions) {
-        super("cloud:function:Function", name, { handler: handler }, opts);
+        super("cloud:function:Function", name, { }, opts);
 
+        this.handler = handler;
         this.lambda = createCallbackFunction(name, handler, isFactoryFunction, { parent: this });
 
         this.registerOutputs({
+            handler: this.handler,
             lambda: this.lambda,
         });
     }

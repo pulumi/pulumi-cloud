@@ -19,7 +19,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { createCallbackFunction } from "./function";
 
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
-    public bucket: aws.s3.Bucket;
+    public readonly bucket: aws.s3.Bucket;
 
     public get: (key: string) => Promise<Buffer>;
     public put: (key: string, contents: Buffer) => Promise<void>;
@@ -75,6 +75,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
             }).promise();
         };
 
+        this.registerOutputs({ bucket: this.bucket });
     }
 
     public onPut(name: string, handler: cloud.BucketHandler, filter?: cloud.BucketFilter) {
