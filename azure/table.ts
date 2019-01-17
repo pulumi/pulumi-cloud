@@ -50,12 +50,12 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             throw new RunError("Only [string] is supported for [primaryKeyType] for an Azure [cloud.Table].");
         }
 
-        super("cloud:table:Table", name, {
-            primaryKey: primaryKey,
-            primaryKeyType: primaryKeyType,
-        }, opts);
+        super("cloud:table:Table", name, { }, opts);
 
-        const primaryKeyOutput = pulumi.output(primaryKey);
+        this.primaryKey = pulumi.output(primaryKey);
+        this.primaryKeyType = pulumi.output(primaryKeyType);
+
+        const primaryKeyOutput = this.primaryKey;
 
         const storageAccount = shared.getGlobalStorageAccount();
 
@@ -204,6 +204,11 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             else {
                 return;
             }
+        });
+
+        this.registerOutputs({
+            primaryKey: this.primaryKey,
+            primaryKeyType: this.primaryKeyType,
         });
     }
 }
