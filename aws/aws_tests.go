@@ -390,12 +390,12 @@ func checkLogs(
 
 	// validate logs.  Note: logs may take a while to appear.  So try several times, waitin one minute
 	// between each try
-	var logs *[]operations.LogEntry
+	var lastLogs *[]operations.LogEntry
 	var ok bool
 
 	max := 6
 	for i := 0; i <= max; i++ {
-		if logs, ok = checkLogsOnce(t, stackInfo, region, isFargate); ok {
+		if lastLogs, ok = checkLogsOnce(t, stackInfo, region, isFargate); ok {
 			return
 		}
 
@@ -403,11 +403,11 @@ func checkLogs(
 		time.Sleep(1 * time.Minute)
 	}
 
-	if logs == nil {
+	if lastLogs == nil {
 		t.Logf("No logs ever produced after %v minutes", max)
 	} else {
 		t.Logf("Did not get expected logs after %v minutes.  Logs produced were:", max)
-		logsByResource := getLogsByResource(*logs)
+		logsByResource := getLogsByResource(*lastLogs)
 
 		for resource, arr := range logsByResource {
 			t.Logf("  %v", resource)
