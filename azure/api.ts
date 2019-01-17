@@ -73,12 +73,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly customDomainNames: pulumi.Output<string>[]; // any custom domain names.
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
-
         super("cloud:http:API", name, {}, opts);
 
         throw new Error("Method not implemented.");
 
-        super.registerOutputs({
+        this.registerOutputs({
             url: this.url,
             customDomainNames: this.customDomainNames,
         });

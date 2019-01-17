@@ -50,6 +50,7 @@ export function createNameWithStackInfo(requiredInfo: string, maxLength: number,
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
         super("cloud:global:infrastructure", "global-infrastructure");
+        this.registerOutputs();
     }
 }
 

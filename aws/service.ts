@@ -661,11 +661,10 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
-        super("cloud:service:Service", name, {
-            containers: containers,
-            replicas: replicas,
-        }, opts);
+        super("cloud:service:Service", name, { }, opts);
 
+        this.containers = containers;
+        this.replicas = replicas;
         this.name = name;
         this.cluster = cluster;
 
@@ -747,6 +746,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             const endpoints = localEndpoints.get();
             return getEndpointHelper(endpoints, containerName, containerPort);
         };
+
+        this.registerOutputs();
     }
 }
 
@@ -811,6 +812,7 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
         this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
+        this.registerOutputs();
     }
 
     getVolumeName() {
@@ -865,7 +867,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     }
 
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
-        super("cloud:task:Task", name, { container: container }, opts);
+        super("cloud:task:Task", name, { }, opts);
 
         const network = getOrCreateNetwork();
         const cluster = getCluster();
@@ -935,5 +937,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 }
             }
         };
+
+        this.registerOutputs();
     }
 }
