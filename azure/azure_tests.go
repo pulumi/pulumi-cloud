@@ -132,7 +132,7 @@ func RunAzureTests(t *testing.T) {
 	longExamples := []integration.ProgramTestOptions{}
 
 	// Only include the long examples on non-Short test runs
-	if !testing.Short() {
+	if !testing.Short() || true {
 		examples = append(examples, longExamples...)
 	}
 
