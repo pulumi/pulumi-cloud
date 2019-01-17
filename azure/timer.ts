@@ -164,9 +164,7 @@ class Timer extends pulumi.ComponentResource {
 
     constructor(name: string, scheduleExpression: string, isTimeSpan: boolean,
                 handler: timer.Action, opts?: pulumi.ResourceOptions) {
-        super("cloud:timer:Timer", name, {
-            scheduleExpression: scheduleExpression,
-        }, opts);
+        super("cloud:timer:Timer", name, { }, opts);
 
         const binding: TimerBinder = {
             schedule: scheduleExpression,
@@ -200,5 +198,7 @@ class Timer extends pulumi.ComponentResource {
                     handler().then(() => context.done());
                 },
             }, { parent: this });
+
+        this.registerOutputs();
     }
 }

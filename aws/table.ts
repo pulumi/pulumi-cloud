@@ -50,10 +50,10 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
             primaryKeyType = "string";
         }
 
-        super("cloud:table:Table", name, {
-            primaryKey: primaryKey,
-            primaryKeyType: primaryKeyType,
-        }, opts);
+        super("cloud:table:Table", name, { }, opts);
+
+        this.primaryKey = pulumi.output(primaryKey);
+        this.primaryKeyType = pulumi.output(primaryKeyType);
 
         this.dynamodbTable = new aws.dynamodb.Table(name, {
             attributes: [{
@@ -142,5 +142,7 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 Key: query,
             }).promise();
         };
+
+        this.registerOutputs({ primaryKey, primaryKeyType });
     }
 }
