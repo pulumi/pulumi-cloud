@@ -379,65 +379,121 @@ func containersRuntimeValidator(region string, isFargate bool) func(t *testing.T
 			t.Logf("GET %v [%v/%v]: %v", baseURL+"custom", resp.StatusCode, contentType, string(bytes))
 		}
 
-		// Wait for five minutes before getting logs.
-		time.Sleep(5 * time.Minute)
+		// Validate we have the logs we expect.
+		checkLogs(t, stackInfo, region, isFargate)
+	}
+}
 
-		// Validate logs from example
-		logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-		if !assert.NotNil(t, logs, "expected logs to be produced") {
+func checkLogs(
+	t *testing.T, stackInfo integration.RuntimeValidationStackInfo,
+	region string, isFargate bool) {
+
+	// validate logs.  Note: logs may take a while to appear.  So try several times, waitin one minute
+	// between each try
+	var lastLogs *[]operations.LogEntry
+	var ok bool
+
+	max := 6
+	for i := 0; i <= max; i++ {
+		if lastLogs, ok = checkLogsOnce(t, stackInfo, region, isFargate); ok {
 			return
 		}
-		if !assert.True(t, len(*logs) > 10) {
-			return
-		}
-		logsByResource := map[string][]operations.LogEntry{}
-		for _, l := range *logs {
-			cur, _ := logsByResource[l.ID]
-			logsByResource[l.ID] = append(cur, l)
-		}
 
-		// NGINX logs
-		//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+		t.Logf("Did not get expected logs.  Waiting 1 minute")
+		time.Sleep(1 * time.Minute)
+	}
 
-		// https://github.com/pulumi/pulumi-cloud/issues/666
-		// We are only making the proxy route in fargate testing.
-		if isFargate {
-			nginxLogs, exists := logsByResource["examples-nginx"]
-			if !assert.True(t, exists) {
-				return
-			}
-			if !assert.True(t, len(nginxLogs) > 0) {
-				return
-			}
-			assert.Contains(t, getAllMessageText(nginxLogs), "GET /")
-		}
+	if lastLogs == nil {
+		t.Logf("No logs ever produced after %v minutes", max)
+	} else {
+		t.Logf("Did not get expected logs after %v minutes.  Logs produced were:", max)
+		logsByResource := getLogsByResource(*lastLogs)
 
-		// Hello World container Task logs
-		//  {examples-hello-world 1512871250458 Hello from Docker!}
-		{
-			hellowWorldLogs, exists := logsByResource["examples-hello-world"]
-			if !assert.True(t, exists) {
-				return
+		for resource, arr := range logsByResource {
+			t.Logf("  %v", resource)
+			for _, entry := range arr {
+				t.Logf("    %v: %v", entry.Timestamp, entry.Message)
 			}
-			if !assert.True(t, len(hellowWorldLogs) > 3) {
-				return
-			}
-			assert.Contains(t, getAllMessageText(hellowWorldLogs), "Hello from Docker!")
-		}
-
-		// Cache Redis container  logs
-		//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
-		{
-			redisLogs, exists := logsByResource["examples-mycache"]
-			if !assert.True(t, exists) {
-				return
-			}
-			if !assert.True(t, len(redisLogs) > 5) {
-				return
-			}
-			assert.Contains(t, getAllMessageText(redisLogs), "Redis is starting")
 		}
 	}
+
+	t.FailNow()
+}
+
+func getLogsByResource(logs []operations.LogEntry) map[string][]operations.LogEntry {
+	logsByResource := map[string][]operations.LogEntry{}
+	for _, l := range logs {
+		cur, _ := logsByResource[l.ID]
+		logsByResource[l.ID] = append(cur, l)
+	}
+
+	return logsByResource
+}
+
+func checkLogsOnce(
+	t *testing.T, stackInfo integration.RuntimeValidationStackInfo,
+	region string, isFargate bool) (*[]operations.LogEntry, bool) {
+
+	// Validate logs from example
+	logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+	if logs == nil {
+		return nil, false
+	}
+
+	if len(*logs) <= 10 {
+		t.Logf("Expected at least 10 logs")
+		return logs, false
+	}
+
+	logsByResource := getLogsByResource(*logs)
+
+	// NGINX logs
+	//  {examples-nginx 1512871243078 18.217.247.198 - - [10/Dec/2017:02:00:43 +0000] "GET / HTTP/1.1" ...
+
+	// https://github.com/pulumi/pulumi-cloud/issues/666
+	// We are only making the proxy route in fargate testing.
+	if isFargate {
+		if !checkSpecificLogs(t, logsByResource, "examples-nginx", 0, "GET /") {
+			return logs, false
+		}
+	}
+
+	// Hello World container Task logs
+	//  {examples-hello-world 1512871250458 Hello from Docker!}
+	if !checkSpecificLogs(t, logsByResource, "examples-hello-world", 3, "Hello from Docker!") {
+		return logs, false
+	}
+
+	// Cache Redis container  logs
+	//  {examples-mycache 1512870479441 1:C 10 Dec 01:47:59.440 # oO0OoO0OoO0Oo Redis is starting ...
+	if !checkSpecificLogs(t, logsByResource, "examples-mycache", 5, "Redis is starting") {
+		return logs, false
+	}
+
+	return logs, true
+}
+
+func checkSpecificLogs(
+	t *testing.T, logsByResource map[string][]operations.LogEntry,
+	id string, minLogs int, expectedText string) bool {
+
+	logs, exists := logsByResource[id]
+	if !exists {
+		t.Logf("Expected logs for %v, but there were none", id)
+		return false
+	}
+
+	if len(logs) <= minLogs {
+		t.Logf("Expected at least %v logs, but got %v", minLogs+1, len(logs))
+		return false
+	}
+
+	if !strings.Contains(getAllMessageText(logs), expectedText) {
+		t.Logf("All logs text did not contain expected text: %v", expectedText)
+		return false
+	}
+
+	return true
 }
 
 func addRandomSuffix(s string) string {
