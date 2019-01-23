@@ -94,7 +94,7 @@ export interface Container {
     ports?: ContainerPort[];
     /**
      * An array of volume mounts, indicating a volume to mount and a path within
-     * the container at which to moung the volume.  Maps to the Docker
+     * the container at which to mount the volume.  Maps to the Docker
      * `--volume` option - see
      * https://docs.docker.com/engine/reference/commandline/run.
      */
