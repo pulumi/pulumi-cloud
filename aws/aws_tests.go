@@ -208,14 +208,17 @@ func RunAwsTests(t *testing.T) {
 		},
 	}
 
-	allTests := shortTests
-
-	// Only include the long examples on non-Short test runs
-	if !testing.Short() {
-		allTests = append(allTests, longTests...)
+	// Run the short or long tests depending on the config.  Note that we only run long tests on
+	// travis after already running short tests.  So no need to actually run both at the same time
+	// ever.
+	var tests []integration.ProgramTestOptions
+	if testing.Short() {
+		tests = shortTests
+	} else {
+		tests = longTests
 	}
 
-	for _, ex := range allTests {
+	for _, ex := range tests {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
