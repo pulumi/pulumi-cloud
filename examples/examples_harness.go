@@ -177,7 +177,7 @@ func RunExamples(
 func GetHTTP(t *testing.T, url string, statusCode int) *http.Response {
 	var resp *http.Response
 	var err error
-	for i := 0; i <= 3; i++ {
+	for i := 0; i <= 5; i++ {
 		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == statusCode {
 			return resp
