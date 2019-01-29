@@ -830,7 +830,7 @@ function getVolumeName(volume: cloud.Volume) {
             // TaskDefinition we pass to ECS.
             return utils.sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${volume.kind}:${volume.name}`);
         default:
-            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`)
+            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`);
     }
 }
 
@@ -848,7 +848,7 @@ function getHostPath(volume: cloud.Volume) {
             // clash with other deployments.
             return `${cluster.efsMountPath}/${volume.name}_${getVolumeName(volume)}`;
         default:
-            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`)
+            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`);
     }
 }
 
