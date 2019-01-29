@@ -383,7 +383,7 @@ function createUniqueContainerName(name: string) {
 }
 
 export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
-    public readonly kind: cloud.VolumeKind;
+    public readonly kind = "SharedVolume";
     public readonly name: string;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
@@ -396,11 +396,10 @@ export class SharedVolume extends pulumi.ComponentResource implements cloud.Shar
 }
 
 export class HostPathVolume implements cloud.HostPathVolume {
-    public readonly kind: cloud.VolumeKind;
+    public readonly kind = "HostPathVolume";
     public readonly path: string;
 
     constructor(path: string) {
-        this.kind = "HostPathVolume";
         this.path = path;
     }
 }
