@@ -39,9 +39,6 @@ import (
 	"github.com/pulumi/pulumi-cloud/examples"
 )
 
-// Fargate is only supported in `us-east-1`, so force Fargate-based tests to run there.
-const fargateRegion = "us-east-1"
-
 func RunAwsTests(t *testing.T) {
 	region := os.Getenv("AWS_REGION")
 	if region == "" {
@@ -65,7 +62,7 @@ func RunAwsTests(t *testing.T) {
 		{
 			Dir: path.Join(cwd, "tests/topic"),
 			Config: map[string]string{
-				"aws:region":     fargateRegion,
+				"aws:region":     region,
 				"cloud:provider": "aws",
 			},
 			Dependencies: []string{
@@ -158,11 +155,14 @@ func RunAwsTests(t *testing.T) {
 		// 	},
 		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, false /*isFargate*/),
 		// },
+	}
+
+	longTests := []integration.ProgramTestOptions{
 		{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-fargate"),
 			Config: map[string]string{
-				"aws:region":               fargateRegion,
+				"aws:region":               region,
 				"cloud:provider":           "aws",
 				"cloud-aws:useFargate":     "true",
 				"containers:redisPassword": "SECRETPASSWORD",
@@ -171,15 +171,12 @@ func RunAwsTests(t *testing.T) {
 				"@pulumi/cloud",
 				"@pulumi/cloud-aws",
 			},
-			ExtraRuntimeValidation: containersRuntimeValidator(fargateRegion, true /*isFargates*/),
+			ExtraRuntimeValidation: containersRuntimeValidator(region, true /*isFargate:*/),
 		},
-	}
-
-	longTests := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
-				"aws:region":                  fargateRegion,
+				"aws:region":                  region,
 				"cloud:provider":              "aws",
 				"cloud-aws:useFargate":        "true",
 				"cloud-aws:usePrivateNetwork": "true",
