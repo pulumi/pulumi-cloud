@@ -195,14 +195,13 @@ export interface ContainerVolumeMount {
 
 export type VolumeKind = "SharedVolume" | "HostPathVolume";
 
-export interface Volume {
-    kind: VolumeKind;
-}
+export type Volume = SharedVolume | HostPathVolume;
 
 /**
  * A shared volume that can be mounted into one or more containers.
  */
-export interface SharedVolume extends Volume {
+export interface SharedVolume {
+    kind: "SharedVolume";
     /*
      * The unique name of the volume.
      */
@@ -228,7 +227,8 @@ export let SharedVolume: SharedVolumeConstructor; // tslint:disable-line
  * across different hosts.  This is not something that most containers will need, but it offers
  * a powerful escape hatch for some applications.
  */
-export interface HostPathVolume extends Volume {
+export interface HostPathVolume {
+    kind: "HostPathVolume";
     /*
      * The unique name of the volume.
      */

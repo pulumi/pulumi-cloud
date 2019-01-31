@@ -57,10 +57,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             throw new RunError("Only a single replicable is supported in Azure currently.");
         }
 
-        super("cloud:service:Service", name, {
-            containers: containers,
-            replicas: replicas,
-        }, opts);
+        super("cloud:service:Service", name, { }, opts);
 
         const { group, endpoints, defaultEndpoint } = createGroup(
             this, name, args.host, containers);
@@ -72,6 +69,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         this.getEndpoint = async (containerName, containerPort) => {
             return getEndpointHelper(endpoints.get(), containerName, containerPort);
         };
+
+        this.registerOutputs();
     }
 }
 
@@ -269,7 +268,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
-        super("cloud:task:Task", name, { container: container }, opts);
+        super("cloud:task:Task", name, { }, opts);
 
         if (container.ports && container.ports.length > 0) {
             throw new RunError("Tasks should not be given any [ports] in their Container definition.");
@@ -367,6 +366,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 throw err;
             }
         };
+
+        this.registerOutputs();
     }
 }
 
@@ -382,22 +383,23 @@ function createUniqueContainerName(name: string) {
 }
 
 export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
-    public readonly kind: cloud.VolumeKind;
+    public readonly kind = "SharedVolume";
     public readonly name: string;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:volume:Volume", name, {}, opts);
 
         throw new Error("Method not implemented.");
+
+        this.registerOutputs({ kind: this.kind, name: this.name });
     }
 }
 
 export class HostPathVolume implements cloud.HostPathVolume {
-    public readonly kind: cloud.VolumeKind;
+    public readonly kind = "HostPathVolume";
     public readonly path: string;
 
     constructor(path: string) {
-        this.kind = "HostPathVolume";
         this.path = path;
     }
 }

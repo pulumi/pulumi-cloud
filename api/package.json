@@ -11,10 +11,10 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "types": "types.d.ts",
     "dependencies": {
-        "@pulumi/pulumi": "dev"
+        "@pulumi/pulumi": "^0.16.12"
     },
     "devDependencies": {
-        "@types/node": "^8.0.26",
+        "@types/node": "^10.0.0",
         "tslint": "^5.11.0",
         "typescript": "^3.0.3"
     }

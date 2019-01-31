@@ -17,7 +17,7 @@
     "devDependencies": {
         "@types/chai": "^4.0.4",
         "@types/mocha": "^2.2.43",
-        "@types/node": "^8.0.26",
+        "@types/node": "^10.0.0",
         "@types/supertest": "^2.0.3"
     },
     "peerDependencies": {

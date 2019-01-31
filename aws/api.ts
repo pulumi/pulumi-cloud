@@ -136,8 +136,9 @@ export class API implements cloud.API {
 
 // HttpDeployment actually performs a deployment of a set of HTTP API Gateway resources.
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
-    public routes: Route[];
-    public staticRoutes: StaticRoute[];
+    public readonly staticRoutes: StaticRoute[];
+    public readonly proxyRoutes: ProxyRoute[];
+    public readonly routes: Route[];
 
     public /*out*/ readonly api: x.API;
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
@@ -190,15 +191,11 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
                 routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
-        super("cloud:http:API", name, {
-            staticRoutes: staticRoutes,
-            proxyRoutes: proxyRoutes,
-            routes: routes,
-            customDomains: customDomains,
-        }, opts);
+        super("cloud:http:API", name, { }, opts);
 
-        this.routes = routes;
         this.staticRoutes = staticRoutes;
+        this.proxyRoutes = proxyRoutes;
+        this.routes = routes;
 
         this.api = new x.API(name, {
             routes: [
@@ -217,10 +214,14 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         this.customDomainNames = awsDomains.map(awsDomain => awsDomain.cloudfrontDomainName);
         this.customDomains = awsDomains;
 
-        super.registerOutputs({
+        this.registerOutputs({
             api: this.api,
             url: this.url,
+            staticRoutes: staticRoutes,
+            proxyRoutes: proxyRoutes,
+            routes: routes,
             customDomainNames: this.customDomainNames,
+            customDomains: this.customDomainNames,
         });
     }
 }
@@ -331,8 +332,8 @@ function apiGatewayToRequestResponse(
         rawHeaders: rawHeaders,
         body: body,
         method: ev.httpMethod,
-        params: ev.pathParameters,
-        query: ev.queryStringParameters,
+        params: ev.pathParameters || {},
+        query: ev.queryStringParameters || {},
         path: ev.path,
         baseUrl: "/" + stageName,
         hostname: ev.headers["Host"],

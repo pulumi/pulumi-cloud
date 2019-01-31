@@ -16,7 +16,7 @@
         "wcstring": "^2.1.1"
     },
     "devDependencies": {
-        "@types/node": "^8.0.27",
+        "@types/node": "^10.0.0",
         "tslint": "^5.7.0",
         "typescript": "^3.0.3"
     },

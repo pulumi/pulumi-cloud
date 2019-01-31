@@ -406,7 +406,7 @@ function computeContainerDefinition(
             environment: keyValuePairs,
             mountPoints: (container.volumes || []).map(v => ({
                 containerPath: v.containerPath,
-                sourceVolume: (v.sourceVolume as Volume).getVolumeName(),
+                sourceVolume: getVolumeName(v.sourceVolume),
             })),
             logConfiguration: {
                 logDriver: "awslogs",
@@ -498,8 +498,8 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
             for (const volumeMount of container.volumes) {
                 const volume = volumeMount.sourceVolume;
                 volumes.push({
-                    hostPath: (volume as Volume).getHostPath(),
-                    name: (volume as Volume).getVolumeName(),
+                    hostPath: getHostPath(volume),
+                    name: getVolumeName(volume),
                 });
             }
         }
@@ -661,11 +661,10 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const replicas = args.replicas === undefined ? 1 : args.replicas;
         const ports: ExposedPorts = {};
 
-        super("cloud:service:Service", name, {
-            containers: containers,
-            replicas: replicas,
-        }, opts);
+        super("cloud:service:Service", name, { }, opts);
 
+        this.containers = containers;
+        this.replicas = replicas;
         this.name = name;
         this.cluster = cluster;
 
@@ -747,6 +746,8 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             const endpoints = localEndpoints.get();
             return getEndpointHelper(endpoints, containerName, containerPort);
         };
+
+        this.registerOutputs();
     }
 }
 
@@ -786,11 +787,6 @@ function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
 
 const volumeNames = new Set<string>();
 
-export interface Volume extends cloud.Volume {
-    getVolumeName(): any;
-    getHostPath(): any;
-}
-
 // _Note_: In the current EFS-backed model, a Volume is purely virtual - it
 // doesn't actually manage any underlying resource.  It is used just to provide
 // a handle to a folder on the EFS share which can be mounted by container(s).
@@ -799,8 +795,8 @@ export interface Volume extends cloud.Volume {
 // though, we rely on this File Share having been set up as part of the ECS
 // Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
 // longer than any individual deployment.
-export class SharedVolume extends pulumi.ComponentResource implements Volume, cloud.SharedVolume {
-    public readonly kind: cloud.VolumeKind;
+export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
+    public readonly kind: "SharedVolume";
     public readonly name: string;
 
     constructor(name: string, opts?: pulumi.ResourceOptions) {
@@ -811,42 +807,49 @@ export class SharedVolume extends pulumi.ComponentResource implements Volume, cl
         this.kind = "SharedVolume";
         this.name = name;
         volumeNames.add(name);
-    }
 
-    getVolumeName() {
-        // Ensure this is unique to avoid conflicts both in EFS and in the
-        // TaskDefinition we pass to ECS.
-        return utils.sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${this.kind}:${this.name}`);
-    }
-
-    getHostPath() {
-        const cluster = getCluster();
-        if (!cluster || !cluster.efsMountPath) {
-            throw new Error(
-                "Cannot use 'Volume'.  Configured cluster does not support EFS.",
-            );
-        }
-        // Include the unique `getVolumeName` in the EFS host path to ensure this doesn't
-        // clash with other deployments.
-        return `${cluster.efsMountPath}/${this.name}_${this.getVolumeName()}`;
+        this.registerOutputs({ kind: this.kind, name: this.name });
     }
 }
 
 export class HostPathVolume implements cloud.HostPathVolume {
-    public readonly kind: cloud.VolumeKind;
+    public readonly kind = "HostPathVolume";
     public readonly path: string;
 
     constructor(path: string) {
-        this.kind = "HostPathVolume";
         this.path = path;
     }
+}
 
-    getVolumeName() {
-        return utils.sha1hash(`${this.kind}:${this.path}`);
+function getVolumeName(volume: cloud.Volume) {
+    const kind = volume.kind;
+    switch (volume.kind) {
+        case "HostPathVolume":
+            return utils.sha1hash(`${volume.kind}:${volume.path}`);
+        case "SharedVolume":
+            // Ensure this is unique to avoid conflicts both in EFS and in the
+            // TaskDefinition we pass to ECS.
+            return utils.sha1hash(`${pulumi.getProject()}:${pulumi.getStack()}:${volume.kind}:${volume.name}`);
+        default:
+            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`);
     }
+}
 
-    getHostPath() {
-        return this.path;
+function getHostPath(volume: cloud.Volume) {
+    const kind = volume.kind;
+    switch (volume.kind) {
+        case "HostPathVolume":
+            return volume.path;
+        case "SharedVolume":
+            const cluster = getCluster();
+            if (!cluster || !cluster.efsMountPath) {
+                throw new Error("Cannot use 'Volume'.  Configured cluster does not support EFS.");
+            }
+            // Include the unique `getVolumeName` in the EFS host path to ensure this doesn't
+            // clash with other deployments.
+            return `${cluster.efsMountPath}/${volume.name}_${getVolumeName(volume)}`;
+        default:
+            throw new Error(`Volume was not a 'HostPathVolume' or 'SharedVolume': ${kind}`);
     }
 }
 
@@ -865,7 +868,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
     }
 
     constructor(name: string, container: cloud.Container, opts?: pulumi.ResourceOptions) {
-        super("cloud:task:Task", name, { container: container }, opts);
+        super("cloud:task:Task", name, { }, opts);
 
         const network = getOrCreateNetwork();
         const cluster = getCluster();
@@ -935,5 +938,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 }
             }
         };
+
+        this.registerOutputs({ cluster, taskDefinition: this.taskDefinition });
     }
 }

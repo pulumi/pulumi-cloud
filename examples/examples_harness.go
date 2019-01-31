@@ -33,7 +33,7 @@ func RunExamples(
 	secrets map[string]string,
 	setConfigVars func(config map[string]string) map[string]string) {
 
-	examples := []integration.ProgramTestOptions{
+	shortExamples := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(examplesDir, "crawler"),
 			Config: setConfigVars(map[string]string{
@@ -147,14 +147,19 @@ func RunExamples(
 		},
 	}
 
-	longExamples := []integration.ProgramTestOptions{}
+	longTests := []integration.ProgramTestOptions{}
 
-	// Only include the long examples on non-Short test runs
-	if !testing.Short() {
-		examples = append(examples, longExamples...)
+	// Run the short or long tests depending on the config.  Note that we only run long tests on
+	// travis after already running short tests.  So no need to actually run both at the same time
+	// ever.
+	var tests []integration.ProgramTestOptions
+	if testing.Short() {
+		tests = shortExamples
+	} else {
+		tests = longTests
 	}
 
-	for _, ex := range examples {
+	for _, ex := range tests {
 		example := ex.With(integration.ProgramTestOptions{
 			ReportStats: integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
 			Tracing:     "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
@@ -172,7 +177,7 @@ func RunExamples(
 func GetHTTP(t *testing.T, url string, statusCode int) *http.Response {
 	var resp *http.Response
 	var err error
-	for i := 0; i <= 3; i++ {
+	for i := 0; i <= 5; i++ {
 		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == statusCode {
 			return resp

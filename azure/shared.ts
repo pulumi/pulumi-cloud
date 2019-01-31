@@ -50,6 +50,7 @@ export function createNameWithStackInfo(requiredInfo: string, maxLength: number,
 class InfrastructureResource extends pulumi.ComponentResource {
     constructor() {
         super("cloud:global:infrastructure", "global-infrastructure");
+        this.registerOutputs();
     }
 }
 
@@ -78,7 +79,7 @@ const azureConfig = new pulumi.Config("cloud-azure");
 export const globalResourceGroup = getGlobalResourceGroup();
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
-function getGlobalResourceGroup() {
+function getGlobalResourceGroup(): pulumi.Output<azure.core.ResourceGroup> {
     const resourceGroupPromise = getOrCreateGlobalResourceGroup();
     return pulumi.output(resourceGroupPromise);
 
@@ -206,7 +207,16 @@ export function sha1hash(s: string): string {
     return shasum.digest("hex").substring(0, 8);
 }
 
-export const defaultSubscriptionArgs = {
+export const defaultSubscriptionArgs: {
+    includePaths: string[] | undefined,
+    includePackages: string[] | undefined,
+
+    resourceGroupName: pulumi.Output<string>,
+    location: string,
+    storageAccount: azure.storage.Account,
+    storageContainer: azure.storage.Container,
+    appServicePlanId: pulumi.Output<string>,
+} = {
     includePaths: config.functionIncludePaths,
     includePackages: config.functionIncludePackages,
 

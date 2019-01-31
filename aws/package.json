@@ -11,10 +11,10 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/aws": "^0.16.6",
+        "@pulumi/pulumi": "^0.16.12",
+        "@pulumi/aws": "^0.16.7",
         "@pulumi/aws-infra": "^0.16.2",
-        "@pulumi/docker": "^0.16.3",
+        "@pulumi/docker": "^0.16.4",
         "aws-serverless-express": "^3.3.5",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
@@ -22,7 +22,7 @@
     "devDependencies": {
         "@types/aws-sdk": "^2.7.0",
         "@types/mime": "^2.0.0",
-        "@types/node": "^8.0.26",
+        "@types/node": "^10.0.0",
         "@types/semver": "^5.4.0",
         "@types/aws-serverless-express": "^3.0.1",
         "@types/express": "^4.16.0",
