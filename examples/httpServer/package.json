@@ -9,14 +9,16 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "feature-proxyOutput",
-        "@pulumi/cloud": "feature-proxyOutput",
-        "@pulumi/cloud-aws": "feature-proxyOutput",
-        "@pulumi/cloud-azure": "feature-proxyOutput",
         "express": "^4.16.3"
     },
     "devDependencies": {
         "@types/node": "^10.0.0",
         "@types/express": "^4.16.0",
         "typescript": "^3.0.3"
+    },
+    "peerDependencies": {
+        "@pulumi/cloud": "latest",
+        "@pulumi/cloud-aws": "latest",
+        "@pulumi/cloud-azure": "latest"
     }
 }
