@@ -1,5 +1,5 @@
 {
-    "name": "apiExample",
+    "name": "httpServerExample",
     "version": "0.0.1",
     "license": "Apache-2.0",
     "main": "bin/index.js",
@@ -8,14 +8,13 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "feature-proxyOutput"
+        "@pulumi/pulumi": "feature-proxyOutput",
+        "@pulumi/aws": "feature-proxyOutput",
+        "express": "^4.16.3"
     },
     "devDependencies": {
         "@types/node": "^10.0.0",
+        "@types/express": "^4.16.0",
         "typescript": "^3.0.3"
-    },
-    "peerDependencies": {
-        "@pulumi/cloud": "latest",
-        "@pulumi/cloud-aws": "latest"
     }
 }

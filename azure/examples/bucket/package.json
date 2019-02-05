@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/azure": "dev",
-        "@pulumi/azure-serverless": "dev"
+        "@pulumi/pulumi": "feature-proxyOutput",
+        "@pulumi/azure": "feature-proxyOutput",
+        "@pulumi/azure-serverless": "feature-proxyOutput"
     },
     "devDependencies": {
         "@types/node": "^10.0.0",

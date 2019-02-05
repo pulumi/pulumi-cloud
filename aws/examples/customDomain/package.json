@@ -8,8 +8,8 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/aws-infra": "dev"
+        "@pulumi/pulumi": "feature-proxyOutput",
+        "@pulumi/awsx": "feature-proxyOutput"
     },
     "devDependencies": {
         "@types/node": "^10.0.0",
