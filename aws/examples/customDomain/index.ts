@@ -26,7 +26,7 @@ let subdomain = "testsubdomain1234";
 // Also get the Hosted Zone Id for the above domain.
 //
 // IDEA: Use `aws.route53.getZone()`
-let hostedZoneId = "ZAH2GWTP2BEOU"; 
+let hostedZoneId = "ZAH2GWTP2BEOU";
 
 // Next, create an Amazon Certificate Manager cert for *.<domainName> in us-east-1 in the same account.
 //
@@ -46,7 +46,7 @@ endpoint.attachCustomDomain({
 });
 let deployment = endpoint.publish();
 
-// Add a DNS CNAME record for the subdomain pointing to the API custom domain. 
+// Add a DNS CNAME record for the subdomain pointing to the API custom domain.
 let recordSet = new aws.route53.Record(subdomain, {
     name: subdomain,
     zoneId: hostedZoneId,
@@ -59,4 +59,4 @@ let recordSet = new aws.route53.Record(subdomain, {
 });
 
 // Export the custom domain URL for the HTTP Endpoint.
-export let url = recordSet.fqdn.apply(fqdn => `https://${fqdn}/`);
+export let url = pulumi.interpolate `https://${recordSet.fqdn}/`;
