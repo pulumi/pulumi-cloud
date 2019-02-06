@@ -9,7 +9,7 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "dev",
-        "@pulumi/aws-infra": "dev",
+        "@pulumi/awsx": "dev",
         "express": "^4.16.3"
     },
     "devDependencies": {
