@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import * as awsinfra from "@pulumi/aws-infra";
+import * as awsx from "@pulumi/awsx";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
-export interface CloudNetwork extends awsinfra.ClusterNetworkArgs {
+export interface CloudNetwork extends awsx.ClusterNetworkArgs {
     /**
      * Whether the network includes private subnets.
      */
@@ -119,13 +119,13 @@ export function getOrCreateNetwork(): CloudNetwork {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
                 // Create a new VPC for this private network.
-                network = new awsinfra.Network(createNameWithStackInfo("global"), {
+                network = new awsx.Network(createNameWithStackInfo("global"), {
                     usePrivateSubnets: config.usePrivateNetwork,
                     numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
                 });
             } else {
                 // Use the default VPC.
-                network = awsinfra.Network.getDefault();
+                network = awsx.Network.getDefault();
             }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
@@ -134,7 +134,7 @@ export function getOrCreateNetwork(): CloudNetwork {
                     "'externalPublicSubnets' and 'externalSecurityGroups'");
             }
             // Use an exsting VPC for this private network
-            network = awsinfra.Network.fromVpc("external-vpc", {
+            network = awsx.Network.fromVpc("external-vpc", {
                 vpcId: config.externalVpcId,
                 usePrivateSubnets: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets,
@@ -175,7 +175,7 @@ export function getCluster(): CloudCluster | undefined {
 
             // If we are asked to provision a cluster, then we will have created a network
             // above - create a cluster in that network.
-            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsx.Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
                 addEFS: config.ecsAutoClusterUseEFS,
                 instanceType: config.ecsAutoClusterInstanceType,
@@ -197,7 +197,7 @@ export function getCluster(): CloudCluster | undefined {
             };
         } else if (config.useFargate) {
             // Else, allocate a Fargate-only cluster.
-            cluster = new awsinfra.Cluster(createNameWithStackInfo("global"), {
+            cluster = new awsx.Cluster(createNameWithStackInfo("global"), {
                 network: getOrCreateNetwork(),
                 maxSize: 0, // Don't allocate any EC2 instances
                 addEFS: false,
