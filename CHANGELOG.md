@@ -1,5 +1,9 @@
+## 0.16.4 (unreleased)
 
-## 0.16.3 (unreleased)
+## 0.16.3 (Released February 22nd, 2019)
+
+- Update @pulumi/pulumi dependency to require at least version 0.16.14 in order
+  to improve delete-before-create handling.
 
 ## 0.16.2 (Released Novemeber 29th, 2018)
 
