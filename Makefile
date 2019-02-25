@@ -17,7 +17,7 @@ travis_api: all
 TESTPARALLELISM := 20
 
 test_all::
-	PATH=$(PULUMI_BIN):$(PATH) go test -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
+	$(GO_TEST_FAST) .
 
 test_fast::
-	PATH=$(PULUMI_BIN):$(PATH) go test -short -v -count=1 -cover -timeout 2h -parallel ${TESTPARALLELISM} .
+	$(GO_TEST) .
