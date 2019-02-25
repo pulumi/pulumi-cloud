@@ -33,7 +33,7 @@ func RunExamples(
 	secrets map[string]string,
 	setConfigVars func(config map[string]string) map[string]string) {
 
-	shortExamples := []integration.ProgramTestOptions{
+	shortTests := []integration.ProgramTestOptions{
 		{
 			Dir: path.Join(examplesDir, "crawler"),
 			Config: setConfigVars(map[string]string{
@@ -149,14 +149,9 @@ func RunExamples(
 
 	longTests := []integration.ProgramTestOptions{}
 
-	// Run the short or long tests depending on the config.  Note that we only run long tests on
-	// travis after already running short tests.  So no need to actually run both at the same time
-	// ever.
-	var tests []integration.ProgramTestOptions
-	if testing.Short() {
-		tests = shortExamples
-	} else {
-		tests = longTests
+	tests := shortTests
+	if !testing.Short() {
+		tests = append(tests, longTests...)
 	}
 
 	for _, ex := range tests {
