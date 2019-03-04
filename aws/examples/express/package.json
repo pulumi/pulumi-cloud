@@ -8,8 +8,8 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/awsx": "dev",
+        "@pulumi/pulumi": "feature-seventeen",
+        "@pulumi/awsx": "feature-seventeen",
         "express": "^4.16.3"
     },
     "devDependencies": {
