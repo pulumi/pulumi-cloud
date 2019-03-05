@@ -56,95 +56,95 @@ func RunExamples(
 				"@pulumi/cloud-" + provider,
 			},
 		},
-		{
-			Dir: path.Join(examplesDir, "httpServer"),
-			Config: setConfigVars(map[string]string{
-				"cloud:provider": provider,
-			}),
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-" + provider,
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url1"].(string)
-				assert.True(t, ok, "expected a `url1` output string property")
-				testURLGet(t, baseURL, "test1.txt", "You got test1")
-			},
-			EditDirs: []integration.EditDir{
-				{
-					Additive: true,
-					Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
-					ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-						baseURL, ok := stackInfo.Outputs["url2"].(string)
-						assert.True(t, ok, "expected a `url2` output string property")
-						testURLGet(t, baseURL, "test2.txt", "You got test2")
-					},
-				},
-			},
-		},
-		{
-			Dir: path.Join(examplesDir, "todo"),
-			Config: setConfigVars(map[string]string{
-				"cloud:provider": provider,
-				"cloud-" + provider + ":functionIncludePaths": "www",
-			}),
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-" + provider,
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output property of type string")
+		// {
+		// 	Dir: path.Join(examplesDir, "httpServer"),
+		// 	Config: setConfigVars(map[string]string{
+		// 		"cloud:provider": provider,
+		// 	}),
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-" + provider,
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		baseURL, ok := stackInfo.Outputs["url1"].(string)
+		// 		assert.True(t, ok, "expected a `url1` output string property")
+		// 		testURLGet(t, baseURL, "test1.txt", "You got test1")
+		// 	},
+		// 	EditDirs: []integration.EditDir{
+		// 		{
+		// 			Additive: true,
+		// 			Dir:      path.Join(examplesDir, "httpServer/variants/update1"),
+		// 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 				baseURL, ok := stackInfo.Outputs["url2"].(string)
+		// 				assert.True(t, ok, "expected a `url2` output string property")
+		// 				testURLGet(t, baseURL, "test2.txt", "You got test2")
+		// 			},
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	Dir: path.Join(examplesDir, "todo"),
+		// 	Config: setConfigVars(map[string]string{
+		// 		"cloud:provider": provider,
+		// 		"cloud-" + provider + ":functionIncludePaths": "www",
+		// 	}),
+		// 	Secrets: secrets,
+		// 	Dependencies: []string{
+		// 		"@pulumi/cloud",
+		// 		"@pulumi/cloud-" + provider,
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		baseURL, ok := stackInfo.Outputs["url"].(string)
+		// 		assert.True(t, ok, "expected a `url` output property of type string")
 
-				// Validate the GET / endpoint
-				resp := GetHTTP(t, baseURL, 200)
-				contentType := resp.Header.Get("Content-Type")
-				assert.Equal(t, "text/html; charset=UTF-8", contentType)
-				bytes, err := ioutil.ReadAll(resp.Body)
-				assert.NoError(t, err)
-				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+		// 		// Validate the GET / endpoint
+		// 		resp := GetHTTP(t, baseURL, 200)
+		// 		contentType := resp.Header.Get("Content-Type")
+		// 		assert.Equal(t, "text/html; charset=UTF-8", contentType)
+		// 		bytes, err := ioutil.ReadAll(resp.Body)
+		// 		assert.NoError(t, err)
+		// 		t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
-				// Validate the GET /index.html endpoint
-				resp = GetHTTP(t, baseURL+"/index.html", 200)
-				contentType = resp.Header.Get("Content-Type")
-				assert.Equal(t, "text/html; charset=UTF-8", contentType)
-				bytes, err = ioutil.ReadAll(resp.Body)
-				assert.NoError(t, err)
-				t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
+		// 		// Validate the GET /index.html endpoint
+		// 		resp = GetHTTP(t, baseURL+"/index.html", 200)
+		// 		contentType = resp.Header.Get("Content-Type")
+		// 		assert.Equal(t, "text/html; charset=UTF-8", contentType)
+		// 		bytes, err = ioutil.ReadAll(resp.Body)
+		// 		assert.NoError(t, err)
+		// 		t.Logf("GET %v [%v/%v]: %v", baseURL, resp.StatusCode, contentType, string(bytes))
 
-				// Validate the GET /favico.ico endpoint
-				resp = GetHTTP(t, baseURL+"/favicon.ico", 200)
-				assert.Equal(t, int64(1150), resp.ContentLength)
-				contentType = resp.Header.Get("Content-Type")
-				assert.Equal(t, "image/x-icon", contentType)
-				t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
+		// 		// Validate the GET /favico.ico endpoint
+		// 		resp = GetHTTP(t, baseURL+"/favicon.ico", 200)
+		// 		assert.Equal(t, int64(1150), resp.ContentLength)
+		// 		contentType = resp.Header.Get("Content-Type")
+		// 		assert.Equal(t, "image/x-icon", contentType)
+		// 		t.Logf("GET %v [%v/%v]: ...", baseURL+"/favicon.ico", resp.StatusCode, contentType)
 
-				// Validate the POST /todo/{id} endpoint
-				resp, err = http.Post(baseURL+"/todo/abc",
-					"application/x-www-form-urlencoded", strings.NewReader("xyz"))
-				assert.NoError(t, err, "expected to be able to POST /todo/{id}")
-				assert.Equal(t, 201, resp.StatusCode)
-				t.Logf("POST %v [%v]: ...", baseURL+"/todo/abc", resp.StatusCode)
+		// 		// Validate the POST /todo/{id} endpoint
+		// 		resp, err = http.Post(baseURL+"/todo/abc",
+		// 			"application/x-www-form-urlencoded", strings.NewReader("xyz"))
+		// 		assert.NoError(t, err, "expected to be able to POST /todo/{id}")
+		// 		assert.Equal(t, 201, resp.StatusCode)
+		// 		t.Logf("POST %v [%v]: ...", baseURL+"/todo/abc", resp.StatusCode)
 
-				// Validate the GET /todo/{id} endpoint
-				resp = GetHTTP(t, baseURL+"/todo/abc", 401)
-				assert.NoError(t, err, "expected to be able to GET /todo/{id}")
-				bytes, err = ioutil.ReadAll(resp.Body)
-				assert.NoError(t, err)
-				assert.Equal(t, "Authorization header required", string(bytes))
-				t.Logf("GET %v [%v]: %v", baseURL+"/todo/abc", resp.StatusCode, string(bytes))
+		// 		// Validate the GET /todo/{id} endpoint
+		// 		resp = GetHTTP(t, baseURL+"/todo/abc", 401)
+		// 		assert.NoError(t, err, "expected to be able to GET /todo/{id}")
+		// 		bytes, err = ioutil.ReadAll(resp.Body)
+		// 		assert.NoError(t, err)
+		// 		assert.Equal(t, "Authorization header required", string(bytes))
+		// 		t.Logf("GET %v [%v]: %v", baseURL+"/todo/abc", resp.StatusCode, string(bytes))
 
-				// Validate the GET /todo endpoint
-				resp = GetHTTP(t, baseURL+"/todo/", 200)
-				assert.NoError(t, err, "expected to be able to GET /todo")
-				bytes, err = ioutil.ReadAll(resp.Body)
-				assert.NoError(t, err)
-				t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
-				assert.Equal(t, "[{\"id\":\"abc\",\"value\":\"xyz\"}]", string(bytes))
-			},
-		},
+		// 		// Validate the GET /todo endpoint
+		// 		resp = GetHTTP(t, baseURL+"/todo/", 200)
+		// 		assert.NoError(t, err, "expected to be able to GET /todo")
+		// 		bytes, err = ioutil.ReadAll(resp.Body)
+		// 		assert.NoError(t, err)
+		// 		t.Logf("GET %v [%v]: %v", baseURL+"/todo", resp.StatusCode, string(bytes))
+		// 		assert.Equal(t, "[{\"id\":\"abc\",\"value\":\"xyz\"}]", string(bytes))
+		// 	},
+		// },
 	}
 
 	longTests := []integration.ProgramTestOptions{}

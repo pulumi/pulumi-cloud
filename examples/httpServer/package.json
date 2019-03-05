@@ -9,9 +9,9 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "feature-seventeen",
-        "@pulumi/cloud": "dev",
-        "@pulumi/cloud-aws": "dev",
-        "@pulumi/cloud-azure": "dev",
+        "@pulumi/cloud": "feature-seventeen",
+        "@pulumi/cloud-aws": "feature-seventeen",
+        "@pulumi/cloud-azure": "feature-seventeen",
         "express": "^4.16.3"
     },
     "devDependencies": {
