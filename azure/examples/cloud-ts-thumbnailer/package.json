@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "feature-seventeen",
-        "@pulumi/azure": "feature-seventeen",
-        "@pulumi/azure-serverless": "feature-seventeen"
+        "@pulumi/pulumi": "^v0.17.0",
+        "@pulumi/azure": "^v0.17.0",
+        "@pulumi/azure-serverless": "^v0.17.0"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
