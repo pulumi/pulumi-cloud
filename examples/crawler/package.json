@@ -8,7 +8,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^v0.17.0",
+        "@pulumi/pulumi": "dev",
         "cheerio": "^1.0.0-rc.2",
         "node-fetch": "^1.7.3",
         "express": "^4.16.3"
@@ -18,7 +18,7 @@
         "@types/node": "^10.0.0",
         "@types/node-fetch": "^1.6.7",
         "@types/express":"^4.16.0",
-        "typescript": "^3.0.3"
+        "typescript": "^3.0.0"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",

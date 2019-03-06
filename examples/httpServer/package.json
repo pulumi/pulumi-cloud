@@ -8,15 +8,15 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^v0.17.0",
-        "@pulumi/cloud": "^v0.17.0",
-        "@pulumi/cloud-aws": "^v0.17.0",
-        "@pulumi/cloud-azure": "^v0.17.0",
+        "@pulumi/pulumi": "dev",
+        "@pulumi/cloud": "dev",
+        "@pulumi/cloud-aws": "dev",
+        "@pulumi/cloud-azure": "dev",
         "express": "^4.16.3"
     },
     "devDependencies": {
         "@types/node": "^10.0.0",
         "@types/express": "^4.16.0",
-        "typescript": "^3.0.3"
+        "typescript": "^3.0.0"
     }
 }
