@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+var v: TemplateStringsArray
+
 import * as cloud from "@pulumi/cloud";
 import { authMiddleware } from "./middleware";
 import * as express from "express";

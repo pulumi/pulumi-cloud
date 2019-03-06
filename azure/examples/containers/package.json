@@ -8,9 +8,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/azure": "dev",
-        "@pulumi/azure-serverless": "dev",
+        "@pulumi/pulumi": "^v0.17.0",
+        "@pulumi/azure": "^v0.17.0",
+        "@pulumi/azure-serverless": "^v0.17.0",
         "node-fetch": "^1.7.3",
         "redis": "^2.8.0"
     },
