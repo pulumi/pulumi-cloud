@@ -215,8 +215,8 @@ function createGroup(
             memory: memoryInGB,
             port: targetPortNumber,
             protocol: protocol,
-            image: imageOptions.apply(io => io.image),
-            environmentVariables: imageOptions.apply(io => io.environment),
+            image: imageOptions.image,
+            environmentVariables: imageOptions.environment,
             commands: container.command,
         });
 

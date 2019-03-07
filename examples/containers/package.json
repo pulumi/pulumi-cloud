@@ -15,7 +15,7 @@
     "devDependencies": {
         "@types/node": "^10.0.0",
         "@types/node-fetch": "^1.6.7",
-        "typescript": "^3.0.3"
+        "typescript": "^3.0.0"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
