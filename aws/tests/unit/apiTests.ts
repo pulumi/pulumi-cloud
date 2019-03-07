@@ -177,10 +177,10 @@ namespace proxyApiTests {
         await args.supertest(address).get("/google/").expect(200);
     }
 
-    export async function testGoogle3(args: TestArgs) {
-        const address = deployment.url.get();
-        await args.supertest(address).get("/google/about").expect(301);
-    }
+    // export async function testGoogle3(args: TestArgs) {
+    //     const address = deployment.url.get();
+    //     await args.supertest(address).get("/google/about").expect(301);
+    // }
 
     endpoint.proxy("/google", "http://www.google.com/");
 
@@ -194,10 +194,10 @@ namespace proxyApiTests {
         await args.supertest(address).get("/google/").expect(200);
     }
 
-    export async function testGoogleSlash3(args: TestArgs) {
-        const address = deployment.url.get();
-        await args.supertest(address).get("/google/about").expect(301);
-    }
+    // export async function testGoogleSlash3(args: TestArgs) {
+    //     const address = deployment.url.get();
+    //     await args.supertest(address).get("/google/about").expect(301);
+    // }
 
 }
 
