@@ -110,7 +110,7 @@ class Cache {
         });
         this.get = (key: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
+                // console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -130,7 +130,7 @@ class Cache {
         };
         this.set = (key: string, value: string) => {
             return redis.getEndpoint("redis", 6379).then(endpoint => {
-                console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
+                // console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
                 let client = require("redis").createClient(
                     endpoint.port,
                     endpoint.hostname,
@@ -203,7 +203,7 @@ api.get("/", async (req, res) => {
             return;
         }
         let endpoint = await nginx.getEndpoint("nginx", 80);
-        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
+        // console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());
@@ -228,7 +228,7 @@ api.get("/custom", async (req, res) => {
     try {
         const fetch = (await import("node-fetch")).default;
         let endpoint = await customWebServer.getEndpoint();
-        console.log(`got host and port: ${JSON.stringify(endpoint)}`);
+        // console.log(`got host and port: ${JSON.stringify(endpoint)}`);
         let resp = await fetch(`http://${endpoint.hostname}:${endpoint.port}/`);
         let buffer = await resp.buffer();
         console.log(buffer.toString());
