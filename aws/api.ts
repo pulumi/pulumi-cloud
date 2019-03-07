@@ -375,7 +375,17 @@ function apiGatewayToRequestResponse(
         },
         json: (obj: any) => {
             res.setHeader("content-type", "application/json");
-            res.end(JSON.stringify(obj));
+            const seen = new WeakSet();
+            res.end(JSON.stringify(obj, (_, value) => {
+                if (typeof value === "object" && value !== null) {
+                    if (seen.has(value)) {
+                        return;
+                    }
+                    seen.add(value);
+                }
+
+                return value;
+            }));
         },
         redirect: (arg1: string | number, arg2?: string) => {
             // Support two overloads:
