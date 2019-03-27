@@ -11,8 +11,8 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/pulumi": "^0.17.1",
-        "@pulumi/azure": "^0.17.0",
+        "@pulumi/pulumi": "^0.17.4",
+        "@pulumi/azure": "^0.17.3",
         "@pulumi/azure-serverless": "^0.17.0",
         "@pulumi/docker": "^0.17.0",
         "stream-buffers": "^3.0.2",
