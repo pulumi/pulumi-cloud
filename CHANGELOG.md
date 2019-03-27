@@ -1,4 +1,8 @@
-## 0.17.1 (Unreleased)
+## 0.17.2 (Unreleased)
+
+- Updated to latest versions of dependent packages.
+
+## 0.17.1 (Released March 27, 2019)
 
 ## 0.17.0 (Released March 5, 2019)
 
