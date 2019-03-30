@@ -33,29 +33,30 @@ func RunExamples(
 	secrets map[string]string,
 	setConfigVars func(config map[string]string) map[string]string) {
 
-	shortTests := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(examplesDir, "crawler"),
-			Config: setConfigVars(map[string]string{
-				"cloud:provider": provider,
-			}),
-			Secrets: secrets,
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-" + provider,
-			},
+	baseTest := integration.ProgramTestOptions{
+		Config: setConfigVars(map[string]string{
+			"cloud:provider": provider,
+		}),
+		Secrets: secrets,
+		Dependencies: []string{
+			"@pulumi/cloud",
+			"@pulumi/cloud-" + provider,
 		},
-		{
+		Quick:       true,
+		SkipRefresh: true,
+	}
+
+	shortTests := []integration.ProgramTestOptions{
+		baseTest.With(integration.ProgramTestOptions{
+			Dir: path.Join(examplesDir, "crawler"),
+		}),
+		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(examplesDir, "timers"),
 			Config: setConfigVars(map[string]string{
 				"cloud:provider": provider,
 				"timers:message": "Hello, Pulumi Timers!",
 			}),
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-" + provider,
-			},
-		},
+		}),
 		// {
 		// 	Dir: path.Join(examplesDir, "httpServer"),
 		// 	Config: setConfigVars(map[string]string{
