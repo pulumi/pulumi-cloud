@@ -15,8 +15,8 @@
 // tslint:disable:max-line-length
 
 import * as aws from "@pulumi/aws";
-import { x } from "@pulumi/aws/apigateway";
 import * as lambda from "@pulumi/aws/lambda";
+import * as awsx from "@pulumi/awsx";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -37,7 +37,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // Create the main aws lambda entrypoint factory function.  Note that this is a factory
         // function so that we can create the underlying server once, and then call into it with
         // each request we get.
-        const entryPointFactory: lambda.CallbackFactory<x.Request, x.Response> = () => {
+        const entryPointFactory: lambda.CallbackFactory<awsx.apigateway.Request, awsx.apigateway.Response> = () => {
             // Pass */* as the binary mime types.  This tells aws-serverless-express to effectively
             // treat all messages as binary and not reinterpret them.
             const server = serverlessExpress.createServer(
@@ -54,7 +54,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // Now, create the actual AWS lambda from that factory function.
         const func = createFactoryFunction(name, entryPointFactory, { parent: this });
 
-        const api = new aws.apigateway.x.API(name, {
+        const api = new awsx.apigateway.API(name, {
             // Register two paths in the Swagger spec, for the root and for a catch all under the
             // root.  Both paths will map to the single AWS lambda created above.
             routes: [
