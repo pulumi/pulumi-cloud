@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import * as aws from "@pulumi/aws";
-import { x } from "@pulumi/aws/apigateway";
 import * as lambda from "@pulumi/aws/lambda";
+import * as awsx from "@pulumi/awsx";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
@@ -140,7 +140,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public readonly proxyRoutes: ProxyRoute[];
     public readonly routes: Route[];
 
-    public /*out*/ readonly api: x.API;
+    public /*out*/ readonly api: awsx.apigateway.API;
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
     public /*out*/ readonly customDomainNames: pulumi.Output<string>[]; // any custom domain names.
     public /*out*/ readonly customDomains: aws.apigateway.DomainName[]; // AWS DomainName objects for custom domains.
@@ -197,10 +197,10 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
         this.proxyRoutes = proxyRoutes;
         this.routes = routes;
 
-        this.api = new x.API(name, {
+        this.api = new awsx.apigateway.API(name, {
             routes: [
                 ...staticRoutes.map(convertStaticRoute),
-                ...proxyRoutes.map(convertProxyRoute),
+                ...proxyRoutes.map(r => convertProxyRoute(name, this, r)),
                 ...routes.map(r => convertRoute(name, r, { parent: this })),
             ],
         }, { parent: this });
@@ -226,7 +226,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 }
 
-function convertStaticRoute(route: StaticRoute): x.StaticRoute {
+function convertStaticRoute(route: StaticRoute): awsx.apigateway.StaticRoute {
     const options = route.options || {};
     return {
         path: route.path,
@@ -236,34 +236,58 @@ function convertStaticRoute(route: StaticRoute): x.StaticRoute {
     };
 }
 
-function convertProxyRoute(route: ProxyRoute): x.ProxyRoute {
+function convertProxyRoute(name: string, api: HttpDeployment, route: ProxyRoute): awsx.apigateway.IntegrationRoute {
     return {
         path: route.path,
-        target: convertProxyRouteTarget(route.target),
+        target: convertProxyRouteTarget(name, api, route),
     };
 }
 
-function convertProxyRouteTarget(target: string | pulumi.Output<cloud.Endpoint>): string | pulumi.Output<x.Endpoint> {
+function convertProxyRouteTarget(name: string, api: HttpDeployment, route: ProxyRoute): pulumi.Input<awsx.apigateway.IntegrationTarget> {
+    const target = route.target;
     if (typeof target === "string") {
-        return target;
+        let result = target;
+        // ensure there is a trailing `/`
+        if (!result.endsWith("/")) {
+            result += "/";
+        }
+
+        return { uri: result, type: "http_proxy", connectionId: undefined, connectionType: undefined };
     }
 
-    return target.apply(ep => {
-        const apiEndpoint: x.Endpoint = {
-            hostname: ep.hostname,
-            port: ep.port,
-            // note: if the endpoint passes in has no loadBalancer, this will fail with an
-            // appropriate error in apigateway.x.API.
-            loadBalancer: (ep as Endpoint).loadBalancer,
-        };
+    const targetArn = target.apply(ep => {
+        const endpoint = ep as Endpoint;
 
-        return apiEndpoint;
+        if (!endpoint.loadBalancer) {
+            throw new pulumi.ResourceError("AWS endpoint proxy requires an AWS Endpoint", api);
+        }
+        return endpoint.loadBalancer.loadBalancerType.apply(loadBalancerType => {
+            if (loadBalancerType === "application") {
+                // We can only support proxying to an Endpoint if it is backed by an
+                // NLB, which will only be the case for cloud.Service ports exposed as
+                // type "tcp".
+                throw new pulumi.ResourceError(
+                    "AWS endpoint proxy requires an Endpoint on a service port of type 'tcp'", api);
+            }
+            return endpoint.loadBalancer.arn;
+        });
     });
+
+    const vpcLink = new aws.apigateway.VpcLink(name + sha1hash(route.path), {
+        targetArn: targetArn,
+    }, { parent: api });
+
+    return {
+        uri: pulumi.interpolate`http://${target.hostname}:${target.port}/`,
+        type: "http_proxy",
+        connectionType: "VPC_LINK",
+        connectionId: vpcLink.id,
+    };
 }
 
-function convertRoute(name: string, route: Route, opts: pulumi.ResourceOptions): x.Route {
+function convertRoute(name: string, route: Route, opts: pulumi.ResourceOptions): awsx.apigateway.Route {
     return {
-        method: <x.Method>route.method,
+        method: <awsx.apigateway.Method>route.method,
         path: route.path,
         eventHandler: convertHandlers(name, route, opts),
     };
@@ -272,7 +296,7 @@ function convertRoute(name: string, route: Route, opts: pulumi.ResourceOptions):
 function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOptions): lambda.Function {
     const handlers = route.handlers;
 
-    const callback: lambda.Callback<x.Request, x.Response> = (ev, ctx, cb) => {
+    const callback: lambda.Callback<awsx.apigateway.Request, awsx.apigateway.Response> = (ev, ctx, cb) => {
         let body: Buffer;
         if (ev.body !== null) {
             if (ev.isBase64Encoded) {
@@ -310,7 +334,7 @@ function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOption
 
 const stageName = "stage";
 function apiGatewayToRequestResponse(
-        ev: x.Request, body: Buffer, cb: (err: any, result: x.Response) => void): [cloud.Request, cloud.Response] {
+        ev: awsx.apigateway.Request, body: Buffer, cb: (err: any, result: awsx.apigateway.Response) => void): [cloud.Request, cloud.Response] {
     const response = {
         statusCode: 200,
         headers: <{[header: string]: string}>{},
