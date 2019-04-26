@@ -64,7 +64,12 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                 });
             });
 
-            return writableStream.getContents();
+            const contents = writableStream.getContents();
+
+            // WritableStreamBuffer returns 'false' when contents is empty.
+            return typeof contents === "boolean"
+                ? Buffer.alloc(0)
+                : contents;
         };
 
         this.put = async (key, contents) => {
