@@ -88,5 +88,5 @@ For more details see the examples in `examples`, or online at: https://docs.pulu
 
 For detailed reference documentation, please visit the API docs site for the package in question:
 
-* [@pulumi/cloud-aws](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud/index.html)
+* [@pulumi/cloud](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud/index.html)
 * [@pulumi/cloud-aws](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud-aws/index.html)
