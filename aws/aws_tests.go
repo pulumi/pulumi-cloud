@@ -58,28 +58,29 @@ func RunAwsTests(t *testing.T) {
 		return config
 	})
 
-	shortTests := []integration.ProgramTestOptions{
-		{
-			Dir: path.Join(cwd, "tests/topic"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
+	baseTest := integration.ProgramTestOptions{
+		Config: map[string]string{
+			"aws:region":     region,
+			"cloud:provider": "aws",
 		},
-		{
+		Dependencies: []string{
+			"@pulumi/cloud",
+			"@pulumi/cloud-aws",
+		},
+		Quick:       true,
+		SkipRefresh: true,
+	}
+
+	shortTests := []integration.ProgramTestOptions{
+		baseTest.With(integration.ProgramTestOptions{
+			Dir: path.Join(cwd, "tests/topic"),
+		}),
+		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "../examples/countdown"),
 			Config: map[string]string{
 				"aws:region":                  region,
 				"cloud:provider":              "aws",
 				"cloud-aws:usePrivateNetwork": "true",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
@@ -100,33 +101,21 @@ func RunAwsTests(t *testing.T) {
 					"expected ID of logs to match the topic+subscription name")
 				assert.Equal(t, "25", (*logs)[0].Message)
 			},
-		},
-		{
+		}),
+		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "../examples/api"),
-			Config: map[string]string{
-				"aws:region":     region,
-				"cloud:provider": "aws",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				baseURL, ok := stackInfo.Outputs["url"].(string)
 				assert.True(t, ok, "expected a `url` output string property")
 				testURLGet(t, baseURL, "test1.txt", "You got test1")
 			},
-		},
-		{
+		}),
+		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "../examples/simplecontainers"),
 			Config: map[string]string{
 				"aws:region":           region,
 				"cloud:provider":       "aws",
 				"cloud-aws:useFargate": "true",
-			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
 			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				nginxEndpoint, ok := stackInfo.Outputs["nginxEndpoint"].(string)
@@ -135,7 +124,7 @@ func RunAwsTests(t *testing.T) {
 				}
 				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
-		},
+		}),
 		// {
 		// 	Dir:       path.Join(cwd, "../examples/containers"),
 		// 	StackName: addRandomSuffix("containers-ec2"),
@@ -158,7 +147,7 @@ func RunAwsTests(t *testing.T) {
 	}
 
 	longTests := []integration.ProgramTestOptions{
-		{
+		baseTest.With(integration.ProgramTestOptions{
 			Dir:       path.Join(cwd, "../examples/containers"),
 			StackName: addRandomSuffix("containers-fargate"),
 			Config: map[string]string{
@@ -167,13 +156,9 @@ func RunAwsTests(t *testing.T) {
 				"cloud-aws:useFargate":     "true",
 				"containers:redisPassword": "SECRETPASSWORD",
 			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
 			ExtraRuntimeValidation: containersRuntimeValidator(region, true /*isFargate:*/),
-		},
-		{
+		}),
+		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "tests/unit"),
 			Config: map[string]string{
 				"aws:region":                  region,
@@ -181,14 +166,10 @@ func RunAwsTests(t *testing.T) {
 				"cloud-aws:useFargate":        "true",
 				"cloud-aws:usePrivateNetwork": "true",
 			},
-			Dependencies: []string{
-				"@pulumi/cloud",
-				"@pulumi/cloud-aws",
-			},
 			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
 				hitUnitTestsEndpoint(t, stackInfo)
 			},
-		},
+		}),
 	}
 
 	tests := shortTests
