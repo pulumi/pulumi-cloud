@@ -355,7 +355,7 @@ func checkLogs(
 	var lastLogs *[]operations.LogEntry
 	var ok bool
 
-	max := 6
+	max := 10
 	for i := 0; i <= max; i++ {
 		if lastLogs, ok = checkLogsOnce(t, stackInfo, region, isFargate); ok {
 			return
