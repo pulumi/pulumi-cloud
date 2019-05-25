@@ -52,11 +52,11 @@ func RunAwsTests(t *testing.T) {
 		return
 	}
 
-	var secrets map[string]string
-	examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
-		config["aws:region"] = region
-		return config
-	})
+	// var secrets map[string]string
+	// examples.RunExamples(t, "aws", path.Join(cwd, "../examples"), secrets, func(config map[string]string) map[string]string {
+	// 	config["aws:region"] = region
+	// 	return config
+	// })
 
 	baseTest := integration.ProgramTestOptions{
 		Config: map[string]string{
@@ -72,44 +72,44 @@ func RunAwsTests(t *testing.T) {
 	}
 
 	shortTests := []integration.ProgramTestOptions{
-		baseTest.With(integration.ProgramTestOptions{
-			Dir: path.Join(cwd, "tests/topic"),
-		}),
-		baseTest.With(integration.ProgramTestOptions{
-			Dir: path.Join(cwd, "../examples/countdown"),
-			Config: map[string]string{
-				"aws:region":                  region,
-				"cloud:provider":              "aws",
-				"cloud-aws:usePrivateNetwork": "true",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
-				time.Sleep(6 * time.Minute)
+		// baseTest.With(integration.ProgramTestOptions{
+		// 	Dir: path.Join(cwd, "tests/topic"),
+		// }),
+		// baseTest.With(integration.ProgramTestOptions{
+		// 	Dir: path.Join(cwd, "../examples/countdown"),
+		// 	Config: map[string]string{
+		// 		"aws:region":                  region,
+		// 		"cloud:provider":              "aws",
+		// 		"cloud-aws:usePrivateNetwork": "true",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		// Wait 6 minutes to give the timer a chance to fire and for Lambda logs to be collected
+		// 		time.Sleep(6 * time.Minute)
 
-				// Validate logs from example
-				logs := getLogs(t, region, stackInfo, operations.LogQuery{})
-				if !assert.NotNil(t, logs, "expected logs to be produced") {
-					return
-				}
+		// 		// Validate logs from example
+		// 		logs := getLogs(t, region, stackInfo, operations.LogQuery{})
+		// 		if !assert.NotNil(t, logs, "expected logs to be produced") {
+		// 			return
+		// 		}
 
-				logLength := len(*logs)
-				t.Logf("Got %v logs", logLength)
-				if !assert.True(t, logLength >= 26, "expected at least 26 logs entries from countdown, got %v", logLength) {
-					return
-				}
-				assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
-					"expected ID of logs to match the topic+subscription name")
-				assert.Equal(t, "25", (*logs)[0].Message)
-			},
-		}),
-		baseTest.With(integration.ProgramTestOptions{
-			Dir: path.Join(cwd, "../examples/api"),
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				baseURL, ok := stackInfo.Outputs["url"].(string)
-				assert.True(t, ok, "expected a `url` output string property")
-				testURLGet(t, baseURL, "test1.txt", "You got test1")
-			},
-		}),
+		// 		logLength := len(*logs)
+		// 		t.Logf("Got %v logs", logLength)
+		// 		if !assert.True(t, logLength >= 26, "expected at least 26 logs entries from countdown, got %v", logLength) {
+		// 			return
+		// 		}
+		// 		assert.Equal(t, "examples-countDown_watcher", (*logs)[0].ID,
+		// 			"expected ID of logs to match the topic+subscription name")
+		// 		assert.Equal(t, "25", (*logs)[0].Message)
+		// 	},
+		// }),
+		// baseTest.With(integration.ProgramTestOptions{
+		// 	Dir: path.Join(cwd, "../examples/api"),
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		baseURL, ok := stackInfo.Outputs["url"].(string)
+		// 		assert.True(t, ok, "expected a `url` output string property")
+		// 		testURLGet(t, baseURL, "test1.txt", "You got test1")
+		// 	},
+		// }),
 		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "../examples/simplecontainers"),
 			Config: map[string]string{
@@ -122,6 +122,7 @@ func RunAwsTests(t *testing.T) {
 				if !assert.True(t, ok, "expected a `nginxEndpoint` output string property") {
 					return
 				}
+				fmt.Printf("nginxEndpoint: %v", nginxEndpoint)
 				testURLGet(t, nginxEndpoint, "", "<h1> Hi from Pulumi </h1>")
 			},
 		}),
@@ -147,29 +148,29 @@ func RunAwsTests(t *testing.T) {
 	}
 
 	longTests := []integration.ProgramTestOptions{
-		baseTest.With(integration.ProgramTestOptions{
-			Dir:       path.Join(cwd, "../examples/containers"),
-			StackName: addRandomSuffix("containers-fargate"),
-			Config: map[string]string{
-				"aws:region":               region,
-				"cloud:provider":           "aws",
-				"cloud-aws:useFargate":     "true",
-				"containers:redisPassword": "SECRETPASSWORD",
-			},
-			ExtraRuntimeValidation: containersRuntimeValidator(region, true /*isFargate:*/),
-		}),
-		baseTest.With(integration.ProgramTestOptions{
-			Dir: path.Join(cwd, "tests/unit"),
-			Config: map[string]string{
-				"aws:region":                  region,
-				"cloud:provider":              "aws",
-				"cloud-aws:useFargate":        "true",
-				"cloud-aws:usePrivateNetwork": "true",
-			},
-			ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
-				hitUnitTestsEndpoint(t, stackInfo)
-			},
-		}),
+		// baseTest.With(integration.ProgramTestOptions{
+		// 	Dir:       path.Join(cwd, "../examples/containers"),
+		// 	StackName: addRandomSuffix("containers-fargate"),
+		// 	Config: map[string]string{
+		// 		"aws:region":               region,
+		// 		"cloud:provider":           "aws",
+		// 		"cloud-aws:useFargate":     "true",
+		// 		"containers:redisPassword": "SECRETPASSWORD",
+		// 	},
+		// 	ExtraRuntimeValidation: containersRuntimeValidator(region, true /*isFargate:*/),
+		// }),
+		// baseTest.With(integration.ProgramTestOptions{
+		// 	Dir: path.Join(cwd, "tests/unit"),
+		// 	Config: map[string]string{
+		// 		"aws:region":                  region,
+		// 		"cloud:provider":              "aws",
+		// 		"cloud-aws:useFargate":        "true",
+		// 		"cloud-aws:usePrivateNetwork": "true",
+		// 	},
+		// 	ExtraRuntimeValidation: func(t *testing.T, stackInfo integration.RuntimeValidationStackInfo) {
+		// 		hitUnitTestsEndpoint(t, stackInfo)
+		// 	},
+		// }),
 	}
 
 	tests := shortTests
