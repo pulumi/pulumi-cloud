@@ -524,7 +524,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }, { parent: parent });
 
     return {
-        task: taskDefinition,
+        taskDefinition: taskDefinition,
         logGroup: logGroup,
     };
 }
