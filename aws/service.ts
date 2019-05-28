@@ -509,11 +509,11 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     const containerDefinitions = computeContainerDefinitions(parent, containers, ports, logGroup);
 
     // Compute the memory and CPU requirements of the task for Fargate
-    const taskMemoryAndCPU = containerDefinitions.apply(taskMemoryAndCPUForContainers);
+    const taskMemoryAndCPU = containerDefinitions.apply(d => taskMemoryAndCPUForContainers(d));
 
     const taskDefinition = new aws.ecs.TaskDefinition(name, {
         family: name,
-        containerDefinitions: containerDefinitions.apply(JSON.stringify),
+        containerDefinitions: containerDefinitions.apply(d => JSON.stringify(d)),
         volumes: volumes,
         taskRoleArn: getTaskRole().arn,
         requiresCompatibilities: config.useFargate ? ["FARGATE"] : undefined,
