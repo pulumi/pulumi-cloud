@@ -476,7 +476,7 @@ function getExecutionRole(): aws.iam.Role {
 }
 
 interface TaskDefinition {
-    task: aws.ecs.TaskDefinition;
+    taskDefinition: aws.ecs.TaskDefinition;
     logGroup: aws.cloudwatch.LogGroup;
 }
 
@@ -524,7 +524,7 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     }, { parent: parent });
 
     return {
-        task: taskDefinition,
+        taskDefinition: taskDefinition,
         logGroup: logGroup,
     };
 }
@@ -625,6 +625,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly cluster: CloudCluster;
     public readonly ecsService: aws.ecs.Service;
 
+    public readonly taskDefinition: aws.ecs.TaskDefinition;
+    public readonly logGroup: aws.cloudwatch.LogGroup;
+
     public readonly endpoints: pulumi.Output<Endpoints>;
     public readonly defaultEndpoint: pulumi.Output<Endpoint>;
 
@@ -708,7 +711,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         }
 
         // Create the task definition, parented to this component.
-        const taskDefinition = createTaskDefinition(this, name, containers, ports);
+        const { taskDefinition, logGroup } = createTaskDefinition(this, name, containers, ports);
 
         // If the cluster has an autoscaling group, ensure the service depends on it being created.
         const serviceDependsOn = [];
@@ -720,7 +723,7 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
         const securityGroups = cluster.securityGroupId ? [ cluster.securityGroupId ] : [];
         this.ecsService = new aws.ecs.Service(name, {
             desiredCount: replicas,
-            taskDefinition: taskDefinition.task.arn,
+            taskDefinition: taskDefinition.arn,
             cluster: cluster.ecsClusterARN,
             loadBalancers: loadBalancers,
             placementConstraints: placementConstraintsForHost(args.host),
@@ -746,6 +749,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             const endpoints = localEndpoints.get();
             return getEndpointHelper(endpoints, containerName, containerPort);
         };
+
+        this.taskDefinition = taskDefinition;
+        this.logGroup = logGroup;
 
         this.registerOutputs();
     }
@@ -859,6 +865,7 @@ function getHostPath(volume: cloud.Volume) {
 export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly cluster: CloudCluster;
     public readonly taskDefinition: aws.ecs.TaskDefinition;
+    public readonly logGroup: aws.cloudwatch.LogGroup;
 
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
@@ -877,7 +884,9 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                 " or 'cloud-aws:ecsAutoCluster' or 'cloud-aws:useFargate'");
         }
         this.cluster = cluster;
-        this.taskDefinition = createTaskDefinition(this, name, { container: container }).task;
+        const { taskDefinition, logGroup } = createTaskDefinition(this, name, { container: container });
+        this.taskDefinition = taskDefinition;
+        this.logGroup = logGroup;
 
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
