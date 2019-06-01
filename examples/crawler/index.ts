@@ -89,7 +89,7 @@ sites.subscribe("foreachurl", async (url) => {
     });
 
     // Loop over all `<a href=...>` that match our filter, and collect in a local Set.
-    let links = new Set();
+    let links = new Set<string>();
     let anchors = $("a", html);
     for (let i = 0; i < anchors.length; i++) {
         let rawHref = anchors[i].attribs["href"];
