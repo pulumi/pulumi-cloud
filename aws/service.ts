@@ -548,15 +548,12 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
 
     // Compute the smallest allowed Fargate memory value compatible with the requested minimum memory.
     let taskMemory: number;
-    let taskMemoryString: string;
     if (minTaskMemory <= 512) {
         taskMemory = 512;
-        taskMemoryString = "0.5GB";
     } else {
         const taskMemGB = minTaskMemory / 1024;
         const taskMemWholeGB = Math.ceil(taskMemGB);
         taskMemory = taskMemWholeGB * 1024;
-        taskMemoryString = `${taskMemWholeGB}GB`;
     }
 
     // Allowed CPU values are powers of 2 between 256 and 4096.  We just ensure it's a power of 2 that is at least
@@ -576,7 +573,7 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
 
     // Return the computed task memory and CPU values
     return {
-        memory: taskMemoryString,
+        memory: `${taskMemory}`,
         cpu: `${taskCPU}`,
     };
 }
