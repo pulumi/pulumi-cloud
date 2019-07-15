@@ -12,4 +12,3 @@ build::
 	cp ../README.md ../LICENSE bin/
 
 lint::
-	tslint -c ../tslint.json -p tsconfig.json
