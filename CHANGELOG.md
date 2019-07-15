@@ -1,9 +1,9 @@
 ## Deprecated (July 15, 2019)
 
-- `@pulumi/cloud` before is deprecated.  Existing `@pulumi/cloud` packages (up to v0.18.1) will
-  still be available, but are unlikely to get continued fixes or support.  Users of these packages
-  are recommended to move to `@pulumi/aws`, `@pulumi/awsx` if you use AWS, and `@pulumi/azure` if
-  you use Azure.  These packages lack the abstractions that provide a single view over the different
+- `@pulumi/cloud` is now deprecated.  Existing `@pulumi/cloud` packages (up to v0.18.1) will still
+  be available, but are unlikely to get continued fixes or support.  Users of these packages are
+  recommended to move to `@pulumi/aws`, `@pulumi/awsx` if you use AWS, and `@pulumi/azure` if you
+  use Azure.  These packages lack the abstractions that provide a single view over the different
   clouds.  However, they expose the full set of rich functionality each cloud provides.
 
 ## 0.18.1 (Release July 15, 2019)
