@@ -1,3 +1,6 @@
+
+# This package has been deprecated. All functionality previously contained in it has moved to the @pulumi/aws, @pulumi/awsx and @pulumi/azure packages.
+
 [![Build Status](https://travis-ci.com/pulumi/pulumi-cloud.svg?token=eHg7Zp5zdDDJfTjY8ejq&branch=master)](https://travis-ci.com/pulumi/pulumi-cloud)
 
 # Pulumi Cloud Framework
