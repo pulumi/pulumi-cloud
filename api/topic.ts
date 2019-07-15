@@ -14,6 +14,7 @@
 
 import * as pulumi from "@pulumi/pulumi";
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface TopicConstructor {
     /**
      * Allocate a new Topic with a given name.
@@ -24,15 +25,10 @@ export interface TopicConstructor {
     new<T>(name: string, opts?: pulumi.ResourceOptions): Topic<T>;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let Topic: TopicConstructor; // tslint:disable-line
 
-/**
- * A Topic<T> is used to distribute work which will be run concurrently by any
- * susbcribed handlers.  Producers can [[publish]] to the topic, and consumers
- * can [[subscribe]] to be notified when new items are published.
- *
- * @param T The type of items published to the topic.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Topic<T> extends Stream<T> {
     /**
      * Publish an item to this Topic.
@@ -52,13 +48,7 @@ export interface Topic<T> extends Stream<T> {
     subscribe(name: string, handler: (item: T) => Promise<void>): void;
 }
 
-/**
- * A Stream<T> provides access to listen to an (infinite) stream of items coming
- * from a data source.  Unlike [[Topic]], a Stream provides only access to read
- * from the stream, not the ability to publish new items to the stream.
- *
- * @param T The type of items published to the stream.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Stream<T> {
     /**
      * Subscribe to items published to this stream.

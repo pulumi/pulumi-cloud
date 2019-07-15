@@ -22,6 +22,7 @@ import * as shared from "./shared";
 
 import * as azureStorage from "azure-storage";
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class Table extends pulumi.ComponentResource implements cloud.Table {
     public readonly table: azure.storage.Table;
 

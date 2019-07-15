@@ -17,6 +17,7 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class API implements cloud.API {
     constructor(name: string) {
         throw new Error("Method not implemented.");
@@ -67,7 +68,7 @@ export class API implements cloud.API {
     }
 }
 
-// HttpDeployment actually performs a deployment of a set of HTTP API Gateway resources.
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
     public /*out*/ readonly customDomainNames: pulumi.Output<string>[]; // any custom domain names.
@@ -84,11 +85,8 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 }
 
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export type HttpEndpoint = API;
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export let HttpEndpoint = API; // tslint:disable-line

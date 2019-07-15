@@ -19,6 +19,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as azuresb from "azure-sb";
 import * as shared from "./shared";
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     public readonly namespace: azure.eventhub.Namespace;
     public readonly topic: azure.eventhub.Topic;

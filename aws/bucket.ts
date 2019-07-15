@@ -18,6 +18,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { createCallbackFunction } from "./function";
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public readonly bucket: aws.s3.Bucket;
 

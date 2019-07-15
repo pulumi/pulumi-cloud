@@ -14,18 +14,15 @@
 
 import * as pulumi from "@pulumi/pulumi";
 
-/**
- * A collection of Containers
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Containers {
     [name: string]: Container;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type HostOperatingSystem = "linux" | "windows";
 
-/**
- * HostProperties describes the kind of host where a service or task can run.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HostProperties {
     /**
      * The operating system of the host.
@@ -35,9 +32,7 @@ export interface HostProperties {
     os?: HostOperatingSystem;
 }
 
-/**
- * Container specifies the metadata for a component of a Service.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Container {
     /**
      * The image to use for the container.  If `image` is specified, but not `build`, the image will be
@@ -119,10 +114,7 @@ export interface Container {
     dockerLabels?: pulumi.Input<{[name: string]: string}>;
 }
 
-/**
- * CacheFrom may be used to specify build stages to use for the Docker build cache. The final image is always
- * implicitly included.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface CacheFrom {
     /**
      * An optional list of build stages to use for caching. Each build stage in this list will be built explicitly and
@@ -131,9 +123,7 @@ export interface CacheFrom {
     stages?: string[];
 }
 
-/**
- * ContainerBuild may be used to specify detailed instructions about how to build a container.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ContainerBuild {
     /**
      * context is a path to a directory to use for the Docker build context, usually the directory in which the
@@ -160,9 +150,8 @@ export interface ContainerBuild {
      */
     cacheFrom?: boolean | CacheFrom;
 }
-/**
- * ContainerPort represents the information about how to expose a container port on a [Service].
-*/
+
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ContainerPort {
     /**
      * The incoming port where the service exposes the endpoint.
@@ -186,20 +175,22 @@ export interface ContainerPort {
     protocol?: ContainerProtocol;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type ContainerProtocol = "tcp" | "udp" | "http" | "https";
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ContainerVolumeMount {
     containerPath: string;
     sourceVolume: Volume;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type VolumeKind = "SharedVolume" | "HostPathVolume";
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type Volume = SharedVolume | HostPathVolume;
 
-/**
- * A shared volume that can be mounted into one or more containers.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface SharedVolume {
     kind: "SharedVolume";
     /*
@@ -208,6 +199,7 @@ export interface SharedVolume {
     name: string;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface SharedVolumeConstructor {
     /**
      * Construct a new Volume with the given unique name.
@@ -218,15 +210,10 @@ export interface SharedVolumeConstructor {
     new (name: string, opts?: pulumi.ResourceOptions): SharedVolume;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let SharedVolume: SharedVolumeConstructor; // tslint:disable-line
 
-/**
- * A volume mounted from a path on the host machine.
- *
- * _Note_: This is an emphemeral volume which will not persist across container restarts or
- * across different hosts.  This is not something that most containers will need, but it offers
- * a powerful escape hatch for some applications.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HostPathVolume {
     kind: "HostPathVolume";
     /*
@@ -235,6 +222,7 @@ export interface HostPathVolume {
     path: string;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HostPathVolumeConstructor {
     /**
      * Construct a new Volume with the given unique name.
@@ -242,13 +230,10 @@ export interface HostPathVolumeConstructor {
     new (path: string): HostPathVolume;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let HostPathVolume: HostPathVolumeConstructor; // tslint:disable-line
 
-/**
- * The arguments to construct a Service object. These arguments may include container information, for simple
- * single-container scenarios, or you may specify that information using the containers property. If a single container
- * is specified in-line, it is implicitly given the name "default".
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ServiceArguments extends Container {
     /**
      * A collection of containers that will be deployed as part of this Service, if there are multiple.
@@ -271,22 +256,20 @@ export interface ServiceArguments extends Container {
     waitForSteadyState?: boolean;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Endpoint {
     hostname: string;
     port: number;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Endpoints {
     [containerName: string]: {
         [port: number]: Endpoint;
     };
 }
 
-/**
- * A persistent service running as part of the Pulumi Cloud application. A
- * collection of container specifications are provided to define the compute
- * that will run inside this service.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Service {
     name: string;
 
@@ -316,6 +299,7 @@ export interface Service {
     getEndpoint(containerName?: string, containerPort?: number): Promise<Endpoint>;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ServiceConstructor {
     /**
      * Construct a new Service, which is one or more managed replicas of a group of one or more Containers.
@@ -326,12 +310,10 @@ export interface ServiceConstructor {
     new (name: string, args: ServiceArguments, opts?: pulumi.ResourceOptions): Service;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let Service: ServiceConstructor; // tslint:disable-line
 
-
-/**
- * Arguments to use for initializing a single run of the Task
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface TaskRunOptions {
     /**
      * Optional environment variables to override those set in the container definition.
@@ -343,10 +325,7 @@ export interface TaskRunOptions {
     host?: HostProperties;
 }
 
-/**
- * A Task represents a container which can be [run] dynamically whenever (and
- * as many times as) needed.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Task {
     /**
      * Run the task, passing in additional task run options.
@@ -354,6 +333,7 @@ export interface Task {
     run(options?: TaskRunOptions): Promise<void>;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface TaskConstructor {
     /**
      * Construct a new Task, which is a Container that can be run many times as individual tasks.
@@ -365,4 +345,5 @@ export interface TaskConstructor {
     new (name: string, container: Container, opts?: pulumi.ResourceOptions): Task;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let Task: TaskConstructor; // tslint:disable-line

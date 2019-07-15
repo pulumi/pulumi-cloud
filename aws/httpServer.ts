@@ -24,6 +24,7 @@ import { createFactoryFunction } from "./function";
 
 import * as serverlessExpress from "aws-serverless-express";
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 

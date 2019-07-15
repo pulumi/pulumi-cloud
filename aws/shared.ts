@@ -18,6 +18,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import * as config from "./config";
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface CloudNetwork extends awsx.ClusterNetworkArgs {
     /**
      * Whether the network includes private subnets.
@@ -38,6 +39,7 @@ export interface CloudNetwork extends awsx.ClusterNetworkArgs {
 // internal resources they provision.
 const nameWithStackInfo = `pulumi-${pulumi.getStack()}`;
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function createNameWithStackInfo(requiredInfo: string) {
     const maxLength = 24;
 
@@ -73,6 +75,8 @@ class InfrastructureResource extends pulumi.ComponentResource {
 }
 
 let globalInfrastructureResource: InfrastructureResource | undefined;
+
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function getGlobalInfrastructureResource(): pulumi.Resource {
     if (!globalInfrastructureResource) {
         globalInfrastructureResource = new InfrastructureResource();
@@ -81,7 +85,7 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
     return globalInfrastructureResource;
 }
 
-// Whether or not we should run lamabda-based compute in the private network
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 
 // The IAM Role Policies to apply to compute for both Lambda and ECS
@@ -94,7 +98,7 @@ let computePolicies: aws.ARN[] = config.computeIAMRolePolicyARNs
     : defaultComputePolicies;
 let computePoliciesAccessed = false;
 
-// Set the IAM policies to use for compute.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function setComputeIAMRolePolicies(policyARNs: string[]) {
     if (computePoliciesAccessed) {
         throw new RunError(
@@ -103,7 +107,7 @@ export function setComputeIAMRolePolicies(policyARNs: string[]) {
     computePolicies = policyARNs;
 }
 
-// Get the IAM policies to use for compute.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function getComputeIAMRolePolicies(): aws.ARN[] {
     computePoliciesAccessed = true;
     return computePolicies;
@@ -111,9 +115,7 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
 
 let network: CloudNetwork;
 
-/**
- * Get or create the network to use for container and lambda compute.
- */
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function getOrCreateNetwork(): CloudNetwork {
     if (!network) {
         if (!config.externalVpcId) {
@@ -147,13 +149,12 @@ export function getOrCreateNetwork(): CloudNetwork {
     return network;
 }
 
-/**
- * @deprecated
- */
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function getNetwork(): CloudNetwork {
     return getOrCreateNetwork();
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface CloudCluster {
     readonly ecsClusterARN: pulumi.Output<string>;
     readonly securityGroupId?: pulumi.Output<string>;
@@ -163,6 +164,8 @@ export interface CloudCluster {
 
 // The cluster to use for container compute or undefined if containers are unsupported.
 let cluster: CloudCluster | undefined;
+
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function getCluster(): CloudCluster | undefined {
     // If no ECS cluster has been initialized, see if we must lazily allocate one.
     if (!cluster) {

@@ -14,12 +14,10 @@
 
 import * as pulumi from "@pulumi/pulumi";
 
-/**
- * The available types for primary keys. The default primary key type is
- * `string`.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type PrimaryKeyType = "string" | "number" | "boolean";
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface TableConstructor {
     /**
      * Creates a new Table.
@@ -35,25 +33,10 @@ export interface TableConstructor {
          opts?: pulumi.ResourceOptions): Table;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let Table: TableConstructor; // tslint:disable-line
 
-/**
- * Table is a simple document store for persistent application backend storage.
- *
- * ```javascript
- * let table = new Table("my-table");
- * await table.insert({id: "kuibai", data: 42});
- * let item = await table.get({id: "kuibai"});
- * ```
- *
- * Tables support a single primary key with a user-defined name and type.  All
- * other document properties are schemaless.  If not specified, a primary key
- * named `id` with type `string` is used.
- *
- * All queries provide a subset of properties to filter on, and only filters on
- * value equality are supported.  The `get`, `update` and `delete` operations
- * expect the query to contain only the value for the primary key.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Table {
     /**
      * The name of the primary key.

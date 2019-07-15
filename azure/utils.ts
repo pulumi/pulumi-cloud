@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<string, U> {
     const result: Record<string, U> = {};
     for (const k of Object.keys(val)) {

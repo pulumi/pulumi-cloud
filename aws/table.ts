@@ -28,6 +28,7 @@ function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
 
 const consistentRead = true;
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class Table extends pulumi.ComponentResource implements cloud.Table {
     public readonly primaryKey: pulumi.Output<string>;
     public readonly primaryKeyType: pulumi.Output<string>;

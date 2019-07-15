@@ -18,9 +18,7 @@ import { RunError } from "@pulumi/pulumi/errors";
 import * as crypto from "crypto";
 import * as config from "./config";
 
-/**
- * Helper to create a name for resources with a name that should be unique to this stack.
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function createNameWithStackInfo(requiredInfo: string, maxLength: number, delim: string) {
     if (requiredInfo.length > maxLength) {
         throw new RunError(`'${requiredInfo}' cannot be longer then ${maxLength} characters.`);
@@ -56,9 +54,7 @@ class InfrastructureResource extends pulumi.ComponentResource {
 
 let globalInfrastructureResource: InfrastructureResource | undefined;
 
-/**
- * Get's the resource that any global infrastructure resource for this stack can use as a parent.
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function getGlobalInfrastructureResource(): pulumi.Resource {
     if (!globalInfrastructureResource) {
         globalInfrastructureResource = new InfrastructureResource();
@@ -67,16 +63,15 @@ export function getGlobalInfrastructureResource(): pulumi.Resource {
     return globalInfrastructureResource;
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export const location = config.location;
 
 const azureConfig = new pulumi.Config("cloud-azure");
 
-/**
- * The Azure Resource Group to use for all resources if a specific one is not specified. To use an
- * existing Resource Group provide the [cloud-azure:resourceGroupName] config value. Otherwise, a
- * new group will be created.
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export const globalResourceGroup = getGlobalResourceGroup();
+
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export const globalResourceGroupName = globalResourceGroup.apply(g => g.name);
 
 function getGlobalResourceGroup(): pulumi.Output<azure.core.ResourceGroup> {
@@ -107,11 +102,7 @@ function getGlobalResourceGroup(): pulumi.Output<azure.core.ResourceGroup> {
 
 let globalStorageAccount: azure.storage.Account;
 
-/**
- * The Azure Storage Account to use for all resources that need to store data if not specific
- * account is specified. To use an existing Storage Account provide the
- * [cloud-azure:storageAccountId] config value. Otherwise, a new account will be created.
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function getGlobalStorageAccount() {
     if (!globalStorageAccount) {
         globalStorageAccount = getOrCreateGlobalStorageAccount();
@@ -158,6 +149,7 @@ function getGlobalStorageContainer() {
 let globalAppServicePlan: azure.appservice.Plan;
 let globalFunctionAppServicePlan: azure.appservice.Plan;
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function getGlobalAppServicePlan() {
     if (!globalAppServicePlan) {
         globalAppServicePlan = new azure.appservice.Plan("global-app", {
@@ -176,6 +168,7 @@ export function getGlobalAppServicePlan() {
     return globalAppServicePlan;
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function getGlobalFunctionAppServicePlan() {
     if (!globalFunctionAppServicePlan) {
         globalFunctionAppServicePlan = new azure.appservice.Plan("global-function-app", {
@@ -198,7 +191,7 @@ function makeSafeStorageAccountName(prefix: string) {
     return prefix.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 }
 
-// sha1hash returns a partial SHA1 hash of the input string.
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function sha1hash(s: string): string {
     const shasum = crypto.createHash("sha1");
     shasum.update(s);
@@ -207,6 +200,7 @@ export function sha1hash(s: string): string {
     return shasum.digest("hex").substring(0, 8);
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export const defaultSubscriptionArgs: {
     includePaths: string[] | undefined,
     includePackages: string[] | undefined,

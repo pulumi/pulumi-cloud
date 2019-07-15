@@ -600,13 +600,15 @@ interface ExposedPort {
     hostProtocol: cloud.ContainerProtocol;
 }
 
-// The AWS-specific Endpoint interface includes additional AWS implementation details for the exposed Endpoint.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface Endpoint extends cloud.Endpoint {
     loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface ServiceArguments extends cloud.ServiceArguments {
     /**
      * Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent
@@ -615,6 +617,7 @@ export interface ServiceArguments extends cloud.ServiceArguments {
     healthCheckGracePeriodSeconds?: pulumi.Input<number>;
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly containers: cloud.Containers;
@@ -790,14 +793,7 @@ function getEndpoints(ports: ExposedPorts): pulumi.Output<Endpoints> {
 
 const volumeNames = new Set<string>();
 
-// _Note_: In the current EFS-backed model, a Volume is purely virtual - it
-// doesn't actually manage any underlying resource.  It is used just to provide
-// a handle to a folder on the EFS share which can be mounted by container(s).
-// On platforms like ACI, we may be able to actually provision a unique File
-// Share per Volume to keep these independently manageable.  For now, on AWS
-// though, we rely on this File Share having been set up as part of the ECS
-// Cluster outside of @pulumi/cloud, and assume that that data has a lifetime
-// longer than any individual deployment.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
     public readonly kind: "SharedVolume";
     public readonly name: string;
@@ -815,6 +811,7 @@ export class SharedVolume extends pulumi.ComponentResource implements cloud.Shar
     }
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class HostPathVolume implements cloud.HostPathVolume {
     public readonly kind = "HostPathVolume";
     public readonly path: string;
@@ -856,9 +853,7 @@ function getHostPath(volume: cloud.Volume) {
     }
 }
 
-/**
- * A Task represents a container which can be [run] dynamically whenever (and as many times as) needed.
- */
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly cluster: CloudCluster;
     public readonly taskDefinition: aws.ecs.TaskDefinition;

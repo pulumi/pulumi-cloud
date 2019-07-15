@@ -15,11 +15,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as http from "http";
 
-// Factory function for creating a requestListener function.  The returned function is the same
-// callback function that would be passed to http.createServer.  See:
-// https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener for more details.
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type RequestListenerFactory = () => (req: http.IncomingMessage, res: http.ServerResponse) => void;
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HttpServerConstructor {
     /**
      * @param createRequestListener Function that, when called, will produce the [[requestListener]]
@@ -31,15 +30,10 @@ export interface HttpServerConstructor {
     new (name: string, createRequestListener: RequestListenerFactory, opts?: pulumi.ResourceOptions): HttpServer;
 }
 
-// tslint:disable-next-line:variable-name
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let HttpServer: HttpServerConstructor;
 
-/**
- * An HttpServer is used to listen and respond to http requests made to the exported [[url]].
- * HttpServers can be constructed passing in a Function that with the same signature as the
- * [[requestListener]] parameter in [[http.createServer]].  See:
- * https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener for more details.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HttpServer {
     readonly url: pulumi.Output<string>;
 }

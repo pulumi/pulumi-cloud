@@ -22,6 +22,7 @@ import * as shared from "./shared";
 import * as azStorage from "azure-storage";
 import * as streamBuffers from "stream-buffers";
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public readonly storageAccount: azure.storage.Account;
     public readonly container: azure.storage.Container;

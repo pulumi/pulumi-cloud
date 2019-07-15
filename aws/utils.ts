@@ -15,7 +15,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as crypto from "crypto";
 
-// sha1hash returns a partial SHA1 hash of the input string.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function sha1hash(s: string): string {
     const shasum: crypto.Hash = crypto.createHash("sha1");
     shasum.update(s);
@@ -24,6 +24,7 @@ export function sha1hash(s: string): string {
     return shasum.digest("hex").substring(0, 8);
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<string, U> {
     const result: Record<string, U> = {};
     for (const k of Object.keys(val)) {
@@ -33,8 +34,7 @@ export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<s
     return result;
 }
 
-// TODO: Replace this with `pulumi.output(Resource)` being able to create an Output with a dependency on the argument
-// Resource.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function liftResource<T extends pulumi.Resource>(resource: T): pulumi.Output<T> {
     return resource.urn.apply(_ => resource);
 }

@@ -19,23 +19,20 @@ import { RunError } from "@pulumi/pulumi/errors";
 const config = new pulumi.Config("cloud-azure");
 
 const functionIncludePathsString = config.get("functionIncludePaths");
-/**
- * Comma-seperated list of additional paths (relative to the project root) to include in Lambda zip uploads for
- * JavaScript callbacks.  E.g "./img.png,app/".
- */
+
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export let functionIncludePaths: string[] | undefined = undefined;
 if (functionIncludePathsString) {
     functionIncludePaths = functionIncludePathsString.split(",");
 }
 
 const functionIncludePackagesString = config.get("functionIncludePackages");
-/**
- * Comma-seperated list of additional packages (relative to the project root) to include in Lambda zip uploads for
- * JavaScript callbacks.  E.g "body-parser,typescript".
- */
+
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export let functionIncludePackages: string[] | undefined = undefined;
 if (functionIncludePackagesString) {
     functionIncludePackages = functionIncludePackagesString.split(",");
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export const location = config.require("location");

@@ -28,6 +28,7 @@ const minutesInOneDay = minutesInOneHour * 24;
 // yes, this is weird.  However, the 24 day interval is important to azure.  See comments below.
 const minutesIn24Days = 24 * minutesInOneDay;
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
 
@@ -102,6 +103,7 @@ function pad(val: number | undefined): string {
     return val.toString();
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | timer.Action,
                       handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
@@ -126,6 +128,7 @@ export function daily(name: string,
     cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | timer.Action,
                        handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
@@ -147,6 +150,7 @@ export function hourly(name: string,
     cron(name, `${minute} * * * ? *`, handler, opts);
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export function cron(name: string, cronTab: string, handler: timer.Action,
                      opts?: pulumi.ResourceOptions): void {
     const t = new Timer(name, cronTab, /*isTimeSpan:*/ false, handler, opts);

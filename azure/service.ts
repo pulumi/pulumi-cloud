@@ -26,6 +26,7 @@ import * as utils from "./utils";
 import * as azureContainerSDK from "azure-arm-containerinstance";
 import * as msrest from "ms-rest-azure";
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class Service extends pulumi.ComponentResource implements cloud.Service {
     public readonly name: string;
     public readonly group: azure.containerservice.Group;
@@ -260,10 +261,7 @@ function getEndpoints(ports: ExposedPorts, group: azure.containerservice.Group):
     }));
 }
 
-/**
- * A Task represents a container which can be [run] dynamically whenever (and as many times as)
- * needed.
- */
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class Task extends pulumi.ComponentResource implements cloud.Task {
     public readonly run: (options?: cloud.TaskRunOptions) => Promise<void>;
 
@@ -382,6 +380,7 @@ function createUniqueContainerName(name: string) {
     return uniqueName.toLowerCase();
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class SharedVolume extends pulumi.ComponentResource implements cloud.SharedVolume {
     public readonly kind = "SharedVolume";
     public readonly name: string;
@@ -395,6 +394,7 @@ export class SharedVolume extends pulumi.ComponentResource implements cloud.Shar
     }
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class HostPathVolume implements cloud.HostPathVolume {
     public readonly kind = "HostPathVolume";
     public readonly path: string;

@@ -15,9 +15,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { Endpoint } from "./service";
 
-/**
- * Request represents an API request.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Request {
     /**
      * The body of the HTTP request.
@@ -62,9 +60,7 @@ export interface Request {
     hostname: string;
 }
 
-/**
- * Response represents the response to an API request.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Response {
     /**
      * Object containing local variables scoped to a single request. Useful for
@@ -108,21 +104,18 @@ export interface Response {
     redirect(status: number, url: string): void;
 }
 
-/**
- * RouteHandler represents a handler for a route on an API.
- *
- * Implementations should invoke methods on `res` to respond to the request, or
- * invoke `next` to pass control to the next available handler on the route for
- * further processing.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type RouteHandler = (req: Request, res: Response, next: () => void) => void;
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface APIConstructor {
     new (apiName: string): API;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let API: APIConstructor; // tslint:disable-line
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface ServeStaticOptions {
     /**
      * The `content-type` to serve the file as.  Only valid when localPath points to a file.  If
@@ -136,27 +129,7 @@ export interface ServeStaticOptions {
     index?: boolean | string;
 }
 
-/**
- * API publishes an internet-facing HTTP API, for serving web
- * applications or REST APIs.
- *
- * ```javascript
- * let api = new API("myapi")
- * api.get("/", (req, res) => res.json({hello: "world"}));
- * api.publish().url.then(url =>
- *   console.log(`Serving myapi at ${url}`)
- * );
- * ```
- *
- * Paths are `/` seperated.  A path can use `{param}` to capture zero-or-more
- * non-`/` characters and make the captured path segment available in
- * `req.params.param`, or `{param+}` to greedily capture all remaining
- * characters in the url path into `req.params.param`.
- *
- * Paths and routing are defined statically, and cannot overlap. Code inside a
- * route handler can be used to provide dynamic decisions about sub-routing
- * within a static path.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface API {
     /**
      * static serves a file or directory from within the source folder at the requested path.
@@ -253,10 +226,7 @@ export interface API {
     publish(): HttpDeployment;
 }
 
-/**
- * HttpDeployment represents an API that has been deployed and is
- * available at a URL.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface HttpDeployment {
     /**
      * The URL at which the HttpDeployment is available to the Internet.
@@ -270,10 +240,7 @@ export interface HttpDeployment {
     customDomainNames: pulumi.Output<string>[];
 }
 
-/**
- * Domain includes the domain name and certificate data to enable hosting an
- * API on a custom domain.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Domain {
     /**
      * The domain name to associate with the API.
@@ -294,11 +261,8 @@ export interface Domain {
     certificateChain: string;
 }
 
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type HttpEndpoint = API;
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let HttpEndpoint: APIConstructor; // tslint:disable-line

@@ -66,6 +66,7 @@ interface AWSContext {
     succeed: (awsResponse: AWSResponse) => void;
 }
 
+/** @deprecated [@pulumi/cloud-azure] has been deprecated.  Please migrate your code to [@pulumi/azure] */
 export class HttpServer extends pulumi.ComponentResource implements cloud.HttpServer {
     public /*out*/ readonly url: pulumi.Output<string>; // the URL for this deployment.
 

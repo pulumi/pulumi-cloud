@@ -14,9 +14,7 @@
 
 import * as pulumi from "@pulumi/pulumi";
 
-/**
- * BucketHandlerArgs are the arguments passed to an [onPut] or [onDelete] handler.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface BucketHandlerArgs {
     /**
      * The key that was updated or deleted by the operation.
@@ -32,19 +30,16 @@ export interface BucketHandlerArgs {
     eventTime: string;
 }
 
-/**
- * BucketHandler is the callback that handles an [onPut] or [onDelete] event.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export type BucketHandler = (args: BucketHandlerArgs) => Promise<void>;
 
-/**
- * BucketFilter specifies filters to apply to an [onPut] or [onDelete] subscription.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface BucketFilter {
     keyPrefix?: string;
     keySuffix?: string;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface BucketConstructor {
     /**
      * Creates a new Bucket.
@@ -55,15 +50,10 @@ export interface BucketConstructor {
     new (name: string, opts?: pulumi.ResourceOptions): Bucket;
 }
 
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export let Bucket: BucketConstructor; // tslint:disable-line
 
-/**
- * Bucket is a simple blob store.
- *
- * Gets are read-after-write consistent for puts of new blobs, and eventually consistent for overwriting puts.
- *
- * Blobs in a bucket are encrypted at rest by default.
- */
+/** @deprecated [@pulumi/cloud] has been deprecated.  Please migrate your code to [@pulumi/aws] or [@pulumi/azure] */
 export interface Bucket {
     /**
      * Registers a handler to be notified when blobs are put into the bucket (created or updated).

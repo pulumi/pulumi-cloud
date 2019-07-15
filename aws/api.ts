@@ -23,34 +23,33 @@ import { createCallbackFunction } from "./function";
 import { Endpoint } from "./service";
 import { sha1hash } from "./utils";
 
-// StaticRoute is a registered static file route, backed by an S3 bucket.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface StaticRoute {
     path: string;
     localPath: string;
     options: cloud.ServeStaticOptions;
 }
 
-// ProxyRoute is a registered proxy route, proxying to either a URL or cloud.Endpoint.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface ProxyRoute {
     path: string;
     target: string | pulumi.Output<cloud.Endpoint>;
 }
 
-// Route is a registered dynamic route, backed by a serverless Lambda.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface Route {
     method: string;
     path: string;
     handlers: cloud.RouteHandler[];
 }
 
-// AWSDomain represents a domain with an SSL/TLS certificate available in AWS.
-// The certificate must be in the us-east-1 region.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export interface AWSDomain {
     domainName: string;
     certificateArn: pulumi.Input<string>;
 }
 
-// Domain represents a hosted domain and associated SSL/TLS certificates.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export type Domain = cloud.Domain | AWSDomain;
 
 // Helper to test whether the Domain is a cloud.Domain or an AWS-specific Domain.
@@ -58,6 +57,7 @@ function isCloudDomain(domain: Domain): domain is cloud.Domain {
     return (domain as cloud.Domain).certificateBody !== undefined;
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class API implements cloud.API {
     private readonly name: string;
     private readonly staticRoutes: StaticRoute[];
@@ -134,7 +134,7 @@ export class API implements cloud.API {
     }
 }
 
-// HttpDeployment actually performs a deployment of a set of HTTP API Gateway resources.
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class HttpDeployment extends pulumi.ComponentResource implements cloud.HttpDeployment {
     public readonly staticRoutes: StaticRoute[];
     public readonly proxyRoutes: ProxyRoute[];
@@ -432,11 +432,8 @@ function apiGatewayToRequestResponse(
     return [req, res];
 }
 
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export type HttpEndpoint = API;
-/**
- * @deprecated HttpEndpoint has been renamed to API
- */
+
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export let HttpEndpoint = API; // tslint:disable-line

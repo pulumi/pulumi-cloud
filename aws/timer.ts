@@ -18,6 +18,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 import { createFunction, Function } from "./function";
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function interval(name: string, options: timer.IntervalRate, handler: timer.Action,
                          opts?: pulumi.ResourceOptions): void {
     let rateMinutes = 0;
@@ -42,11 +43,13 @@ export function interval(name: string, options: timer.IntervalRate, handler: tim
     createScheduledEvent(name, `rate(${rateMinutes} ${unit})`, handler, opts);
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function cron(name: string, cronTab: string, handler: timer.Action,
                      opts?: pulumi.ResourceOptions): void {
     createScheduledEvent(name, `cron(${cronTab})`, handler, opts);
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function daily(name: string,
                       scheduleOrHandler: timer.DailySchedule | timer.Action,
                       handlerOrOptions?: timer.Action | pulumi.ResourceOptions,
@@ -71,6 +74,7 @@ export function daily(name: string,
     cron(name, `${minute} ${hour} * * ? *`, handler, opts);
 }
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export function hourly(name: string,
                        scheduleOrHandler: timer.HourlySchedule | timer.Action,
                        handlerOrOptions?: timer.Action | pulumi.ResourceOptions,

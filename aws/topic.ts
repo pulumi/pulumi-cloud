@@ -18,6 +18,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { createCallbackFunction } from "./function";
 
+/** @deprecated [@pulumi/cloud-aws] has been deprecated.  Please migrate your code to [@pulumi/aws] */
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
