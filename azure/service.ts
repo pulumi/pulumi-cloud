@@ -537,7 +537,7 @@ function computeImageFromFunction(
 
     // TODO[pulumi/pulumi-cloud#85]: Put this in a real Pulumi-owned Docker image.
     // TODO[pulumi/pulumi-cloud#86]: Pass the full local zipped folder through to the container (via S3?)
-    preEnv.PULUMI_SRC = pulumi.runtime.serializeFunctionAsync(func);
+    preEnv.PULUMI_SRC = pulumi.runtime.serializeFunction(func).then(v => v.text);
 
     // TODO[pulumi/pulumi-cloud#85]: move this to a Pulumi Docker Hub account.
     return createImageOptions("lukehoban/nodejsrunner", preEnv);
