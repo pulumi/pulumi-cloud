@@ -45,3 +45,6 @@ const thisShape: typeof thisModule = undefined as any;
 
 // This line ensures that our exported API is a superset of the framework API.
 apiShape = thisShape;
+
+import { log } from "@pulumi/pulumi";
+log.warn("@pulumi/cloud-azure has been deprecated.  Please migrate your code to @pulumi/azure.");

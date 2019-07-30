@@ -50,3 +50,6 @@ apiShape = thisShape;
 // uncomment it because our use of private members in classes *does* mean that we're effectively
 // exporting a larger surface area.  We can solve this in the future by using the IIFE pattern.
 // thisShape = frameworkShape;
+
+import { log } from "@pulumi/pulumi";
+log.warn("@pulumi/cloud-aws has been deprecated.  Please migrate your code to @pulumi/aws.");
