@@ -1,8 +1,18 @@
 [![Build Status](https://travis-ci.com/pulumi/pulumi-cloud.svg?token=eHg7Zp5zdDDJfTjY8ejq&branch=master)](https://travis-ci.com/pulumi/pulumi-cloud)
 
-# Pulumi Cloud Framework
+# Pulumi Cloud Framework (Preview)
 
-Pulumi's multi-cloud framework for building modern container and serverless cloud applications.
+Pulumi Cloud Framework is our multi-cloud framework for building modern container and serverless cloud applications.
+
+This is a preview library demonstrating how to build Pulumi [components](https://www.pulumi.com/docs/reference/component-tutorial/)
+that can abstract over and target multiple clouds.
+
+For developers targeting a single cloud platform like AWS, Azure or GCP, we recommend using the
+[@pulumi/aws](https://github.com/pulumi/pulumi-aws),
+[@pulumi/azure](https://github.com/pulumi/pulumi-azure) and
+[@pulumi/gcp](https://github.com/pulumi/pulumi-gcp) packages respectively. These packages give
+you full access to the breadth of the platform's capabilities and comes with many abstractions to
+make developing against that platform easier.
 
 ## Installing
 
