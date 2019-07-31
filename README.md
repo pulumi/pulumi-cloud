@@ -2,7 +2,7 @@
 
 # Pulumi Cloud Framework (Preview)
 
-Pulumi's multi-cloud framework for building modern container and serverless cloud applications.
+Pulumi Cloud Framework is our multi-cloud framework for building modern container and serverless cloud applications.
 
 This is a preview library demonstrating how to build Pulumi [component
 resources](https://www.pulumi.com/docs/reference/component-tutorial/) that can abstract over and
