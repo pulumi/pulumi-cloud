@@ -4,9 +4,8 @@
 
 Pulumi Cloud Framework is our multi-cloud framework for building modern container and serverless cloud applications.
 
-This is a preview library demonstrating how to build Pulumi [component
-resources](https://www.pulumi.com/docs/reference/component-tutorial/) that can abstract over and
-target multiple clouds.
+This is a preview library demonstrating how to build Pulumi [components](https://www.pulumi.com/docs/reference/component-tutorial/)
+that can abstract over and target multiple clouds.
 
 For developers targeting a single cloud platform like AWS, Azure or GCP, we recommend using the
 [@pulumi/aws](https://github.com/pulumi/pulumi-aws),
