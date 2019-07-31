@@ -10,9 +10,9 @@ that can abstract over and target multiple clouds.
 For developers targeting a single cloud platform like AWS, Azure or GCP, we recommend using the
 [@pulumi/aws](https://github.com/pulumi/pulumi-aws),
 [@pulumi/azure](https://github.com/pulumi/pulumi-azure) and
-[@pulumi/gcp](https://github.com/pulumi/pulumi-gcp) packages respectively.  These packages give full
-access to the breadth of capabilities of those specific platforms and come with many
-platform-specific abstractions to make development easier.
+[@pulumi/gcp](https://github.com/pulumi/pulumi-gcp) packages respectively. These packages give
+you full access to the breadth of the platform's capabilities and comes with many abstractions to
+make developing against that platform easier.
 
 ## Installing
 
