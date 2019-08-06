@@ -11,7 +11,7 @@ For developers targeting a single cloud platform like AWS, Azure or GCP, we reco
 [@pulumi/aws](https://github.com/pulumi/pulumi-aws),
 [@pulumi/azure](https://github.com/pulumi/pulumi-azure) and
 [@pulumi/gcp](https://github.com/pulumi/pulumi-gcp) packages respectively. These packages give
-you full access to the breadth of the platform's capabilities and comes with many abstractions to
+you full access to the breadth of the platform's capabilities and come with many abstractions to
 make developing against that platform easier.
 
 ## Installing
