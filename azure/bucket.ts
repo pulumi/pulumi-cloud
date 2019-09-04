@@ -45,7 +45,6 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         this.storageAccount = storageAccount;
 
         const container =  new azure.storage.Container(name, {
-            resourceGroupName: resourceGroupName,
             storageAccountName: storageAccount.name,
         }, { parent: this, protect: preventDestroy });
         this.container = container;
