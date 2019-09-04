@@ -96,9 +96,9 @@ func RunAzureTests(t *testing.T) {
 		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "./examples/bucket"),
 		}),
-		baseTest.With(integration.ProgramTestOptions{
-			Dir: path.Join(cwd, "./examples/table"),
-		}),
+		//baseTest.With(integration.ProgramTestOptions{
+		//	Dir: path.Join(cwd, "./examples/table"),
+		//}),
 		baseTest.With(integration.ProgramTestOptions{
 			Dir: path.Join(cwd, "./examples/cloud-ts-thumbnailer"),
 		}),
