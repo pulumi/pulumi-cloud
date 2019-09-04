@@ -1,3 +1,7 @@
+## HEAD (Unreleased)
+
+- Update `@pulumi/aws` and `@pulumi/pulumi` dependencies to 1.0.0
+
 ## 0.18.1 (Release July 15, 2019)
 
 ### Important
