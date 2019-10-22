@@ -21,7 +21,7 @@ travis_api: all
 TESTPARALLELISM := 20
 
 test_all::
-	$(GO_TEST_FAST) .
+	$(GO_TEST) ./examples
 
 test_fast::
-	$(GO_TEST) .
+	$(GO_TEST_FAST) ./examples
