@@ -1,3 +1,7 @@
+## HEAD (Unreleased)
+
+ - Upgrade to go1.13.x
+
 ## 0.18.2 (Release November 6, 2019)
 
 - Update `@pulumi/aws` and `@pulumi/pulumi` dependencies to 1.0.0
