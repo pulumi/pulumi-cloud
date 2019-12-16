@@ -190,7 +190,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
 
         const parsedURL = url.parse(azureRequest.originalUrl);
         const path = parsedURL.pathname;
-        if (path === undefined) {
+        if (path === null) {
             throw new Error("Could not determine pathname in: " + azureRequest.originalUrl);
         }
 
