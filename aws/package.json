@@ -13,7 +13,7 @@
     "dependencies": {
         "@pulumi/pulumi": "^1.0.0",
         "@pulumi/aws": "^1.0.0",
-        "@pulumi/awsx": "^0.18.0",
+        "@pulumi/awsx": "^0.19.0",
         "@pulumi/docker": "^0.17.0",
         "aws-serverless-express": "^3.3.5",
         "mime": "^2.0.3",
@@ -27,7 +27,7 @@
         "@types/aws-serverless-express": "^3.0.1",
         "@types/express": "^4.16.0",
         "tslint": "^5.11.0",
-        "typescript": "^3.0.3"
+        "typescript": "^3.7.4"
     },
     "peerDependencies": {
         "@pulumi/cloud": "${VERSION}"
