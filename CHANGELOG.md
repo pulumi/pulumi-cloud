@@ -1,6 +1,7 @@
 ## HEAD (Unreleased)
 
  - Upgrade to go1.13.x
+ - Upgrade to latest version of `@pulumi/awsx`.
 
 ## 0.18.2 (Release November 6, 2019)
 

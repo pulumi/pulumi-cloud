@@ -195,7 +195,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
         }
 
         const awsEvent: AWSEvent = {
-            path: path,
+            path: path!,
             httpMethod: azureRequest.method,
             headers: azureRequest.headers || {},
             queryStringParameters: azureRequest.query || {},

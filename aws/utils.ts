@@ -38,3 +38,9 @@ export function apply<T, U>(val: Record<string, T>, func: (t: T) => U): Record<s
 export function liftResource<T extends pulumi.Resource>(resource: T): pulumi.Output<T> {
     return resource.urn.apply(_ => resource);
 }
+
+/** @internal */
+export function ifUndefined<T>(input: pulumi.Input<T> | undefined, value: pulumi.Input<T>): pulumi.Output<T> {
+    return <any>pulumi.all([input, value])
+                      .apply(([input, value]) => input !== undefined ? input : value);
+}
