@@ -228,7 +228,7 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
         };
 
         // Now, call into the library to actually handle the translated Azure-to-AWS request.
-        awsServerlessExpress.proxy(server, awsEvent, <any>awsContext);
+        awsServerlessExpress.proxy(server, <any>awsEvent, <any>awsContext);
     }
     catch (err) {
         azureContext.log("Error executing handler: " + err.message + "\n" + err.stack);
