@@ -8,8 +8,8 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/pulumi": "dev",
-        "@pulumi/azure": "dev",
+        "@pulumi/pulumi": "feature-2.0",
+        "@pulumi/azure": "feature-2.0",
         "@pulumi/azure-serverless": "dev",
         "express": "^4.16.3"
     },
