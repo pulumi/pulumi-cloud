@@ -97,9 +97,9 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         this.onPut = async (putName, handler, filter) => {
             filter = filter || {};
-            serverless.storage.onBlobEvent(putName, storageAccount, {
+            serverless.storage.onBlobEvent(putName, storageAccount, <any>{
                     ...shared.defaultSubscriptionArgs,
-                    func: (context, buffer) => {
+                    func: (context: serverless.storage.BlobContext, buffer: Buffer) => {
                         handler({
                             key: context.bindingData.blobTrigger,
                             eventTime: context.bindingData.sys.utcNow,

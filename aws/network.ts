@@ -131,20 +131,24 @@ export class Network extends pulumi.ComponentResource {
     public static getDefault(opts?: pulumi.ComponentResourceOptions): Network {
         if (!defaultNetwork) {
             const vpc = aws.ec2.getVpc({default: true});
-            const vpcId = vpc.id;
-            const subnetIds = aws.ec2.getSubnetIds({ vpcId }).ids;
-            const defaultSecurityGroup = aws.ec2.getSecurityGroup(
-                { name: "default", vpcId },
-            ).id;
-            const subnet0 = subnetIds[0];
-            const subnet1 = subnetIds[1];
+            const vpcId = vpc.then(v => v.id);
+            const subnetIds = vpcId.then(async i => {
+                const idsResult = await aws.ec2.getSubnetIds({ vpcId: i });
+                return idsResult.ids;
+            });
+            const defaultSecurityGroup = vpcId.then(async i => {
+                const sgResult = await aws.ec2.getSecurityGroup(
+                { name: "default", vpcId: i });
+                return sgResult.id;
+            });
 
+            const filteredIds = [ subnetIds.then(ids => ids[0]), subnetIds.then(ids => ids[1]) ];
             defaultNetwork = this.fromVpc("default-vpc", {
                 vpcId: vpcId,
-                subnetIds: [ subnet0, subnet1 ],
+                subnetIds: filteredIds,
                 usePrivateSubnets: false,
                 securityGroupIds: [ defaultSecurityGroup ],
-                publicSubnetIds: [ subnet0, subnet1 ],
+                publicSubnetIds: filteredIds,
             }, opts);
         }
 

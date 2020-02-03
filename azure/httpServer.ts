@@ -100,7 +100,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         const factoryFunc = createFactoryFunction(createRequestListener);
 
         const eventSubscription = new subscription.EventSubscription<subscription.Context, any>(
-            "cloud:httpserver:EventSubscription", name, bindings, {
+            "cloud:httpserver:EventSubscription", name, bindings, <any>{
                 ...shared.defaultSubscriptionArgs,
                 factoryFunc,
             }, { parent: this });
