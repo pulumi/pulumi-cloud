@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
-import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as azuresb from "azure-sb";
@@ -21,8 +20,8 @@ import * as shared from "./shared";
 
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     public readonly namespace: azure.eventhub.Namespace;
-    public readonly topic: azure.eventhub.Topic;
-    public readonly subscriptions: serverless.eventhub.TopicEventSubscription[] = [];
+    public readonly topic: azure.servicebus.Topic;
+    public readonly subscriptions: azure.servicebus.TopicEventSubscription[] = [];
 
     public readonly publish: (item: T) => Promise<void>;
 
@@ -32,14 +31,14 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
     constructor(name: string, opts?: pulumi.ResourceOptions) {
         super("cloud:topic:Topic", name, {}, opts);
 
-        const namespace = new azure.eventhub.Namespace(name, {
+        const namespace = new azure.servicebus.Namespace(name, {
             location: shared.location,
             resourceGroupName: shared.globalResourceGroupName,
             // topics are only supported in standard and premium.
             sku: "standard",
         }, { parent: this });
 
-        const topic = new azure.eventhub.Topic(name, {
+        const topic = new azure.servicebus.Topic(name, {
             resourceGroupName: shared.globalResourceGroupName,
             namespaceName: namespace.name,
         }, { parent: this });
@@ -48,11 +47,12 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         this.topic = topic;
 
         this.subscribe = (name, handler) => {
-            const subscription = serverless.eventhub.onTopicEvent(
-                name, namespace, topic, {
+            const subscription = this.topic.onEvent(
+                name, {
                     ...shared.defaultSubscriptionArgs,
-                    func: (context, val) => {
-                        handler(val).then(() => context.done());
+                    account: shared.getGlobalStorageAccount(),
+                    callback: (context, event) => {
+                        handler(JSON.parse(event) as T).then(() => context.done());
                     },
                 }, { parent: this });
 

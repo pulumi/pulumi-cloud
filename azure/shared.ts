@@ -146,7 +146,6 @@ let globalStorageContainer: azure.storage.Container;
 function getGlobalStorageContainer() {
     if (!globalStorageContainer) {
         globalStorageContainer = new azure.storage.Container("global", {
-            resourceGroupName: globalResourceGroupName,
             storageAccountName: getGlobalStorageAccount().name,
             containerAccessType: "private",
         }, { parent: getGlobalInfrastructureResource() });
