@@ -11,8 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import * as subscription from "@pulumi/azure-serverless/subscription";
 import * as appservice from "@pulumi/azure/appservice";
 import { timer } from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
@@ -152,34 +150,21 @@ export function cron(name: string, cronTab: string, handler: timer.Action,
     const t = new Timer(name, cronTab, /*isTimeSpan:*/ false, handler, opts);
 }
 
-interface TimerBinder extends subscription.Binding {
-    schedule: string;
-    name: string;
-    type: "timerTrigger";
-    direction: "in";
-}
-
 class Timer extends pulumi.ComponentResource {
-    public readonly subscription: subscription.EventSubscription<subscription.Context, any>;
+    // public readonly subscription: subscription.EventSubscription<subscription.Context, any>;
+    public readonly subscription: appservice.TimerSubscription;
 
     constructor(name: string, scheduleExpression: string, isTimeSpan: boolean,
                 handler: timer.Action, opts?: pulumi.ResourceOptions) {
         super("cloud:timer:Timer", name, { }, opts);
 
-        const binding: TimerBinder = {
-            schedule: scheduleExpression,
-            name: "timer",
-            type: "timerTrigger",
-            direction: "in",
-        };
-
-        let appServicePlanId = shared.defaultSubscriptionArgs.appServicePlanId;
-        let siteConfig: subscription.EventSubscriptionArgs<subscription.Context, any>["siteConfig"] | undefined;
+        let appServicePlan = shared.getGlobalFunctionAppServicePlan();
+        let siteConfig: appservice.TimerSubscriptionArgs["siteConfig"];
 
         if (isTimeSpan) {
             // https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#timespan
             // TimeSpan expression are only supported under non-consumption plans.
-            appServicePlanId = shared.getGlobalAppServicePlan().id;
+            appServicePlan = shared.getGlobalAppServicePlan();
 
             // https://github.com/Azure/azure-functions-host/wiki/Investigating-and-reporting-issues-with-timer-triggered-functions-not-firing
             // For a TimeSpan timer, the FunctionApp must be 'always on' to work.
@@ -188,13 +173,14 @@ class Timer extends pulumi.ComponentResource {
             };
         }
 
-        this.subscription = new subscription.EventSubscription<subscription.Context, any>(
-            "cloud:timer:EventSubscription", name, [binding], {
+        this.subscription = new appservice.TimerSubscription(
+            name, {
                 ...shared.defaultSubscriptionArgs,
-                appServicePlanId: appServicePlanId,
+                account: shared.getGlobalStorageAccount(),
+                schedule: scheduleExpression,
+                plan: appServicePlan,
                 siteConfig: siteConfig,
-
-                func: context => {
+                callback: context => {
                     handler().then(() => context.done());
                 },
             }, { parent: this });
