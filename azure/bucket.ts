@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as azure from "@pulumi/azure";
-import * as serverless from "@pulumi/azure-serverless";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import * as stream from "stream";
@@ -40,12 +39,10 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         const preventDestroy = opts && opts.protect;
 
-        const resourceGroupName = shared.globalResourceGroupName;
         const storageAccount = shared.getGlobalStorageAccount();
         this.storageAccount = storageAccount;
 
         const container =  new azure.storage.Container(name, {
-            resourceGroupName: resourceGroupName,
             storageAccountName: storageAccount.name,
         }, { parent: this, protect: preventDestroy });
         this.container = container;
@@ -97,17 +94,15 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
 
         this.onPut = async (putName, handler, filter) => {
             filter = filter || {};
-            serverless.storage.onBlobEvent(putName, storageAccount, <any>{
-                    ...shared.defaultSubscriptionArgs,
-                    func: (context: serverless.storage.BlobContext, buffer: Buffer) => {
+            this.container.onBlobEvent(putName, {
+                    account: storageAccount,
+                    callback: (context, buffer) => {
                         handler({
                             key: context.bindingData.blobTrigger,
                             eventTime: context.bindingData.sys.utcNow,
                             size: buffer.length,
                         }).then(() => context.done());
                     },
-                    storageAccount: storageAccount,
-                    containerName: container.name,
                     filterPrefix: filter.keyPrefix,
                     filterSuffix: filter.keySuffix,
                 },

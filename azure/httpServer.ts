@@ -11,8 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import * as subscription from "@pulumi/azure-serverless/subscription";
+import * as azure from "@pulumi/azure";
 import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { interpolate } from "@pulumi/pulumi";
@@ -75,22 +74,6 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 
         super("cloud:httpserver:HttpServer", name, {}, opts);
 
-        const bindings: subscription.Binding[] = [
-            // Input binding that captures all incoming http requests.
-            <subscription.Binding>{
-                "authLevel" : "anonymous",
-                "type"      : "httpTrigger",
-                "direction" : "in",
-                "name"      : "req",
-                "route"     : "{*segments}",
-            },
-            // Output binding necessary to return http responses.
-            {
-                "type"      : "http",
-                "direction" : "out",
-                "name"      : "res",
-            }];
-
         // Setup the top level factory function for the FunctionApp we're creating. That factory
         // function will end up launching a real node http server locally.  Once that's done it will
         // return the incoming message handler.  This handler will translate incoming azure message
@@ -98,11 +81,11 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
         // http response back, it will translate that back to a form azure expects as an http
         // response.
         const factoryFunc = createFactoryFunction(createRequestListener);
-
-        const eventSubscription = new subscription.EventSubscription<subscription.Context, any>(
-            "cloud:httpserver:EventSubscription", name, bindings, <any>{
+        const eventSubscription = new azure.appservice.HttpEventSubscription(name, {
                 ...shared.defaultSubscriptionArgs,
-                factoryFunc,
+                account: shared.getGlobalStorageAccount(),
+                callbackFactory: factoryFunc,
+                route: "{*segments}",
             }, { parent: this });
 
         this.url = interpolate `https://${eventSubscription.functionApp.name}.azurewebsites.net/api/`;
@@ -113,7 +96,7 @@ export class HttpServer extends pulumi.ComponentResource implements cloud.HttpSe
 }
 
 function createFactoryFunction(
-    createRequestListener: cloud.RequestListenerFactory): subscription.CallbackFactory<subscription.Context, any> {
+    createRequestListener: cloud.RequestListenerFactory): azure.appservice.CallbackFactory<azure.appservice.Context<azure.appservice.HttpResponse>, azure.appservice.HttpRequest, azure.appservice.ExtendedHttpResponse> {
 
     return () => {
         // First, setup the server.  This will only happen once when the module loads.
@@ -167,7 +150,7 @@ function createServer(createRequestListener: cloud.RequestListenerFactory) {
     return server;
 }
 
-function handleIncomingMessage(server: http.Server, azureContext: subscription.Context) {
+function handleIncomingMessage(server: http.Server, azureContext: azure.appservice.Context<azure.appservice.HttpResponse>) {
     try {
         // First, ensure the azure http request/response is one we understand.
         if (!azureContext.req) {
@@ -179,8 +162,8 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
         }
 
         const azureRequest = azureContext.req;
-        if (azureRequest.originalUrl === undefined) {
-            throw new Error("Azure context.req missing [originalUrl] property.");
+        if (azureRequest.url === undefined) {
+            throw new Error("Azure context.req missing [url] property.");
         }
 
         // Convert the azure incoming request to the form that aws-serverless-express expects.
@@ -188,15 +171,15 @@ function handleIncomingMessage(server: http.Server, azureContext: subscription.C
         // is that azure keeps paths in their full form like `/api/foo/bar?name=baz`.  However,
         // AWS wants to have the `/api/foo/bar` and {'name':'baz'} parts separated.
 
-        const parsedURL = url.parse(azureRequest.originalUrl);
+        const parsedURL = url.parse(azureRequest.url);
         const path = parsedURL.pathname;
         if (path === null) {
-            throw new Error("Could not determine pathname in: " + azureRequest.originalUrl);
+            throw new Error("Could not determine pathname in: " + azureRequest.url);
         }
 
         const awsEvent: AWSEvent = {
             path: path!,
-            httpMethod: azureRequest.method,
+            httpMethod: azureRequest.method as AWSEvent["httpMethod"], // cast the method
             headers: azureRequest.headers || {},
             queryStringParameters: azureRequest.query || {},
             body: azureRequest.body,

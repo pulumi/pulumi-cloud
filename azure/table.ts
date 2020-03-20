@@ -63,7 +63,6 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         // Table names must be alphanumeric.
         const acceptableName = name.replace(/[^A-Za-z0-9]/g, "");
         this.table = new azure.storage.Table(acceptableName, {
-            resourceGroupName: shared.globalResourceGroupName,
             storageAccountName: storageAccount.name,
         }, { parent: this});
 

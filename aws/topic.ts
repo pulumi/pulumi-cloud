@@ -65,6 +65,6 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         const lambda = createCallbackFunction(
             subscriptionName, eventHandler, /*isFactoryFunction:*/ false, opts);
 
-        this.topic.onEvent(subscriptionName, eventHandler, {}, opts);
+        this.topic.onEvent(subscriptionName, lambda, {}, opts);
     }
 }
