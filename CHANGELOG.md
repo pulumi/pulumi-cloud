@@ -1,5 +1,7 @@
 ## HEAD (Unreleased)
 
+## 0.19.0 (Release April 2, 2020)
+
  - Upgrade to go1.13.x
  - Upgrade to latest version of `@pulumi/awsx`.
  - Upgrade to latest version of `@pulumi/azure`
