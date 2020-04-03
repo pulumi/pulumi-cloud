@@ -1,10 +1,12 @@
 ## HEAD (Unreleased)
 
+## 0.19.0 (Release April 2, 2020)
+
  - Upgrade to go1.13.x
  - Upgrade to latest version of `@pulumi/awsx`.
  - Upgrade to latest version of `@pulumi/azure`
     
-    Note that this is a breaking change!
+    Note that the version bump for `@pulumi/azure` is a breaking change for users of `@pulumi/cloud-azure`:
     - The underlying type for `Timer.subscription` is now `appservice.TimerSubscription`
     - The underlying types for `Topic.topic` and `Topic.subscriptions` are now `azure.servicebus.Topic` and `azure.servicebus.TopicEventSubscription[]` respectively;
 
