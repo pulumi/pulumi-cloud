@@ -3,7 +3,8 @@ module github.com/pulumi/pulumi-cloud
 go 1.13
 
 require (
-	github.com/pulumi/pulumi v0.17.8-0.20190418223219-0ede30fdb624
+	github.com/pulumi/pulumi/pkg/v2 v2.0.0
+	github.com/pulumi/pulumi/sdk/v2 v2.0.0
 	github.com/stretchr/testify v1.3.0
 )
 

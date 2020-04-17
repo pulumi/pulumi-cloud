@@ -117,7 +117,7 @@ let network: CloudNetwork;
 /**
  * Get or create the network to use for container and lambda compute.
  */
-export function getOrCreateNetwork(): CloudNetwork {
+export async function getOrCreateNetwork(): Promise<CloudNetwork> {
     if (!network) {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
@@ -128,7 +128,7 @@ export function getOrCreateNetwork(): CloudNetwork {
                 });
             } else {
                 // Use the default VPC.
-                network = networkMod.Network.getDefault();
+                network = await networkMod.Network.getDefault();
             }
         } else /* config.externalVpcId */ {
             if (!config.externalSubnets || !config.externalSecurityGroups || !config.externalPublicSubnets) {
@@ -153,7 +153,7 @@ export function getOrCreateNetwork(): CloudNetwork {
 /**
  * @deprecated
  */
-export function getNetwork(): CloudNetwork {
+export function getNetwork(): Promise<CloudNetwork> {
     return getOrCreateNetwork();
 }
 

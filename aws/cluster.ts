@@ -46,7 +46,7 @@ export interface ClusterArgs {
     /**
      * The network in which to create this cluster.
      */
-    network: ClusterNetworkArgs;
+    network: Promise<ClusterNetworkArgs>;
     /**
      * Whether to create an EFS File System to manage volumes across the cluster.
      */
@@ -117,7 +117,7 @@ export class Cluster extends pulumi.ComponentResource {
     /**
      * The network in which to create this cluster.
      */
-    public readonly network: ClusterNetworkArgs;
+    public readonly network: Promise<ClusterNetworkArgs>;
     /**
      * The ECS Cluster ARN.
      */
@@ -160,7 +160,7 @@ export class Cluster extends pulumi.ComponentResource {
         // new security group in the Cluster layer?  This may allow us to share a single Security Group
         // across both instance and Lambda compute.
         const instanceSecurityGroup = new aws.ec2.SecurityGroup(name, {
-            vpcId: args.network.vpcId,
+            vpcId: pulumi.output(args.network).vpcId,
             ingress: [
                 // Expose SSH
                 {
@@ -188,31 +188,35 @@ export class Cluster extends pulumi.ComponentResource {
         // If requested, add EFS file system and mount targets in each subnet.
         let filesystem: aws.efs.FileSystem | undefined;
         if (args.addEFS) {
-            filesystem = new aws.efs.FileSystem(name, {}, { parent: this });
-            const efsSecurityGroupName = `${name}-fs`;
-            const efsSecurityGroup = new aws.ec2.SecurityGroup(efsSecurityGroupName, {
-                vpcId: args.network.vpcId,
-                ingress: [
-                    // Allow NFS traffic from the instance security group
-                    {
-                        securityGroups: [ instanceSecurityGroup.id ],
-                        protocol: "TCP",
-                        fromPort: 2049,
-                        toPort: 2049,
+            args.network.then(network => {
+                filesystem = new aws.efs.FileSystem(name, {}, { parent: this });
+                const efsSecurityGroupName = `${name}-fs`;
+                const efsSecurityGroup = new aws.ec2.SecurityGroup(efsSecurityGroupName, {
+                    vpcId: network.vpcId,
+                    ingress: [
+                        // Allow NFS traffic from the instance security group
+                        {
+                            securityGroups: [ instanceSecurityGroup.id ],
+                            protocol: "TCP",
+                            fromPort: 2049,
+                            toPort: 2049,
+                        },
+                    ],
+                    tags: {
+                        Name: efsSecurityGroupName,
                     },
-                ],
-                tags: {
-                    Name: efsSecurityGroupName,
-                },
-            }, { parent: this });
-            for (let i = 0; i <  args.network.subnetIds.length; i++) {
-                const subnetId = args.network.subnetIds[i];
-                const mountTarget = new aws.efs.MountTarget(`${name}-${i}`, {
-                    fileSystemId: filesystem.id,
-                    subnetId: subnetId,
-                    securityGroups: [ efsSecurityGroup.id ],
                 }, { parent: this });
-            }
+
+                for (let i = 0; i < network.subnetIds.length; i++) {
+                    const subnetId = network.subnetIds[i];
+                    const mountTarget = new aws.efs.MountTarget(`${name}-${i}`, {
+                        fileSystemId: filesystem.id,
+                        subnetId: subnetId,
+                        securityGroups: [ efsSecurityGroup.id ],
+                    }, { parent: this });
+                }
+            });
+
             this.efsMountPath = defaultEfsMountPath;
         }
 
@@ -324,7 +328,7 @@ function createAutoScalingGroup(
                 args.minSize || 2,
                 args.maxSize || 100,
                 instanceLaunchConfiguration.id,
-                args.network.subnetIds,
+                pulumi.output(args.network).subnetIds,
             ),
         }, { parent: parent });
 }
@@ -439,10 +443,9 @@ function getCloudFormationAsgTemplate(
     minSize: number,
     maxSize: number,
     instanceLaunchConfigurationId: pulumi.Output<string>,
-    subnetIds: pulumi.Input<string>[]): pulumi.Output<string> {
+    subnetIds: pulumi.Input<string[]>): pulumi.Output<string> {
 
-    const subnetsIdsArray = pulumi.all(subnetIds);
-    return pulumi.all([subnetsIdsArray, instanceLaunchConfigurationId])
+    return pulumi.all([subnetIds, instanceLaunchConfigurationId])
                  .apply(([array, configId]) => {
     return `
     AWSTemplateFormatVersion: '2010-09-09'

@@ -128,14 +128,13 @@ export class Network extends pulumi.ComponentResource {
      * default network will be lazily created, using whatever options are provided in opts. All
      * subsequent calls will return that same network even if different opts are provided.
      */
-    public static getDefault(opts?: pulumi.ComponentResourceOptions): Network {
+    public static async getDefault(opts?: pulumi.ComponentResourceOptions): Promise<Network> {
         if (!defaultNetwork) {
-            const vpc = aws.ec2.getVpc({default: true});
+            const vpc = await aws.ec2.getVpc({default: true}, { async: true });
             const vpcId = vpc.id;
-            const subnetIds = aws.ec2.getSubnetIds({ vpcId }).ids;
-            const defaultSecurityGroup = aws.ec2.getSecurityGroup(
-                { name: "default", vpcId },
-            ).id;
+            const subnetIds = (await aws.ec2.getSubnetIds({ vpcId }, { async: true })).ids;
+            const defaultSecurityGroup = (await aws.ec2.getSecurityGroup(
+                { name: "default", vpcId }, { async: true })).id;
             const subnet0 = subnetIds[0];
             const subnet1 = subnetIds[1];
 
