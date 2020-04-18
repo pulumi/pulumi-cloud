@@ -84,7 +84,7 @@ export interface NetworkVpcArgs {
 }
 
 // The lazily initialized default network instance.
-let defaultNetwork: Network;
+let defaultNetwork: Promise<Network>;
 
 /**
  * Network encapsulates the configuration of an Amazon VPC.  Both [VPC with Public
@@ -128,23 +128,31 @@ export class Network extends pulumi.ComponentResource {
      * default network will be lazily created, using whatever options are provided in opts. All
      * subsequent calls will return that same network even if different opts are provided.
      */
-    public static async getDefault(opts?: pulumi.ComponentResourceOptions): Promise<Network> {
+    public static getDefault(opts?: pulumi.ComponentResourceOptions): Promise<Network> {
         if (!defaultNetwork) {
-            const vpc = await aws.ec2.getVpc({default: true}, { async: true });
-            const vpcId = vpc.id;
-            const subnetIds = (await aws.ec2.getSubnetIds({ vpcId }, { async: true })).ids;
-            const defaultSecurityGroup = (await aws.ec2.getSecurityGroup(
-                { name: "default", vpcId }, { async: true })).id;
-            const subnet0 = subnetIds[0];
-            const subnet1 = subnetIds[1];
+            const vpcResult = aws.ec2.getVpc({default: true}, { async: true });
+            const self = this;
 
-            defaultNetwork = this.fromVpc("default-vpc", {
-                vpcId: vpcId,
-                subnetIds: [ subnet0, subnet1 ],
-                usePrivateSubnets: false,
-                securityGroupIds: [ defaultSecurityGroup ],
-                publicSubnetIds: [ subnet0, subnet1 ],
-            }, opts);
+            defaultNetwork = vpcResult.then(vpc => {
+                const vpcId = vpc.id;
+                const subnetIdsResult = aws.ec2.getSubnetIds({ vpcId }, { async: true });
+                const defaultSecurityGroupResult = aws.ec2.getSecurityGroup(
+                    { name: "default", vpcId }, { async: true });
+
+                return Promise.all([subnetIdsResult, defaultSecurityGroupResult]).then(
+                    ([subnetIds, defaultSecurityGroup]) => {
+                        const subnet0 = subnetIds.ids[0];
+                        const subnet1 = subnetIds.ids[1];
+                        return self.fromVpc("default-vpc", {
+                            vpcId: vpcId,
+                            subnetIds: [ subnet0, subnet1 ],
+                            usePrivateSubnets: false,
+                            securityGroupIds: [ defaultSecurityGroup.id ],
+                            publicSubnetIds: [ subnet0, subnet1 ],
+                        }, opts);
+                    },
+                );
+            });
         }
 
         return defaultNetwork;
