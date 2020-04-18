@@ -100,6 +100,10 @@ function getEndpointHelper(
 // azure.containerservice.GroupArgs.  This was done to make it easy to type check small
 // objets as we're building them up before making the final Group.
 
+interface AzureContainerPort {
+
+}
+
 interface AzureContainer {
     commands?: pulumi.Input<string[]>;
     cpu: pulumi.Input<number>;
@@ -109,7 +113,7 @@ interface AzureContainer {
     image: pulumi.Input<string>;
     memory: pulumi.Input<number>;
     name: pulumi.Input<string>;
-    port?: pulumi.Input<number>;
+    ports?: azure.types.input.containerservice.GroupContainer["ports"];
     protocol?: pulumi.Input<string>;
     volumes?: pulumi.Input<pulumi.Input<{
         mountPath: pulumi.Input<string>;
@@ -213,7 +217,9 @@ function createGroup(
             name: qualifiedName,
             cpu: pulumi.output(container.cpu).apply(c => c === undefined ? 1 : c),
             memory: memoryInGB,
-            port: targetPortNumber,
+            ports: [{
+                port: targetPortNumber,
+            }],
             protocol: protocol,
             image: imageOptions.image,
             environmentVariables: imageOptions.environment,
