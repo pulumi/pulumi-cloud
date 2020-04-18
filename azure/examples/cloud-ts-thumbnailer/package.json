@@ -9,8 +9,7 @@
     },
     "dependencies": {
         "@pulumi/pulumi": "dev",
-        "@pulumi/azure": "dev",
-        "@pulumi/azure-serverless": "dev"
+        "@pulumi/azure": "dev"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",
