@@ -100,10 +100,6 @@ function getEndpointHelper(
 // azure.containerservice.GroupArgs.  This was done to make it easy to type check small
 // objets as we're building them up before making the final Group.
 
-interface AzureContainerPort {
-
-}
-
 interface AzureContainer {
     commands?: pulumi.Input<string[]>;
     cpu: pulumi.Input<number>;

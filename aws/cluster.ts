@@ -46,7 +46,7 @@ export interface ClusterArgs {
     /**
      * The network in which to create this cluster.
      */
-    network: Promise<ClusterNetworkArgs>;
+    network: Promise<ClusterNetworkArgs> | ClusterNetworkArgs;
     /**
      * Whether to create an EFS File System to manage volumes across the cluster.
      */
@@ -143,7 +143,11 @@ export class Cluster extends pulumi.ComponentResource {
 
         super("awsx:cluster:Cluster", name, {}, opts);
 
-        this.network = args.network;
+        if ((args.network as ClusterNetworkArgs).vpcId !== undefined) {
+            this.network = Promise.resolve(args.network);
+        } else {
+            this.network = args.network as Promise<ClusterNetworkArgs>;
+        }
 
         // First create an ECS cluster.
         const cluster = new aws.ecs.Cluster(name, {}, { parent: this });
@@ -160,7 +164,7 @@ export class Cluster extends pulumi.ComponentResource {
         // new security group in the Cluster layer?  This may allow us to share a single Security Group
         // across both instance and Lambda compute.
         const instanceSecurityGroup = new aws.ec2.SecurityGroup(name, {
-            vpcId: pulumi.output(args.network).vpcId,
+            vpcId: pulumi.output(this.network).vpcId,
             ingress: [
                 // Expose SSH
                 {
@@ -188,7 +192,7 @@ export class Cluster extends pulumi.ComponentResource {
         // If requested, add EFS file system and mount targets in each subnet.
         let filesystem: aws.efs.FileSystem | undefined;
         if (args.addEFS) {
-            args.network.then(network => {
+            this.network.then(network => {
                 filesystem = new aws.efs.FileSystem(name, {}, { parent: this });
                 const efsSecurityGroupName = `${name}-fs`;
                 const efsSecurityGroup = new aws.ec2.SecurityGroup(efsSecurityGroupName, {
