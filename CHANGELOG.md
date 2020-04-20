@@ -1,5 +1,7 @@
 ## HEAD (Unreleased)
 
+## 0.20.0 (Release April 20, 2020)
+
 - Update dependencies to allow both 1.x and 2.x versions of `@pulumi/pulumi`, `@pulumi/aws`
 - Update dependencies to allow both 2.x and 3.x of `@pulumi/azure`
 
