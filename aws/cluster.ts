@@ -263,7 +263,7 @@ function createAutoScalingGroup(
         assumeRolePolicy: JSON.stringify(assumeInstanceRolePolicyDoc),
     }, { parent: parent });
     const policyARNs = args.instanceRolePolicyARNs
-        || [aws.iam.AmazonEC2ContainerServiceforEC2Role, aws.iam.AmazonEC2ReadOnlyAccess];
+        || [aws.iam.ManagedPolicies.AmazonEC2ContainerServiceforEC2Role, aws.iam.ManagedPolicies.AmazonEC2ReadOnlyAccess];
     const instanceRolePolicies: aws.iam.RolePolicyAttachment[] = [];
     for (let i = 0; i < policyARNs.length; i++) {
         const policyARN = policyARNs[i];

@@ -40,7 +40,7 @@ export function createCallbackFunction(
         const network = getOrCreateNetwork();
         // TODO[terraform-providers/terraform-provider-aws#1507]: Updates which cause existing Lambdas to need to
         //     add VPC access will currently fail due to an issue in the Terraform provider.
-        policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
+        policies.push(aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole);
         vpcConfig = {
             securityGroupIds: pulumi.output(network).securityGroupIds,
             subnetIds: pulumi.output(network).subnetIds,
