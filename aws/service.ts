@@ -39,7 +39,7 @@ function createLoadBalancer(
         serviceName: string,
         containerName: string,
         portMapping: cloud.ContainerPort,
-        network: CloudNetwork): ContainerPortLoadBalancer {
+        network: Promise<CloudNetwork>): ContainerPortLoadBalancer {
 
     // Load balancers need *very* short names, so we unfortunately have to hash here.
     //
@@ -49,7 +49,7 @@ function createLoadBalancer(
     const shortName = utils.sha1hash(`${longName}`);
 
     // Create an internal load balancer if requested.
-    const internal = network.usePrivateSubnets && !portMapping.external;
+    const internal = pulumi.output(network).apply(n => n.usePrivateSubnets && !portMapping.external);
     const portMappingProtocol: cloud.ContainerProtocol = portMapping.protocol || "tcp";
 
     // See what kind of load balancer to create (application L7 for HTTP(S) traffic, or network L4 otherwise).
@@ -88,7 +88,7 @@ function createLoadBalancer(
 
     const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
-        subnets: network.publicSubnetIds,
+        subnets: pulumi.output(network).publicSubnetIds,
         internal: internal,
         // If this is an application LB, we need to associate it with the ECS cluster's security group, so
         // that traffic on any ports can reach it.  Otherwise, leave blank, and default to the VPC's group.
@@ -102,7 +102,7 @@ function createLoadBalancer(
     const target = new aws.elasticloadbalancingv2.TargetGroup(shortName, {
         port: portMapping.targetPort || portMapping.port,
         protocol: targetProtocol,
-        vpcId: network.vpcId,
+        vpcId: pulumi.output(network).vpcId,
         deregistrationDelay: 180, // 3 minutes
         tags: {
             Name: longName,
@@ -728,9 +728,9 @@ export class Service extends pulumi.ComponentResource implements cloud.Service {
             healthCheckGracePeriodSeconds: args.healthCheckGracePeriodSeconds,
             launchType: config.useFargate ? "FARGATE" : "EC2",
             networkConfiguration: {
-                assignPublicIp: config.useFargate && !network.usePrivateSubnets,
+                assignPublicIp: pulumi.output(network).apply(n => config.useFargate && !n.usePrivateSubnets),
                 securityGroups: securityGroups,
-                subnets: network.subnetIds,
+                subnets: pulumi.output(network).subnetIds,
             },
         }, { parent: this, dependsOn: serviceDependsOn });
 
@@ -888,10 +888,10 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
         const containerEnv = pulumi.all(container.environment || {});
-        const subnetIds = pulumi.all(network.subnetIds);
+        const subnetIds = pulumi.output(network).subnetIds;
         const securityGroups =  cluster.securityGroupId!;
         const useFargate = config.useFargate;
-        const assignPublicIp = useFargate && !network.usePrivateSubnets;
+        const assignPublicIp = pulumi.output(network).apply(n => useFargate && !n.usePrivateSubnets);
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {

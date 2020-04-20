@@ -10,7 +10,6 @@
     "dependencies": {
         "@pulumi/pulumi": "dev",
         "@pulumi/azure": "dev",
-        "@pulumi/azure-serverless": "dev",
         "express": "^4.16.3"
     },
     "devDependencies": {

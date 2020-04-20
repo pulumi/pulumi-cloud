@@ -112,20 +112,20 @@ export function getComputeIAMRolePolicies(): aws.ARN[] {
     return computePolicies;
 }
 
-let network: CloudNetwork;
+let network: Promise<CloudNetwork>;
 
 /**
  * Get or create the network to use for container and lambda compute.
  */
-export function getOrCreateNetwork(): CloudNetwork {
+export function getOrCreateNetwork(): Promise<CloudNetwork> {
     if (!network) {
         if (!config.externalVpcId) {
             if (config.usePrivateNetwork) {
                 // Create a new VPC for this private network.
-                network = new networkMod.Network(createNameWithStackInfo("global"), {
+                network = Promise.resolve(new networkMod.Network(createNameWithStackInfo("global"), {
                     usePrivateSubnets: config.usePrivateNetwork,
                     numberOfAvailabilityZones: config.ecsAutoCluster ? config.ecsAutoClusterNumberOfAZs : undefined,
-                });
+                }));
             } else {
                 // Use the default VPC.
                 network = networkMod.Network.getDefault();
@@ -137,13 +137,13 @@ export function getOrCreateNetwork(): CloudNetwork {
                     "'externalPublicSubnets' and 'externalSecurityGroups'");
             }
             // Use an exsting VPC for this private network
-            network = networkMod.Network.fromVpc("external-vpc", {
+            network = Promise.resolve(networkMod.Network.fromVpc("external-vpc", {
                 vpcId: config.externalVpcId,
                 usePrivateSubnets: config.usePrivateNetwork,
                 subnetIds: config.externalSubnets,
                 publicSubnetIds: config.externalPublicSubnets,
                 securityGroupIds: config.externalSecurityGroups,
-            });
+            }));
         }
     }
 
@@ -153,7 +153,7 @@ export function getOrCreateNetwork(): CloudNetwork {
 /**
  * @deprecated
  */
-export function getNetwork(): CloudNetwork {
+export function getNetwork(): Promise<CloudNetwork> {
     return getOrCreateNetwork();
 }
 

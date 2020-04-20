@@ -42,8 +42,8 @@ export function createCallbackFunction(
         //     add VPC access will currently fail due to an issue in the Terraform provider.
         policies.push(aws.iam.AWSLambdaVPCAccessExecutionRole);
         vpcConfig = {
-            securityGroupIds: pulumi.all(network.securityGroupIds),
-            subnetIds: pulumi.all(network.subnetIds),
+            securityGroupIds: pulumi.output(network).securityGroupIds,
+            subnetIds: pulumi.output(network).subnetIds,
         };
     }
 

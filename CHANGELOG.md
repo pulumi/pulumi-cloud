@@ -1,5 +1,12 @@
 ## HEAD (Unreleased)
 
+- Update dependencies to allow both 1.x and 2.x versions of `@pulumi/pulumi`, `@pulumi/aws`
+- Update dependencies to allow both 2.x and 3.x of `@pulumi/azure`
+
+  Note that this is a breaking change in `@pulumi/cloud-aws` as a result of removing synchronous calls:
+  `network.getDefault()` now returns a `Promise<Network>` instead of `Network` and
+  `shared.getOrCreateNetwork()` now returns a `Promise<CloudNetwork>`.
+
 ## 0.19.0 (Release April 2, 2020)
 
  - Upgrade to go1.13.x
