@@ -13,7 +13,7 @@
     "dependencies": {
         "@pulumi/pulumi": "^1.0.0 || ^2.0.0",
         "@pulumi/azure": "^2.0.0 || ^3.0.0",
-        "@pulumi/docker": "^1.0.0 || 2.0.0",
+        "@pulumi/docker": "^1.0.0 || ^2.0.0",
         "stream-buffers": "^3.0.2",
         "azure-storage": "^2.10.3",
         "azure-sb": "^0.11.0",
