@@ -1,5 +1,8 @@
 ## HEAD (Unreleased)
 
+- Update dependencies to allow for both 1.x and 2.x versions of `@pulumi/docker`
+- Update awsx dependency to use version that supports peer dependencies for aws and pulumi
+
 ## 0.20.0 (Release April 20, 2020)
 
 - Update dependencies to allow both 1.x and 2.x versions of `@pulumi/pulumi`, `@pulumi/aws`
