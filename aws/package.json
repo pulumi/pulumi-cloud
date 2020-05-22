@@ -13,8 +13,8 @@
     "dependencies": {
         "@pulumi/pulumi": "^1.0.0 || ^2.0.0",
         "@pulumi/aws": "^1.0.0 || ^2.0.0",
-        "@pulumi/awsx": "^0.19.0",
-        "@pulumi/docker": "^0.17.0",
+        "@pulumi/awsx": "^0.20.0",
+        "@pulumi/docker": "^1.0.0 || ^2.0.0",
         "aws-serverless-express": "^3.3.5",
         "mime": "^2.0.3",
         "semver": "^5.4.0"
