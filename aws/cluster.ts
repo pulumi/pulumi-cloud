@@ -24,7 +24,6 @@ const defaultEfsMountPath = "/mnt/efs";
 
 /**
  * @deprecated Usages of awsx.Cluster should be migrated to awsx.ecs.Cluster.
- * @internal
  */
 export interface ClusterNetworkArgs {
     /**

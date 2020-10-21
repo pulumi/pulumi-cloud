@@ -1,5 +1,7 @@
 ## HEAD (Unreleased)
 
+- Expose the type `cluster.ClusterNetworkArgs` in `@pulumi/cloud-aws`
+
 ## 0.21.0 (Release May 22, 2020)
 
 - Update dependencies to allow for both 1.x and 2.x versions of `@pulumi/docker`
