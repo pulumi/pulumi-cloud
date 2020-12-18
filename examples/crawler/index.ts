@@ -92,7 +92,9 @@ sites.subscribe("foreachurl", async (url) => {
     let links = new Set<string>();
     let anchors = $("a", html);
     for (let i = 0; i < anchors.length; i++) {
-        let rawHref = anchors[i].attribs["href"];
+        let anchor = anchors[i];
+        if (anchor.type != "tag") { continue; }
+        let rawHref = anchor.attribs["href"];
         if (!rawHref) { continue; }
         let href = canonicalUrl(rawHref, url);
         console.log(`${url}: Found href: ${rawHref}, canonicalized to ${href}`);
