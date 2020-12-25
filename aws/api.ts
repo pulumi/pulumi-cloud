@@ -345,10 +345,28 @@ function apiGatewayToRequestResponse(
     // Lowercase all header names to align with Node.js HTTP request behaviour,
     // and create the `rawHeaders` array to maintain access to raw header data.
     if (ev.headers) {
-        for (const name of Object.keys(ev.headers)) {
-            headers[name.toLowerCase()] = ev.headers[name];
-            rawHeaders.push(name);
-            rawHeaders.push(ev.headers[name]);
+        for (const [name, header] of Object.entries(ev.headers)) {
+            if (header) {
+                headers[name.toLowerCase()] = header;
+                rawHeaders.push(name);
+                rawHeaders.push(header);
+            }
+        }
+    }
+    const params: { [param: string]: string } = {};
+    if (ev.pathParameters) {
+        for (const [name, param] of Object.entries(ev.pathParameters)) {
+            if (param) {
+                params[name] = param;
+            }
+        }
+    }
+    const query: { [query: string]: string } = {};
+    if (ev.queryStringParameters) {
+        for (const [name, param] of Object.entries(ev.queryStringParameters)) {
+            if (param) {
+                query[name] = param;
+            }
         }
     }
     // Always add `content-length` header, as this is stripped by API Gateway
@@ -358,8 +376,8 @@ function apiGatewayToRequestResponse(
         rawHeaders: rawHeaders,
         body: body,
         method: ev.httpMethod,
-        params: ev.pathParameters || {},
-        query: ev.queryStringParameters || {},
+        params: params,
+        query: query,
         path: ev.path,
         baseUrl: "/" + stageName,
         hostname: headers["host"],
