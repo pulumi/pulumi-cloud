@@ -51,7 +51,7 @@ if (functionIncludePackagesString) {
 
 /**
  * Set the IAM role policies to apply to compute (both Lambda and ECS) within this Pulumi program. The default is:
- * "arn:aws:iam::aws:policy/AWSLambdaFullAccess,arn:aws:iam::aws:policy/AmazonEC2ContainerServiceFullAccess".
+ * "arn:aws:iam::aws:policy/AWSLambdaFullAccess,arn:aws:iam::aws:policy/AmazonECS_FullAccess".
  */
 export let computeIAMRolePolicyARNs = config.get("computeIAMRolePolicyARNs");
 
