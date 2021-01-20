@@ -12,7 +12,7 @@
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
         "@pulumi/pulumi": "^1.0.0 || ^2.0.0",
-        "@pulumi/aws": "^3.22.0",
+        "@pulumi/aws": "^1.0.0 || ^2.0.0",
         "@pulumi/awsx": "^0.20.0",
         "@pulumi/docker": "^1.0.0 || ^2.0.0",
         "aws-serverless-express": "^3.3.5",

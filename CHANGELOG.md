@@ -1,6 +1,5 @@
 ## HEAD (Unreleased)
 
-- Replaced deprecated `AmazonEC2ContainerServiceFullAccess` policy with `AmazonECS_FullAccess`.
 - Expose the type `cluster.ClusterNetworkArgs` in `@pulumi/cloud-aws`
 
 ## 0.21.0 (Release May 22, 2020)
