@@ -43,8 +43,8 @@ import * as shared from "./shared";
 interface AWSEvent {
     path: string;
     httpMethod: string;
-    headers: Record<string, string>;
-    queryStringParameters: Record<string, string>;
+    headers: Record<string, string | undefined>;
+    queryStringParameters: Record<string, string | undefined>;
     body: string;
     isBase64Encoded: boolean;
 }
