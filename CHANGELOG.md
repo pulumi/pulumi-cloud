@@ -1,4 +1,7 @@
 ## HEAD (Unreleased)
+
+## 0.22.0 (Release Jan 27, 2021)
+
 - (Breaking) Replace `AWSLambdaFullAccess` with `LambdaFullAccess`, a more scoped down LambdaFullAccess
   policy (the new one that AWS recommends). As this significantly reduces the scope for the task definition,
   users may need to attach additional policies if their task needs access to specific AWS services.
