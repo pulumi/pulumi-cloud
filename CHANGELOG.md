@@ -1,5 +1,5 @@
 ## HEAD (Unreleased)
-
+- Replace `AWSLambdaFullAccess` with `LambdaFullAccess` (the new AWS default with more limited scope) as the default compute policy.
 - Replaced deprecated `AmazonEC2ContainerServiceFullAccess` policy with `AmazonECS_FullAccess`.
 - Expose the type `cluster.ClusterNetworkArgs` in `@pulumi/cloud-aws`
 
