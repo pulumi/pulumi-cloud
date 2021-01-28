@@ -888,7 +888,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
         const clusterARN = this.cluster.ecsClusterARN;
         const taskDefinitionArn = this.taskDefinition.arn;
         const containerEnv = pulumi.all(container.environment || {});
-        const subnetIds = pulumi.output(network).subnetIds;
+        const subnetIds = pulumi.output(pulumi.output(network).subnetIds);
         const securityGroups =  cluster.securityGroupId!;
         const useFargate = config.useFargate;
         const assignPublicIp = pulumi.output(network).apply(n => useFargate && !n.usePrivateSubnets);
