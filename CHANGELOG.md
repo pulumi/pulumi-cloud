@@ -1,5 +1,6 @@
 ## HEAD (Unreleased)
 
+- Fix a bug where `subnetIds` was not being unwrapped correctly leading `Task.run` to fail for `@pulumi/cloud-aws`.
 ## 0.22.0 (Release Jan 27, 2021)
 
 - (Breaking) Replace `AWSLambdaFullAccess` with `LambdaFullAccess`, a more scoped down LambdaFullAccess
