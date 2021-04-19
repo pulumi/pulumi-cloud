@@ -2,13 +2,14 @@ module github.com/pulumi/pulumi-cloud
 
 go 1.16
 
-replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.4.3+incompatible
-
 require (
-	github.com/pulumi/pulumi/pkg/v2 v2.0.0
-	github.com/stretchr/testify v1.5.1
+	github.com/pulumi/pulumi/pkg/v3 v3.0.0
+	github.com/stretchr/testify v1.6.1
+	golang.org/x/sys v0.0.0-20210112080510-489259a85091 // indirect
+	golang.org/x/tools v0.0.0-20201224043029-2b0845dc783e // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 replace (
