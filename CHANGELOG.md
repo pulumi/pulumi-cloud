@@ -1,5 +1,8 @@
 ## HEAD (Unreleased)
 
+
+## 0.30.0 (Release April 19, 2021)
+
 - (Breaking) Update to Pulumi 3.0 packages
 - Fix a bug where `subnetIds` was not being unwrapped correctly leading `Task.run` to fail for `@pulumi/cloud-aws`.
   [#785](https://github.com/pulumi/pulumi-cloud/pull/785)
