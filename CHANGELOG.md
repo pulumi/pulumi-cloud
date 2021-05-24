@@ -1,5 +1,7 @@
 ## HEAD (Unreleased)
 
+## 0.30.1 (Release May 24, 2021)
+
 - Fix a regression where `LambdaFullAccess` does not have enough permissions for most function scenarios.
   Default to the same permissions for Lambda functions as `@pulumi/aws` along with `AmazonECSFullAccess`.
 ## 0.30.0 (Release April 19, 2021)
