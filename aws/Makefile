@@ -15,7 +15,3 @@ build::
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
-
-install_nodejs_sdk::
-	cd $(WORKING_DIR)/bin && yarn install
-	yarn link --cwd $(WORKING_DIR)/bin
