@@ -168,9 +168,9 @@ jobs:
           github.workspace}}/node_modules/@pulumi/cloud-azure
       - name: Install dependencies
         run: |
-          yarn link --cwd ${{ github.workspace }}node_modules/@pulumi/cloud
-          yarn link --cwd ${{ github.workspace }}node_modules/@pulumi/cloud-aws
-          yarn link --cwd ${{ github.workspace }}node_modules/@pulumi/cloud-azure
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-aws
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-azure
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

@@ -130,14 +130,17 @@ jobs:
           name: cloud-sdks
           path: ${{ github.workspace}}
       - name: Uncompress cloud-api SDK folder
-        run: tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
-          github.workspace}}/api
+        run: mkdir -p ${{
+          github.workspace}}/api/bin && tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
+          github.workspace}}/api/bin
       - name: Uncompress cloud-aws SDK folder
-        run: tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
-          github.workspace}}/aws
+        run: mkdir -p ${{
+          github.workspace}}/aws/bin && tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
+          github.workspace}}/aws/bin
       - name: Uncompress cloud-azure SDK folder
-        run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
-          github.workspace}}/azure
+        run: mkdir -p ${{
+          github.workspace}}/azure/bin && tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
+          github.workspace}}/azure/bin
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         name: Publish SDK
@@ -189,17 +192,25 @@ jobs:
         with:
           name: cloud-sdks
           path: ${{ github.workspace}}
+      - name: Create SDK directories
+        run: |
+          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud
+          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud-aws
+          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud-azure
       - name: Uncompress cloud-api SDK folder
         run: tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
-          github.workspace}}/api
+          github.workspace}}/node_modules/@pulumi/cloud
       - name: Uncompress cloud-aws SDK folder
         run: tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
-          github.workspace}}/aws
+          github.workspace}}/node_modules/@pulumi/cloud-aws
       - name: Uncompress cloud-azure SDK folder
         run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
-          github.workspace}}/azure
+          github.workspace}}/node_modules/@pulumi/cloud-azure
       - name: Install dependencies
-        run: make -C api install_nodejs_sdk && make -C aws install_nodejs_sdk && make -C azure install_nodejs_sdk
+        run: |
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-aws
+          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-azure
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
