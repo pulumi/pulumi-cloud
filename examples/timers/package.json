@@ -15,6 +15,7 @@
         "typescript": "^3.0.0"
     },
     "peerDependencies": {
+        "@pulumi/cloud": "latest",
         "@pulumi/cloud-aws": "latest"
     }
 }
