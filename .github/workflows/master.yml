@@ -186,7 +186,7 @@ jobs:
         run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
           github.workspace}}/azure
       - name: Install dependencies
-        run: make ensure
+        run: make -C api install && make -C aws install && make -C azure install
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
