@@ -1,0 +1,223 @@
+env:
+  AWS_REGION: us-west-2
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GO111MODULE: "on"
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  PROVIDER: cloud
+  PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+  PULUMI_API: https://api.pulumi-staging.io
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  TRAVIS_OS_NAME: linux
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Unshallow clone for tags
+        run: git fetch --prune --unshallow --tags
+      - name: Install pulumictl
+        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        with:
+          repo: pulumi/pulumictl
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{matrix.nodeversion}}
+          registry-url: https://registry.npmjs.org
+      - name: Install Yarn
+        run: curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.13.0
+      - name: Update PATH for Yarn
+        run: |
+          echo "$HOME/.yarn/bin" >> $GITHUB_PATH
+          echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
+      - name: Run lint
+        run: make lint
+  build_sdk:
+    name: build_sdk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Checkout Scripts Repo
+        uses: actions/checkout@v2
+        with:
+          path: ci-scripts
+          repository: pulumi/scripts
+      - name: Unshallow clone for tags
+        run: git fetch --prune --unshallow --tags
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.goversion }}
+      - name: Install pulumictl
+        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        with:
+          repo: pulumi/pulumictl
+      - name: Install Pulumi CLI
+        uses: pulumi/action-install-pulumi-cli@v1.0.1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{matrix.nodeversion}}
+          registry-url: https://registry.npmjs.org
+      - name: Build SDK
+        run: make only_build
+      - name: Check worktree clean
+        run: ./ci-scripts/ci/check-worktree-is-clean
+      - name: Compress cloud-api SDK
+        run: tar -zcf api-sdk.tar.gz -C ./api .
+      - name: Compress cloud-aws SDK
+        run: tar -zcf aws-sdk.tar.gz -C ./aws .
+      - name: Compress cloud-azure SDK
+        run: tar -zcf azure-sdk.tar.gz -C ./azure .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: cloud-sdks
+          path: ${{ github.workspace}}/*-sdk.tar.gz
+      - name: Run SDK tests
+        run: make only_test_fast
+    strategy:
+      fail-fast: true
+      matrix:
+        goversion:
+          - 1.16.x
+        language:
+          - nodejs
+        nodeversion:
+          - 13.x
+  publish_sdk:
+    name: publish_sdk
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Checkout Scripts Repo
+        uses: actions/checkout@v2
+        with:
+          path: ci-scripts
+          repository: pulumi/scripts
+      - name: Unshallow clone for tags
+        run: git fetch --prune --unshallow --tags
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.goversion }}
+      - name: Install pulumictl
+        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        with:
+          repo: pulumi/pulumictl
+      - name: Install Pulumi CLI
+        uses: pulumi/action-install-pulumi-cli@v1.0.1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          always-auth: true
+          registry-url: https://registry.npmjs.org
+      - name: Download SDK
+        uses: actions/download-artifact@v2
+        with:
+          name: cloud-sdks
+          path: ${{ github.workspace}}
+      - name: Uncompress cloud-api SDK folder
+        run: tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
+          github.workspace}}/api
+      - name: Uncompress cloud-aws SDK folder
+        run: tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
+          github.workspace}}/aws
+      - name: Uncompress cloud-azure SDK folder
+        run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
+          github.workspace}}/azure
+      - name: Install dependencies
+        run: make ensure
+      - env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        name: Publish SDK
+        run: ./scripts/publish_packages.sh
+  create_docs_build:
+    name: Create docs build
+    needs: publish_sdk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pulumictl
+        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        with:
+          repo: pulumi/pulumictl
+      - env:
+          GITHUB_TOKEN: ${{ secrets.PULUMI_BOT_TOKEN }}
+        name: Dispatch event
+        run: pulumictl create docs-build pulumi-${{ env.PROVIDER }} ${GITHUB_REF#refs/tags/}
+  test:
+    name: test
+    needs: build_sdk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Checkout Scripts Repo
+        uses: actions/checkout@v2
+        with:
+          path: ci-scripts
+          repository: pulumi/scripts
+      - name: Unshallow clone for tags
+        run: git fetch --prune --unshallow --tags
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.goversion }}
+      - name: Install pulumictl
+        uses: jaxxstorm/action-install-gh-release@v1.1.0
+        with:
+          repo: pulumi/pulumictl
+      - name: Install Pulumi CLI
+        uses: pulumi/action-install-pulumi-cli@v1.0.1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{matrix.nodeversion}}
+          registry-url: https://registry.npmjs.org
+      - name: Download SDK
+        uses: actions/download-artifact@v2
+        with:
+          name: cloud-sdks
+          path: ${{ github.workspace}}
+      - name: Uncompress cloud-api SDK folder
+        run: tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
+          github.workspace}}/api
+      - name: Uncompress cloud-aws SDK folder
+        run: tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
+          github.workspace}}/aws
+      - name: Uncompress cloud-azure SDK folder
+        run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
+          github.workspace}}/azure
+      - name: Install dependencies
+        run: make ensure
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-duration-seconds: 3600
+          role-session-name: ${{ env.PROVIDER }}@githubActions
+          role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
+      - name: Run tests
+        run: make test_${{ matrix.language}}
+    strategy:
+      fail-fast: true
+      matrix:
+        goversion:
+          - 1.16.x
+        language:
+          - nodejs
+        nodeversion:
+          - 13.x
+name: release
+"on":
+  push:
+    tags:
+      - v*.*.*
