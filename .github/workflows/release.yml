@@ -94,7 +94,7 @@ jobs:
         language:
           - nodejs
         nodeversion:
-          - 13.x
+          - 14.x
   publish_sdk:
     name: publish_sdk
     needs: test
@@ -230,7 +230,7 @@ jobs:
         language:
           - nodejs
         nodeversion:
-          - 13.x
+          - 14.x
 name: release
 "on":
   push:

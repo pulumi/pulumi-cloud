@@ -58,8 +58,8 @@ jobs:
           echo "$HOME/.config/yarn/global/node_modules/.bin" >> $GITHUB_PATH
       - name: Run lint
         run: make lint
-  build_sdk:
-    name: build_sdk
+  build_and_test:
+    name: Build and Test SDK
     runs-on: ubuntu-latest
     if: github.event_name == 'repository_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
@@ -86,91 +86,11 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
-      - name: Build SDK
-        run: make only_build
       - name: Checkout Scripts Repo
         uses: actions/checkout@v2
         with:
           path: ci-scripts
           repository: pulumi/scripts
-      - name: Check worktree clean
-        run: ./ci-scripts/ci/check-worktree-is-clean
-      - name: Compress cloud-api SDK
-        run: tar -zcf api-sdk.tar.gz -C ./api/bin .
-      - name: Compress cloud-aws SDK
-        run: tar -zcf aws-sdk.tar.gz -C ./aws/bin .
-      - name: Compress cloud-azure SDK
-        run: tar -zcf azure-sdk.tar.gz -C ./azure/bin .
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: cloud-sdks
-          path: ${{ github.workspace}}/*-sdk.tar.gz
-    strategy:
-      fail-fast: true
-      matrix:
-        goversion:
-          - 1.16.x
-        language:
-          - nodejs
-        nodeversion:
-          - 14.x
-  test:
-    name: test
-    needs: build_sdk
-    runs-on: ubuntu-latest
-    if: github.event_name == 'repository_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ env.PR_COMMIT_SHA }}
-      - name: Checkout Scripts Repo
-        uses: actions/checkout@v2
-        with:
-          path: ci-scripts
-          repository: pulumi/scripts
-      - name: Unshallow clone for tags
-        run: git fetch --prune --unshallow --tags
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.goversion }}
-      - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
-        with:
-          repo: pulumi/pulumictl
-      - name: Install Pulumi CLI
-        uses: pulumi/action-install-pulumi-cli@v1.0.1
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{matrix.nodeversion}}
-          registry-url: https://registry.npmjs.org
-      - name: Download SDK
-        uses: actions/download-artifact@v2
-        with:
-          name: cloud-sdks
-          path: ${{ github.workspace}}
-      - name: Create SDK directories
-        run: |
-          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud
-          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud-aws
-          mkdir -p ${{ github.workspace}}/node_modules/@pulumi/cloud-azure
-      - name: Uncompress cloud-api SDK folder
-        run: tar -zxf ${{ github.workspace}}/api-sdk.tar.gz -C ${{
-          github.workspace}}/node_modules/@pulumi/cloud
-      - name: Uncompress cloud-aws SDK folder
-        run: tar -zxf ${{ github.workspace}}/aws-sdk.tar.gz -C ${{
-          github.workspace}}/node_modules/@pulumi/cloud-aws
-      - name: Uncompress cloud-azure SDK folder
-        run: tar -zxf ${{ github.workspace}}/azure-sdk.tar.gz -C ${{
-          github.workspace}}/node_modules/@pulumi/cloud-azure
-      - name: Install dependencies
-        run: |
-          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud
-          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-aws
-          yarn link --cwd ${{ github.workspace }}/node_modules/@pulumi/cloud-azure
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -180,8 +100,8 @@ jobs:
           role-duration-seconds: 3600
           role-session-name: ${{ env.PROVIDER }}@githubActions
           role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
-      - name: Run tests
-        run: make test_all
+      - name: Build and Test SDK
+        run: make travis_pull_request
     strategy:
       fail-fast: true
       matrix:
