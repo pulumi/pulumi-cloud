@@ -86,10 +86,12 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
+      - name: Setup scripts path
+        run: mkdir -p $(GOPATH)/src/github.com/pulumi/scripts
       - name: Checkout Scripts Repo
         uses: actions/checkout@v2
         with:
-          path: ci-scripts
+          path: $(GOPATH)/src/github.com/pulumi/scripts
           repository: pulumi/scripts
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
