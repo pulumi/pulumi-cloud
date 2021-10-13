@@ -61,11 +61,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ env.PR_COMMIT_SHA }}
-      - name: Checkout Scripts Repo
-        uses: actions/checkout@v2
-        with:
-          path: ci-scripts
-          repository: pulumi/scripts
       - name: Unshallow clone for tags
         run: git fetch --prune --unshallow --tags
       - name: Install Go
@@ -87,6 +82,11 @@ jobs:
         run: make ensure
       - name: Build SDK
         run: make only_build
+      - name: Checkout Scripts Repo
+        uses: actions/checkout@v2
+        with:
+          path: ci-scripts
+          repository: pulumi/scripts
       - name: Check worktree clean
         run: ./ci-scripts/ci/check-worktree-is-clean
       - name: Compress cloud-api SDK
