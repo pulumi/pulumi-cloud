@@ -3,6 +3,7 @@ NODE_MODULE_NAME := @pulumi/cloud-azure
 include ../build/common.mk
 
 VERSION := $(shell ../scripts/get-version)
+WORKING_DIR := $(shell pwd)
 
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
@@ -14,3 +15,7 @@ build::
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
+
+install_nodejs_sdk::
+	cd $(WORKING_DIR)/bin && yarn install
+	yarn link --cwd $(WORKING_DIR)/bin
