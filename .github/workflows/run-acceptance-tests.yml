@@ -86,12 +86,14 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
+      - name: Setup GOPATH
+        run: echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
       - name: Setup scripts path
-        run: mkdir -p $(go env GOPATH)/src/github.com/pulumi/scripts
+        run: mkdir -p ${{ env.GOPATH }}/src/github.com/pulumi/scripts
       - name: Checkout Scripts Repo
         uses: actions/checkout@v2
         with:
-          path: $(go env GOPATH)/src/github.com/pulumi/scripts
+          path: ${{ env.GOPATH }}/src/github.com/pulumi/scripts
           repository: pulumi/scripts
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
