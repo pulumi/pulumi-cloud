@@ -87,11 +87,11 @@ jobs:
       - name: Ensure dependencies
         run: make ensure
       - name: Setup scripts path
-        run: mkdir -p $GOPATH/src/github.com/pulumi/scripts
+        run: mkdir -p $$(go env GOPATH)/src/github.com/pulumi/scripts
       - name: Checkout Scripts Repo
         uses: actions/checkout@v2
         with:
-          path: $GOPATH/src/github.com/pulumi/scripts
+          path: $$(go env GOPATH)/src/github.com/pulumi/scripts
           repository: pulumi/scripts
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
