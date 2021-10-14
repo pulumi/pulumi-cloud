@@ -81,7 +81,13 @@ jobs:
           role-session-name: ${{ env.PROVIDER }}@githubActions
           role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
       - name: Build SDK
-        run: make travis_push
+        run: make only_build
+      - name: Check worktree clean
+        run: ./ci-scripts/ci/check-worktree-is-clean
+      - name: Run Tests
+        run: make only_test_fast
+      - name: Publish
+        run: publish_packages
     strategy:
       fail-fast: true
       matrix:

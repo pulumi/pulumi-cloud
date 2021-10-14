@@ -86,14 +86,10 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
-      - name: Setup GOPATH
-        run: echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-      - name: Setup scripts path
-        run: mkdir -p ${{ env.GOPATH }}/src/github.com/pulumi/scripts
       - name: Checkout Scripts Repo
         uses: actions/checkout@v2
         with:
-          path: ${{ env.GOPATH }}/src/github.com/pulumi/scripts
+          path: ci-scripts
           repository: pulumi/scripts
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -104,8 +100,12 @@ jobs:
           role-duration-seconds: 3600
           role-session-name: ${{ env.PROVIDER }}@githubActions
           role-to-assume: ${{ secrets.AWS_CI_ROLE_ARN }}
-      - name: Build and Test SDK
-        run: make travis_pull_request
+      - name: Build SDK
+        run: make only_build
+      - name: Check worktree clean
+        run: ./ci-scripts/ci/check-worktree-is-clean
+      - name: Run Tests
+        run: make only_test_fast
     strategy:
       fail-fast: true
       matrix:
