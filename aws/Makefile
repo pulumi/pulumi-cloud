@@ -14,4 +14,3 @@ build::
 
 lint::
 	tslint -c ../tslint.json -p tsconfig.json
-
