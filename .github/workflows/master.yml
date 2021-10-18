@@ -63,6 +63,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{matrix.nodeversion}}
+          always-auth: true
           registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
@@ -87,6 +88,8 @@ jobs:
       - name: Run Tests
         run: make only_test_fast
       - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: make publish_packages
     strategy:
       fail-fast: true
