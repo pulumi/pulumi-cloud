@@ -78,7 +78,7 @@ jobs:
       - name: Run Tests
         run: make only_test_fast
       - name: Publish
-        run: publish_packages
+        run: make publish_packages
     strategy:
       fail-fast: true
       matrix:
