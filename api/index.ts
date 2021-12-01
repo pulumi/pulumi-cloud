@@ -28,7 +28,13 @@ const provider = config.require("provider");
 
 // Load the implementation of @pulumi/cloud for the target provider.
 function loadFrameworkModule() {
-    const frameworkModule = `@pulumi/cloud-${provider}`;
+    // if the user has configured a fully qualified name for the provider then use 
+    // that as the module reference so that cloud implementations, maintained out
+    // of pulumi org, can be used, otherwise assume it's a @pulumi package.
+    const qualifiedModule = /^@/.test(provider);
+    const frameworkModule = qualifiedModule
+        ? provider
+        : `@pulumi/cloud-${provider}`;
     pulumi.log.debug(`Loading ${frameworkModule} for current environment.`);
     try {
         return require(frameworkModule);
