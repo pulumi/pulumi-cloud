@@ -96,7 +96,6 @@ For more details see the examples in `examples`, or online at: https://docs.pulu
 
 ## Reference
 
-For detailed reference documentation, please visit the API docs site for the package in question:
+For detailed reference documentation, please visit the API docs site for this package:
 
-* [@pulumi/cloud](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud/index.html)
-* [@pulumi/cloud-aws](https://pulumi.io/reference/pkg/nodejs/@pulumi/cloud-aws/index.html)
+* [@pulumi/cloud](https://pulumi.com/docs/reference/pkg/nodejs/pulumi/cloud/)
