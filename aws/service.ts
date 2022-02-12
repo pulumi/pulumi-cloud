@@ -529,47 +529,56 @@ function createTaskDefinition(parent: pulumi.Resource, name: string,
     };
 }
 
+function addInputs(mIn: pulumi.Input<number>, nIn: pulumi.Input<number>): pulumi.Output<number> {
+    return pulumi.all([pulumi.output(mIn), pulumi.output(nIn)]).apply(([m, n]) => m + n);
+}
+
 // Compute the memory and CPU requirements of the task for Fargate. See
 // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size.
 function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
     // Sum the requested memory and CPU for each container in the task.
-    let minTaskMemory = 0;
-    let minTaskCPU = 0;
+    let minTaskMemory = pulumi.output(0);
+    let minTaskCPU = pulumi.output(0);
     for (const containerDef of defs) {
         if (containerDef.memoryReservation) {
-            minTaskMemory += containerDef.memoryReservation;
+            minTaskMemory = addInputs(minTaskMemory, containerDef.memoryReservation);
         } else if (containerDef.memory) {
-            minTaskMemory += containerDef.memory;
+            minTaskMemory = addInputs(minTaskMemory, containerDef.memory);
         }
         if (containerDef.cpu) {
-            minTaskCPU += containerDef.cpu;
+            minTaskCPU = addInputs(minTaskCPU, containerDef.cpu);
         }
     }
 
     // Compute the smallest allowed Fargate memory value compatible with the requested minimum memory.
-    let taskMemory: number;
-    if (minTaskMemory <= 512) {
-        taskMemory = 512;
-    } else {
-        const taskMemGB = minTaskMemory / 1024;
-        const taskMemWholeGB = Math.ceil(taskMemGB);
-        taskMemory = taskMemWholeGB * 1024;
-    }
+    const taskMemory = minTaskMemory.apply(mem => {
+        if (mem <= 512) {
+            return 512;
+        } else {
+            const taskMemGB = mem / 1024;
+            const taskMemWholeGB = Math.ceil(taskMemGB);
+            return taskMemWholeGB * 1024;
+        }
+    });
 
     // Allowed CPU values are powers of 2 between 256 and 4096.  We just ensure it's a power of 2 that is at least
     // 256. We leave the error case for requiring more CPU than is supported to ECS.
-    let taskCPU = Math.pow(2, Math.ceil(Math.log2(Math.max(minTaskCPU, 256))));
+    let taskCPU = minTaskCPU.apply(cpu => Math.pow(2, Math.ceil(Math.log2(Math.max(cpu, 256)))));
 
     // Make sure we select an allowed CPU value for the specified memory.
-    if (taskMemory > 16384) {
-        taskCPU = Math.max(taskCPU, 4096);
-    } else if (taskMemory > 8192) {
-        taskCPU = Math.max(taskCPU, 2048);
-    } else if (taskMemory > 4096) {
-        taskCPU = Math.max(taskCPU, 1024);
-    } else if (taskMemory > 2048) {
-        taskCPU = Math.max(taskCPU, 512);
-    }
+    taskCPU = pulumi.all([taskMemory, taskCPU]).apply(([mem, cpu]) => {
+        if (mem > 16384) {
+            return Math.max(cpu, 4096);
+        } else if (mem > 8192) {
+            return Math.max(cpu, 2048);
+        } else if (mem > 4096) {
+            return Math.max(cpu, 1024);
+        } else if (mem > 2048) {
+            return Math.max(cpu, 512);
+        }
+
+        return cpu;
+    })
 
     // Return the computed task memory and CPU values
     return {
