@@ -582,8 +582,8 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
 
     // Return the computed task memory and CPU values
     return {
-        memory: `${taskMemory}`,
-        cpu: `${taskCPU}`,
+        memory: taskMemory.apply(m => m.toString()),
+        cpu: taskCPU.apply(c => c.toString()),
     };
 }
 
