@@ -1,6 +1,7 @@
 ## HEAD (Unreleased)
 
 - Fix a bug to allow computing minimum task and memory size requirements as `Inputs` for `Service` in `cloud/aws`.
+
 ## 0.30.1 (Release May 24, 2021)
 
 - Fix a regression where `LambdaFullAccess` does not have enough permissions for most function scenarios.
