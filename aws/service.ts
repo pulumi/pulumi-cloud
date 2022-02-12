@@ -578,7 +578,7 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
         }
 
         return cpu;
-    })
+    });
 
     // Return the computed task memory and CPU values
     return {
