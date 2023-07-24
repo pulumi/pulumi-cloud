@@ -2,8 +2,6 @@
     "name": "containers",
     "version": "0.0.1",
     "license": "Apache-2.0",
-    "main": "bin/index.js",
-    "typings": "bin/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
@@ -15,7 +13,7 @@
     "devDependencies": {
         "@types/node": "^10.0.0",
         "@types/node-fetch": "^1.6.7",
-        "typescript": "^3.0.0"
+        "typescript": "4.7.4"
     },
     "peerDependencies": {
         "@pulumi/cloud": "latest",

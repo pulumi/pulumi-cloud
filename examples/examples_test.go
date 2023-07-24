@@ -16,7 +16,7 @@ package examples
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -28,17 +28,22 @@ import (
 )
 
 func TestAccAwsCrawler(t *testing.T) {
-	t.Skip("Skipped as commented out in old code")
 	test := getAwsBaseOptions(t).
 		With(integration.ProgramTestOptions{
 			Dir: path.Join(getCwd(t), "crawler"),
 		})
+	integration.ProgramTest(t, &test)
+}
 
+func TestAccAwsApi(t *testing.T) {
+	test := getAwsBaseOptions(t).
+		With(integration.ProgramTestOptions{
+			Dir: path.Join(getCwd(t), "api"),
+		})
 	integration.ProgramTest(t, &test)
 }
 
 func TestAccAwsTimers(t *testing.T) {
-	t.Skip("Skipped as commented out in old code")
 	test := getAwsBaseOptions(t).
 		With(integration.ProgramTestOptions{
 			Dir: path.Join(getCwd(t), "timers"),
@@ -135,8 +140,6 @@ func getAzureBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	clientSecret := getRequiredEnvValue(t, "ARM_CLIENT_SECRET")
 	tenantID := getRequiredEnvValue(t, "ARM_TENANT_ID")
 	base := integration.ProgramTestOptions{
-		ReportStats:          integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
-		Tracing:              "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
 		ExpectRefreshChanges: true,
 		SkipRefresh:          true,
 		Quick:                true,
@@ -190,8 +193,6 @@ func getCwd(t *testing.T) string {
 func getAwsBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	region := getAwsRegion(t)
 	base := integration.ProgramTestOptions{
-		ReportStats:          integration.NewS3Reporter("us-west-2", "eng.pulumi.com", "testreports"),
-		Tracing:              "https://tracing.pulumi-engineering.com/collector/api/v1/spans",
 		ExpectRefreshChanges: true,
 		SkipRefresh:          true,
 		Quick:                true,
@@ -214,7 +215,7 @@ func testURLGet(t *testing.T, baseURL string, path string, contents string) {
 
 	contentType := resp.Header.Get("Content-Type")
 	assert.Equal(t, "text/html", contentType)
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	t.Logf("GET %v [%v/%v]: %v", baseURL+path, resp.StatusCode, contentType, string(bytes))
 	assert.Equal(t, contents, string(bytes))
@@ -246,7 +247,7 @@ func GetHTTP(t *testing.T, url string, statusCode int) *http.Response {
 
 	if !assert.Equal(t, statusCode, resp.StatusCode, "Got unexpected status code. Body was:") {
 		contentType := resp.Header.Get("Content-Type")
-		bytes, _ := ioutil.ReadAll(resp.Body)
+		bytes, _ := io.ReadAll(resp.Body)
 		t.Logf("GET %v [%v/%v]: %v", url, resp.StatusCode, contentType, string(bytes))
 		t.FailNow()
 	}

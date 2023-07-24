@@ -57,7 +57,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                         return reject(err);
                     }
 
-                    resolve();
+                    resolve(undefined);
                 });
             });
 
@@ -74,7 +74,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                         return reject(err);
                     }
 
-                    resolve();
+                    resolve(undefined);
                 });
             });
         };
@@ -87,7 +87,7 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
                         return reject(err);
                     }
 
-                    resolve();
+                    resolve(undefined);
                 });
             });
         };

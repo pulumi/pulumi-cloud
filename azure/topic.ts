@@ -39,8 +39,7 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         }, { parent: this });
 
         const topic = new azure.servicebus.Topic(name, {
-            resourceGroupName: shared.globalResourceGroupName,
-            namespaceName: namespace.name,
+            namespaceId: namespace.id,
         }, { parent: this });
 
         this.namespace = namespace;
