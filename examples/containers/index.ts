@@ -108,45 +108,27 @@ class Cache {
                 },
             },
         });
-        this.get = (key: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
-                // console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
-                let client = require("redis").createClient(
-                    endpoint.port,
-                    endpoint.hostname,
-                    { password: redisPassword },
-                );
-                console.log(client);
-                return new Promise<string>((resolve, reject) => {
-                    client.get(key, (err: any, v: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(v);
-                        }
-                    });
-                });
+        this.get = async (key: string) => {
+            const { createClient } = await import("redis");
+            const endpoint = await redis.getEndpoint("redis", 6379);
+            let client = createClient({
+                url: `redis://${endpoint.hostname}:${endpoint.port}`,
+                password: redisPassword,
             });
+            console.log(client);
+            const res = await client.get(key);
+            return res ?? "";
         };
-        this.set = (key: string, value: string) => {
-            return redis.getEndpoint("redis", 6379).then(endpoint => {
-                // console.log(`Endpoint: ${JSON.stringify(endpoint)}`);
-                let client = require("redis").createClient(
-                    endpoint.port,
-                    endpoint.hostname,
-                    { password: redisPassword },
-                );
-                console.log(client);
-                return new Promise<void>((resolve, reject) => {
-                    client.set(key, value, (err: any, v: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    });
-                });
+        this.set = async (key: string, value: string) => {
+            const { createClient } = await import("redis");
+            const endpoint = await redis.getEndpoint("redis", 6379);
+            let client = createClient({
+                url: `redis://${endpoint.hostname}:${endpoint.port}`,
+                password: redisPassword,
             });
+            console.log(client);
+            const res = await client.set(key, value);
+            console.log(res);
         };
     }
 }

@@ -43,6 +43,18 @@ func TestAccAwsApi(t *testing.T) {
 	integration.ProgramTest(t, &test)
 }
 
+func TestAccAwsContainers(t *testing.T) {
+	test := getAwsBaseOptions(t).
+		With(integration.ProgramTestOptions{
+			Dir: path.Join(getCwd(t), "containers"),
+			Config: map[string]string{
+				"containers:redisPassword": "ABC$123",
+				"cloud-aws:useFargate":     "true",
+			},
+		})
+	integration.ProgramTest(t, &test)
+}
+
 func TestAccAwsTimers(t *testing.T) {
 	test := getAwsBaseOptions(t).
 		With(integration.ProgramTestOptions{
