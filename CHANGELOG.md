@@ -1,6 +1,10 @@
 ## HEAD (Unreleased)
 
 - Fix a bug to allow computing minimum task and memory size requirements as `Inputs` for `Service` in `cloud/aws`.
+- Update to use `@pulumi/aws` 5.x
+- Update to use `@pulumi/awsx` 0.40.x
+- Update to use `@pulumi/azure` 5.x
+- aws: Build docker images for `linux/amd64` platform. 
 
 ## 0.30.1 (Release May 24, 2021)
 

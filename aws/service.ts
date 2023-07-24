@@ -298,11 +298,11 @@ function computeImageFromBuildWorker(
     else {
         const dockerBuildOptions: docker.DockerBuild = {
             // Force build of linux/amd64 image.  Once we support
-            // specifying the target platform for compute in the 
+            // specifying the target platform for compute in the
             // container cluster, we can thread that through here.
             extraOptions: ["--platform", "linux/amd64"],
-            context: typeof build == "string" ? build : build.context,
-            ...(typeof build == "string" ? {} : build),
+            context: typeof build === "string" ? build : build.context,
+            ...(typeof build === "string" ? {} : build),
         };
         // If we haven't, build and push the local build context to the ECR repository.  Then return
         // the unique image name we pushed to.  The name will change if the image changes ensuring
