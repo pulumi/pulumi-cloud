@@ -9,7 +9,7 @@
         "@pulumi/pulumi": "dev"
     },
     "devDependencies": {
-        "typescript": "^3.0.0",
+        "typescript": "4.7.4",
         "@types/node": "^10.0.0"
     },
     "peerDependencies": {
