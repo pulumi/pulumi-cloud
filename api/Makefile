@@ -7,9 +7,9 @@ VERSION := $(shell ../scripts/get-version)
 export PATH := $(shell yarn bin 2>/dev/null):$(PATH)
 
 build::
-	tsc
+	yarn run tsc
 	sed -e "s/\$${VERSION}/$(VERSION)/g" < package.json > bin/package.json
 	cp ../README.md ../LICENSE bin/
 
 lint::
-	tslint -c ../tslint.json -p tsconfig.json
+	yarn run tslint -c ../tslint.json -p tsconfig.json
