@@ -56,7 +56,6 @@ export function createCallbackFunction(
             extraIncludePaths: functionIncludePaths,
             extraIncludePackages: functionIncludePackages,
         },
-        runtime: "nodejs14.x",
         callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
         callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
     };
