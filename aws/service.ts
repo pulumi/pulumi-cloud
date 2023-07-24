@@ -160,7 +160,7 @@ const repositories = new Map<string, aws.ecr.Repository>();
 function getOrCreateRepository(imageName: string): aws.ecr.Repository {
     let repository: aws.ecr.Repository | undefined = repositories.get(imageName);
     if (!repository) {
-        repository = new aws.ecr.Repository(imageName.toLowerCase());
+        repository = new aws.ecr.Repository(imageName.toLowerCase(), { forceDelete: true });
         repositories.set(imageName, repository);
 
         // Set a default lifecycle policy such that at most a single untagged image is retained.
