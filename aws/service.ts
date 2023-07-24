@@ -296,10 +296,18 @@ function computeImageFromBuildWorker(
             pulumi.log.debug(`    already built: ${imageName} (${d})`, logResource));
     }
     else {
+        const dockerBuildOptions: docker.DockerBuild = {
+            // Force build of linux/amd64 image.  Once we support
+            // specifying the target platform for compute in the
+            // container cluster, we can thread that through here.
+            extraOptions: ["--platform", "linux/amd64"],
+            context: typeof build === "string" ? build : build.context,
+            ...(typeof build === "string" ? {} : build),
+        };
         // If we haven't, build and push the local build context to the ECR repository.  Then return
         // the unique image name we pushed to.  The name will change if the image changes ensuring
         // the TaskDefinition get's replaced IFF the built image changes.
-        uniqueImageName = docker.buildAndPushImage(imageName, build, repositoryUrl, logResource, async () => {
+        uniqueImageName = docker.buildAndPushImage(imageName, dockerBuildOptions, repositoryUrl, logResource, async () => {
             // Construct Docker registry auth data by getting the short-lived authorizationToken from ECR, and
             // extracting the username/password pair after base64-decoding the token.
             //
