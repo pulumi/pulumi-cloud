@@ -11,7 +11,7 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
-        "@pulumi/pulumi": "^3.73.0",
+        "@pulumi/pulumi": "^3.76.0",
         "@pulumi/aws": "^5.42.0",
         "@pulumi/awsx": "^0.40.0",
         "@pulumi/docker": "^3.0.0",
