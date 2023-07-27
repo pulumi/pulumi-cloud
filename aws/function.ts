@@ -18,23 +18,23 @@ import { functionIncludePackages, functionIncludePaths, functionMemorySize } fro
 import { getComputeIAMRolePolicies, getOrCreateNetwork, runLambdaInVPC } from "./shared";
 
 export function createFunction(
-        name: string, handler: aws.serverless.Handler, opts?: pulumi.ResourceOptions): Function {
+        name: string, handler: aws.lambda.Callback<any,any>, opts?: pulumi.ResourceOptions): Function {
     return new Function(name, handler, /*isFactoryFunction*/ false, opts);
 }
 
 export function createFactoryFunction(
-        name: string, handler: aws.serverless.HandlerFactory, opts?: pulumi.ResourceOptions): Function {
+        name: string, handler: aws.lambda.CallbackFactory<any,any>, opts?: pulumi.ResourceOptions): Function {
     return new Function(name, handler, /*isFactoryFunction*/ true, opts);
 }
 
 export function createCallbackFunction(
         name: string,
-        handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
+        handler: aws.lambda.Callback<any,any> | aws.lambda.CallbackFactory<any,any>,
         isFactoryFunction: boolean,
         opts?: pulumi.ResourceOptions): aws.lambda.CallbackFunction<any, any> {
 
     const policies = [...getComputeIAMRolePolicies()];
-    let vpcConfig: aws.serverless.FunctionOptions["vpcConfig"];
+    let vpcConfig: aws.lambda.CallbackFunctionArgs<any, any>["vpcConfig"];
 
     if (runLambdaInVPC) {
         const network = getOrCreateNetwork();
@@ -56,21 +56,21 @@ export function createCallbackFunction(
             extraIncludePaths: functionIncludePaths,
             extraIncludePackages: functionIncludePackages,
         },
-        callback: isFactoryFunction ? undefined : <aws.serverless.Handler>handler,
-        callbackFactory: isFactoryFunction ? <aws.serverless.HandlerFactory>handler : undefined,
+        callback: isFactoryFunction ? undefined : <aws.lambda.Callback<any,any>>handler,
+        callbackFactory: isFactoryFunction ? <aws.lambda.CallbackFactory<any,any>>handler : undefined,
     };
 
     return new aws.lambda.CallbackFunction(name, args, opts);
 }
 
-// Function is a wrapper over aws.serverless.Function which configures policies and VPC settings based on
+// Function is a wrapper over aws.lambda.CallbackFunction which configures policies and VPC settings based on
 // `@pulumi/cloud` configuration.
 export class Function extends pulumi.ComponentResource {
-    public readonly handler: aws.serverless.Handler | aws.serverless.HandlerFactory;
+    public readonly handler: aws.lambda.Callback<any,any> | aws.lambda.CallbackFactory<any,any>;
     public readonly lambda: aws.lambda.Function;
 
     constructor(name: string,
-                handler: aws.serverless.Handler | aws.serverless.HandlerFactory,
+                handler: aws.lambda.Callback<any,any> | aws.lambda.CallbackFactory<any,any>,
                 isFactoryFunction: boolean,
                 opts?: pulumi.ResourceOptions) {
         super("cloud:function:Function", name, { }, opts);

@@ -105,7 +105,7 @@ class Timer extends pulumi.ComponentResource {
 
         this.function = createFunction(
             name,
-            (ev: any, ctx: aws.serverless.Context, cb: (error: any, result: any) => void) => {
+            (ev: any, ctx: aws.lambda.Context, cb: (error: any, result: any) => void) => {
                 handler().then(() => {
                     cb(null, null);
                 }).catch((err: any) => {
