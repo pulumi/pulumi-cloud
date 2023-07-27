@@ -91,13 +91,9 @@ export let runLambdaInVPC: boolean = config.usePrivateNetwork;
 const defaultComputePolicies = [
     aws.iam.ManagedPolicy.LambdaFullAccess,    // Provides full access to Lambda
     aws.iam.ManagedPolicy.CloudWatchFullAccess,
-    aws.iam.ManagedPolicy.CloudWatchEventsFullAccess,
     aws.iam.ManagedPolicy.AmazonS3FullAccess,
     aws.iam.ManagedPolicy.AmazonDynamoDBFullAccess,
-    aws.iam.ManagedPolicy.AmazonSQSFullAccess,
-    aws.iam.ManagedPolicy.AmazonKinesisFullAccess,
-    aws.iam.ManagedPolicy.AmazonCognitoPowerUser,
-    aws.iam.ManagedPolicy.AWSXrayWriteOnlyAccess,
+    aws.iam.ManagedPolicy.AmazonSNSFullAccess,
     aws.iam.ManagedPolicy.AmazonECSFullAccess, // Required for lambda compute to be able to run Tasks
 ];
 let computePolicies: aws.ARN[] = config.computeIAMRolePolicyARNs
