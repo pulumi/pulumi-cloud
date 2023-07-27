@@ -4,7 +4,8 @@
 - Update to use `@pulumi/aws` 5.x
 - Update to use `@pulumi/awsx` 0.40.x
 - Update to use `@pulumi/azure` 5.x
-- aws: Build docker images for `linux/amd64` platform. 
+- Build docker images for `linux/amd64` platform. 
+- Reduce default IAM permissions to those needed by cloud-aws. 
 
 ## 0.30.1 (Release May 24, 2021)
 
