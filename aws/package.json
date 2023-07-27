@@ -11,6 +11,11 @@
     "homepage": "https://pulumi.io",
     "repository": "https://github.com/pulumi/pulumi-cloud",
     "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.378.0",
+        "@aws-sdk/client-ecs": "^3.378.0",
+        "@aws-sdk/client-s3": "^3.378.0",
+        "@aws-sdk/client-sns": "^3.378.0",
+        "@aws-sdk/lib-dynamodb": "^3.378.0",
         "@pulumi/pulumi": "^3.76.0",
         "@pulumi/aws": "^5.42.0",
         "@pulumi/awsx": "^0.40.0",

@@ -912,8 +912,8 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
 
         // tslint:disable-next-line:no-empty
         this.run = async function (options?: cloud.TaskRunOptions) {
-            const awssdk = await import("aws-sdk");
-            const ecs = new awssdk.ECS();
+            const ecssdk = await import("@aws-sdk/client-ecs");
+            const ecs = new ecssdk.ECS({});
 
             // Extract the envrionment values from the options
             const env: { name: string, value: string }[] = [];
@@ -941,7 +941,7 @@ export class Task extends pulumi.ComponentResource implements cloud.Task {
                         },
                     ],
                 },
-            }).promise();
+            });
 
             if (res.failures && res.failures.length > 0) {
                 throw new Error("Failed to start task:" + JSON.stringify(res.failures, null, ""));

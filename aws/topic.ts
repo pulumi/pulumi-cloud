@@ -18,6 +18,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { createCallbackFunction } from "./function";
 
+import * as snssdk from "@aws-sdk/client-sns";
+
 export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T> {
     private readonly name: string;
     public readonly topic: aws.sns.Topic;
@@ -36,11 +38,11 @@ export class Topic<T> extends pulumi.ComponentResource implements cloud.Topic<T>
         const topicId = this.topic.id;
 
         this.publish = async (item) => {
-            const snsconn = new aws.sdk.SNS();
-            const result = await snsconn.publish({
+            const sns = new snssdk.SNS({});
+            const result = await sns.publish({
                 Message: JSON.stringify(item),
                 TopicArn: topicId.get(),
-            }).promise();
+            });
         };
 
         this.registerOutputs({

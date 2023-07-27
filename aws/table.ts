@@ -17,6 +17,9 @@ import * as cloud from "@pulumi/cloud";
 import * as pulumi from "@pulumi/pulumi";
 import { RunError } from "@pulumi/pulumi/errors";
 
+import * as ddbsdk from "@aws-sdk/client-dynamodb";
+import * as ddbdocumentsdk from "@aws-sdk/lib-dynamodb";
+
 function pulumiKeyTypeToDynamoKeyType(keyType: cloud.PrimaryKeyType): string {
     switch (keyType) {
         case "string": return "S";
@@ -67,21 +70,21 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
         const tableName = this.dynamodbTable.name;
 
         this.get = async (query) => {
-            const db = new aws.sdk.DynamoDB.DocumentClient();
+            const db = ddbdocumentsdk.DynamoDBDocument.from(new ddbsdk.DynamoDB({}));
             const result = await db.get({
                 TableName: tableName.get(),
                 Key: query,
                 ConsistentRead: consistentRead,
-            }).promise();
+            });
 
             return result.Item;
         };
         this.insert = async (item) => {
-            const db = new aws.sdk.DynamoDB.DocumentClient();
+            const db = ddbdocumentsdk.DynamoDBDocument.from(new ddbsdk.DynamoDB({}));
             await db.put({
                 TableName: tableName.get(),
                 Item: item,
-            }).promise();
+            });
         };
         this.scan = <any>(async (callback?: (items: any[]) => Promise<boolean>) => {
             let items: any[] | undefined;
@@ -93,13 +96,13 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 };
             }
 
-            const db = new aws.sdk.DynamoDB.DocumentClient();
-            const params: any = {
+            const db = ddbdocumentsdk.DynamoDBDocument.from(new ddbsdk.DynamoDB({}));
+            const params: ddbdocumentsdk.ScanCommandInput = {
                 TableName: tableName.get(),
                 ConsistentRead: consistentRead,
             };
             while (true) {
-                const result = await db.scan(params).promise();
+                const result = await db.scan(params);
                 const acceptMore = await callback(<any[]>result.Items);
                 if (!acceptMore || (result.LastEvaluatedKey === undefined)) {
                     break;
@@ -127,20 +130,20 @@ export class Table extends pulumi.ComponentResource implements cloud.Table {
                 updateExpression += `${key} = :${key}`;
                 attributeValues[`:${key}`] = val;
             }
-            const db = new aws.sdk.DynamoDB.DocumentClient();
+            const db = ddbdocumentsdk.DynamoDBDocument.from(new ddbsdk.DynamoDB({}));
             await db.update({
                 TableName: tableName.get(),
                 Key: query,
                 UpdateExpression: updateExpression,
                 ExpressionAttributeValues: attributeValues,
-            }).promise();
+            });
         };
         this.delete = async (query) => {
-            const db = new aws.sdk.DynamoDB.DocumentClient();
+            const db = ddbdocumentsdk.DynamoDBDocument.from(new ddbsdk.DynamoDB({}));
             await db.delete({
                 TableName: tableName.get(),
                 Key: query,
-            }).promise();
+            });
         };
 
         this.registerOutputs({

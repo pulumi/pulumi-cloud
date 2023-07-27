@@ -18,6 +18,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { createCallbackFunction } from "./function";
 
+import * as s3sdk from "@aws-sdk/client-s3";
+
 export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
     public readonly bucket: aws.s3.Bucket;
 
@@ -50,29 +52,33 @@ export class Bucket extends pulumi.ComponentResource implements cloud.Bucket {
         const bucketName = this.bucket.id;
 
         this.get = async (key: string) => {
-            const s3 = new aws.sdk.S3();
+            const s3 = new s3sdk.S3({});
             const res = await s3.getObject({
                 Bucket: bucketName.get(),
                 Key: key,
-            }).promise();
-            return <Buffer>res.Body;
+            });
+            if (!res.Body) {
+                return Buffer.from([]);
+            }
+            const bytes = await res.Body.transformToByteArray();
+            return Buffer.from(bytes);
         };
 
         this.put = async (key: string, contents: Buffer) => {
-            const s3 = new aws.sdk.S3();
+            const s3 = new s3sdk.S3({});
             const res = await s3.putObject({
                 Bucket: bucketName.get(),
                 Key: key,
                 Body: contents,
-            }).promise();
+            });
         };
 
         this.delete = async (key: string) => {
-            const s3 = new aws.sdk.S3();
+            const s3 = new s3sdk.S3({});
             const res = await s3.deleteObject({
                 Bucket: bucketName.get(),
                 Key: key,
-            }).promise();
+            });
         };
 
         this.registerOutputs({ bucket: this.bucket });
