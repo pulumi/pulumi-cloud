@@ -26,8 +26,8 @@ import { createNameWithStackInfo, getCluster, getComputeIAMRolePolicies,
 import * as utils from "./utils";
 
 interface ContainerPortLoadBalancer {
-    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
-    targetGroup: aws.elasticloadbalancingv2.TargetGroup;
+    loadBalancer: aws.lb.LoadBalancer;
+    targetGroup: aws.lb.TargetGroup;
     protocol: cloud.ContainerProtocol;
 }
 
@@ -86,7 +86,7 @@ function createLoadBalancer(
             throw new Error(`Unrecognized Service protocol: ${portMapping.protocol}`);
     }
 
-    const loadBalancer = new aws.elasticloadbalancingv2.LoadBalancer(shortName, {
+    const loadBalancer = new aws.lb.LoadBalancer(shortName, {
         loadBalancerType: useAppLoadBalancer ? "application" : "network",
         subnets: pulumi.output(network).publicSubnetIds,
         internal: internal,
@@ -99,7 +99,7 @@ function createLoadBalancer(
     }, {parent: parent});
 
     // Create the target group for the new container/port pair.
-    const target = new aws.elasticloadbalancingv2.TargetGroup(shortName, {
+    const target = new aws.lb.TargetGroup(shortName, {
         port: portMapping.targetPort || portMapping.port,
         protocol: targetProtocol,
         vpcId: pulumi.output(network).vpcId,
@@ -111,7 +111,7 @@ function createLoadBalancer(
     }, { parent: parent });
 
     // Listen on the requested port on the LB and forward to the target.
-    const listener = new aws.elasticloadbalancingv2.Listener(longName, {
+    const listener = new aws.lb.Listener(longName, {
         loadBalancerArn: loadBalancer!.arn,
         protocol: protocol,
         certificateArn: useCertificateARN,
@@ -612,14 +612,14 @@ interface ExposedPorts {
 }
 
 interface ExposedPort {
-    host: aws.elasticloadbalancingv2.LoadBalancer;
+    host: aws.lb.LoadBalancer;
     hostPort: number;
     hostProtocol: cloud.ContainerProtocol;
 }
 
 // The AWS-specific Endpoint interface includes additional AWS implementation details for the exposed Endpoint.
 export interface Endpoint extends cloud.Endpoint {
-    loadBalancer: aws.elasticloadbalancingv2.LoadBalancer;
+    loadBalancer: aws.lb.LoadBalancer;
 }
 
 export type Endpoints = { [containerName: string]: { [port: number]: Endpoint } };
