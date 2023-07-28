@@ -1,4 +1,8 @@
-## HEAD (Unreleased)
+## 0.40.1 (Release Jul 27, 2023)
+
+- Use Node.js 18.x Lambda runtime to ensure AWS SDK 3.0 is available
+
+## 0.40.0 (Release Jul 27, 2023)
 
 - Fix a bug to allow computing minimum task and memory size requirements as `Inputs` for `Service` in `cloud/aws`.
 - Update to use `@pulumi/aws` 5.x
@@ -11,6 +15,7 @@
 
 - Fix a regression where `LambdaFullAccess` does not have enough permissions for most function scenarios.
   Default to the same permissions for Lambda functions as `@pulumi/aws` along with `AmazonECSFullAccess`.
+
 ## 0.30.0 (Release April 19, 2021)
 
 - (Breaking) Update to Pulumi 3.0 packages
