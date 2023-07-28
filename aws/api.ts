@@ -150,7 +150,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     public /*out*/ readonly customDomains: aws.apigateway.DomainName[]; // AWS DomainName objects for custom domains.
 
     private static registerCustomDomains(parent: pulumi.Resource, apiName: string, api: aws.apigateway.RestApi,
-        domains: Domain[]): aws.apigateway.DomainName[] {
+                                         domains: Domain[]): aws.apigateway.DomainName[] {
 
         const awsDomains: aws.apigateway.DomainName[] = [];
         for (const domain of domains) {
@@ -193,7 +193,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     }
 
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
-        routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
+                routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
         super("cloud:http:API", name, {}, opts);
 
