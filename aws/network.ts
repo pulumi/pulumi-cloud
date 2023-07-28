@@ -130,14 +130,20 @@ export class Network extends pulumi.ComponentResource {
      */
     public static getDefault(opts?: pulumi.ComponentResourceOptions): Promise<Network> {
         if (!defaultNetwork) {
-            const vpcResult = aws.ec2.getVpc({default: true}, { async: true });
+            const vpcResult = aws.ec2.getVpc({ default: true });
             const self = this;
 
             defaultNetwork = vpcResult.then(vpc => {
                 const vpcId = vpc.id;
-                const subnetIdsResult = aws.ec2.getSubnetIds({ vpcId }, { async: true });
-                const defaultSecurityGroupResult = aws.ec2.getSecurityGroup(
-                    { name: "default", vpcId }, { async: true });
+                const subnetIdsResult = aws.ec2.getSubnets({
+                    filters: [
+                        { name: "vpc-id", values: [vpcId] },
+                    ],
+                });
+                const defaultSecurityGroupResult = aws.ec2.getSecurityGroup({
+                    name: "default",
+                    vpcId,
+                });
 
                 return Promise.all([subnetIdsResult, defaultSecurityGroupResult]).then(
                     ([subnetIds, defaultSecurityGroup]) => {
@@ -145,10 +151,10 @@ export class Network extends pulumi.ComponentResource {
                         const subnet1 = subnetIds.ids[1];
                         return self.fromVpc("default-vpc", {
                             vpcId: vpcId,
-                            subnetIds: [ subnet0, subnet1 ],
+                            subnetIds: [subnet0, subnet1],
                             usePrivateSubnets: false,
-                            securityGroupIds: [ defaultSecurityGroup.id ],
-                            publicSubnetIds: [ subnet0, subnet1 ],
+                            securityGroupIds: [defaultSecurityGroup.id],
+                            publicSubnetIds: [subnet0, subnet1],
                         }, opts);
                     },
                 );
@@ -218,7 +224,7 @@ export class Network extends pulumi.ComponentResource {
 
         this.vpcId = vpc.id;
 
-        this.securityGroupIds = [ vpc.defaultSecurityGroupId ];
+        this.securityGroupIds = [vpc.defaultSecurityGroupId];
         this.subnetIds = [];
         this.publicSubnetIds = [];
 
@@ -230,9 +236,9 @@ export class Network extends pulumi.ComponentResource {
         const publicRouteTable = new aws.ec2.RouteTable(name, {
             vpcId: vpc.id,
             routes: [{
-                    cidrBlock: "0.0.0.0/0",
-                    gatewayId: internetGateway.id,
-                }],
+                cidrBlock: "0.0.0.0/0",
+                gatewayId: internetGateway.id,
+            }],
             tags,
         }, parentOpts);
         this.publicRouteTableId = publicRouteTable.id;
@@ -266,8 +272,8 @@ export class Network extends pulumi.ComponentResource {
 }
 
 function createSubnetRouteTable(
-        network: Network, publicRouteTable: aws.ec2.RouteTable,
-        subnet: aws.ec2.Subnet, name: string, index: number) {
+    network: Network, publicRouteTable: aws.ec2.RouteTable,
+    subnet: aws.ec2.Subnet, name: string, index: number) {
     const parentOpts = { parent: network };
 
     if (!network.usePrivateSubnets) {
@@ -283,7 +289,7 @@ function createSubnetRouteTable(
     const natGatewayPublicSubnet = new aws.ec2.Subnet(natName, {
         vpcId: network.vpcId,
         availabilityZone: getAvailabilityZone(index),
-        cidrBlock: `10.10.${index+64}.0/24`, // Use top half of the subnet space
+        cidrBlock: `10.10.${index + 64}.0/24`, // Use top half of the subnet space
         mapPublicIpOnLaunch: true,        // Always assign a public IP in NAT subnet
         tags,
     }, parentOpts);
