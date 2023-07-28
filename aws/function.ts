@@ -51,6 +51,8 @@ export function createCallbackFunction(
     const args: aws.lambda.CallbackFunctionArgs<any, any> = {
         policies,
         vpcConfig,
+        // Require Node 18 to use AWS SDK 3.0
+        runtime: aws.lambda.Runtime.NodeJS18dX,
         memorySize: functionMemorySize,
         codePathOptions: {
             extraIncludePaths: functionIncludePaths,
