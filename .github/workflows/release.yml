@@ -97,19 +97,6 @@ jobs:
           - nodejs
         nodeversion:
           - 14.x
-  create_docs_build:
-    name: Create docs build
-    needs: build_test_publish
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.1.0
-        with:
-          repo: pulumi/pulumictl
-      - env:
-          GITHUB_TOKEN: ${{ secrets.PULUMI_BOT_TOKEN }}
-        name: Dispatch event
-        run: pulumictl create docs-build pulumi-${{ env.PROVIDER }} ${GITHUB_REF#refs/tags/}
 name: release
 "on":
   push:
