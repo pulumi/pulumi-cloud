@@ -74,24 +74,28 @@ export class API implements cloud.API {
         this.customDomains = [];
     }
 
-    public static(path: string, localPath: string, options?: cloud.ServeStaticOptions) {
+    private cleanPath(path: string): string {
+        if (path.endsWith("/")) {
+            path = path.slice(0, -1);
+        }
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
+        return path;
+    }
+
+    public static(path: string, localPath: string, options?: cloud.ServeStaticOptions) {
+        path = this.cleanPath(path);
         this.staticRoutes.push({ path, localPath, options: options || {} });
     }
 
     public proxy(path: string, target: string | pulumi.Output<cloud.Endpoint>) {
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
+        path = this.cleanPath(path);
         this.proxyRoutes.push({ path, target });
     }
 
     public route(method: string, path: string, ...handlers: cloud.RouteHandler[]) {
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
+        path = this.cleanPath(path);
         this.routes.push({ method: method, path: path, handlers: handlers });
     }
 
@@ -174,13 +178,13 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
                 };
             }
 
-            const awsDomain = new aws.apigateway.DomainName(apiNameAndHash, domainArgs, {parent});
+            const awsDomain = new aws.apigateway.DomainName(apiNameAndHash, domainArgs, { parent });
 
             const basePathMapping = new aws.apigateway.BasePathMapping(apiNameAndHash, {
                 restApi: api,
                 stageName: stageName,
                 domainName: awsDomain.domainName,
-            }, {parent});
+            }, { parent });
 
             awsDomains.push(awsDomain);
         }
@@ -191,7 +195,7 @@ export class HttpDeployment extends pulumi.ComponentResource implements cloud.Ht
     constructor(name: string, staticRoutes: StaticRoute[], proxyRoutes: ProxyRoute[],
                 routes: Route[], customDomains: Domain[], opts?: pulumi.ResourceOptions) {
 
-        super("cloud:http:API", name, { }, opts);
+        super("cloud:http:API", name, {}, opts);
 
         this.staticRoutes = staticRoutes;
         this.proxyRoutes = proxyRoutes;
@@ -334,10 +338,10 @@ function convertHandlers(name: string, route: Route, opts: pulumi.ResourceOption
 
 const stageName = "stage";
 function apiGatewayToRequestResponse(
-        ev: awsx.apigateway.Request, body: Buffer, cb: (err: any, result: awsx.apigateway.Response) => void): [cloud.Request, cloud.Response] {
+    ev: awsx.apigateway.Request, body: Buffer, cb: (err: any, result: awsx.apigateway.Response) => void): [cloud.Request, cloud.Response] {
     const response = {
         statusCode: 200,
-        headers: <{[header: string]: string}>{},
+        headers: <{ [header: string]: string }>{},
         body: Buffer.from([]),
     };
     const headers: { [name: string]: string; } = {};

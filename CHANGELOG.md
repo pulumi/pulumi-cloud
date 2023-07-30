@@ -1,6 +1,10 @@
+## Unreleased 
+
+- Allow trailing slash in API routes.
+
 ## 0.40.1 (Release Jul 27, 2023)
 
-- Use Node.js 18.x Lambda runtime to ensure AWS SDK 3.0 is available
+- Use Node.js 18.x Lambda runtime to ensure AWS SDK 3.0 is available.
 
 ## 0.40.0 (Release Jul 27, 2023)
 
