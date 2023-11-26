@@ -595,7 +595,7 @@ function taskMemoryAndCPUForContainers(defs: aws.ecs.ContainerDefinition[]) {
     };
 }
 
-function placementConstraintsForHost(host: cloud.HostProperties | undefined) {
+function placementConstraintsForHost(host: cloud.HostProperties | undefined): [{type: "memberOf", expression: string}] | undefined {
     if (host && host.os) {
         return [{
             type: "memberOf",
