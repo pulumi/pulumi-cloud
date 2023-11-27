@@ -62,6 +62,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{matrix.nodeversion}}
+          registry-url: https://registry.npmjs.org
       - name: Ensure dependencies
         run: make ensure
       - name: Checkout Scripts Repo
