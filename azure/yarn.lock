@@ -327,10 +327,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/azure@^5.45.0":
-  version "5.56.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-5.56.0.tgz#643b70d4c60954ebcbdf5383265537ea50c00bd6"
-  integrity sha512-wTLYnvvzhoZNft2Wo1BsvDO6HfXxl7JgKwyV9iRgUpZSSJsQe4TwnIPqmbITRliYQ9x2Xm/1gOUSTzzjXmW9EQ==
+"@pulumi/azure@^5.60.0":
+  version "5.60.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure/-/azure-5.60.0.tgz#6d468c9340c8f6edf3344abcc1de648f02d5ea5d"
+  integrity sha512-JebJ3C89tCPKJCUBwBqNTRfZY6/gdnZBgyNLz5MhQjw36i+nXDItbKKsvv9OxIirthNOxro6FRf58HpaqnT0jQ==
   dependencies:
     "@azure/eventgrid" "^4.6.0"
     "@azure/functions" "=1.2.2"
