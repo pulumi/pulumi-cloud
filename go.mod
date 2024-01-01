@@ -7,6 +7,8 @@ require (
 	github.com/stretchr/testify v1.6.1
 )
 
+replace sourcegraph.com/sourcegraph/appdash-data => github.com/sourcegraph/appdash-data v0.0.0-20151005221446-73f23eafcf67
+
 require (
 	cloud.google.com/go v0.72.0 // indirect
 	cloud.google.com/go/logging v1.0.0 // indirect
