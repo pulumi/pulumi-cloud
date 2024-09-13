@@ -1,3 +1,10 @@
+> [!Note]  
+> This repository has been archived; you can learn a bit more about the history of this project and why it was archived in https://github.com/pulumi/pulumi-cloud/issues/844
+> For alternative cloud specific abstractions consider Pulumi's [Crosswalk for AWS](https://www.pulumi.com/docs/clouds/aws/guides/).
+> There are also other multi-cloud abstractions that have been built on Pulumi such as [SST](https://sst.dev)
+
+
+
 [![Build Status](https://travis-ci.com/pulumi/pulumi-cloud.svg?token=eHg7Zp5zdDDJfTjY8ejq&branch=master)](https://travis-ci.com/pulumi/pulumi-cloud)
 
 # Pulumi Cloud Framework (Preview)
